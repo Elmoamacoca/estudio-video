@@ -1,18 +1,26 @@
 name: esteira
 
-# A esteira roda em duas fases, e o paralelismo existe por um motivo tecnico:
-# o Instagram libera UM pedido por endereco de saida. Cada trabalho do GitHub roda
-# numa maquina propria, com endereco proprio. Entao N perfis em paralelo sao N
-# enderecos, e o limite deixa de ser gargalo.
+# COMO ESTA ESTEIRA VENCE O LIMITE DO INSTAGRAM
+#
+# Medido em 16/08/2026, dentro deste proprio repositorio:
+#   - um endereco de saida serve para UMA leitura de 12 posts;
+#   - depois disso ele responde 401 por mais de treze minutos, e esperar nao resolve:
+#     seis voltas de 135 segundos foram recusadas em sequencia;
+#   - baixar o arquivo de video, por outro lado, nao tem limite algum.
+#
+# Entao a esteira nao insiste no mesmo lugar. Ela usa MUITAS MAQUINAS, uma atras da
+# outra: cada elo da corrente e' um trabalho novo do GitHub, com endereco proprio,
+# que le uma pagina, grava onde parou e passa a vez. Vinte elos por rodada.
+#
+# Isso so e' gratuito porque o repositorio e' publico, onde nao ha teto de minutos.
 
 on:
   workflow_dispatch:
     inputs:
-      minutos:
-        description: "quanto tempo cada perfil varre por rodada"
-        default: "18"
+      elos:
+        description: "quantas maquinas encadear nesta rodada (cada uma le 12 posts)"
+        default: "20"
   schedule:
-    # o menor intervalo que o GitHub aceita e' 5 minutos
     - cron: "*/30 * * * *"
 
 permissions:
@@ -23,66 +31,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  listar:
+  elo:
     runs-on: ubuntu-latest
-    outputs:
-      contas: ${{ steps.ler.outputs.contas }}
-      tem: ${{ steps.ler.outputs.tem }}
-    steps:
-      - uses: actions/checkout@v5
-      - id: ler
-        run: |
-          python - <<'PY' >> $GITHUB_OUTPUT
-          import json, pathlib
-          arq = pathlib.Path("dados/fontes.json")
-          contas = []
-          if arq.exists():
-              contas = (json.loads(arq.read_text(encoding="utf-8")).get("contas") or [])
-          # o teto de 20 e' o de trabalhos simultaneos da conta gratuita
-          contas = [c.strip().lstrip("@") for c in contas if c.strip()][:20]
-          print(f"contas={json.dumps(contas)}")
-          print(f"tem={'sim' if contas else 'nao'}")
-          PY
-
-  minerar:
-    needs: listar
-    if: needs.listar.outputs.tem == 'sim'
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 8
+    # a corrente e' sequencial de proposito: o marcador da pagina seguinte so existe
+    # depois que a anterior foi lida. Cada elo entra com endereco limpo.
     strategy:
-      max-parallel: 20
+      max-parallel: 1
       fail-fast: false
       matrix:
-        conta: ${{ fromJson(needs.listar.outputs.contas) }}
+        elo: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     steps:
       - uses: actions/checkout@v5
-      - name: Varrer ${{ matrix.conta }}
-        run: python minerar.py "${{ matrix.conta }}" "${{ inputs.minutos || 18 }}"
-      - name: Guardar o avanco
-        uses: actions/upload-artifact@v4
         with:
-          name: perfil-${{ matrix.conta }}
-          path: dados/perfis/
-          retention-days: 7
-          if-no-files-found: ignore
+          ref: main
 
-  consolidar:
-    needs: minerar
-    if: always() && needs.minerar.result != 'skipped'
+      - name: Ler uma pagina de cada perfil pendente
+        run: python rodada.py
+
+      - name: Guardar o avanco
+        run: |
+          git config user.name "esteira"
+          git config user.email "esteira@users.noreply.github.com"
+          git add dados/
+          if git diff --staged --quiet; then
+            echo "nada novo neste elo"
+          else
+            git commit -m "elo ${{ matrix.elo }}"
+            for tentativa in 1 2 3; do
+              git pull --rebase --autostash origin main && git push && break
+              sleep 5
+            done
+          fi
+
+  fechar:
+    needs: elo
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
         with:
-          path: recebidos
-          merge-multiple: true
-      - name: Juntar o que cada maquina trouxe
-        run: |
-          mkdir -p dados/perfis
-          find recebidos -name "*.json" -exec cp -f {} dados/perfis/ \; 2>/dev/null || true
-          rm -rf recebidos
-          ls -la dados/perfis/ || echo "nada veio"
-      - name: Aplicar a regua e selecionar
+          ref: main
+      - name: Aplicar a regua e atualizar a tela
         run: |
           python selecionar.py "reels,post,carrossel" 1.5 500
           python - <<'PY'
@@ -102,11 +92,11 @@ jobs:
           pathlib.Path("dados/fila.json").write_text(
               json.dumps(fila, ensure_ascii=False, indent=1), encoding="utf-8")
           PY
-      - name: Publicar o resultado
+      - name: Publicar
         run: |
           git config user.name "esteira"
           git config user.email "esteira@users.noreply.github.com"
           git add dados/
-          git diff --staged --quiet || git commit -m "rodada da esteira"
+          git diff --staged --quiet || git commit -m "fecha a rodada"
           git pull --rebase --autostash origin main || true
-          git push
+          git push || true
