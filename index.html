@@ -57,6 +57,13 @@ tr:last-child td{border-bottom:none}
 .campo{flex:1;min-width:130px}
 .campo label{display:block;font-size:12px;color:var(--suave);margin-bottom:5px}
 a{color:var(--marca)}
+.passos{margin:12px 0 12px 20px;font-size:13.5px;color:var(--suave)}
+.passos li{margin-bottom:7px;padding-left:3px}
+.passos strong{color:var(--texto)}
+code{font:12.5px ui-monospace,Consolas,monospace;background:var(--fundo);border:1px solid var(--borda);border-radius:5px;padding:2px 6px;color:var(--texto);word-break:break-all}
+.chamada{background:var(--realce);border:1px solid color-mix(in srgb,var(--marca) 35%,transparent);border-radius:11px;padding:14px 17px;margin-bottom:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.chamada strong{color:var(--marca)}
+.chamada button{margin-left:auto}
 footer{max-width:1120px;margin:0 auto;padding:0 22px 40px;color:var(--suave);font-size:12.5px}
 @media(max-width:640px){main{padding:16px 13px 60px}.bloco{padding:16px}}
 </style>
@@ -70,6 +77,11 @@ footer{max-width:1120px;margin:0 auto;padding:0 22px 40px;color:var(--suave);fon
 </div>
 
 <main>
+
+  <div class="chamada" id="aviso_senha" style="display:none">
+    <span><strong>Falta a senha.</strong> A tela lê tudo, mas os botões não obedecem enquanto ela não for colada. É rápido, e uma vez só.</span>
+    <button class="forte" id="ir_senha">Como fazer</button>
+  </div>
 
   <div class="bloco">
     <h2>Situação</h2>
@@ -130,13 +142,19 @@ footer{max-width:1120px;margin:0 auto;padding:0 22px 40px;color:var(--suave);fon
     <div class="rolagem" id="melhores"><div class="vazio">A seleção aparece depois da primeira varredura.</div></div>
   </div>
 
-  <div class="bloco">
-    <h2>Acesso de escrita</h2>
-    <h3>Sua chave fica só neste navegador</h3>
-    <p class="nota">A tela lê sem chave. Para mandar a esteira trabalhar ela precisa da sua chave do GitHub, guardada apenas neste aparelho. Ela nunca sobe para o repositório.</p>
-    <div class="linha"><input type="password" id="chave" placeholder="chave de acesso" autocomplete="off"></div>
+  <div class="bloco" id="bloco_chave">
+    <h2>Senha · faça isto primeiro</h2>
+    <h3>Sem ela, os botões acima não obedecem</h3>
+    <p class="nota">A tela <strong>lê</strong> tudo sozinha. Para ela <strong>dar ordem</strong> (salvar a lista, varrer, montar lote) precisa provar que é você, senão qualquer um que achasse este endereço mandaria também.</p>
+    <ol class="passos">
+      <li>Abra no bloco de notas o arquivo <code>C:\Users\Gabri\.claude\secrets\github_token.txt</code></li>
+      <li>Lá tem uma linha <code>GITHUB_TOKEN=...</code>. Copie <strong>só o que vem depois do sinal de igual</strong>.</li>
+      <li>Cole no campo abaixo e clique em Guardar.</li>
+    </ol>
+    <p class="nota">Ela fica salva só neste navegador, nunca sobe para lugar nenhum, e você faz isso uma vez só neste computador.</p>
+    <div class="linha"><input type="password" id="chave" placeholder="cole a senha aqui" autocomplete="off"></div>
     <div class="linha">
-      <button id="guardar">Guardar</button>
+      <button class="forte" id="guardar">Guardar</button>
       <button id="esquecer">Esquecer</button>
       <span class="nota" id="recado_chave"></span>
     </div>
@@ -159,13 +177,20 @@ $("tema").onclick=()=>{const n=document.documentElement.dataset.tema==="escuro"?
   document.documentElement.dataset.tema=n; localStorage.setItem("estudio_tema",n);};
 
 const chave=()=>localStorage.getItem("estudio_chave")||"";
-if(chave()) $("chave").value="................";
+function conferirSenha(){
+  const tem=!!chave();
+  $("aviso_senha").style.display=tem?"none":"flex";
+  if(tem) $("chave").value="................";
+}
+$("ir_senha").onclick=()=>{$("bloco_chave").scrollIntoView({behavior:"smooth",block:"center"});
+  setTimeout(()=>$("chave").focus(),450);};
 $("guardar").onclick=()=>{const v=$("chave").value.trim();
-  if(!v||v.startsWith("....")){$("recado_chave").textContent="cole a chave antes";return;}
+  if(!v||v.startsWith("....")){$("recado_chave").textContent="cole a senha no campo antes de guardar";return;}
   localStorage.setItem("estudio_chave",v); $("chave").value="................";
-  $("recado_chave").textContent="guardada neste aparelho";};
+  $("recado_chave").textContent="pronto, os botões já obedecem"; conferirSenha();};
 $("esquecer").onclick=()=>{localStorage.removeItem("estudio_chave");$("chave").value="";
-  $("recado_chave").textContent="removida";};
+  $("recado_chave").textContent="removida deste navegador"; conferirSenha();};
+conferirSenha();
 
 $("formatos").onclick=e=>{const o=e.target.closest(".opcao"); if(o) o.classList.toggle("ligada");};
 const formatosEscolhidos=()=>[...document.querySelectorAll(".opcao.ligada")].map(o=>o.dataset.f);
@@ -179,7 +204,7 @@ async function ler(caminho){
 }
 
 async function gravar(caminho,obj,msg){
-  const k=chave(); if(!k) throw new Error("guarde a chave de acesso primeiro");
+  const k=chave(); if(!k) throw new Error("falta a senha: veja o último bloco desta página");
   let sha=null;
   const a=await fetch(`${API}/contents/${caminho}?ref=main`);
   if(a.ok) sha=(await a.json()).sha;
@@ -191,7 +216,7 @@ async function gravar(caminho,obj,msg){
 }
 
 async function chamar(fluxo,entradas){
-  const k=chave(); if(!k) throw new Error("guarde a chave de acesso primeiro");
+  const k=chave(); if(!k) throw new Error("falta a senha: veja o último bloco desta página");
   const r=await fetch(`${API}/actions/workflows/${fluxo}/dispatches`,{method:"POST",
     headers:{Authorization:`Bearer ${k}`,Accept:"application/vnd.github+json"},
     body:JSON.stringify({ref:"main",inputs:entradas||{}})});
