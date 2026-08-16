@@ -7,80 +7,58 @@
 <title>Estúdio</title>
 <style>
 :root{
-  --fundo:#f7f7f5; --painel:#ffffff; --borda:#e3e3df; --texto:#1c1c1a;
-  --suave:#6b6b66; --marca:#ba5a18; --ok:#2f7d4f; --alerta:#b4451c; --trilho:#efefec;
+  --fundo:#f7f7f5; --painel:#fff; --borda:#e3e3df; --texto:#1c1c1a; --suave:#6b6b66;
+  --marca:#ba5a18; --ok:#2f7d4f; --alerta:#b4451c; --trilho:#efefec; --realce:#faf3ee;
 }
 :root[data-tema="escuro"]{
-  --fundo:#141413; --painel:#1c1c1a; --borda:#2e2e2b; --texto:#f0efec;
-  --suave:#9a9a93; --marca:#e07b34; --ok:#4caf7d; --alerta:#e0703f; --trilho:#262623;
+  --fundo:#141413; --painel:#1c1c1a; --borda:#2e2e2b; --texto:#f0efec; --suave:#9a9a93;
+  --marca:#e07b34; --ok:#4caf7d; --alerta:#e0703f; --trilho:#262623; --realce:#241d18;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:var(--fundo); color:var(--texto);
-  font:15px/1.55 ui-sans-serif,system-ui,"Segoe UI",Inter,sans-serif;
-  -webkit-font-smoothing:antialiased;
-}
-.faixa{
-  position:sticky; top:0; z-index:10; background:var(--painel);
-  border-bottom:1px solid var(--borda); padding:14px 22px;
-  display:flex; align-items:center; gap:14px;
-}
-.marca{font-weight:650; letter-spacing:-.01em; font-size:16px}
+body{background:var(--fundo);color:var(--texto);font:15px/1.55 ui-sans-serif,system-ui,"Segoe UI",Inter,sans-serif;-webkit-font-smoothing:antialiased}
+.faixa{position:sticky;top:0;z-index:20;background:var(--painel);border-bottom:1px solid var(--borda);padding:13px 22px;display:flex;align-items:center;gap:13px}
+.marca{font-weight:650;font-size:16px;letter-spacing:-.01em}
 .marca span{color:var(--marca)}
-.pilula{
-  margin-left:auto; display:flex; align-items:center; gap:7px;
-  font-size:12.5px; color:var(--suave); border:1px solid var(--borda);
-  padding:5px 11px; border-radius:100px;
-}
+.pilula{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--suave);border:1px solid var(--borda);padding:5px 11px;border-radius:100px}
 .ponto{width:7px;height:7px;border-radius:50%;background:var(--suave)}
-.ponto.vivo{background:var(--ok)}
-.ponto.morto{background:var(--alerta)}
-button{
-  font:inherit; cursor:pointer; border:1px solid var(--borda);
-  background:var(--painel); color:var(--texto); padding:7px 13px;
-  border-radius:8px; transition:.15s;
-}
+.ponto.vivo{background:var(--ok)} .ponto.morto{background:var(--alerta)}
+button{font:inherit;cursor:pointer;border:1px solid var(--borda);background:var(--painel);color:var(--texto);padding:7px 13px;border-radius:8px;transition:.15s}
 button:hover{border-color:var(--marca)}
-button.forte{background:var(--marca); border-color:var(--marca); color:#fff; font-weight:550}
+button.forte{background:var(--marca);border-color:var(--marca);color:#fff;font-weight:550}
 button.forte:hover{filter:brightness(1.08)}
-button:disabled{opacity:.45; cursor:not-allowed}
-main{max-width:1080px; margin:0 auto; padding:26px 22px 70px}
-.bloco{
-  background:var(--painel); border:1px solid var(--borda);
-  border-radius:12px; padding:20px; margin-bottom:18px;
-}
-h2{font-size:13px; text-transform:uppercase; letter-spacing:.07em; color:var(--suave); font-weight:600; margin-bottom:14px}
-h3{font-size:15px; font-weight:600; margin-bottom:5px}
-p.nota{color:var(--suave); font-size:13.5px}
-textarea{
-  width:100%; min-height:110px; resize:vertical; font:14px/1.5 ui-monospace,Consolas,monospace;
-  background:var(--fundo); color:var(--texto); border:1px solid var(--borda);
-  border-radius:9px; padding:12px;
-}
-textarea:focus{outline:none; border-color:var(--marca)}
-input[type=password],input[type=text]{
-  font:14px ui-monospace,Consolas,monospace; background:var(--fundo); color:var(--texto);
-  border:1px solid var(--borda); border-radius:9px; padding:9px 11px; width:100%;
-}
-input:focus{outline:none;border-color:var(--marca)}
-.linha{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px}
-.painel-numeros{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--borda); border:1px solid var(--borda); border-radius:11px; overflow:hidden}
-.numero{background:var(--painel); padding:16px 18px}
-.numero .valor{font-size:26px; font-weight:600; letter-spacing:-.02em; line-height:1.1}
-.numero .nome{font-size:12.5px; color:var(--suave); margin-top:3px}
-table{width:100%; border-collapse:collapse; font-size:14px}
-th{text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--suave); font-weight:600; padding:0 10px 9px 0; border-bottom:1px solid var(--borda)}
-td{padding:11px 10px 11px 0; border-bottom:1px solid var(--borda)}
+button:disabled{opacity:.45;cursor:not-allowed}
+main{max-width:1120px;margin:0 auto;padding:24px 22px 70px}
+.bloco{background:var(--painel);border:1px solid var(--borda);border-radius:12px;padding:20px;margin-bottom:18px}
+h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--suave);font-weight:600;margin-bottom:13px}
+h3{font-size:15px;font-weight:600;margin-bottom:4px}
+p.nota{color:var(--suave);font-size:13.5px}
+textarea{width:100%;min-height:96px;resize:vertical;font:14px/1.5 ui-monospace,Consolas,monospace;background:var(--fundo);color:var(--texto);border:1px solid var(--borda);border-radius:9px;padding:12px}
+textarea:focus,input:focus{outline:none;border-color:var(--marca)}
+input[type=password],input[type=text],input[type=number]{font:14px ui-monospace,Consolas,monospace;background:var(--fundo);color:var(--texto);border:1px solid var(--borda);border-radius:9px;padding:9px 11px;width:100%}
+.linha{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--borda);border:1px solid var(--borda);border-radius:11px;overflow:hidden}
+.numero{background:var(--painel);padding:15px 17px}
+.numero .valor{font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.numero .nome{font-size:12.5px;color:var(--suave);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--suave);font-weight:600;padding:0 10px 9px 0;border-bottom:1px solid var(--borda);white-space:nowrap}
+td{padding:10px 10px 10px 0;border-bottom:1px solid var(--borda)}
 tr:last-child td{border-bottom:none}
-.vazio{color:var(--suave); font-size:14px; padding:22px 0; text-align:center}
-.barra{height:5px; background:var(--trilho); border-radius:100px; overflow:hidden; margin-top:7px}
-.barra i{display:block; height:100%; background:var(--marca); border-radius:100px}
-.tag{font-size:11.5px; padding:3px 8px; border-radius:100px; border:1px solid var(--borda); color:var(--suave)}
-.tag.ok{color:var(--ok); border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
-.tag.trab{color:var(--marca); border-color:color-mix(in srgb,var(--marca) 40%,transparent)}
-footer{max-width:1080px; margin:0 auto; padding:0 22px 40px; color:var(--suave); font-size:12.5px}
-.aviso{border-left:2px solid var(--marca); padding:9px 0 9px 13px; margin-top:14px; font-size:13.5px; color:var(--suave)}
-@media(max-width:640px){main{padding:18px 14px 60px}.bloco{padding:16px}}
+.rolagem{overflow-x:auto;margin:0 -4px;padding:0 4px}
+.vazio{color:var(--suave);font-size:14px;padding:24px 0;text-align:center}
+.escolha{display:flex;gap:8px;flex-wrap:wrap}
+.opcao{display:flex;align-items:center;gap:7px;border:1px solid var(--borda);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:14px;user-select:none}
+.opcao.ligada{border-color:var(--marca);background:var(--realce);color:var(--marca);font-weight:550}
+.tag{font-size:11.5px;padding:3px 8px;border-radius:100px;border:1px solid var(--borda);color:var(--suave);white-space:nowrap}
+.tag.forte{color:var(--marca);border-color:color-mix(in srgb,var(--marca) 45%,transparent)}
+.tag.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.barra{height:5px;background:var(--trilho);border-radius:100px;overflow:hidden;margin-top:6px}
+.barra i{display:block;height:100%;background:var(--marca);border-radius:100px}
+.campo{flex:1;min-width:130px}
+.campo label{display:block;font-size:12px;color:var(--suave);margin-bottom:5px}
+a{color:var(--marca)}
+footer{max-width:1120px;margin:0 auto;padding:0 22px 40px;color:var(--suave);font-size:12.5px}
+@media(max-width:640px){main{padding:16px 13px 60px}.bloco{padding:16px}}
 </style>
 </head>
 <body>
@@ -88,193 +66,222 @@ footer{max-width:1080px; margin:0 auto; padding:0 22px 40px; color:var(--suave);
 <div class="faixa">
   <div class="marca">Estúdio<span>.</span></div>
   <div class="pilula"><span class="ponto" id="ponto"></span><span id="conexao">verificando</span></div>
-  <button id="tema" title="Alternar tema">Tema</button>
+  <button id="tema">Tema</button>
 </div>
 
 <main>
 
   <div class="bloco">
     <h2>Situação</h2>
-    <div class="painel-numeros">
-      <div class="numero"><div class="valor" id="n_fontes">0</div><div class="nome">contas de origem</div></div>
-      <div class="numero"><div class="valor" id="n_fila">0</div><div class="nome">na fila</div></div>
-      <div class="numero"><div class="valor" id="n_prontos">0</div><div class="nome">peças prontas</div></div>
-      <div class="numero"><div class="valor" id="n_hoje">0</div><div class="nome">feitas hoje</div></div>
+    <div class="numeros">
+      <div class="numero"><div class="valor" id="n_contas">0</div><div class="nome">contas de origem</div></div>
+      <div class="numero"><div class="valor" id="n_lidos">0</div><div class="nome">posts varridos</div></div>
+      <div class="numero"><div class="valor" id="n_sel">0</div><div class="nome">acima do corte</div></div>
+      <div class="numero"><div class="valor" id="n_lote">0</div><div class="nome">no último lote</div></div>
     </div>
-    <p class="nota" style="margin-top:13px">Lido direto do repositório da esteira. Se o número não existe, a tela diz que não existe, e não mostra zero por dedução.</p>
+    <p class="nota" style="margin-top:12px" id="quando">A esteira ainda não rodou.</p>
   </div>
 
   <div class="bloco">
-    <h2>Contas de origem</h2>
-    <h3>De onde os vídeos serão minerados</h3>
-    <p class="nota">Uma conta por linha, com ou sem arroba. A esteira lê os posts de cada uma, mede o desempenho de cada post contra a mediana da própria conta, e seleciona só o que ficou acima do corte.</p>
-    <textarea id="fontes" placeholder="@conta_um&#10;@conta_dois&#10;@conta_tres"></textarea>
+    <h2>Passo 1 · Contas de origem</h2>
+    <h3>De onde os vídeos são minerados</h3>
+    <p class="nota">Uma por linha. A esteira varre o perfil inteiro, do post de hoje até o primeiro, guardando onde parou. Um perfil de cinco mil publicações não sai numa rodada, e não precisa sair.</p>
+    <textarea id="fontes" placeholder="boletimdamorte&#10;outraconta"></textarea>
     <div class="linha">
       <button class="forte" id="salvar">Salvar lista</button>
-      <button id="rodar">Rodar esteira agora</button>
+      <button id="varrer">Varrer agora</button>
       <span class="nota" id="recado"></span>
     </div>
   </div>
 
   <div class="bloco">
-    <h2>Acesso de escrita</h2>
-    <h3>Sua chave fica só neste navegador</h3>
-    <p class="nota">A tela lê sem chave nenhuma. Para mandar a esteira trabalhar, ela precisa da sua chave do GitHub. Ela é guardada apenas aqui, neste aparelho, e nunca sobe para o repositório.</p>
-    <div class="linha">
-      <input type="password" id="chave" placeholder="chave de acesso" autocomplete="off">
+    <h2>Passo 2 · Critério</h2>
+    <h3>O que conta como bom desempenho</h3>
+    <p class="nota">Desempenho é múltiplo da mediana da própria conta, e a mediana é calculada <strong>por formato</strong>. Vídeo tem contagem de exibição, imagem e carrossel não têm, então comparar os dois no mesmo ranking premiaria o formato errado.</p>
+    <div class="escolha" style="margin-top:14px" id="formatos">
+      <div class="opcao ligada" data-f="reels">Reels</div>
+      <div class="opcao" data-f="post">Post</div>
+      <div class="opcao" data-f="carrossel">Carrossel</div>
     </div>
     <div class="linha">
-      <button id="guardar">Guardar chave</button>
-      <button id="esquecer">Esquecer chave</button>
+      <div class="campo"><label>Corte, em vezes a mediana</label><input type="number" id="corte" value="1.5" step="0.1" min="1"></div>
+      <div class="campo"><label>Máximo de arquivos no lote</label><input type="number" id="quantos" value="150" step="10" min="1"></div>
+    </div>
+  </div>
+
+  <div class="bloco">
+    <h2>Passo 3 · Baixar</h2>
+    <h3>O lote inteiro num arquivo só</h3>
+    <p class="nota">Baixar não tem limite de ritmo. O que trava é descobrir o que baixar, e isso o passo 1 já resolveu. Ao terminar, o lote aparece abaixo com o link.</p>
+    <div class="linha">
+      <button class="forte" id="baixar">Montar lote e baixar</button>
+      <span class="nota" id="recado_baixar"></span>
+    </div>
+    <div id="lotes" style="margin-top:16px"></div>
+  </div>
+
+  <div class="bloco">
+    <h2>Perfis em varredura</h2>
+    <div id="perfis"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
+  </div>
+
+  <div class="bloco">
+    <h2>Melhores encontrados</h2>
+    <div class="rolagem" id="melhores"><div class="vazio">A seleção aparece depois da primeira varredura.</div></div>
+  </div>
+
+  <div class="bloco">
+    <h2>Acesso de escrita</h2>
+    <h3>Sua chave fica só neste navegador</h3>
+    <p class="nota">A tela lê sem chave. Para mandar a esteira trabalhar ela precisa da sua chave do GitHub, guardada apenas neste aparelho. Ela nunca sobe para o repositório.</p>
+    <div class="linha"><input type="password" id="chave" placeholder="chave de acesso" autocomplete="off"></div>
+    <div class="linha">
+      <button id="guardar">Guardar</button>
+      <button id="esquecer">Esquecer</button>
       <span class="nota" id="recado_chave"></span>
     </div>
   </div>
 
-  <div class="bloco">
-    <h2>Fila</h2>
-    <div id="tabela_fila"><div class="vazio">A esteira ainda não rodou.</div></div>
-  </div>
-
-  <div class="bloco">
-    <h2>Camadas gratuitas</h2>
-    <h3>Quanto do teto diário já foi usado</h3>
-    <div id="tetos"></div>
-    <div class="aviso">O sistema reveza entre as vias. Quando uma bate no teto, a seguinte assume sozinha, sem parar a produção.</div>
-  </div>
-
 </main>
 
-<footer>
-  Estúdio · esteira de produção de vídeo em lote · processamento sem teto de minutos · nenhum dado de acesso mora neste site
-</footer>
+<footer>Estúdio · esteira de produção de vídeo em lote · processamento sem teto de minutos · nenhum dado de acesso mora neste site</footer>
 
 <script>
-const DONO = "Elmoamacoca", REPO = "estudio-video";
-const API = `https://api.github.com/repos/${DONO}/${REPO}`;
-const $ = id => document.getElementById(id);
+const DONO="Elmoamacoca", REPO="estudio-video";
+const API=`https://api.github.com/repos/${DONO}/${REPO}`;
+const $=id=>document.getElementById(id);
+const num=n=>(n||0).toLocaleString("pt-BR");
 
-// tema
-const temaGuardado = localStorage.getItem("estudio_tema");
-if (temaGuardado) document.documentElement.dataset.tema = temaGuardado;
-else if (matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.dataset.tema = "escuro";
-$("tema").onclick = () => {
-  const novo = document.documentElement.dataset.tema === "escuro" ? "claro" : "escuro";
-  document.documentElement.dataset.tema = novo;
-  localStorage.setItem("estudio_tema", novo);
-};
+const t=localStorage.getItem("estudio_tema");
+if(t) document.documentElement.dataset.tema=t;
+else if(matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.dataset.tema="escuro";
+$("tema").onclick=()=>{const n=document.documentElement.dataset.tema==="escuro"?"claro":"escuro";
+  document.documentElement.dataset.tema=n; localStorage.setItem("estudio_tema",n);};
 
-// chave, só no navegador
-const chave = () => localStorage.getItem("estudio_chave") || "";
-$("chave").value = chave() ? "................" : "";
-$("guardar").onclick = () => {
-  const v = $("chave").value.trim();
-  if (!v || v.startsWith("....")) { $("recado_chave").textContent = "cole a chave antes de guardar"; return; }
-  localStorage.setItem("estudio_chave", v);
-  $("chave").value = "................";
-  $("recado_chave").textContent = "guardada neste aparelho";
-};
-$("esquecer").onclick = () => {
-  localStorage.removeItem("estudio_chave");
-  $("chave").value = "";
-  $("recado_chave").textContent = "removida";
-};
+const chave=()=>localStorage.getItem("estudio_chave")||"";
+if(chave()) $("chave").value="................";
+$("guardar").onclick=()=>{const v=$("chave").value.trim();
+  if(!v||v.startsWith("....")){$("recado_chave").textContent="cole a chave antes";return;}
+  localStorage.setItem("estudio_chave",v); $("chave").value="................";
+  $("recado_chave").textContent="guardada neste aparelho";};
+$("esquecer").onclick=()=>{localStorage.removeItem("estudio_chave");$("chave").value="";
+  $("recado_chave").textContent="removida";};
 
-async function ler(caminho) {
-  const r = await fetch(`${API}/contents/${caminho}?ref=main&t=${Date.now()}`);
-  if (!r.ok) return null;
-  const d = await r.json();
-  try { return JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g, ""))))); }
-  catch { return null; }
+$("formatos").onclick=e=>{const o=e.target.closest(".opcao"); if(o) o.classList.toggle("ligada");};
+const formatosEscolhidos=()=>[...document.querySelectorAll(".opcao.ligada")].map(o=>o.dataset.f);
+
+async function ler(caminho){
+  const r=await fetch(`${API}/contents/${caminho}?ref=main&t=${Date.now()}`);
+  if(!r.ok) return null;
+  const d=await r.json();
+  try{return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(d.content.replace(/\n/g,"")),c=>c.charCodeAt(0))));}
+  catch{return null;}
 }
 
-async function gravar(caminho, objeto, mensagem) {
-  const k = chave();
-  if (!k) throw new Error("sem chave de acesso guardada");
-  let sha = null;
-  const atual = await fetch(`${API}/contents/${caminho}?ref=main`);
-  if (atual.ok) sha = (await atual.json()).sha;
-  const corpo = { message: mensagem, content: btoa(unescape(encodeURIComponent(JSON.stringify(objeto, null, 2)))) };
-  if (sha) corpo.sha = sha;
-  const r = await fetch(`${API}/contents/${caminho}`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${k}`, Accept: "application/vnd.github+json" },
-    body: JSON.stringify(corpo)
-  });
-  if (!r.ok) throw new Error((await r.json()).message || "falha ao gravar");
+async function gravar(caminho,obj,msg){
+  const k=chave(); if(!k) throw new Error("guarde a chave de acesso primeiro");
+  let sha=null;
+  const a=await fetch(`${API}/contents/${caminho}?ref=main`);
+  if(a.ok) sha=(await a.json()).sha;
+  const corpo={message:msg,content:btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(obj,null,1))))};
+  if(sha) corpo.sha=sha;
+  const r=await fetch(`${API}/contents/${caminho}`,{method:"PUT",
+    headers:{Authorization:`Bearer ${k}`,Accept:"application/vnd.github+json"},body:JSON.stringify(corpo)});
+  if(!r.ok) throw new Error((await r.json()).message||"falha ao gravar");
 }
 
-function desenhaTetos(t) {
-  if (!t) { $("tetos").innerHTML = '<div class="vazio">Ainda sem medição de uso.</div>'; return; }
-  $("tetos").innerHTML = t.map(c => {
-    const pct = c.teto ? Math.min(100, Math.round(100 * c.usado / c.teto)) : 0;
+async function chamar(fluxo,entradas){
+  const k=chave(); if(!k) throw new Error("guarde a chave de acesso primeiro");
+  const r=await fetch(`${API}/actions/workflows/${fluxo}/dispatches`,{method:"POST",
+    headers:{Authorization:`Bearer ${k}`,Accept:"application/vnd.github+json"},
+    body:JSON.stringify({ref:"main",inputs:entradas||{}})});
+  if(r.status!==204) throw new Error("a esteira recusou o pedido");
+}
+
+function desenhaPerfis(p){
+  if(!p||!p.length){$("perfis").innerHTML='<div class="vazio">Nenhum perfil varrido ainda.</div>';return;}
+  $("perfis").innerHTML=p.map(x=>{
+    const pct=x.publicacoes?Math.min(100,Math.round(100*x.lidos/x.publicacoes)):0;
     return `<div style="margin-bottom:15px">
-      <div style="display:flex;justify-content:space-between;font-size:13.5px">
-        <span><strong>${c.nome}</strong> <span class="nota">${c.papel}</span></span>
-        <span class="nota">${c.usado} de ${c.teto === null ? "sem teto" : c.teto}</span>
-      </div>
-      <div class="barra"><i style="width:${c.teto === null ? 4 : pct}%"></i></div>
-    </div>`;
-  }).join("");
+      <div style="display:flex;justify-content:space-between;font-size:13.5px;gap:10px">
+        <span><strong>@${x.conta}</strong> ${x.completo?'<span class="tag ok">completo</span>':'<span class="tag forte">varrendo</span>'}</span>
+        <span class="nota">${num(x.lidos)} de ${num(x.publicacoes)} · ${pct}%</span>
+      </div><div class="barra"><i style="width:${pct}%"></i></div></div>`;}).join("");
 }
 
-function desenhaFila(f) {
-  if (!f || !f.itens || !f.itens.length) {
-    $("tabela_fila").innerHTML = '<div class="vazio">A esteira ainda não rodou.</div>';
-    return;
-  }
-  $("tabela_fila").innerHTML = `<table><thead><tr>
-    <th>origem</th><th>desempenho</th><th>etapa</th><th>situação</th></tr></thead><tbody>
-    ${f.itens.map(i => `<tr>
-      <td>${i.origem || "-"}</td>
-      <td>${i.indice ? i.indice + "x a mediana" : "-"}</td>
-      <td>${i.etapa || "-"}</td>
-      <td><span class="tag ${i.situacao === "pronta" ? "ok" : "trab"}">${i.situacao || "-"}</span></td>
+function desenhaMelhores(s){
+  const i=s&&s.itens||[];
+  if(!i.length){$("melhores").innerHTML='<div class="vazio">A seleção aparece depois da primeira varredura.</div>';return;}
+  $("melhores").innerHTML=`<table><thead><tr>
+    <th>desempenho</th><th>formato</th><th>alcance</th><th>base</th><th>mediana do formato</th><th>conta</th><th>post</th>
+    </tr></thead><tbody>${i.slice(0,60).map(p=>`<tr>
+      <td><strong>${p.indice}x</strong></td>
+      <td><span class="tag">${p.formato}</span></td>
+      <td>${num(p.views||p.curtidas)}</td>
+      <td class="nota">${p.escala}</td>
+      <td class="nota">${num(p.mediana_do_formato)}</td>
+      <td>@${p.conta}</td>
+      <td><a href="${p.endereco}" target="_blank" rel="noopener">abrir</a></td>
+    </tr>`).join("")}</tbody></table>
+    ${i.length>60?`<p class="nota" style="margin-top:11px">Mostrando 60 de ${num(i.length)}. O lote leva todos.</p>`:""}`;
+}
+
+function desenhaLotes(l){
+  if(!l||!l.length){$("lotes").innerHTML='<p class="nota">Nenhum lote montado ainda.</p>';return;}
+  $("lotes").innerHTML=`<table><thead><tr><th>lote</th><th>arquivos</th><th>tamanho</th><th>critério</th><th></th></tr></thead>
+    <tbody>${l.map(x=>`<tr>
+      <td><strong>${x.numero}</strong></td><td>${x.arquivos}</td><td>${x.mb} MB</td>
+      <td class="nota">${x.criterio||"-"}</td>
+      <td><a href="https://github.com/${DONO}/${REPO}/actions/runs/${x.execucao}" target="_blank" rel="noopener">baixar</a></td>
     </tr>`).join("")}</tbody></table>`;
 }
 
-async function atualizar() {
-  const estado = await ler("dados/estado.json");
-  const fila = await ler("dados/fila.json");
-  const fontes = await ler("dados/fontes.json");
+async function atualizar(){
+  const [estado,sel,fontes]=await Promise.all([ler("dados/estado.json"),ler("dados/selecao.json"),ler("dados/fontes.json")]);
+  const vivo=estado!==null;
+  $("ponto").className="ponto "+(vivo?"vivo":"morto");
+  $("conexao").textContent=vivo?"no ar":"sem resposta";
 
-  const vivo = estado !== null;
-  $("ponto").className = "ponto " + (vivo ? "vivo" : "morto");
-  $("conexao").textContent = vivo ? "no ar" : "sem resposta do repositório";
+  const perfis=(estado&&estado.perfis)||(sel&&sel.perfis)||[];
+  $("n_contas").textContent=fontes&&fontes.contas?fontes.contas.length:0;
+  $("n_lidos").textContent=num(perfis.reduce((a,b)=>a+(b.lidos||0),0));
+  $("n_sel").textContent=num(sel&&sel.itens?sel.itens.length:0);
+  $("n_lote").textContent=num(estado&&estado.lotes&&estado.lotes[0]?estado.lotes[0].arquivos:0);
 
-  $("n_fontes").textContent = fontes && fontes.contas ? fontes.contas.length : "0";
-  $("n_fila").textContent = fila && fila.itens ? fila.itens.filter(i => i.situacao !== "pronta").length : "0";
-  $("n_prontos").textContent = estado && estado.prontas != null ? estado.prontas : "0";
-  $("n_hoje").textContent = estado && estado.hoje != null ? estado.hoje : "0";
-
-  if (fontes && fontes.contas) $("fontes").value = fontes.contas.join("\n");
-  desenhaFila(fila);
-  desenhaTetos(estado && estado.camadas);
+  if(estado&&estado.ultima_rodada){
+    const d=new Date(estado.ultima_rodada*1000);
+    $("quando").textContent="Última rodada em "+d.toLocaleString("pt-BR")+
+      (estado.avaliados?` · ${num(estado.avaliados)} posts avaliados`:"");
+  }
+  if(fontes&&fontes.contas&&!$("fontes").matches(":focus")) $("fontes").value=fontes.contas.join("\n");
+  desenhaPerfis(perfis); desenhaMelhores(sel); desenhaLotes(estado&&estado.lotes);
 }
 
-$("salvar").onclick = async () => {
-  const contas = $("fontes").value.split("\n").map(s => s.trim().replace(/^@/, "")).filter(Boolean);
-  $("recado").textContent = "salvando";
-  try {
-    await gravar("dados/fontes.json", { contas, atualizado: new Date().toISOString() }, "atualiza contas de origem");
-    $("recado").textContent = `${contas.length} contas salvas`;
-    atualizar();
-  } catch (e) { $("recado").textContent = e.message; }
+$("salvar").onclick=async()=>{
+  const contas=$("fontes").value.split("\n").map(s=>s.trim().replace(/^@/,"").replace(/\/$/,"").split("/").pop()).filter(Boolean);
+  $("recado").textContent="salvando";
+  try{ await gravar("dados/fontes.json",{contas,atualizado:new Date().toISOString()},"atualiza contas de origem");
+    $("recado").textContent=`${contas.length} contas salvas`; atualizar(); }
+  catch(e){ $("recado").textContent=e.message; }
 };
 
-$("rodar").onclick = async () => {
-  const k = chave();
-  if (!k) { $("recado").textContent = "guarde a chave de acesso primeiro"; return; }
-  $("recado").textContent = "chamando a esteira";
-  const r = await fetch(`${API}/actions/workflows/esteira.yml/dispatches`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${k}`, Accept: "application/vnd.github+json" },
-    body: JSON.stringify({ ref: "main" })
-  });
-  $("recado").textContent = r.status === 204 ? "esteira acionada" : "a esteira ainda não foi instalada";
+$("varrer").onclick=async()=>{
+  $("recado").textContent="chamando a esteira";
+  try{ await chamar("esteira.yml",{minutos:"18"});
+    $("recado").textContent="varredura em andamento, acompanhe acima"; }
+  catch(e){ $("recado").textContent=e.message; }
 };
 
-atualizar();
-setInterval(atualizar, 30000);
+$("baixar").onclick=async()=>{
+  const f=formatosEscolhidos();
+  if(!f.length){ $("recado_baixar").textContent="escolha ao menos um formato"; return; }
+  $("recado_baixar").textContent="montando o lote";
+  try{ await chamar("baixar.yml",{formatos:f.join(","),corte:$("corte").value,quantos:$("quantos").value});
+    $("recado_baixar").textContent="lote em preparo, o link aparece aqui ao terminar"; }
+  catch(e){ $("recado_baixar").textContent=e.message; }
+};
+
+atualizar(); setInterval(atualizar,25000);
 </script>
 </body>
 </html>
