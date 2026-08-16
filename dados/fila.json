@@ -1,4 +1,23 @@
 {
- "itens": [],
- "atualizado": 1786913724
+ "itens": [
+  {
+   "origem": "@boletimdamorte",
+   "indice": 424.0,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 2.23,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 1.59,
+   "etapa": "post",
+   "situacao": "selecionada"
+  }
+ ],
+ "atualizado": 1786914713
 }
