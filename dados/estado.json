@@ -1,7 +1,7 @@
 {
- "prontas": 263,
+ "prontas": 350,
  "hoje": 0,
- "ultima_rodada": 1786916938,
+ "ultima_rodada": 1786918399,
  "camadas": [
   {
    "nome": "Processamento de vídeo",
@@ -28,12 +28,12 @@
    "teto": null
   }
  ],
- "avaliados": 840,
+ "avaliados": 1068,
  "perfis": [
   {
    "conta": "boletimdamorte",
    "publicacoes": 4976,
-   "lidos": 840,
+   "lidos": 1068,
    "completo": false
   }
  ]
