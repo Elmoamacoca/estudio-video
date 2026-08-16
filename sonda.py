@@ -1,56 +1,39 @@
-"""Sonda 3: qual o RITMO sustentavel, e quanto dado vem por pedido."""
-import urllib.request, urllib.error, json, time, re
-
+"""Sonda 4: um pedido traz os links; o download do arquivo sofre o mesmo limite?"""
+import urllib.request, urllib.error, json, time
 CAB={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36",
-     "X-IG-App-ID":"936619743392459","Accept":"*/*","Referer":"https://www.instagram.com/",
-     "Accept-Language":"pt-BR,pt;q=0.9"}
-UID="59965128968"; USER="boletimdamorte"
-BASE=f"https://www.instagram.com/api/v1/feed/user/{UID}/?count=12"
-
-def bate(url,cab=None):
-    try:
-        with urllib.request.urlopen(urllib.request.Request(url,headers=cab or CAB),timeout=25) as r:
-            return True,r.status,r.read()
-    except urllib.error.HTTPError as e: return False,e.code,b""
-    except Exception as e: return False,type(e).__name__,b""
-
+     "X-IG-App-ID":"936619743392459","Accept":"*/*","Referer":"https://www.instagram.com/"}
+UID="59965128968"
 try:
     with urllib.request.urlopen("https://api.ipify.org?format=json",timeout=15) as r: ip=json.loads(r.read())["ip"]
 except Exception: ip="?"
 print(f"endereco: {ip}")
 
-print("\n=== 1. QUANTO VEM NUM PEDIDO SO ===")
-s,cod,corpo=bate(BASE)
-if s:
-    j=json.loads(corpo)
-    itens=j.get("items",[])
-    print(f"  {len(itens)} posts | {len(corpo)//1024} KB | mais={j.get('more_available')}")
-    if itens:
-        i=itens[0]
-        print(f"  campos uteis: views={i.get('play_count')} likes={i.get('like_count')} coment={i.get('comment_count')} data={i.get('taken_at')} dur={i.get('video_duration')}")
-        print(f"  link do arquivo de video presente: {'sim' if i.get('video_versions') else 'nao'}")
-else:
-    print(f"  cortou de cara: {cod}")
+print("\n=== 1 pedido de leitura, para colher os links ===")
+try:
+    with urllib.request.urlopen(urllib.request.Request(
+        f"https://www.instagram.com/api/v1/feed/user/{UID}/?count=12",headers=CAB),timeout=25) as r:
+        j=json.loads(r.read())
+except urllib.error.HTTPError as e:
+    print(f"cortou: {e.code}"); raise SystemExit
 
-print("\n=== 2. RITMO: quantos pedidos passam com cada pausa ===")
-for pausa in (15, 30, 60):
-    print(f"  pausa {pausa}s:", end=" ", flush=True)
-    passou=0
-    for tent in range(4):
-        time.sleep(pausa)
-        s,cod,_=bate(BASE)
-        if s: passou+=1
-        else: print(f"cortou no {tent+1}o (HTTP {cod})", end=""); break
-    if passou==4: print("4 de 4 passaram", end="")
-    print(f"  -> {passou}/4")
-    time.sleep(150)
+itens=[i for i in j.get("items",[]) if i.get("video_versions")]
+print(f"  {len(j.get('items',[]))} posts, {len(itens)} com video")
 
-print("\n=== 3. A PAGINA COMUM DO PERFIL: quanto dado tem dentro ===")
-s,cod,corpo=bate(f"https://www.instagram.com/{USER}/", {"User-Agent":CAB["User-Agent"],"Accept-Language":"pt-BR,pt;q=0.9"})
-if s:
-    h=corpo.decode("utf-8","replace")
-    print(f"  {len(corpo)//1024} KB de pagina")
-    for chave in ("edge_owner_to_timeline_media","play_count","shortcode","video_url","taken_at_timestamp"):
-        print(f"    contem '{chave}': {h.count(chave)} vezes")
-else:
-    print(f"  nao respondeu: {cod}")
+print("\n=== baixando os videos, um atras do outro, SEM pausa ===")
+ok=0; bytes_totais=0; t0=time.time()
+for n,i in enumerate(itens,1):
+    v=sorted(i["video_versions"],key=lambda x:x.get("width",0))[-1]
+    try:
+        t=time.time()
+        with urllib.request.urlopen(urllib.request.Request(v["url"],headers={"User-Agent":CAB["User-Agent"]}),timeout=60) as r:
+            dados=r.read()
+        dt=time.time()-t; ok+=1; bytes_totais+=len(dados)
+        print(f"  {n}: ok {len(dados)//1024} KB em {dt:.1f}s | {i.get('video_duration',0):.0f}s de video | views={i.get('play_count')}")
+    except urllib.error.HTTPError as e:
+        print(f"  {n}: CORTOU HTTP {e.code} apos {ok} downloads"); break
+    except Exception as e:
+        print(f"  {n}: erro {type(e).__name__}"); break
+
+g=time.time()-t0
+print(f"\nVEREDITO: {ok} de {len(itens)} videos baixados, {bytes_totais/1048576:.0f} MB em {g:.0f}s")
+if ok: print(f"media: {bytes_totais/ok/1048576:.1f} MB por video, {g/ok:.1f}s por video")
