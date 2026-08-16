@@ -45,8 +45,14 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: main
+          fetch-depth: 0
 
-      - name: Ler uma pagina de cada perfil pendente
+      - name: Pegar o avanco do elo anterior
+        # sem isto o elo trabalha em cima de uma copia velha e o commit dele apaga
+        # o que o anterior gravou. Custou 204 posts perdidos numa rodada de teste.
+        run: git pull --rebase origin main
+
+      - name: Ler uma pagina do perfil mais atrasado
         run: python rodada.py
 
       - name: Guardar o avanco
@@ -60,7 +66,8 @@ jobs:
             git commit -m "elo ${{ matrix.elo }}"
             for tentativa in 1 2 3; do
               git pull --rebase --autostash origin main && git push && break
-              sleep 5
+              echo "empurrao recusado, tentando de novo"
+              sleep 6
             done
           fi
 
