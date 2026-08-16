@@ -70,11 +70,47 @@ def _pega_teimoso(url: str, tentativas: int, prazo: float, rotulo: str) -> dict 
     return None
 
 
+def _pega_alternando(urls: list[str], voltas: int, prazo: float,
+                     rotulo: str) -> dict | None:
+    """Reveza entre vias equivalentes antes de gastar espera.
+
+    Enderecos diferentes do Instagram contam orcamento separado, entao tentar a
+    segunda via custa segundos, enquanto esperar custa mais de dois minutos.
+    """
+    for volta in range(1, voltas + 1):
+        for i, url in enumerate(urls, 1):
+            try:
+                return _pega(url)
+            except urllib.error.HTTPError as e:
+                if e.code not in (401, 429):
+                    print(f"{rotulo} erro HTTP {e.code}")
+                    return None
+                print(f"{rotulo} via {i} recusou ({e.code})")
+            except Exception as e:
+                print(f"{rotulo} via {i} falhou: {type(e).__name__}")
+            time.sleep(3)
+        if volta == voltas or time.time() + ESPERA_APOS_CORTE > prazo:
+            print(f"{rotulo} nao passou nesta rodada")
+            return None
+        print(f"{rotulo} esperando {ESPERA_APOS_CORTE}s antes da volta {volta + 1}")
+        time.sleep(ESPERA_APOS_CORTE)
+    return None
+
+
 def identifica(conta: str, prazo: float) -> dict | None:
-    """Traduz o nome da conta para o numero interno, e traz o retrato do perfil."""
-    d = _pega_teimoso(
+    """Traduz o nome da conta para o numero interno, e traz o retrato do perfil.
+
+    Duas vias, alternadas: medido em 16/08/2026 que www e i.instagram respondem a
+    mesma coisa e contam orcamento separado, entao quando uma recusa a outra pode
+    passar. E o numero interno do perfil nunca muda: basta acertar uma vez na vida,
+    porque a partir dai ele fica gravado e a varredura nao depende mais disto.
+    """
+    vias = [
         f"https://www.instagram.com/api/v1/users/web_profile_info/?username={conta}",
-        tentativas=6, prazo=prazo, rotulo=f"[{conta}] identificacao")
+        f"https://i.instagram.com/api/v1/users/web_profile_info/?username={conta}",
+    ]
+    d = _pega_alternando(vias, voltas=4, prazo=prazo,
+                         rotulo=f"[{conta}] identificacao")
     if not d:
         return None
     u = d["data"]["user"]
@@ -149,13 +185,15 @@ def minerar(conta: str, minutos: int = 18) -> dict:
         return estado
 
     uid = estado["perfil"]["id"]
-    base = f"https://www.instagram.com/api/v1/feed/user/{uid}/?count=12"
+    bases = [f"https://www.instagram.com/api/v1/feed/user/{uid}/?count=12",
+             f"https://i.instagram.com/api/v1/feed/user/{uid}/?count=12"]
     vistos = {p["codigo"] for p in estado["posts"]}
     paginas = 0
 
     while time.time() < limite:
-        url = base + (f"&max_id={estado['marcador']}" if estado.get("marcador") else "")
-        j = _pega_teimoso(url, tentativas=8, prazo=limite, rotulo=f"[{conta}] pagina")
+        rabo = f"&max_id={estado['marcador']}" if estado.get("marcador") else ""
+        j = _pega_alternando([b + rabo for b in bases], voltas=6, prazo=limite,
+                             rotulo=f"[{conta}] pagina {paginas + 1}")
         if j is None:
             break
 
