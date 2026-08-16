@@ -1,0 +1,14 @@
+name: sonda
+on:
+  workflow_dispatch:
+    inputs:
+      pausa:
+        description: "segundos entre pedidos"
+        default: "1.5"
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: python sonda.py ${{ inputs.pausa }}
