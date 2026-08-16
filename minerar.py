@@ -44,9 +44,39 @@ def _pega(url: str, tempo: int = 25) -> dict:
         return json.loads(r.read())
 
 
-def identifica(conta: str) -> dict:
+def _pega_teimoso(url: str, tentativas: int, prazo: float, rotulo: str) -> dict | None:
+    """Insiste enquanto houver tempo.
+
+    O endereco da maquina pode ja chegar queimado, porque o GitHub reaproveita
+    enderecos entre execucoes. Desistir na primeira recusa joga a rodada fora por
+    nada: basta esperar o orcamento voltar, o que medi em cerca de dois minutos.
+    """
+    for tentativa in range(1, tentativas + 1):
+        try:
+            return _pega(url)
+        except urllib.error.HTTPError as e:
+            if e.code not in (401, 429):
+                print(f"{rotulo} erro HTTP {e.code}")
+                return None
+            if tentativa == tentativas or time.time() + ESPERA_APOS_CORTE > prazo:
+                print(f"{rotulo} recusado ({e.code}) e sem tempo de esperar")
+                return None
+            print(f"{rotulo} recusado ({e.code}), tentativa {tentativa}, "
+                  f"esperando {ESPERA_APOS_CORTE}s")
+            time.sleep(ESPERA_APOS_CORTE)
+        except Exception as e:
+            print(f"{rotulo} falha de rede: {type(e).__name__}")
+            return None
+    return None
+
+
+def identifica(conta: str, prazo: float) -> dict | None:
     """Traduz o nome da conta para o numero interno, e traz o retrato do perfil."""
-    d = _pega(f"https://www.instagram.com/api/v1/users/web_profile_info/?username={conta}")
+    d = _pega_teimoso(
+        f"https://www.instagram.com/api/v1/users/web_profile_info/?username={conta}",
+        tentativas=6, prazo=prazo, rotulo=f"[{conta}] identificacao")
+    if not d:
+        return None
     u = d["data"]["user"]
     return {
         "conta": u.get("username"),
@@ -99,12 +129,18 @@ def minerar(conta: str, minutos: int = 18) -> dict:
     limite = time.time() + minutos * 60
 
     if not estado.get("perfil"):
-        try:
-            estado["perfil"] = identifica(conta)
-            print(f"[{conta}] {estado['perfil']['publicacoes']} publicacoes, "
-                  f"{estado['perfil']['seguidores']} seguidores")
-        except urllib.error.HTTPError as e:
-            print(f"[{conta}] nao consegui identificar agora: HTTP {e.code}")
+        perfil = identifica(conta, limite)
+        if not perfil:
+            print(f"[{conta}] nao consegui identificar nesta rodada. A proxima continua.")
+            return estado
+        estado["perfil"] = perfil
+        grava(conta, estado)
+        print(f"[{conta}] {perfil['publicacoes']} publicacoes, "
+              f"{perfil['seguidores']} seguidores")
+        if perfil.get("privado"):
+            print(f"[{conta}] perfil privado, nao da para varrer")
+            estado["completo"] = True
+            grava(conta, estado)
             return estado
         time.sleep(ESPERA_APOS_CORTE)
 
@@ -119,22 +155,8 @@ def minerar(conta: str, minutos: int = 18) -> dict:
 
     while time.time() < limite:
         url = base + (f"&max_id={estado['marcador']}" if estado.get("marcador") else "")
-        try:
-            j = _pega(url)
-        except urllib.error.HTTPError as e:
-            # 401 e 429 sao o corte por endereco. Esperar e' a unica saida.
-            if e.code in (401, 429):
-                sobra = limite - time.time()
-                if sobra < ESPERA_APOS_CORTE + 20:
-                    print(f"[{conta}] cortado e sem tempo de esperar. Paro aqui.")
-                    break
-                print(f"[{conta}] cortado ({e.code}), esperando {ESPERA_APOS_CORTE}s")
-                time.sleep(ESPERA_APOS_CORTE)
-                continue
-            print(f"[{conta}] erro HTTP {e.code}, encerrando")
-            break
-        except Exception as e:
-            print(f"[{conta}] falha de rede: {type(e).__name__}")
+        j = _pega_teimoso(url, tentativas=8, prazo=limite, rotulo=f"[{conta}] pagina")
+        if j is None:
             break
 
         novos = 0
