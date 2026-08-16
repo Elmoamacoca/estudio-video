@@ -1,0 +1,14 @@
+{
+ "criterio": {
+  "formatos": [
+   "reels",
+   "post",
+   "carrossel"
+  ],
+  "corte": 1.5,
+  "teto": 500
+ },
+ "perfis": [],
+ "avaliados": 0,
+ "itens": []
+}

@@ -1,11 +1,33 @@
 {
-  "prontas": 0,
-  "hoje": 0,
-  "ultima_rodada": null,
-  "camadas": [
-    {"nome":"Processamento de vídeo","papel":"GitHub, repositório público","usado":0,"teto":null},
-    {"nome":"Transcrição","papel":"Deepgram","usado":0,"teto":null},
-    {"nome":"Título e legenda","papel":"revezamento entre vias gratuitas","usado":0,"teto":3000},
-    {"nome":"Armazenamento","papel":"Google Drive","usado":0,"teto":null}
-  ]
+ "prontas": 0,
+ "hoje": 0,
+ "ultima_rodada": 1786912303,
+ "camadas": [
+  {
+   "nome": "Processamento de vídeo",
+   "papel": "GitHub, repositório público",
+   "usado": 0,
+   "teto": null
+  },
+  {
+   "nome": "Transcrição",
+   "papel": "Deepgram",
+   "usado": 0,
+   "teto": null
+  },
+  {
+   "nome": "Título e legenda",
+   "papel": "revezamento entre vias gratuitas",
+   "usado": 0,
+   "teto": 3000
+  },
+  {
+   "nome": "Armazenamento",
+   "papel": "Google Drive",
+   "usado": 0,
+   "teto": null
+  }
+ ],
+ "avaliados": 0,
+ "perfis": []
 }
