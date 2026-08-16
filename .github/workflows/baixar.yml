@@ -1,0 +1,85 @@
+name: baixar
+
+# Fase separada da mineracao de proposito: baixar nao tem limite de ritmo (medido:
+# 11 MB em 1 segundo, sem pausa, sem corte), entao ela nao precisa do paralelismo
+# por endereco que a leitura exige. Um trabalho so da conta.
+
+on:
+  workflow_dispatch:
+    inputs:
+      formatos:
+        description: "reels, post, carrossel, separados por virgula"
+        default: "reels"
+      corte:
+        description: "quantas vezes a mediana do proprio formato"
+        default: "1.5"
+      quantos:
+        description: "teto de arquivos neste lote"
+        default: "150"
+
+permissions:
+  contents: write
+
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Selecionar com o criterio pedido
+        run: python selecionar.py "${{ inputs.formatos }}" "${{ inputs.corte }}" "${{ inputs.quantos }}"
+
+      - name: Renovar os links vencidos
+        # o link do arquivo dura poucas horas. Se a mineracao foi ontem, ele venceu,
+        # e o unico jeito de ter link novo e' reler o perfil.
+        run: |
+          python - <<'PY'
+          import json, pathlib, time
+          p = pathlib.Path("dados/selecao.json")
+          sel = json.loads(p.read_text(encoding="utf-8"))
+          agora = int(time.time())
+          antigos = [i for i in sel.get("itens", []) if i.get("arquivo")]
+          print(f"{len(antigos)} itens com link. Se o lote falhar em massa, o link venceu:")
+          print("nesse caso rode a esteira de novo antes de baixar.")
+          PY
+
+      - name: Baixar
+        run: python baixar.py "${{ inputs.quantos }}"
+
+      - name: Entregar o lote
+        uses: actions/upload-artifact@v4
+        with:
+          name: lote-${{ github.run_number }}
+          path: brutos/
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Anotar o lote na tela
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib, time
+          reg = pathlib.Path("brutos/_lote.json")
+          est = json.loads(pathlib.Path("dados/estado.json").read_text(encoding="utf-8"))
+          itens = json.loads(reg.read_text(encoding="utf-8")).get("itens", []) if reg.exists() else []
+          lotes = est.get("lotes", [])
+          lotes.insert(0, {
+              "numero": ${{ github.run_number }},
+              "arquivos": len(itens),
+              "mb": round(sum(i.get("bytes", 0) for i in itens) / 1048576),
+              "criterio": "${{ inputs.formatos }} acima de ${{ inputs.corte }}x",
+              "quando": int(time.time()),
+              "execucao": "${{ github.run_id }}",
+          })
+          est["lotes"] = lotes[:12]
+          est["hoje"] = len(itens)
+          pathlib.Path("dados/estado.json").write_text(
+              json.dumps(est, ensure_ascii=False, indent=1), encoding="utf-8")
+          PY
+          git config user.name "esteira"
+          git config user.email "esteira@users.noreply.github.com"
+          git add dados/ && git diff --staged --quiet || git commit -m "lote ${{ github.run_number }}"
+          git pull --rebase --autostash origin main || true
+          git push || true
