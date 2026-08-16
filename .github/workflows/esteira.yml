@@ -1,0 +1,112 @@
+name: esteira
+
+# A esteira roda em duas fases, e o paralelismo existe por um motivo tecnico:
+# o Instagram libera UM pedido por endereco de saida. Cada trabalho do GitHub roda
+# numa maquina propria, com endereco proprio. Entao N perfis em paralelo sao N
+# enderecos, e o limite deixa de ser gargalo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      minutos:
+        description: "quanto tempo cada perfil varre por rodada"
+        default: "18"
+  schedule:
+    # o menor intervalo que o GitHub aceita e' 5 minutos
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: esteira
+  cancel-in-progress: false
+
+jobs:
+  listar:
+    runs-on: ubuntu-latest
+    outputs:
+      contas: ${{ steps.ler.outputs.contas }}
+      tem: ${{ steps.ler.outputs.tem }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: ler
+        run: |
+          python - <<'PY' >> $GITHUB_OUTPUT
+          import json, pathlib
+          arq = pathlib.Path("dados/fontes.json")
+          contas = []
+          if arq.exists():
+              contas = (json.loads(arq.read_text(encoding="utf-8")).get("contas") or [])
+          # o teto de 20 e' o de trabalhos simultaneos da conta gratuita
+          contas = [c.strip().lstrip("@") for c in contas if c.strip()][:20]
+          print(f"contas={json.dumps(contas)}")
+          print(f"tem={'sim' if contas else 'nao'}")
+          PY
+
+  minerar:
+    needs: listar
+    if: needs.listar.outputs.tem == 'sim'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      max-parallel: 20
+      fail-fast: false
+      matrix:
+        conta: ${{ fromJson(needs.listar.outputs.contas) }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Varrer ${{ matrix.conta }}
+        run: python minerar.py "${{ matrix.conta }}" "${{ inputs.minutos || 18 }}"
+      - name: Guardar o avanco
+        uses: actions/upload-artifact@v4
+        with:
+          name: perfil-${{ matrix.conta }}
+          path: dados/perfis/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  consolidar:
+    needs: minerar
+    if: always() && needs.minerar.result != 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          path: recebidos
+          merge-multiple: true
+      - name: Juntar o que cada maquina trouxe
+        run: |
+          mkdir -p dados/perfis
+          find recebidos -name "*.json" -exec cp -f {} dados/perfis/ \; 2>/dev/null || true
+          rm -rf recebidos
+          ls -la dados/perfis/ || echo "nada veio"
+      - name: Aplicar a regua e selecionar
+        run: |
+          python selecionar.py "reels,post,carrossel" 1.5 500
+          python - <<'PY'
+          import json, pathlib, time
+          sel = json.loads(pathlib.Path("dados/selecao.json").read_text(encoding="utf-8"))
+          est = json.loads(pathlib.Path("dados/estado.json").read_text(encoding="utf-8"))
+          est["prontas"] = len(sel.get("itens", []))
+          est["avaliados"] = sel.get("avaliados", 0)
+          est["ultima_rodada"] = int(time.time())
+          est["perfis"] = sel.get("perfis", [])
+          pathlib.Path("dados/estado.json").write_text(
+              json.dumps(est, ensure_ascii=False, indent=1), encoding="utf-8")
+          fila = {"itens": [{"origem": "@" + i["conta"], "indice": i["indice"],
+                             "etapa": i["formato"], "situacao": "selecionada"}
+                            for i in sel.get("itens", [])[:60]],
+                  "atualizado": int(time.time())}
+          pathlib.Path("dados/fila.json").write_text(
+              json.dumps(fila, ensure_ascii=False, indent=1), encoding="utf-8")
+          PY
+      - name: Publicar o resultado
+        run: |
+          git config user.name "esteira"
+          git config user.email "esteira@users.noreply.github.com"
+          git add dados/
+          git diff --staged --quiet || git commit -m "rodada da esteira"
+          git pull --rebase --autostash origin main || true
+          git push
