@@ -1,0 +1,31 @@
+{
+ "contas": [
+  {
+   "conta": "vinci.society",
+   "nome": "Vinci",
+   "primeiro": 1786926358,
+   "ultimo": 1786990442,
+   "eventos": 5,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "limite",
+   "lidos": 281,
+   "publicacoes": 286,
+   "completo": true
+  },
+  {
+   "conta": "boletimdamorte",
+   "nome": "Boletim da Morte",
+   "primeiro": 1786913827,
+   "ultimo": 1786990341,
+   "eventos": 10,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "limite",
+   "lidos": 3095,
+   "publicacoes": 4976,
+   "completo": true
+  }
+ ],
+ "atualizado": 1786997004
+}
