@@ -2154,10 +2154,6 @@ function desenhaLivro() {
   $("liv_mais").hidden = fila.length <= livroMostra;
   $("liv_mais").textContent = `Ver mais ${Math.min(POR_LEVA, fila.length - livroMostra)}`;
   $("exp_tela").textContent = `${fila.length} de ${LIVRO.length} perfis`;
-  $("liv_sub").textContent = LIVRO.length
-    ? `${LIVRO.length} ${LIVRO.length === 1 ? "perfil" : "perfis"}`
-      + `, desde ${dataHora(Math.min(...LIVRO.map(c => c.primeiro))).slice(0, 8)}`
-    : "nenhum perfil registrado ainda";
 
   $("liv_lista").innerHTML = pedaco.map(c => {
     const grave = c.falhas ? "falha" : c.avisos ? "aviso" : "";
