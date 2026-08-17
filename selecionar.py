@@ -70,11 +70,17 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
         dados = json.loads(arq.read_text(encoding="utf-8"))
         if not dados.get("perfil"):
             continue
+        datas = sorted(x["data"] for x in dados.get("posts", []) if x.get("data"))
         perfis.append({
             "conta": dados["perfil"]["conta"],
             "publicacoes": dados["perfil"]["publicacoes"],
             "lidos": len(dados.get("posts", [])),
             "completo": bool(dados.get("completo")),
+            # ate onde a varredura alcancou. O Instagram corta a leitura anonima por
+            # profundidade: no @boletimdamorte ele fechou aos 3.093 posts, cobrindo
+            # de junho de 2023 para ca. O resto exige sessao, e nao vale o risco.
+            "mais_antigo": datas[0] if datas else None,
+            "mais_novo": datas[-1] if datas else None,
         })
         todos += mede_perfil(dados, formatos)
 
