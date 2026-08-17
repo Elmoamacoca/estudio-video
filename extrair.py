@@ -33,6 +33,11 @@ QUERO = (
     # tamanho padrão de 300 por 150, e esse retângulo invisível empurrava o cabeçalho
     # inteiro para baixo do meio da tela.
     ".tinta",
+    # A tabela e as sub-abas da aba de Contas, que a aba de Minerados replica.
+    ".ct-topo", ".ct-menu", ".ct-item", ".ct-filtros", ".ct-busca", ".ct-painel",
+    ".tab-rolo", ".tab-linha", ".tab-perfil", ".tab-quem", ".tab-num", ".tab-nulo",
+    ".tab-acao", ".tab-tags", ".pino", ".pag", ".pcard-retrato", ".pcard-avatar",
+    ".gal-vazia", ".vermais",
 )
 
 # A base: sem ela o texto sai com fonte serifada do navegador e as caixas nascem sem
