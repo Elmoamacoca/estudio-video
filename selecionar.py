@@ -19,6 +19,40 @@ from pathlib import Path
 
 PASTA = Path("dados/perfis")
 SAIDA = Path("dados/selecao.json")
+REGUA = Path("dados/regua.json")
+
+# O QUE VALE QUANDO O GABRIEL NÃO ESCOLHEU NADA. Antes estes números moravam na linha
+# de comando dentro do arquivo da esteira, escolhidos por mim: a tela tinha campos para
+# editá-los e a esteira ignorava os campos. Agora a escolha dele fica no acervo, e isto
+# aqui é só o ponto de partida.
+PADRAO = {
+    "formatos": ["reels", "post", "carrossel"],
+    "por_formato": True,
+    "corte": 1.5,
+    "cortes": {"reels": 1.5, "post": 1.5, "carrossel": 1.5},
+    "teto": 500,
+}
+
+
+def regua() -> dict:
+    """A régua escolhida na tela, com o padrão preenchendo o que faltar."""
+    d = dict(PADRAO)
+    if REGUA.exists():
+        try:
+            d.update({k: v for k, v in
+                      json.loads(REGUA.read_text(encoding="utf-8")).items()
+                      if v is not None})
+        except Exception:
+            pass
+    d["cortes"] = {**PADRAO["cortes"], **(d.get("cortes") or {})}
+    return d
+
+
+def corte_de(formato: str, r: dict) -> float:
+    """O corte daquele formato. Sem separação por formato, um corte serve para todos."""
+    if not r.get("por_formato"):
+        return float(r.get("corte") or PADRAO["corte"])
+    return float(r["cortes"].get(formato, r.get("corte") or PADRAO["corte"]))
 
 
 def sinal(post: dict) -> tuple[int, str]:
@@ -28,24 +62,30 @@ def sinal(post: dict) -> tuple[int, str]:
     return post.get("curtidas") or 0, "curtidas"
 
 
-def mede_perfil(dados: dict, formatos: list[str]) -> list[dict]:
+def mede_perfil(dados: dict, r: dict) -> list[dict]:
     """Devolve os posts do perfil com o indice de desempenho calculado."""
     conta = (dados.get("perfil") or {}).get("conta", "?")
-    posts = [p for p in dados.get("posts", []) if p.get("formato") in formatos]
+    posts = [p for p in dados.get("posts", []) if p.get("formato") in r["formatos"]]
     saida: list[dict] = []
 
-    # um grupo por formato e por escala: reels-exibicoes e reels-curtidas nao se misturam
+    # A CHAVE DO GRUPO É A ESCOLHA DELE. Com separação por formato, reels e carrossel
+    # têm medianas próprias; sem ela, todos entram num caldeirão só. A escala continua
+    # separando em qualquer caso, e isso não é opção: vídeo vem com contagem de exibição
+    # e imagem vem só com curtida, então comparar os dois é comparar réguas diferentes.
+    def chave(p, escala):
+        return (p["formato"] if r.get("por_formato") else "tudo", escala)
+
     grupos: dict[tuple[str, str], list[int]] = {}
     for p in posts:
         valor, escala = sinal(p)
         if valor > 0:
-            grupos.setdefault((p["formato"], escala), []).append(valor)
+            grupos.setdefault(chave(p, escala), []).append(valor)
 
     medianas = {k: statistics.median(v) for k, v in grupos.items() if v}
 
     for p in posts:
         valor, escala = sinal(p)
-        mediana = medianas.get((p["formato"], escala), 0)
+        mediana = medianas.get(chave(p, escala), 0)
         alcance = p.get("views") or p.get("curtidas") or 0
         interacao = (p.get("curtidas") or 0) + (p.get("comentarios") or 0)
         saida.append({
@@ -53,6 +93,7 @@ def mede_perfil(dados: dict, formatos: list[str]) -> list[dict]:
             "conta": conta,
             "escala": escala,
             "mediana_do_formato": round(mediana),
+            "corte_usado": corte_de(p["formato"], r),
             "indice": round(valor / mediana, 2) if mediana else 0.0,
             "engajamento": round(100 * interacao / alcance, 2) if alcance else 0.0,
             "endereco": f"https://www.instagram.com/p/{p['codigo']}/",
@@ -60,7 +101,9 @@ def mede_perfil(dados: dict, formatos: list[str]) -> list[dict]:
     return saida
 
 
-def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
+def selecionar(r: dict | None = None) -> dict:
+    r = r or regua()
+    teto = int(r.get("teto") or PADRAO["teto"])
     if not PASTA.exists():
         return {"itens": [], "erro": "nenhum perfil minerado ainda"}
 
@@ -102,7 +145,7 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
             "imagens": por_formato["post"],
             "carrosseis": por_formato["carrossel"],
         })
-        todos += mede_perfil(dados, formatos)
+        todos += mede_perfil(dados, r)
 
     # QUANTOS PASSARAM DA RÉGUA, POR PERFIL, e sem o teto do lote.
     # Contar pela lista final fazia o primeiro perfil levar as 500 vagas e o segundo
@@ -110,7 +153,7 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
     acima_por_perfil: dict[str, int] = {}
     reels_por_perfil: dict[str, int] = {}
     for x in todos:
-        if x["indice"] >= corte:
+        if x["indice"] >= x["corte_usado"]:
             acima_por_perfil[x["conta"]] = acima_por_perfil.get(x["conta"], 0) + 1
             if x["formato"] == "reels" and x.get("arquivo"):
                 reels_por_perfil[x["conta"]] = reels_por_perfil.get(x["conta"], 0) + 1
@@ -119,13 +162,14 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
         pf["baixaveis"] = reels_por_perfil.get(pf["conta"], 0)
 
     escolhidos = sorted(
-        (p for p in todos if p["indice"] >= corte),
+        (p for p in todos if p["indice"] >= p["corte_usado"]),
         key=lambda p: (p["indice"], p.get("views") or p.get("curtidas") or 0),
         reverse=True,
     )[:teto]
 
     return {
-        "criterio": {"formatos": formatos, "corte": corte, "teto": teto},
+        "criterio": {"formatos": r["formatos"], "por_formato": bool(r.get("por_formato")),
+                     "corte": r.get("corte"), "cortes": r["cortes"], "teto": teto},
         "perfis": perfis,
         "avaliados": len(todos),
         "itens": escolhidos,
@@ -133,16 +177,27 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
 
 
 if __name__ == "__main__":
-    formatos = (sys.argv[1] if len(sys.argv) > 1 else "reels,post,carrossel").split(",")
-    corte = float(sys.argv[2]) if len(sys.argv) > 2 else 1.5
-    teto = int(sys.argv[3]) if len(sys.argv) > 3 else 500
+    # SEM ARGUMENTOS: a régua vem do acervo, escolhida na tela. Os argumentos continuam
+    # aceitos para uso na bancada, mas a esteira não os usa mais.
+    r = regua()
+    if len(sys.argv) > 1:
+        r["formatos"] = [f.strip() for f in sys.argv[1].split(",") if f.strip()]
+    if len(sys.argv) > 2:
+        r["por_formato"] = False
+        r["corte"] = float(sys.argv[2])
+    if len(sys.argv) > 3:
+        r["teto"] = int(sys.argv[3])
 
-    r = selecionar([f.strip() for f in formatos if f.strip()], corte, teto)
+    saida = selecionar(r)
     SAIDA.parent.mkdir(parents=True, exist_ok=True)
-    SAIDA.write_text(json.dumps(r, ensure_ascii=False, indent=1), encoding="utf-8")
+    SAIDA.write_text(json.dumps(saida, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    print(f"avaliados: {r['avaliados']} | acima de {corte}x: {len(r['itens'])}")
-    for p in r["itens"][:12]:
+    como = ("por formato " + ", ".join(f"{f} {r['cortes'][f]}x" for f in r["formatos"]
+                                       if f in r["cortes"])
+            if r.get("por_formato") else f"corte único de {r['corte']}x")
+    print(f"avaliados: {saida['avaliados']} | acima da régua: {len(saida['itens'])} "
+          f"({como})")
+    for p in saida["itens"][:12]:
         print(f"  {p['indice']:>6.2f}x  {p['formato']:<9} "
               f"{(p.get('views') or p.get('curtidas')):>9,}".replace(",", ".")
               + f"  {p['escala']:<10} @{p['conta']}  {p['endereco']}")
