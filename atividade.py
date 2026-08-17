@@ -119,6 +119,9 @@ def registrar_rodada(rodada: int | None = None) -> int:
     """Anota o que esta rodada fez com cada perfil. Devolve quantos eventos entraram."""
     agora = int(time.time())
     entraram = 0
+    if not PERFIS.exists():
+        reconstruir_indice()
+        return 0
 
     for arq in sorted(PERFIS.glob("*.json")):
         conta = arq.stem
@@ -191,6 +194,8 @@ def registrar_rodada(rodada: int | None = None) -> int:
 def reconstruir_indice() -> dict:
     """A capa da lista: um resumo por perfil, do mais recente para o mais antigo."""
     contas = []
+    if not PASTA.exists():
+        PASTA.mkdir(parents=True, exist_ok=True)
     for arq in sorted(PASTA.glob("*.json")):
         if arq.name == "indice.json":
             continue
