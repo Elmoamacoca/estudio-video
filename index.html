@@ -172,11 +172,14 @@ $("formatos").onclick=e=>{const o=e.target.closest(".opcao"); if(o) o.classList.
 const formatosEscolhidos=()=>[...document.querySelectorAll(".opcao.ligada")].map(o=>o.dataset.f);
 
 async function ler(caminho){
-  const r=await fetch(`${API}/contents/${caminho}?ref=main&t=${Date.now()}`);
-  if(!r.ok) return null;
-  const d=await r.json();
-  try{return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(d.content.replace(/\n/g,"")),c=>c.charCodeAt(0))));}
-  catch{return null;}
+  // pelo endereco cru, e nao pela porta de programacao do GitHub: aquela corta em
+  // 60 consultas por hora sem identificacao, e a tela se atualiza sozinha o tempo todo.
+  try{
+    const r=await fetch(`https://raw.githubusercontent.com/${DONO}/${REPO}/main/${caminho}?t=${Date.now()}`,
+                        {cache:"no-store"});
+    if(!r.ok) return null;
+    return await r.json();
+  }catch{ return null; }
 }
 
 const PONTE="https://estudio-ponte.gabrieltorres.workers.dev";
