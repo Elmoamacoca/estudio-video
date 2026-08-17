@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Estúdio</title>
+<!-- O TEMA, ANTES DE QUALQUER PINTURA.
+     A troca do cabeçalho sempre gravou a escolha, mas ninguém a lia de volta: a tela
+     abria sem tema nenhum e caía no claro, toda vez, por mais que a chave fosse virada.
+     Aqui a escolha guardada é aplicada antes do primeiro quadro, então não há piscada
+     branca ao abrir no escuro.
+
+     E O PADRÃO É O ESCURO. O sistema de origem pergunta ao sistema operacional quando
+     não há escolha gravada; aqui o padrão é fixo, porque foi ele que o Gabriel pediu. -->
+<script>(function(){var s=null;try{s=localStorage.getItem("st-tema")}catch(e){}document.documentElement.setAttribute("data-theme",s==="light"?"light":"dark");})();</script>
 <!-- A Manrope é a fonte do sistema, e ela vem de fora. Sem estes três links a paleta
      e as medidas continuam certas, mas o texto cai na fonte serifada do navegador e a
      tela inteira parece quebrada, que foi o que aconteceu na primeira montagem. -->
@@ -224,9 +233,72 @@ a{color:var(--link)}
 
 .ac-lista button:hover,.ac-lista button.marcado{background:var(--paper-2)}
 
+.filtros .sel,.filtros .autocomplete{flex:0 0 var(--l-filtro)}
+
+.filtros .sel-gatilho,.filtros .autocomplete__trigger{width:100%}
+
+.sel{position:relative}
+
+.sel-gatilho{display:flex;align-items:center;justify-content:space-between;
+             gap:6px;white-space:nowrap;height:var(--h-filtro);min-width:var(--l-filtro);
+             padding:0 10px 0 14px;
+             border:1px solid var(--rule-solid);border-radius:var(--r-filtro);
+             background:var(--branco);
+             font:inherit;font-size:14px;line-height:20px;color:var(--ink);cursor:pointer;
+             box-shadow:0 1px 2px 0 rgba(14,14,14,.05);
+             transition:color .15s, box-shadow .15s, border-color .15s}
+
+.sel-gatilho:focus-visible{outline:0;border-color:var(--accent);
+                           box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 50%, transparent)}
+
+.sel-gatilho[aria-expanded="true"]{border-color:var(--accent)}
+
+.sel-valor{display:flex;flex:1;text-align:left}
+
+.sel-valor[data-vazio="true"]{color:var(--muted)}
+
+.sel-seta{width:16px;height:16px;flex:0 0 16px;color:var(--muted);pointer-events:none}
+
+
+
+.sel-lista{position:absolute;top:calc(100% + 4px);left:0;z-index:50;display:none;
+           width:max-content;min-width:max(144px, 100%);
+           max-height:320px;overflow-y:auto;overflow-x:hidden;
+           border-radius:var(--r-balao);
+           background:var(--branco);border:1px solid var(--rule-solid);
+           box-shadow:var(--sombra-balao)}
+
+.sel-lista.aberta{display:block}
+
+.sel-grupo{padding:4px}
+
+.sel-rotulo{padding:6px 8px;font-size:12px;color:var(--muted)}
+
+.sel-item{position:relative;display:flex;width:100%;align-items:center;gap:8px;
+          padding:6px 32px 6px 10px;border:0;background:none;
+          border-radius:var(--r-item);
+          font:inherit;font-size:14px;line-height:20px;color:var(--ink);
+          text-align:left;cursor:default}
+
 .sel-item:hover,.sel-item.marcado{background:color-mix(in srgb, var(--ink) 10%, transparent)}
 
+.sel-item-texto{display:flex;flex:1 0 auto;gap:8px;white-space:nowrap}
+
+.sel-marca{position:absolute;right:8px;display:flex;width:16px;height:16px;
+           align-items:center;justify-content:center;pointer-events:none}
+
+.sel-marca svg{width:16px;height:16px}
+
 .list-box-item.marcado{background:var(--paper-2)}
+@media (max-width:720px){
+  
+  .filtros .ac,.filtros .sel,.filtros .autocomplete{flex:1 1 100%;width:100%}
+  
+  .sel-gatilho,.autocomplete__trigger{width:100%}
+}
+
+
+.selo-ig{width:18px;height:18px;display:block}
 
 :root[data-theme="dark"] .badge-etq{
   border-color:hsl(var(--etq-h) 26% 30%);
@@ -258,7 +330,59 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 
 :root{--cor-seguidores:var(--accent)}
 
+
+.ins-filtros .autocomplete,.ins-filtros .sel{flex:1 1 150px;min-width:0}
+
+.ins-filtros .autocomplete__trigger,.ins-filtros .sel-gatilho{padding-left:11px;
+                                                              padding-right:11px}
+
+
+.ins-filtros .autocomplete__value,.ins-filtros .sel-valor{font-size:13px;
+                                                          white-space:nowrap}
+
+
+.ins-filtros .autocomplete__trigger,.ins-filtros .sel-gatilho{min-width:0}
+
+.ins-ordenar .sel{flex:0 0 auto}
+@media(max-width:900px){
+  
+  .ins-ordenar .sel{flex:1 1 auto}
+}
+
 .sinal.modelo .pcard-retrato{flex:0 0 48px;width:48px;height:48px}
+
+
+
+
+.cat-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+         margin:30px 0 14px;padding-bottom:9px;border-bottom:2px solid var(--ink)}
+
+.cat-cab .n{display:flex;width:23px;height:23px;flex:0 0 23px;border-radius:999px;
+            align-items:center;justify-content:center;background:var(--ink);
+            color:var(--paper);font-size:12px;font-weight:800}
+
+.cat-cab h3{font-size:16px;font-weight:800;letter-spacing:-.2px}
+
+.cat-cab .sub{font-size:13px;color:var(--muted)}
+
+.cat-cab .dir{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+
+.cat-cab .sel{flex:0 0 auto}
+
+.cat-cab .sel-gatilho{height:32px;border-radius:9px;padding:0 12px;font-size:12.5px}
+
+.cat-cab .sel-valor{font-size:12.5px}
+
+
+.cat-cab .autocomplete{flex:0 0 auto}
+
+.cat-cab .autocomplete__trigger{min-height:32px;min-width:0;border-radius:9px;
+                                padding:0 10px;font-size:12.5px}
+
+.cat-cab .autocomplete__value{font-size:12.5px;white-space:nowrap}
+
+.cat-cab .autocomplete__value .badge{height:18px;font-size:11px}
 
 .gpost.cheio .pcard-retrato{flex:0 0 34px;width:34px;height:34px}
 
@@ -298,6 +422,18 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 .rodape-selo .marca{width:34px;height:34px}
 
 .chart .marca-x{font-size:11px}
+
+.secao-filtros .sel,.secao-filtros .autocomplete{flex:0 0 var(--l-filtro)}
+
+.secao-filtros .sel-gatilho,.secao-filtros .autocomplete__trigger{width:100%}
+@media (max-width:1080px){
+  
+  .secao-filtros .sel,.secao-filtros .autocomplete{flex:1 1 200px}
+}
+@media (max-width:560px){
+  
+  .secao-filtros .sel,.secao-filtros .autocomplete{flex:1 1 100%}
+}
 
 .chart-balao .marca{flex-shrink:0;width:10px;height:10px;border-radius:2px;
                     background:var(--cor-seguidores);border:1px solid var(--cor-seguidores)}
@@ -388,6 +524,11 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 
 .pino.ruim{color:var(--vermelho);border-color:color-mix(in srgb,var(--vermelho) 35%,transparent)}
 
+
+.imp-caixa .sel,.imp-caixa .autocomplete{width:100%}
+
+.imp-caixa .sel-gatilho,.imp-caixa .autocomplete__trigger{width:100%}
+
 .lg-bola.indo{background:transparent;box-shadow:inset 0 0 0 2px var(--accent);
               animation:lgPisca 1.4s ease-in-out infinite}
 
@@ -416,6 +557,8 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
   animation:pfBloco .38s cubic-bezier(.22,1,.36,1) both}
 
 .pf-retrato .pcard-avatar{width:100%;height:100%;font-size:22px;border-width:2px}
+
+.pf-gal-cab .sel-gatilho{height:30px;border-radius:8px;padding:0 10px;font-size:12.5px}
 /* O que é desta tela e não veio do Social Tracker.
    Tudo aqui usa as variáveis de lá, para as duas telas envelhecerem juntas. */
 
@@ -561,84 +704,36 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .por-vir{padding:22px 18px}
 }
 
-/* ---- a tabela de minerados, no molde da tabela de contas ---- */
-.tab{width:100%;border-collapse:collapse;font-size:13.5px}
-.tab thead th{text-align:left;font-size:11.5px;text-transform:uppercase;
-  letter-spacing:.05em;color:var(--muted);font-weight:600;white-space:nowrap;
-  padding:0 14px 10px 0;border-bottom:1px solid var(--rule-solid)}
-.tab td{padding:12px 14px 12px 0;border-bottom:1px solid var(--rule);
-        vertical-align:middle;color:var(--ink)}
-.tab tbody tr:last-child td{border-bottom:0}
-.tab tbody tr:hover{background:var(--paper)}
-.tab .tab-num{text-align:right;font-variant-numeric:tabular-nums;padding-right:18px}
-.tab thead th.tab-num{text-align:right;padding-right:18px}
-.tab-nulo{color:var(--soft);font-size:12.5px}
-.tab-perfil-in{display:flex;align-items:center;gap:11px}
-.tab-quem{display:flex;flex-direction:column;line-height:1.3}
-.tab-quem b{font-weight:650;color:var(--ink)}
-.tab-quem span{font-size:12px;color:var(--muted)}
-.tab-acao{text-align:right;white-space:nowrap}
-.tab-acao .acao{height:34px;padding:0 14px;font-size:13px;display:inline-flex;
-                align-items:center;text-decoration:none}
+/* ================================================== A TABELA E OS FILTROS DE MINERADOS
 
-/* retrato: a inicial é o fundo, a foto entra por cima. Foto do Instagram vence em
-   horas, e sem a inicial embaixo a tabela ficaria cheia de quadrado quebrado. */
-.pcard-retrato{flex:none}
-.pcard-avatar{position:relative;display:grid;place-items:center;width:36px;height:36px;
-  border-radius:50%;background:var(--paper-2);border:1px solid var(--rule-solid);
-  color:var(--muted);font-weight:700;font-size:14px;overflow:hidden}
-.pcard-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+   AQUI NÃO SE REESCREVE NADA QUE JÁ VEIO COPIADO, e isso é o conserto de 17/08.
+   Este trecho era uma imitação da tabela de lá: `.tab`, `.tab-rolo`, `.cat-cab`,
+   `.pino`, `.ct-filtros`, `.pag` e o retrato estavam TODOS escritos de novo aqui, com
+   medidas parecidas e não iguais. Escrito depois, este arquivo ganhava de quem veio de
+   lá, então a tela não usava a tabela do sistema: usava uma cópia à mão dela. O retrato
+   saía com 36 pixels em vez de 84, o cabeçalho de categoria perdia a linha embaixo e a
+   barra de páginas perdia a caixa. Era isso que se lia como tabela quebrada.
 
-.pino{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;
-      border-radius:999px;border:1px solid var(--rule-solid);color:var(--muted);
-      white-space:nowrap}
-.pino.ok{color:var(--verde);border-color:color-mix(in srgb,var(--verde) 40%,transparent)}
-.pino.ruim{color:var(--vermelho);border-color:color-mix(in srgb,var(--vermelho) 40%,transparent)}
+   Fica aqui só o que não existe lá: as duas coisas que esta tabela tem e a de contas
+   não, e os ajustes de tamanho do botão próprio dentro da linha. */
 
-/* ---- cabeça de categoria, com o número na frente ---- */
-.cat-cab{display:flex;align-items:flex-start;gap:13px;margin-bottom:16px}
-.cat-num{flex:none;display:grid;place-items:center;width:26px;height:26px;
-  border-radius:50%;background:var(--accent-tint);color:var(--accent);
-  font-size:12.5px;font-weight:700}
-.cat-tit{font-size:16px;font-weight:650;margin:0 0 2px;color:var(--ink)}
+/* `hidden` não vence sozinho quem tem `display` escrito. As duas caixas abaixo têm:
+   `.pag` é `flex` e o painel precisa sumir quando a sub-aba troca. */
+.ct-painel[hidden],.pag[hidden]{display:none}
 
-/* ---- filtros e listas ---- */
-.ct-topo{display:flex;align-items:center;justify-content:space-between;gap:16px;
-         margin-bottom:20px;flex-wrap:wrap}
-.ct-menu{display:flex;gap:4px;padding:4px;border:1px solid var(--rule-solid);
-         border-radius:var(--r-lg);background:var(--paper-2)}
-.ct-item{display:flex;align-items:center;gap:8px;border:0;cursor:pointer;
-  padding:8px 15px;border-radius:12px;background:transparent;color:var(--muted);
-  font:600 13.5px/1 inherit;transition:.16s}
-.ct-item:hover{color:var(--ink)}
-.ct-item.ativo{background:var(--branco);color:var(--ink);box-shadow:var(--sombra)}
-.ct-item b{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:999px;
-           background:var(--paper-2);color:var(--muted)}
-.ct-item.ativo b{background:var(--accent-tint);color:var(--accent)}
+/* O botão de comando desta tela dentro da linha da tabela. Lá a ação da linha é o
+   botão de navegação do sistema, que tem seta e quatro filhos; aqui são comandos. */
+.tab-acao-in{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end}
+.tab-acao .acao{height:32px;padding:0 13px;font-size:12.5px;border-radius:9px;
+                display:inline-flex;align-items:center;text-decoration:none}
+.tab-acao .acao.redonda{width:32px;padding:0;justify-content:center}
+.tab-acao .acao.redonda svg{width:15px;height:15px}
 
-.ct-filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.ct-busca{flex:1;min-width:var(--l-filtro);height:var(--h-filtro);
-  border:1px solid var(--rule-solid);border-radius:var(--r-filtro);
-  background:var(--branco);color:var(--ink);padding:0 15px;font:14px inherit}
-.ct-sel{height:var(--h-filtro);border:1px solid var(--rule-solid);
-  border-radius:var(--r-filtro);background:var(--branco);color:var(--ink);
-  padding:0 13px;font:14px inherit;cursor:pointer}
-.ct-busca:focus,.ct-sel:focus{outline:none;border-color:var(--accent)}
-.ct-painel[hidden]{display:none}
-
-.tab-rolo{overflow-x:auto;background:var(--branco);border:1px solid var(--rule-solid);
-          border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--sombra)}
-.gal-vazia{color:var(--muted);font-size:14px;padding:30px 0;text-align:center;
-           background:var(--branco);border:1px solid var(--rule-solid);
-           border-radius:var(--r-lg)}
-
-/* ---- paginação ---- */
-.pag{display:flex;align-items:center;justify-content:space-between;gap:16px;
-     margin-top:16px;flex-wrap:wrap}
-.pag[hidden]{display:none}
-.pag-quanto{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-.pag-nav{display:flex;align-items:center;gap:12px}
-.pag-nav .acao{height:38px;padding:0 15px;font-size:13.5px}
+/* A COBERTURA CARREGA O TOTAL DA CONTA EMBAIXO. O total era coluna própria, e sozinho
+   ele empurrava a última coluna para fora da tela. Junto da porcentagem ele também lê
+   melhor: 62% de 4.976 é uma frase, e duas colunas separadas eram duas metades dela. */
+.tab-dupla{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1.25}
+.tab-dupla i{font-style:normal;font-size:11.5px;color:var(--muted)}
 
 </style>
 </head>
@@ -770,6 +865,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <button class="acao forte" id="salvar">Salvar e varrer</button>
           <button class="acao" id="varrer">Varrer de novo</button>
         </div>
+        <p class="nota" style="margin-top:12px">Perfil já minerado <b>não fica de fora</b>.
+          Pedir de novo faz a esteira reler do topo até bater no que já está guardado,
+          então ela traz o que foi publicado desde a última vez e para ali, sem repetir
+          o histórico inteiro. A mesma coisa vale pelo botão de cada linha, em Minerados.</p>
       </div>
     </div>
 
@@ -798,40 +897,60 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
   </div>
 
-  <!-- ----------------------------------------------------------------- MINERADOS -->
+  <!-- ----------------------------------------------------------------- MINERADOS
+       Os nomes de classe aqui são os DE LÁ, e não parecidos com os de lá. A primeira
+       versão inventou `cat-num` e `cat-tit` para o cabeçalho e `pag-nav` para a barra
+       de páginas: nenhum desses nomes existe na folha copiada, então o cabeçalho saía
+       sem a linha embaixo e a paginação sem caixa nenhuma.
+
+       O FILTRO TAMBÉM NÃO É `select`. O do navegador abre a lista do sistema
+       operacional, com a moldura branca e a faixa azul do Windows no meio de uma tela
+       escura. Lá isso está resolvido com um componente próprio, e é ele que está aqui:
+       um botão, uma lista e a marca de escolhido. -->
   <div class="ct-painel" id="sub-p-minerados" hidden>
     <div class="secao">
       <div class="cat-cab">
-        <span class="cat-num">2</span>
-        <div>
-          <h3 class="cat-tit">Perfis minerados</h3>
-          <p class="nota" id="min-sub">o histórico de cada varredura</p>
-        </div>
+        <span class="n">1</span><h3>Perfis minerados</h3>
+        <span class="sub" id="min-sub">o histórico de cada varredura</span>
       </div>
 
       <div class="ct-filtros">
         <input class="ct-busca" id="min-q" type="text" autocomplete="off"
                spellcheck="false" placeholder="Buscar perfil pelo @ ou pelo nome">
-        <select class="ct-sel" id="min-estado">
-          <option value="">Todos os estados</option>
-          <option value="completo">Concluídos</option>
-          <option value="limite">Varridos até o limite</option>
-          <option value="varrendo">Ainda varrendo</option>
-        </select>
-        <select class="ct-sel" id="min-ordem">
-          <option value="varridos">Mais varridos</option>
-          <option value="cobertura">Maior cobertura</option>
-          <option value="acima">Mais acima da régua</option>
-          <option value="reels">Mais reels</option>
-          <option value="conta">Nome do perfil</option>
-        </select>
+        <div class="sel" id="min-estado">
+          <button class="sel-gatilho" id="min-estadog" type="button"
+                  aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-valor" id="min-estadov">Todos os estados</span>
+            <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="sel-lista" id="min-estadol" role="listbox">
+            <div class="sel-grupo" id="min-estadogr"></div>
+          </div>
+        </div>
+        <div class="sel" id="min-ordem">
+          <button class="sel-gatilho" id="min-ordemg" type="button"
+                  aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-valor" id="min-ordemv">Mais varridos</span>
+            <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="sel-lista" id="min-ordeml" role="listbox">
+            <div class="sel-grupo" id="min-ordemgr"></div>
+          </div>
+        </div>
       </div>
 
+      <!-- ONZE COLUNAS, E NÃO DOZE. O total de publicações da conta era coluna própria
+           e sozinha ela empurrava a tabela para fora da tela: a última coluna aparecia
+           cortada na metade da palavra. Ele agora é a segunda linha da cobertura, que é
+           onde a conta faz sentido de qualquer forma: 62% de 4.976. -->
       <div class="tab-rolo">
         <table class="tab">
           <thead><tr>
             <th>Perfil</th>
-            <th class="tab-num">Posts na conta</th>
             <th class="tab-num">Varridos</th>
             <th class="tab-num">Cobertura</th>
             <th>Alcançou até</th>
@@ -850,16 +969,25 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         Tire uma marcação para alargar a busca.</div>
 
       <div class="pag" id="min-pag" hidden>
-        <span class="pag-quanto">
-          <label for="min-por">Perfis por página</label>
-          <select class="ct-sel" id="min-por">
-            <option>10</option><option>25</option><option>50</option>
-          </select>
-        </span>
-        <span class="pag-nav">
-          <button class="acao" id="min-antes" type="button">Anterior</button>
-          <span class="nota" id="min-onde"></span>
-          <button class="acao" id="min-depois" type="button">Próxima</button>
+        <span>Perfis por página</span>
+        <div class="sel" id="min-por">
+          <button class="sel-gatilho" id="min-porg" type="button"
+                  aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-valor" id="min-porv">10</span>
+            <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="sel-lista" id="min-porl" role="listbox">
+            <div class="sel-grupo" id="min-porgr"></div>
+          </div>
+        </div>
+        <span class="nav">
+          <button id="min-ini" type="button" aria-label="Primeira página">&laquo;</button>
+          <button id="min-ant" type="button" aria-label="Página anterior">&lsaquo;</button>
+          <span class="conta" id="min-conta"></span>
+          <button id="min-prox" type="button" aria-label="Próxima página">&rsaquo;</button>
+          <button id="min-fim" type="button" aria-label="Última página">&raquo;</button>
         </span>
       </div>
     </div>
@@ -1095,94 +1223,55 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 })();
 
 
-(function(){
-  var el = document.getElementById("estado"),
-      rotulo = el.querySelector(".rotulo"),
-      dado = __ESTADO__;
-  var HORAS_NO_RITMO = 3,      // ciclo roda a cada 150 minutos
-      HORAS_ATE_MORTO = 26;    // mesmo limite do alarme do sistema
-
-  function quanto(h){
-    if (h < 0.017) return "agora";
-    if (h < 1) return Math.round(h * 60) + " min";
-    if (h < 24) return (h < 10 ? h.toFixed(1) : Math.round(h)) + " h";
-    return Math.round(h / 24) + " d";
+</script>
+<script>
+window.montarSelect = function(pre, opcoes, escolhido, aoEscolher){
+  var gat = document.getElementById(pre + "g"), val = document.getElementById(pre + "v"),
+      lis = document.getElementById(pre + "l"), gru = document.getElementById(pre + "gr");
+  if (!gat || !lis) return function(){ return escolhido; };
+  var atual = escolhido;
+  var MARCA = '<span class="sel-marca"><svg viewBox="0 0 24 24" fill="none" ' +
+    'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+    'stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>';
+  function rotulo(v){
+    var o = opcoes.filter(function(x){ return x.v === v; })[0];
+    return o ? o.r : "";
   }
-  function classificar(){
-    el.classList.remove("online", "degraded", "offline");
-    if (!dado || !dado.ultima){
-      el.classList.add("offline");
-      rotulo.textContent = "nunca coletou";
-      return;
-    }
-    var h = (Date.now() - new Date(dado.ultima).getTime()) / 3600000;
-    if (h > HORAS_ATE_MORTO){
-      el.classList.add("offline");
-      rotulo.textContent = "fora do ar há " + quanto(h);
-    } else if (h > HORAS_NO_RITMO){
-      el.classList.add("degraded");
-      rotulo.textContent = "desatualizado há " + quanto(h);
-    } else {
-      el.classList.add("online");
-      rotulo.textContent = "ao vivo · coletou há " + quanto(h);
-    }
+  function pintar(){
+    gru.innerHTML = opcoes.map(function(o){
+      return '<button class="sel-item" type="button" role="option" data-v="' +
+        String(o.v).replace(/"/g, "&quot;") + '" aria-selected="' + (o.v === atual) +
+        '"><span class="sel-item-texto">' + o.r + '</span>' +
+        (o.v === atual ? MARCA : '') + '</button>';
+    }).join("");
   }
-  // ------------------------------------------------- a página sabe quando envelheceu
-  //
-  // O PROBLEMA, medido em 14/08: o Gabriel deixa a aba aberta, o computador publica uma
-  // versão nova, e a aba continua mostrando a antiga. Ele não vê o que foi construído e
-  // conclui, com razão, que não foi construído. A página pede ao navegador para guardá-la
-  // por dois minutos, mas o ponto nem é esse: aba aberta não recarrega nunca sozinha.
-  //
-  // A CONTA É SIMPLES: a marca da versão vem junto do estado, que a página já pergunta de
-  // minuto em minuto para manter o selo do cabeçalho vivo. Se a marca mudou, o que está
-  // na tela é velho.
-  //
-  // E O QUE ELA FAZ COM ISSO respeita quem está do outro lado:
-  //   aba escondida  -> recarrega na hora, ninguém está olhando e ninguém perde o lugar;
-  //   aba na frente  -> mostra o botão e espera, porque puxar a página debaixo de alguém
-  //                     que está lendo é pior que a página velha;
-  //   ao voltar      -> recarrega, que é quando a troca não custa nada.
-  var minhaVersao = null, envelheceu = false;
-
-  function conferirVersao(v){
-    if (!v) return;
-    if (minhaVersao === null){ minhaVersao = v; return; }
-    if (v === minhaVersao || envelheceu) return;
-    envelheceu = true;
-    // Escondida, ela troca na hora. Na frente, ela espera: puxar a pagina debaixo de
-    // quem esta' lendo e' pior que a pagina velha, e o `visibilitychange` la' embaixo
-    // resolve assim que a aba perde e recupera o foco.
-    if (document.hidden) location.reload();
-  }
-  document.addEventListener("visibilitychange", function(){
-    if (envelheceu && !document.hidden) location.reload();
+  gat.addEventListener("click", function(){
+    var abre = !lis.classList.contains("aberta");
+    if (abre) pintar();
+    lis.classList.toggle("aberta", abre);
+    gat.setAttribute("aria-expanded", abre ? "true" : "false");
   });
-
-  function perguntar(){
-    fetch("estado", {cache: "no-store"})
-      .then(function(r){
-        // A PAGINA SE MANDA SE A SESSAO CAIU. Ela pode ter vindo do cache do navegador,
-        // e nesse caso ninguem passou pela porta para chegar aqui. Esta rota exige
-        // sessao, entao um 401 e' a prova de que a sessao acabou.
-        if (r.status === 401){
-          location.replace("entrar?de=" + encodeURIComponent(location.pathname));
-          return null;
-        }
-        return r.ok ? r.json() : null;
-      })
-      .then(function(d){
-        if (d){ conferirVersao(d.versao); if (d.ultima) dado = d; }
-        classificar();
-      })
-      .catch(function(){ classificar(); });
-  }
-  classificar();
-  setInterval(classificar, 15000);
-  setInterval(perguntar, 60000);
-  perguntar();
-})();
-
+  lis.addEventListener("click", function(ev){
+    var b = ev.target.closest(".sel-item");
+    if (!b) return;
+    atual = b.dataset.v;
+    val.textContent = rotulo(atual);
+    lis.classList.remove("aberta");
+    gat.setAttribute("aria-expanded", "false");
+    aoEscolher(atual);
+  });
+  // Clicar fora fecha. O caminho do evento e' lido com `composedPath` porque a lista e'
+  // reescrita a cada abertura, e `closest` num no' ja' descartado devolve nada.
+  document.addEventListener("click", function(ev){
+    var c = ev.composedPath ? ev.composedPath() : [ev.target];
+    var dentro = c.some(function(x){
+      return x && x.matches && x.matches("#" + pre + ", #" + pre + " *"); });
+    if (!dentro){ lis.classList.remove("aberta");
+                  gat.setAttribute("aria-expanded", "false"); }
+  });
+  val.textContent = rotulo(atual);
+  return function(){ return atual; };
+};
 </script>
 <script>
 /* O comportamento da tela do Estúdio.
@@ -1351,23 +1440,50 @@ function quando(ts) {
 }
 
 function retrato(p) {
-  // a foto do Instagram vence em horas, então a inicial é o fundo e a foto entra por
-  // cima. Se ela falhar, a inicial continua lá e ninguém vê um quadrado quebrado.
+  // A FOTO VEM PELA PONTE, e não do endereço que o Instagram devolveu.
+  // Aquele endereço é assinado com prazo: conferido em 17/08, o que tinha sido guardado
+  // na véspera respondia 403, e a tabela ficava só com a inicial. A ponte guarda a
+  // imagem no acervo na hora de identificar o perfil e serve o arquivo daqui em diante,
+  // sem prazo e sem depender do Instagram de novo.
+  // A inicial continua desenhada embaixo: se a foto ainda não existir, ela é o que
+  // aparece, e ninguém vê quadrado quebrado.
   const ini = (p.conta || "?")[0].toUpperCase();
-  const foto = p.avatar
-    ? `<img src="${p.avatar}" alt="" loading="lazy" onerror="this.remove()">` : "";
+  const foto = `<img src="${PONTE}/retrato/${encodeURIComponent(p.conta)}" alt=""
+                 loading="lazy" onerror="this.remove()">`;
   return `<span class="pcard-retrato"><span class="pcard-avatar">${ini}${foto}</span></span>`;
 }
 
+/* Os três controles são o componente do sistema, montado pela função copiada de lá.
+   O `select` do navegador abre a lista do sistema operacional, que não pertence a
+   esta tela: era o retângulo branco com faixa azul no meio da tabela escura. */
+let minEstado = "", minOrdem = "varridos", minPor = 10;
+
+window.montarSelect("min-estado", [
+  { v: "", r: "Todos os estados" },
+  { v: "completo", r: "Concluídos" },
+  { v: "limite", r: "Varridos até o limite" },
+  { v: "varrendo", r: "Ainda varrendo" },
+], "", v => { minEstado = v; minPagina = 1; desenhaMinerados(); });
+
+window.montarSelect("min-ordem", [
+  { v: "varridos", r: "Mais varridos" },
+  { v: "cobertura", r: "Maior cobertura" },
+  { v: "acima", r: "Mais acima da régua" },
+  { v: "reels", r: "Mais reels" },
+  { v: "conta", r: "Nome do perfil" },
+], "varridos", v => { minOrdem = v; minPagina = 1; desenhaMinerados(); });
+
+window.montarSelect("min-por", [
+  { v: "10", r: "10" }, { v: "25", r: "25" }, { v: "50", r: "50" },
+], "10", v => { minPor = parseInt(v, 10) || 10; minPagina = 1; desenhaMinerados(); });
+
 function desenhaMinerados() {
   const q = ($("min-q").value || "").trim().toLowerCase();
-  const est = $("min-estado").value;
-  const ordem = $("min-ordem").value;
-  const por = parseInt($("min-por").value, 10) || 10;
+  const por = minPor;
 
   let fila = MINERADOS.filter(p => {
     if (q && !((p.conta || "") + " " + (p.nome || "")).toLowerCase().includes(q)) return false;
-    if (est && situacaoDe(p) !== est) return false;
+    if (minEstado && situacaoDe(p) !== minEstado) return false;
     return true;
   });
 
@@ -1379,7 +1495,7 @@ function desenhaMinerados() {
     conta: p => p.conta || "",
   };
   fila.sort((a, b) => {
-    const x = chaves[ordem](a), y = chaves[ordem](b);
+    const x = chaves[minOrdem](a), y = chaves[minOrdem](b);
     return typeof x === "string" ? x.localeCompare(y, "pt") : x - y;
   });
 
@@ -1388,12 +1504,11 @@ function desenhaMinerados() {
   const pedaco = fila.slice((minPagina - 1) * por, minPagina * por);
 
   $("min-vazio").hidden = fila.length > 0;
-  $("min-pag").hidden = fila.length <= por;
-  $("min-onde").textContent = fila.length
-    ? `${(minPagina - 1) * por + 1} a ${Math.min(minPagina * por, fila.length)} de ${fila.length}`
-    : "";
-  $("min-antes").disabled = minPagina <= 1;
-  $("min-depois").disabled = minPagina >= paginas;
+  $("min-pag").hidden = fila.length === 0;
+  $("min-conta").textContent = `Pág. ${minPagina}/${paginas} · ${num(fila.length)}`
+    + (fila.length === 1 ? " perfil" : " perfis");
+  $("min-ini").disabled = $("min-ant").disabled = minPagina <= 1;
+  $("min-prox").disabled = $("min-fim").disabled = minPagina >= paginas;
   $("min-sub").textContent = `${MINERADOS.length} ${MINERADOS.length === 1 ? "perfil varrido" : "perfis varridos"}`;
   $("sub-conta").textContent = MINERADOS.length;
 
@@ -1408,9 +1523,9 @@ function desenhaMinerados() {
       <td class="tab-perfil"><div class="tab-perfil-in">${retrato(p)}
         <span class="tab-quem"><b>@${p.conta}</b>
           <span>${p.nome || "sem nome no perfil"}</span></span></div></td>
-      <td class="tab-num">${num(p.publicacoes)}</td>
       <td class="tab-num">${num(p.lidos)}</td>
-      <td class="tab-num">${cob}%</td>
+      <td class="tab-num"><span class="tab-dupla">${cob}%
+        <i>de ${num(p.publicacoes)}</i></span></td>
       <td>${ate}</td>
       <td class="tab-num">${num(p.reels)}</td>
       <td class="tab-num">${num(p.imagens)}</td>
@@ -1418,16 +1533,49 @@ function desenhaMinerados() {
       <td class="tab-num">${num(p.acima)}</td>
       <td>${selo}</td>
       <td>${quando(p.atualizado)}</td>
-      <td class="tab-acao"><a class="acao" target="_blank" rel="noopener"
-        href="https://www.instagram.com/${p.conta}/">Instagram</a></td>
+      <td class="tab-acao"><span class="tab-acao-in">
+        <button class="acao redonda" type="button" data-remina="${p.conta}"
+                title="Minerar de novo: lê do topo até o que já está guardado">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1
+               1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
+        <a class="acao" target="_blank" rel="noopener"
+           href="https://www.instagram.com/${p.conta}/">Instagram</a></span></td>
     </tr>`;
   }).join("");
 }
 
-["min-q", "min-estado", "min-ordem", "min-por"].forEach(id =>
-  $(id).addEventListener("input", () => { minPagina = 1; desenhaMinerados(); }));
-$("min-antes").onclick = () => { minPagina--; desenhaMinerados(); };
-$("min-depois").onclick = () => { minPagina++; desenhaMinerados(); };
+$("min-q").addEventListener("input", () => { minPagina = 1; desenhaMinerados(); });
+$("min-ini").onclick = () => { minPagina = 1; desenhaMinerados(); };
+$("min-ant").onclick = () => { minPagina--; desenhaMinerados(); };
+$("min-prox").onclick = () => { minPagina++; desenhaMinerados(); };
+$("min-fim").onclick = () => { minPagina = 1e9; desenhaMinerados(); };
+
+/* ---------------------------------------------------------- minerar de novo
+   O PERFIL JÁ MINERADO NÃO SAI DA FILA. A esteira pulava quem estava marcado como
+   concluído, então pedir de novo não fazia nada: a rodada abria, não achava trabalho
+   e fechava. Aqui o pedido é registrado, e a esteira relê do topo até bater no que já
+   tem guardado, o que traz o que foi publicado desde a última passagem. */
+async function revisitar(contas, ondeAvisar) {
+  const aviso = $(ondeAvisar);
+  aviso.textContent = "pedindo releitura";
+  try {
+    await mandar("/revisitar", { contas });
+    await mandar("/varrer");
+    aviso.textContent = contas.length === 1
+      ? `@${contas[0]} entrou na fila para ser lido de novo`
+      : `${contas.length} perfis entraram na fila para leitura nova`;
+    anotar(`releitura pedida: ${contas.join(", ")}`, "bom");
+    setTimeout(() => { aoVivo(); atualizar(); }, 2500);
+  } catch (e) { aviso.textContent = e.message; anotar(e.message, "ruim"); }
+}
+
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-remina]");
+  if (!b) return;
+  b.disabled = true;
+  revisitar([b.dataset.remina], "recado").then(() => { b.disabled = false; });
+});
 
 /* ---------------------------------------------------------------- desenhos */
 function desenhaPerfis(p) {
@@ -1537,8 +1685,10 @@ async function atualizar() {
   MINERADOS = perfis.map(p => {
     const meus = itens.filter(i => i.conta === p.conta);
     const r = (retratos && retratos[p.conta]) || {};
+    // A FOTO NÃO VEM DAQUI. Este arquivo guarda o nome e os números; a imagem tem
+    // endereço próprio na ponte, porque o que o Instagram devolve vence em horas.
     // tudo já vem contado pelo seletor, por perfil e sem teto de lote
-    return { ...p, nome: p.nome || r.nome, avatar: p.avatar || r.avatar,
+    return { ...p, nome: p.nome || r.nome,
              acima: p.acima != null ? p.acima : meus.length };
   });
   desenhaMinerados();
@@ -1561,6 +1711,11 @@ $("salvar").onclick = async () => {
     const d = await mandar("/contas", { contas });
     (d.novos || []).filter(n => n.ok).forEach(n =>
       anotar(`@${n.conta} identificado: ${num(n.publicacoes)} publicações`, "bom"));
+    // O PEDIDO DE RELEITURA VAI JUNTO. Sem ele, salvar uma lista que já foi minerada
+    // não fazia nada: a esteira abria, não achava perfil pendente e fechava. Quem
+    // ainda está no meio da varredura não é afetado, porque a releitura só vale para
+    // perfil que a esteira já deu por encerrado.
+    await mandar("/revisitar", { contas });
     await mandar("/varrer");
     $("recado").textContent = d.contas + " contas salvas, esteira acionada";
     anotar("esteira acionada", "bom");
@@ -1569,6 +1724,10 @@ $("salvar").onclick = async () => {
 };
 
 $("varrer").onclick = async () => {
+  const contas = $("fontes").value.split("\n")
+    .map(s => s.trim().replace(/^@/, "").replace(/\/+$/, "").split("/").pop())
+    .filter(Boolean);
+  if (contas.length) return revisitar(contas, "recado");
   $("recado").textContent = "chamando a esteira";
   try {
     await mandar("/varrer");
