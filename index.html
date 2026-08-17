@@ -1395,7 +1395,11 @@ function selar(estado) {
     rotulo.textContent = "desatualizado há " + quanto(h);
   } else {
     selo.className = "status online";
-    rotulo.textContent = "ao vivo · coletou há " + quanto(h);
+    const quando = quanto(h);
+    // "coletou há agora" é o que sai quando se junta a preposição com a palavra que já
+    // é advérbio de tempo. Aqui ela cai fora.
+    rotulo.textContent = "ao vivo · coletou "
+      + (quando === "agora" ? "agora" : "há " + quando);
   }
 }
 setInterval(() => selar(null), 15000);
