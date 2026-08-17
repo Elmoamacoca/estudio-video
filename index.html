@@ -168,6 +168,7 @@ $("tema").onclick=()=>{const n=document.documentElement.dataset.tema==="escuro"?
   document.documentElement.dataset.tema=n; localStorage.setItem("estudio_tema",n);};
 
 
+$("fontes").addEventListener("input",()=>{$("fontes").dataset.tocado="1";});
 $("formatos").onclick=e=>{const o=e.target.closest(".opcao"); if(o) o.classList.toggle("ligada");};
 const formatosEscolhidos=()=>[...document.querySelectorAll(".opcao.ligada")].map(o=>o.dataset.f);
 
@@ -257,7 +258,10 @@ $("salvar").onclick=async()=>{
   try{ const d=await mandar("/contas",{contas});
     $("recado").textContent=`${d.contas} contas salvas, chamando a esteira`;
     await mandar("/varrer");
-    $("recado").textContent=`${d.contas} contas salvas e esteira acionada`;
+    const achados=(d.novos||[]).filter(n=>n.ok);
+    $("recado").textContent = achados.length
+      ? `${achados.map(n=>"@"+n.conta+": "+n.publicacoes+" publicações").join(" · ")} · esteira acionada`
+      : `${d.contas} contas salvas e esteira acionada`;
     setTimeout(()=>{verAoVivo();atualizar();},2500); }
   catch(e){ $("recado").textContent=e.message; }
 };
