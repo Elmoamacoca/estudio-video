@@ -2297,6 +2297,19 @@ function linhaDoAgora(b) {
 const ANDANDO = new Set(["in_progress", "queued", "waiting", "pending", "requested"]);
 
 async function aoVivo() {
+  // OS BILHETES PRIMEIRO, A CORRIDA DO GITHUB DEPOIS.
+  //
+  // O bilhete é escrito pela máquina que está lendo, a cada página: é prova do
+  // trabalho. O estado da corrida é indício, e indício erra. Numa rodada disparada
+  // enquanto outra ainda trabalhava, a ponte devolveu a corrida NOVA, que estava na
+  // fila e sem máquina nenhuma, e a tela anunciou "rodada concluída, nada a ler" com o
+  // cartão logo abaixo dizendo "varrendo agora, 24 de 2.252". Duas frases contrárias na
+  // mesma tela, e a errada era a de cima.
+  await ouvirBatimentos();
+  const segundos = Date.now() / 1000;
+  const batendo = [...BATIMENTOS.values()]
+    .filter(b => !b.completo && (segundos - (b.quando || 0)) < 180);
+
   let d = null;
   try {
     const r = await fetch(`${PONTE}/andamento?t=${Date.now()}`, { cache: "no-store" });
@@ -2314,12 +2327,17 @@ async function aoVivo() {
     let titulo = "Esteira parada", resumo = "Nenhuma rodada em andamento.";
     let selo = "parada", viva = false, desde = null;
 
-    if (lendo.length) {
+    if (batendo.length || lendo.length) {
       viva = true; selo = "ao vivo";
-      titulo = lendo.length === 1 ? "Uma máquina lendo o Instagram"
-                                  : `${lendo.length} máquinas lendo ao mesmo tempo`;
-      resumo = "Cada uma lê uma página de doze posts e passa a vez"
-             + (rodada ? `, ${rodada}.` : ".");
+      // o bilhete manda no número: ele conta as máquinas que gravaram avanço de verdade
+      const quantas = Math.max(batendo.length, lendo.length);
+      titulo = quantas === 1 ? "Uma máquina lendo o Instagram"
+                             : `${quantas} máquinas lendo ao mesmo tempo`;
+      resumo = batendo.length
+        ? batendo.map(b => `@${b.conta}: ${num(b.lidos)} de ${num(b.publicacoes)} posts`)
+                 .join(" · ")
+        : "Cada uma lê uma página de doze posts e passa a vez"
+          + (rodada ? `, ${rodada}.` : ".");
       desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
     } else if (conferindo) {
       viva = true; selo = "conferindo";
@@ -2329,6 +2347,13 @@ async function aoVivo() {
       viva = true; selo = "fechando";
       titulo = "Fechando a rodada";
       resumo = "Aplicando a régua, separando os links e carimbando o registro.";
+    } else if (d.rodando) {
+      // CORRIDA ABERTA SEM MÁQUINA NENHUMA é fila, e não conclusão. O GitHub segura uma
+      // rodada enquanto a anterior trabalha, de propósito, para as duas não gravarem por
+      // cima uma da outra. Sem este ramo, essa espera era anunciada como rodada pronta.
+      viva = true; selo = "na fila";
+      titulo = `Rodada ${d.numero} esperando a vez`;
+      resumo = "A anterior ainda está no ar, e duas não gravam ao mesmo tempo.";
     } else if (!LIVRO.length) {
       // BANCO VAZIO FALA DO VAZIO. Sem isto, a tela zerada abria anunciando a última
       // rodada que existiu, com as vinte máquinas dela: número grande de trabalho antigo
@@ -2354,8 +2379,6 @@ async function aoVivo() {
     $("vivo_quando").innerHTML = `<span class="kon-vivo${viva ? " ativa" : ""}"><i></i>`
       + selo + (corrido > 0 ? ` · ${corrido} min` : "") + "</span>";
   }
-
-  ouvirBatimentos();
 }
 
 function livroFiltrado() {
