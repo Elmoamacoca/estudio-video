@@ -1,0 +1,132 @@
+<!-- ================================================================ ABA 1 · MINERAÇÃO
+     Duas categorias, na ordem que o Gabriel definiu: primeiro onde se manda trabalhar
+     e se acompanha ao vivo, depois onde se confere a situação de cada perfil. -->
+<section class="aba" id="aba-minerar">
+
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>Contas de origem</h2>
+      <div class="dir"><span class="nota" id="recado"></span></div>
+    </div>
+    <div class="caixa">
+      <h3>De onde os vídeos são minerados</h3>
+      <p class="nota">Uma por linha, com ou sem arroba, ou o endereço inteiro do perfil.
+        A esteira varre o histórico até onde o Instagram deixa, guardando onde parou.</p>
+      <textarea id="fontes" placeholder="boletimdamorte&#10;vinci.society&#10;https://www.instagram.com/outraconta/"></textarea>
+      <div class="linha">
+        <button class="acao forte" id="salvar">Salvar e varrer</button>
+        <button class="acao" id="varrer">Varrer de novo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>Registro ao vivo</h2>
+      <div class="dir"><span class="nota" id="vivo_quando"></span></div>
+    </div>
+    <div class="caixa">
+      <h3 id="vivo_titulo">Esteira parada</h3>
+      <p class="nota" id="vivo_resumo">Nenhuma rodada em andamento.</p>
+      <div id="vivo_elos" class="elos"></div>
+      <div class="registro" id="registro"></div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <div class="secao-cab"><h2>Situação</h2></div>
+    <div class="numeros quatro">
+      <div class="num"><b id="n_contas">0</b><span>contas de origem</span></div>
+      <div class="num"><b id="n_lidos">0</b><span>posts varridos</span></div>
+      <div class="num"><b id="n_sel">0</b><span>acima do corte</span></div>
+      <div class="num"><b id="n_completos">0</b><span>perfis concluídos</span></div>
+    </div>
+    <div class="caixa" style="margin-top:14px">
+      <h3>Por perfil</h3>
+      <div id="perfis"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ==================================================================== ABA 2 · BAIXAR
+     Quantidade, nunca lista: quantos posts a conta tem, quantos passaram na régua, e
+     qual régua foi. A lista de post por post vive no Instagram, não aqui. -->
+<section class="aba" id="aba-baixar" hidden>
+
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>Régua</h2>
+      <div class="dir"><span class="nota">vale para os perfis abaixo</span></div>
+    </div>
+    <div class="caixa">
+      <h3>O que conta como bom desempenho</h3>
+      <p class="nota">Desempenho é múltiplo da mediana da própria conta, calculada
+        <b>por formato</b>. Vídeo tem contagem de exibição, imagem e carrossel não têm.</p>
+      <div class="linha">
+        <div class="campo">
+          <label>Corte, em vezes a mediana</label>
+          <input type="number" id="corte" value="1.5" step="0.5" min="1">
+        </div>
+        <div class="campo">
+          <label>Máximo de arquivos por lote</label>
+          <input type="number" id="quantos" value="150" step="10" min="1">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>Perfis varridos</h2>
+      <div class="dir"><span class="nota" id="recado_baixar"></span></div>
+    </div>
+    <div id="prontos"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
+  </div>
+
+  <div class="secao">
+    <div class="secao-cab"><h2>Lotes montados</h2></div>
+    <div id="lotes"><div class="vazio">Nenhum lote ainda.</div></div>
+  </div>
+
+</section>
+
+
+<!-- ================================================================ ABA 3 · TRATAMENTO -->
+<section class="aba" id="aba-tratar" hidden>
+  <div class="secao">
+    <div class="por-vir">
+      <div class="por-vir-selo">a construir</div>
+      <h2>Tratamento</h2>
+      <p class="nota">Esta aba ainda não foi desenhada. Abaixo, o que vai morar aqui.</p>
+      <ul class="por-vir-lista">
+        <li>Limpeza completa de metadados de cada arquivo baixado.</li>
+        <li>Conferência automática, arquivo por arquivo, do que sobrou depois da limpeza.</li>
+        <li>Identidade nova para cada peça, para o arquivo deixar de ser o mesmo.</li>
+        <li>Entrega dos arquivos tratados para a aba de Edição.</li>
+      </ul>
+      <p class="nota" style="margin-top:14px">Já medido e valendo para esta aba: apagar
+        metadado com o comando padrão <b>não basta</b>. O codificador reescreve a própria
+        assinatura depois, no arquivo e nas duas faixas. Por isso a conferência é
+        obrigatória, e não opcional.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- =================================================================== ABA 4 · EDIÇÃO -->
+<section class="aba" id="aba-editar" hidden>
+  <div class="secao">
+    <div class="por-vir">
+      <div class="por-vir-selo">a construir</div>
+      <h2>Edição</h2>
+      <p class="nota">Esta aba ainda não foi desenhada, e o desenho dela ainda não foi
+        definido com você.</p>
+      <ul class="por-vir-lista">
+        <li>Aplicação do template da página em lote.</li>
+        <li>Título e legenda por peça.</li>
+      </ul>
+    </div>
+  </div>
+</section>
