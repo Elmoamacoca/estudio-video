@@ -114,8 +114,10 @@ def por_construir(titulo: str, linhas: list[str]) -> str:
 
 
 def montar() -> Path:
-    css = "\n".join(sem_comentario((PECAS / f).read_text(encoding="utf-8", errors="replace"))
-                    for f in ("paleta.css", "cab.css", "corpo.css"))
+    # sistema.css sai do extrair.py, que preserva blocos condicionais inteiros. A
+    # extração achatada anterior soltou `.nav-itens{display:none}` de dentro do bloco
+    # de celular e escondeu as abas em qualquer largura.
+    css = sem_comentario((PECAS / "sistema.css").read_text(encoding="utf-8", errors="replace"))
     proprio = (BASE / "estilo.css").read_text(encoding="utf-8")
     defs = (PECAS / "defs.svg").read_text(encoding="utf-8", errors="replace")
     js_cab = (PECAS / "cab.js").read_text(encoding="utf-8", errors="replace")
@@ -130,6 +132,13 @@ def montar() -> Path:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Estúdio</title>
+<!-- A Manrope é a fonte do sistema, e ela vem de fora. Sem estes três links a paleta
+     e as medidas continuam certas, mas o texto cai na fonte serifada do navegador e a
+     tela inteira parece quebrada, que foi o que aconteceu na primeira montagem. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
 {css}
 {proprio}
