@@ -700,7 +700,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .konsole{border:1px solid var(--rule-solid);border-radius:var(--r-lg);
          background:var(--branco);overflow:hidden;box-shadow:var(--sombra)}
 
-.kon-topo{display:flex;align-items:center;gap:13px;padding:17px 20px}
+.kon-topo{display:flex;align-items:center;gap:13px;padding:18px 20px}
 .kon-selo{flex:none;display:grid;place-items:center;width:34px;height:34px;
           border-radius:9px;background:var(--paper-2);border:1px solid var(--rule-solid);
           color:var(--muted)}
@@ -1814,8 +1814,10 @@ async function aoVivo() {
 
   if (!d.elos || !d.elos.length) {
     $("vivo_titulo").textContent = "Esteira parada";
-    $("vivo_resumo").textContent = "Nenhuma rodada em andamento. Ela acorda sozinha "
-      + "de meia em meia hora, ou agora se você mandar varrer.";
+    // FRASES CURTAS AQUI. O molde reserva UMA linha para o subtítulo, e o parágrafo
+    // que morava neste lugar quebrava em três, empurrando o selo e desalinhando o
+    // ícone. O detalhe, quando é preciso, entra no fluxo como linha.
+    $("vivo_resumo").textContent = "Acorda sozinha de meia em meia hora.";
     $("vivo_elos").hidden = true;
     selarConsole(false, "parada");
     return;
@@ -1846,13 +1848,10 @@ async function aoVivo() {
     ? ` Relendo ${relendo.join(" e ")} a pedido: só o que foi publicado desde a última vez.`
     : "";
   $("vivo_resumo").textContent = !comTrabalho.length
-    ? "Nenhum perfil tem página por ler, então nada foi lido: as máquinas conferem o "
-      + "acervo e desligam sem tocar no Instagram. Para haver trabalho, é preciso "
-      + "acrescentar um perfil que ainda não esteja no banco."
+    ? "Nenhum perfil tem página por ler, então nada foi lido."
     : (d.rodando
-        ? `${feitos} de ${d.elos.length} máquinas concluídas. Cada uma lê 12 posts com `
-          + `endereço próprio, porque o Instagram só libera uma leitura por endereço.`
-        : `${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números abaixo já estão atualizados.`)
+        ? `${feitos} de ${d.elos.length} máquinas concluídas, uma página de 12 posts cada.`
+        : `${feitos} de ${d.elos.length} máquinas trouxeram posts.`)
       + porque;
   // ENQUANTO A RODADA ESTÁ NO AR, o canto do bloco vira sinal de carregamento, contando
   // desde a hora real em que ela começou. O relógio não é reiniciado a cada consulta:
