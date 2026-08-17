@@ -684,17 +684,94 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .elo.agora .luz{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
 .elo.falhou .luz{background:var(--vermelho)}
 
-/* ---- o registro corrido, linha a linha ---- */
-.registro{margin-top:16px;border:1px solid var(--rule-solid);border-radius:var(--r-md);
-          background:var(--paper);max-height:260px;overflow-y:auto;
-          font:12.5px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.registro:empty{display:none}
-.registro .ln{display:flex;gap:12px;padding:5px 13px;border-bottom:1px solid var(--rule)}
-.registro .ln:last-child{border-bottom:0}
-.registro .hora{color:var(--soft);flex:none;font-variant-numeric:tabular-nums}
-.registro .txt{color:var(--ink)}
-.registro .ln.bom .txt{color:var(--verde)}
-.registro .ln.ruim .txt{color:var(--vermelho)}
+/* ====================================================== O REGISTRO, EM FORMA DE CONSOLE
+
+   Molde escolhido pelo Gabriel em 17/08: cartão fechado, com cabeça de identidade, três
+   medidas por gravidade com traço de atividade, faixa de "ao vivo", o fluxo das linhas
+   em letra de máquina e um pé com o tamanho da memória.
+
+   AS TRÊS CORES SÃO AS DA CARTELA DE GRÁFICO, e não `--vermelho` e `--ambar`.
+   Essas duas não são redefinidas no tema escuro: ficam nos tons de fundo claro e somem
+   contra o preto. `--chart-5`, `--chart-3` e `--chart-2` têm par nos dois temas.
+
+   O TRAÇO DE ATIVIDADE É MEDIDO, e não enfeite: cada ponto é quantas linhas daquela
+   gravidade entraram numa janela de cinco segundos. Sem movimento ele sai reto e apagado,
+   que é a verdade, e não uma onda inventada para a tela parecer viva. */
+.konsole{border:1px solid var(--rule-solid);border-radius:var(--r-lg);
+         background:var(--branco);overflow:hidden;box-shadow:var(--sombra)}
+
+.kon-topo{display:flex;align-items:center;gap:13px;padding:17px 20px}
+.kon-selo{flex:none;display:grid;place-items:center;width:34px;height:34px;
+          border-radius:9px;background:var(--paper-2);border:1px solid var(--rule-solid);
+          color:var(--muted)}
+.kon-selo svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;
+              stroke-linecap:round;stroke-linejoin:round}
+.kon-quem{min-width:0;flex:1}
+.kon-quem b{display:block;font-size:14.5px;font-weight:650;color:var(--ink);line-height:1.3}
+.kon-quem span{display:block;font-size:12.5px;color:var(--muted);line-height:1.45;
+               margin-top:2px}
+.kon-dir{flex:none;display:flex;align-items:center}
+.kon-vivo{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;
+          letter-spacing:.09em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.kon-vivo i{width:6px;height:6px;border-radius:50%;background:var(--soft);flex:none}
+.kon-vivo.ativa{color:var(--verde)}
+.kon-vivo.ativa i{background:var(--verde)}
+
+/* as três medidas, divididas por fio, como no molde */
+.kon-medidas{display:grid;grid-template-columns:repeat(3,1fr);
+             border-top:1px solid var(--rule)}
+.kon-medida{padding:15px 20px 17px;min-width:0}
+.kon-medida + .kon-medida{border-left:1px solid var(--rule)}
+.kon-rot{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.kon-rot svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;
+             flex:none}
+.kon-rot span{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.09em;
+              text-transform:uppercase}
+.kon-medida b{display:block;margin:9px 0 10px;font-size:27px;font-weight:650;
+              letter-spacing:-.02em;line-height:1;color:var(--ink);
+              font-variant-numeric:tabular-nums}
+.kon-traco{display:block;width:100%;height:20px}
+.kon-traco path{fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.kon-medida.falha .kon-traco path{stroke:var(--chart-5)}
+.kon-medida.aviso .kon-traco path{stroke:var(--chart-3)}
+.kon-medida.evento .kon-traco path{stroke:var(--chart-2)}
+.kon-traco.parado path{opacity:.32}
+
+/* as máquinas só aparecem enquanto a rodada está no ar */
+.kon-maquinas{padding:0 20px 16px;border-top:1px solid var(--rule);padding-top:16px}
+.kon-maquinas[hidden]{display:none}
+
+.kon-faixa{padding:8px 20px;background:var(--paper-2);
+           border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+           font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+           color:var(--muted)}
+
+.kon-fluxo{max-height:250px;overflow-y:auto;scrollbar-width:none}
+.kon-fluxo::-webkit-scrollbar{display:none}
+.kon-fluxo:empty::after{content:"Nada aconteceu ainda nesta sessão.";display:block;
+                        padding:18px 20px;font-size:12.5px;color:var(--soft)}
+.kon-ln{display:flex;align-items:center;gap:11px;padding:11px 20px}
+.kon-ln i{width:6px;height:6px;border-radius:50%;flex:none;background:var(--chart-2)}
+.kon-ln.falha i{background:var(--chart-5)}
+.kon-ln.aviso i{background:var(--chart-3)}
+.kon-ln .txt{flex:1;min-width:0;color:var(--ink);
+             font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+             overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kon-ln .quando{flex:none;font-size:11.5px;color:var(--soft);
+                font-variant-numeric:tabular-nums}
+
+.kon-pe{display:flex;align-items:center;justify-content:space-between;gap:14px;
+        padding:11px 20px;background:var(--paper-2);border-top:1px solid var(--rule);
+        font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+        color:var(--muted)}
+.kon-pe a{font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;
+          color:var(--link);text-decoration:none}
+.kon-pe a:hover{text-decoration:underline}
+
+@media(max-width:720px){
+  .kon-medidas{grid-template-columns:1fr}
+  .kon-medida + .kon-medida{border-left:0;border-top:1px solid var(--rule)}
+}
 
 /* ---- perfil: barra de avanço ---- */
 .perfil-linha{background:var(--branco);border:1px solid var(--rule-solid);
@@ -984,16 +1061,67 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       </div>
     </div>
 
+    <!-- O registro no molde de console que o Gabriel escolheu: identidade em cima, três
+         medidas por gravidade com traço de atividade, faixa de ao vivo, o fluxo em letra
+         de máquina e o pé com o tamanho da memória. As máquinas da rodada continuam
+         aqui, mas só aparecem enquanto uma rodada está no ar: fora disso são vinte
+         pastilhas ocupando o cartão para dizer que nada acontece. -->
     <div class="secao">
-      <div class="secao-cab">
-        <h2>Registro ao vivo</h2>
-        <div class="dir"><span class="nota" id="vivo_quando"></span></div>
-      </div>
-      <div class="caixa">
-        <h3 id="vivo_titulo">Esteira parada</h3>
-        <p class="nota" id="vivo_resumo">Nenhuma rodada em andamento.</p>
-        <div id="vivo_elos" class="elos"></div>
-        <div class="registro" id="registro"></div>
+      <div class="secao-cab"><h2>Registro ao vivo</h2></div>
+
+      <div class="konsole">
+        <div class="kon-topo">
+          <span class="kon-selo">
+            <svg viewBox="0 0 24 24"><path d="m5 8 4 4-4 4M12 16h7"/></svg>
+          </span>
+          <div class="kon-quem">
+            <b id="vivo_titulo">Esteira parada</b>
+            <span id="vivo_resumo">Nenhuma rodada em andamento.</span>
+          </div>
+          <div class="kon-dir" id="vivo_quando">
+            <span class="kon-vivo"><i></i>parada</span>
+          </div>
+        </div>
+
+        <div class="kon-medidas">
+          <div class="kon-medida falha">
+            <div class="kon-rot">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/>
+                <path d="M12 8v5M12 16h.01"/></svg><span>falhas</span>
+            </div>
+            <b id="k_falha">0</b>
+            <svg class="kon-traco parado" id="t_falha" viewBox="0 0 100 20"
+                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
+          </div>
+          <div class="kon-medida aviso">
+            <div class="kon-rot">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/>
+                <path d="M12 16v-5M12 8h.01"/></svg><span>avisos</span>
+            </div>
+            <b id="k_aviso">0</b>
+            <svg class="kon-traco parado" id="t_aviso" viewBox="0 0 100 20"
+                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
+          </div>
+          <div class="kon-medida evento">
+            <div class="kon-rot">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/>
+                <path d="m20 20-4.3-4.3"/></svg><span>eventos</span>
+            </div>
+            <b id="k_evento">0</b>
+            <svg class="kon-traco parado" id="t_evento" viewBox="0 0 100 20"
+                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
+          </div>
+        </div>
+
+        <div class="kon-maquinas elos" id="vivo_elos" hidden></div>
+
+        <div class="kon-faixa">ao vivo</div>
+        <div class="kon-fluxo" id="registro"></div>
+        <div class="kon-pe">
+          <span id="kon_memoria">memória: 0 de 120 linhas</span>
+          <a href="https://github.com/Elmoamacoca/estudio-video/actions" target="_blank"
+             rel="noopener">Ver a esteira &rarr;</a>
+        </div>
       </div>
     </div>
 
@@ -1589,16 +1717,94 @@ const NOMES = { queued: "na fila", in_progress: "trabalhando", success: "pronto"
                 waiting: "esperando", pending: "na fila" };
 let relogio = null, vistos = new Set();
 
+/* ------------------------------------------------------------ o fluxo do console
+
+   TRÊS GRAVIDADES, e não quatro. O molde tem três colunas e três cores, e cada linha
+   do fluxo pertence a uma delas. Antes havia "bom", "ruim" e neutro, com verde e
+   vermelho: verde não existe neste desenho, e o que era vermelho misturava duas coisas
+   diferentes. Recusar um perfil já minerado não é falha, é aviso: o sistema fez o que
+   devia. Falha é a coisa que não devia ter acontecido.
+
+     falha   vermelho   o serviço não respondeu, o Instagram recusou
+     aviso   âmbar      pedido barrado de propósito, nada pendente para fazer
+     evento  azul       o andamento normal do trabalho
+
+   O TEMPO DE CADA LINHA É RELATIVO E ANDA SOZINHO. O relógio absoluto respondia "às
+   15:31:38", que obriga quem lê a fazer a conta de cabeça para saber se é de agora ou
+   de meia hora atrás. */
+const CONTAS = { falha: 0, aviso: 0, evento: 0 };
+const JANELAS = { falha: [], aviso: [], evento: [] };
+let desdeAmostra = { falha: 0, aviso: 0, evento: 0 };
+const MEMORIA = 120;
+
+function tempoDesde(ms) {
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return "há " + s + "s";
+  if (s < 3600) return "há " + Math.floor(s / 60) + "min";
+  return "há " + Math.floor(s / 3600) + "h";
+}
+
 function anotar(texto, tipo) {
   const reg = $("registro");
   if (vistos.has(texto)) return;
   vistos.add(texto);
+  const gravidade = CONTAS[tipo] !== undefined ? tipo : "evento";
+  CONTAS[gravidade] += 1;
+  desdeAmostra[gravidade] += 1;
+
   const ln = document.createElement("div");
-  ln.className = "ln" + (tipo ? " " + tipo : "");
-  ln.innerHTML = `<span class="hora">${new Date().toLocaleTimeString("pt-BR")}</span>`
-               + `<span class="txt">${texto}</span>`;
+  ln.className = "kon-ln " + gravidade;
+  ln.dataset.quando = Date.now();
+  ln.innerHTML = `<i></i><span class="txt"></span>`
+               + `<span class="quando">há 0s</span>`;
+  ln.querySelector(".txt").textContent = texto;
   reg.prepend(ln);
-  while (reg.children.length > 120) reg.lastChild.remove();
+  while (reg.children.length > MEMORIA) reg.lastChild.remove();
+
+  for (const g of Object.keys(CONTAS)) $("k_" + g).textContent = num(CONTAS[g]);
+  $("kon_memoria").textContent =
+    `memória: ${reg.children.length} de ${MEMORIA} linhas`;
+}
+
+/** Reescreve o "há quanto tempo" de cada linha, de segundo em segundo. */
+setInterval(() => {
+  document.querySelectorAll("#registro .kon-ln").forEach(ln => {
+    ln.querySelector(".quando").textContent = tempoDesde(Number(ln.dataset.quando));
+  });
+}, 1000);
+
+/* O traço de atividade: quantas linhas de cada gravidade entraram em cada janela de
+   cinco segundos, nos últimos dois minutos. Sem movimento ele sai reto e apagado, que
+   é o que aconteceu, em vez de uma onda desenhada para a tela parecer viva. */
+function tracar() {
+  for (const g of Object.keys(JANELAS)) {
+    const serie = JANELAS[g];
+    serie.push(desdeAmostra[g]);
+    desdeAmostra[g] = 0;
+    while (serie.length > 24) serie.shift();
+
+    const alvo = $("t_" + g);
+    const teto = Math.max(...serie, 0);
+    if (!teto) {
+      alvo.classList.add("parado");
+      alvo.querySelector("path").setAttribute("d", "M0 19H100");
+      continue;
+    }
+    alvo.classList.remove("parado");
+    const passo = serie.length > 1 ? 100 / (serie.length - 1) : 100;
+    const d = serie.map((v, i) =>
+      `${i ? "L" : "M"}${(i * passo).toFixed(1)} ${(19 - (v / teto) * 17).toFixed(1)}`
+    ).join(" ");
+    alvo.querySelector("path").setAttribute("d", d);
+  }
+}
+setInterval(tracar, 5000);
+
+/** O selo do cartão: ponto verde e a palavra, no molde do widget. */
+function selarConsole(ativa, palavra) {
+  const alvo = $("vivo_quando");
+  if (!alvo || RELOGIOS.has("vivo_quando")) return;
+  alvo.innerHTML = `<span class="kon-vivo${ativa ? " ativa" : ""}"><i></i>${palavra}</span>`;
 }
 
 async function aoVivo() {
@@ -1610,7 +1816,8 @@ async function aoVivo() {
     $("vivo_titulo").textContent = "Esteira parada";
     $("vivo_resumo").textContent = "Nenhuma rodada em andamento. Ela acorda sozinha "
       + "de meia em meia hora, ou agora se você mandar varrer.";
-    $("vivo_elos").innerHTML = "";
+    $("vivo_elos").hidden = true;
+    selarConsole(false, "parada");
     return;
   }
 
@@ -1655,9 +1862,13 @@ async function aoVivo() {
     if (!RELOGIOS.has("vivo_quando"))
       carregando("vivo_quando", "Rodada " + d.numero, "orbita", d.comecou);
   } else {
-    parado("vivo_quando", d.comecou
-      ? "começou " + new Date(d.comecou).toLocaleTimeString("pt-BR") : "");
+    parado("vivo_quando");
+    selarConsole(false, "encerrada");
   }
+
+  // AS MÁQUINAS SÓ APARECEM ENQUANTO A RODADA ESTÁ NO AR. Fora disso são vinte
+  // pastilhas ocupando o cartão para dizer que nada está acontecendo.
+  $("vivo_elos").hidden = !d.rodando;
 
   $("vivo_elos").innerHTML = d.elos
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt", { numeric: true }))
@@ -1670,10 +1881,10 @@ async function aoVivo() {
     }).join("");
 
   d.elos.filter(e => e.situacao === "success" && e.fim)
-    .forEach(e => anotar(`${e.nome} concluída`, "bom"));
+    .forEach(e => anotar(`${e.nome} concluída`, "evento"));
   // só se afirma leitura quando existe perfil com página por ler. Antes esta linha saía
   // sempre, e escrevia "lendo uma página" numa rodada que não leu nada.
-  if (agora && comTrabalho.length) anotar(`${agora.nome} lendo uma página`, "");
+  if (agora && comTrabalho.length) anotar(`${agora.nome} lendo uma página`, "evento");
 
   if (d.rodando && !relogio) relogio = setInterval(() => { aoVivo(); atualizar(); }, 7000);
   if (!d.rodando && relogio) { clearInterval(relogio); relogio = null; atualizar(); }
@@ -1996,17 +2207,17 @@ $("salvar").onclick = async () => {
   // esse tempo se lê como travamento.
   carregando("recado", contas.length === 1 ? "Salvando o perfil"
                                            : `Salvando ${contas.length} perfis`, "onda");
-  anotar("salvando " + contas.length + " contas de origem");
+  anotar("salvando " + contas.length + " contas de origem", "evento");
   try {
     const d = await mandar("/contas", { contas });
 
     // O QUE FOI RECUSADO NA PORTA. Perfil já minerado não entra de novo, e isso é dito
     // com o nome dele: recusa sem nome vira "não funcionou", e não é isso.
     const barrados = d.bloqueados || [];
-    barrados.forEach(c => anotar(`@${c} já está minerado, não entra de novo`, "ruim"));
+    barrados.forEach(c => anotar(`@${c} já está minerado, não entra de novo`, "aviso"));
     (d.novos || []).forEach(n => n.ok
-      ? anotar(`@${n.conta} identificado: ${num(n.publicacoes)} publicações`, "bom")
-      : anotar(`@${n.conta} não respondeu ao Instagram, tente daqui a pouco`, "ruim"));
+      ? anotar(`@${n.conta} identificado: ${num(n.publicacoes)} publicações`, "evento")
+      : anotar(`@${n.conta} não respondeu ao Instagram, tente daqui a pouco`, "falha"));
 
     // A ESTEIRA SÓ É CHAMADA SE ENTROU PERFIL NOVO.
     // Ela era chamada sempre, e salvar uma lista que já estava no banco acordava vinte
@@ -2015,7 +2226,7 @@ $("salvar").onclick = async () => {
     const entraram = (d.novos || []).filter(n => n.ok);
     if (entraram.length) {
       await mandar("/varrer");
-      anotar("esteira acionada", "bom");
+      anotar("esteira acionada", "evento");
     }
 
     // O CAMPO ESVAZIA AQUI. Ele é o lugar de PEDIR, e o pedido já foi respondido, seja
@@ -2034,7 +2245,7 @@ $("salvar").onclick = async () => {
         ? `@${barrados[0]} já está minerado, nada a fazer`
         : `os ${barrados.length} perfis já estão minerados, nada a fazer`;
     setTimeout(() => { aoVivo(); atualizar(); }, 2500);
-  } catch (e) { parado("recado", e.message); anotar(e.message, "ruim"); }
+  } catch (e) { parado("recado", e.message); anotar(e.message, "falha"); }
 };
 
 $("varrer").onclick = async () => {
@@ -2043,7 +2254,7 @@ $("varrer").onclick = async () => {
   const comTrabalho = MINERADOS.filter(p => p.relendo || !p.completo);
   if (!comTrabalho.length) {
     parado("recado", "todos os perfis estão em dia, não há página por ler");
-    anotar("nada pendente: a esteira não foi chamada", "");
+    anotar("nada pendente: a esteira não foi chamada", "aviso");
     return;
   }
   carregando("recado", "Chamando a esteira", "orbita");
@@ -2053,9 +2264,9 @@ $("varrer").onclick = async () => {
     $("recado").textContent = comTrabalho.length === 1
       ? "esteira acionada para 1 perfil"
       : `esteira acionada para ${comTrabalho.length} perfis`;
-    anotar("esteira acionada", "bom");
+    anotar("esteira acionada", "evento");
     setTimeout(aoVivo, 2500);
-  } catch (e) { parado("recado", e.message); anotar(e.message, "ruim"); }
+  } catch (e) { parado("recado", e.message); anotar(e.message, "falha"); }
 };
 
 document.addEventListener("click", async ev => {
