@@ -125,9 +125,12 @@ jobs:
         run: |
           python - <<'PY' > veredito.txt
           import json, pathlib, subprocess
-          pendentes = sum(
-              1 for a in pathlib.Path("dados/perfis").glob("*.json")
-              if not json.loads(a.read_text(encoding="utf-8")).get("completo"))
+          # perfil em releitura conta como pela metade: ele esta' marcado como
+          # completo e continua tendo pagina para ler.
+          def falta(a):
+              d = json.loads(a.read_text(encoding="utf-8"))
+              return (not d.get("completo")) or d.get("relendo")
+          pendentes = sum(1 for a in pathlib.Path("dados/perfis").glob("*.json") if falta(a))
           # quantos commits de elo entraram nos ultimos 30 minutos
           r = subprocess.run(["git", "log", "--since=30.minutes", "--oneline", "--grep=^vaga"],
                              capture_output=True, text=True)
