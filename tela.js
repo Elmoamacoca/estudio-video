@@ -343,11 +343,9 @@ async function atualizar() {
   MINERADOS = perfis.map(p => {
     const meus = itens.filter(i => i.conta === p.conta);
     const r = (retratos && retratos[p.conta]) || {};
+    // formato vem do que foi VARRIDO (o seletor conta); `acima` é o que passou na régua
     return { ...p, nome: p.nome || r.nome, avatar: p.avatar || r.avatar,
-      reels: meus.filter(i => i.formato === "reels").length,
-      imagens: meus.filter(i => i.formato === "post").length,
-      carrosseis: meus.filter(i => i.formato === "carrossel").length,
-      acima: meus.length };
+             acima: meus.length };
   });
   desenhaMinerados();
 
