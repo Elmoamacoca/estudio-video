@@ -57,7 +57,18 @@ def blocos_equilibrados(css: str):
         i = j + 1
 
 
+# O SISTEMA DE REVELAÇÃO AO ROLAR NÃO VEM, e isso não é preguiça.
+# Lá ele funciona assim: a classe `com-revelar` deixa tudo com opacidade zero, e um
+# observador de rolagem marca cada seção como vista para acender. Copiar só a metade
+# de CSS deixa a página inteira apagada para sempre, que foi o que aconteceu aqui: o
+# texto saía cinza-fantasma e a tela parecia quebrada. Ou vem inteiro, com observador,
+# ou não vem. Optamos por não vir: a tela do Estúdio é curta e não ganha nada com isso.
+PROIBIDO = ("com-revelar", ".entra", "data-visto")
+
+
 def interessa(sel: str) -> bool:
+    if any(p in sel for p in PROIBIDO):
+        return False
     return any(q in sel for q in QUERO)
 
 
@@ -86,6 +97,9 @@ def extrair_css(html: str) -> tuple[str, list[str]]:
         if sel.startswith("@keyframes"):
             if any(k in sel for k in ("ping", "subir", "tracar")):
                 guardados.append(inteiro)
+            continue
+        if any(p in sel for p in PROIBIDO):
+            avisos.append(f"{sel[:50]} é do sistema de revelação: fora")
             continue
         if ":root" in sel or sel.startswith("html["):
             guardados.append(inteiro)          # a paleta inteira, dos dois temas
