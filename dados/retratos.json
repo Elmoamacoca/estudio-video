@@ -2,11 +2,13 @@
  "boletimdamorte": {
   "nome": "BOLETIM DA MORTE 🏴‍☠️",
   "seguidores": 314358,
-  "publicacoes": 4977
+  "publicacoes": 4977,
+  "foto": true
  },
  "vinci.society": {
   "nome": "Vinci",
   "seguidores": 211466,
-  "publicacoes": 286
+  "publicacoes": 286,
+  "foto": true
  }
 }
