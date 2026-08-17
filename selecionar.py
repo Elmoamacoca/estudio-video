@@ -89,6 +89,10 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
             "publicacoes": dados["perfil"]["publicacoes"],
             "lidos": len(dados.get("posts", [])),
             "completo": bool(dados.get("completo")),
+            # perfil encerrado que foi pedido de novo. Sem este campo a tela mostrava
+            # "até o limite" enquanto uma vaga estava lendo ele, e a conta não fechava
+            # para quem olhava: já foi varrido, por que está varrendo?
+            "relendo": bool(dados.get("relendo")),
             # ate onde a varredura alcancou. O Instagram corta a leitura anonima por
             # profundidade: no @boletimdamorte ele fechou aos 3.093 posts, cobrindo
             # de junho de 2023 para ca. O resto exige sessao, e nao vale o risco.
