@@ -870,18 +870,19 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         <div class="dir"><span class="nota" id="recado"></span></div>
       </div>
       <div class="caixa">
-        <h3>De onde os vídeos são minerados</h3>
+        <h3>Acrescentar contas de origem</h3>
         <p class="nota">Uma por linha, com ou sem arroba, ou o endereço inteiro do perfil.
-          A esteira varre o histórico até onde o Instagram deixa, guardando onde parou.</p>
+          O campo <b>esvazia ao salvar</b>: quem entrou passa a viver na aba de Minerados,
+          e não volta a aparecer aqui. Este espaço é só para o que ainda não foi pedido.</p>
         <textarea id="fontes" placeholder="boletimdamorte&#10;vinci.society&#10;https://www.instagram.com/outraconta/"></textarea>
         <div class="linha">
           <button class="acao forte" id="salvar">Salvar e varrer</button>
-          <button class="acao" id="varrer">Varrer de novo</button>
+          <button class="acao" id="varrer">Acordar a esteira</button>
         </div>
-        <p class="nota" style="margin-top:12px">Perfil já minerado <b>não fica de fora</b>.
-          Pedir de novo faz a esteira reler do topo até bater no que já está guardado,
-          então ela traz o que foi publicado desde a última vez e para ali, sem repetir
-          o histórico inteiro. A mesma coisa vale pelo botão de cada linha, em Minerados.</p>
+        <p class="nota" style="margin-top:12px">Para <b>minerar de novo</b> um perfil que
+          já está no banco, use o botão redondo da linha dele, em Minerados. A esteira
+          relê do topo até bater no que já tem guardado, então traz o que foi publicado
+          desde a última vez e para ali, sem repetir o histórico inteiro.</p>
       </div>
     </div>
 
@@ -1347,6 +1348,58 @@ async function mandar(rota, corpo) {
   return d;
 }
 
+/* ------------------------------------------------------------------ o selo do topo
+
+   ELE DIZ "AO VIVO", e não "no ar", e a diferença não é de palavra.
+   "No ar" respondia só se a ponte estava respondendo, o que é quase sempre verdade e
+   por isso não informa nada: o selo ficava verde com a esteira parada havia dois dias.
+   Este aqui é o mesmo selo do Social Tracker, com a mesma régua de lá: ele conta desde
+   a última rodada que fechou, e muda de cor sozinho quando ela envelhece.
+
+     até 3 horas   ao vivo, verde        (a esteira acorda de meia em meia hora)
+     até 26 horas  desatualizado, âmbar  (perdeu rodadas, mas o dado ainda serve)
+     acima disso   fora do ar, vermelho  (alguma coisa parou e precisa de olho)
+
+   Ele também envelhece com a página aberta: o relógio reclassifica de 15 em 15
+   segundos, então uma aba esquecida na tela não continua dizendo "ao vivo" para
+   sempre. */
+const HORAS_NO_RITMO = 3, HORAS_ATE_MORTO = 26;
+let ultimaColeta = null;
+
+function quanto(h) {
+  if (h < 0.017) return "agora";
+  if (h < 1) return Math.round(h * 60) + " min";
+  if (h < 24) return (h < 10 ? h.toFixed(1).replace(".", ",") : Math.round(h)) + " h";
+  return Math.round(h / 24) + " d";
+}
+
+function selar(estado) {
+  if (estado && estado.ultima_rodada) ultimaColeta = estado.ultima_rodada;
+  const selo = $("estado"), rotulo = selo.querySelector(".rotulo");
+  if (estado === null && ultimaColeta === null) {
+    selo.className = "status offline";
+    rotulo.textContent = "sem resposta";
+    return;
+  }
+  if (!ultimaColeta) {
+    selo.className = "status offline";
+    rotulo.textContent = "nunca coletou";
+    return;
+  }
+  const h = (Date.now() / 1000 - ultimaColeta) / 3600;
+  if (h > HORAS_ATE_MORTO) {
+    selo.className = "status offline";
+    rotulo.textContent = "fora do ar há " + quanto(h);
+  } else if (h > HORAS_NO_RITMO) {
+    selo.className = "status degraded";
+    rotulo.textContent = "desatualizado há " + quanto(h);
+  } else {
+    selo.className = "status online";
+    rotulo.textContent = "ao vivo · coletou há " + quanto(h);
+  }
+}
+setInterval(() => selar(null), 15000);
+
 /* ---------------------------------------------------------------- registro ao vivo */
 const NOMES = { queued: "na fila", in_progress: "trabalhando", success: "pronto",
                 failure: "falhou", cancelled: "cancelado", skipped: "pulado",
@@ -1384,10 +1437,18 @@ async function aoVivo() {
   $("vivo_titulo").textContent = d.rodando
     ? (agora ? "Lendo agora: " + agora.nome : "A esteira está trabalhando")
     : "Rodada " + d.numero + " encerrada";
-  $("vivo_resumo").textContent = d.rodando
+  // POR QUE ELA ESTÁ LENDO UM PERFIL QUE JÁ FOI VARRIDO. Sem esta frase a esteira
+  // parecia refazer trabalho pronto por conta própria; ela está atendendo um pedido de
+  // releitura, e quem pediu tem direito de ver isso escrito.
+  const relendo = MINERADOS.filter(p => p.relendo).map(p => "@" + p.conta);
+  const porque = relendo.length
+    ? ` Relendo ${relendo.join(" e ")} a pedido: só o que foi publicado desde a última vez.`
+    : "";
+  $("vivo_resumo").textContent = (d.rodando
     ? `${feitos} de ${d.elos.length} máquinas concluídas. Cada uma lê 12 posts com `
       + `endereço próprio, porque o Instagram só libera uma leitura por endereço.`
-    : `${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números abaixo já estão atualizados.`;
+    : `${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números abaixo já estão atualizados.`)
+    + porque;
   $("vivo_quando").textContent = d.comecou
     ? "começou " + new Date(d.comecou).toLocaleTimeString("pt-BR") : "";
 
@@ -1437,9 +1498,14 @@ const ESTADOS = {
   completo: ['<span class="pino ok">concluído</span>', "completo"],
   limite: ['<span class="pino ok">até o limite</span>', "limite"],
   varrendo: ['<span class="pino">varrendo</span>', "varrendo"],
+  relendo: ['<span class="pino">relendo</span>', "relendo"],
 };
 
 function situacaoDe(p) {
+  // a releitura vem primeiro: um perfil encerrado que foi pedido de novo está
+  // trabalhando agora, e mostrar "até o limite" enquanto uma vaga lê ele é o que
+  // fazia a conta não fechar para quem olhava a esteira.
+  if (p.relendo) return "relendo";
   if (!p.completo) return "varrendo";
   return (p.publicacoes && p.lidos < p.publicacoes) ? "limite" : "completo";
 }
@@ -1487,6 +1553,7 @@ window.montarSelect("min-estado", [
   { v: "completo", r: "Concluídos" },
   { v: "limite", r: "Varridos até o limite" },
   { v: "varrendo", r: "Ainda varrendo" },
+  { v: "relendo", r: "Relendo agora" },
 ], "", v => { minEstado = v; minPagina = 1; desenhaMinerados(); });
 
 window.montarSelect("min-ordem", [
@@ -1675,10 +1742,7 @@ async function atualizar() {
     // arquivo à parte: o do perfil varrido passa de 1 MB e a via de leitura corta ali
     ler("dados/retratos.json")]);
 
-  const vivo = estado !== null;
-  const selo = $("estado");
-  selo.className = "status " + (vivo ? "online" : "offline");
-  selo.querySelector(".rotulo").textContent = vivo ? "no ar" : "sem resposta";
+  selar(estado);
 
   // a seleção é quem calcula os números da tabela; o estado é a cópia dela
   const perfis = (sel && sel.perfis) || (estado && estado.perfis) || [];
@@ -1687,8 +1751,11 @@ async function atualizar() {
   $("n_sel").textContent = num(sel && sel.itens ? sel.itens.length : 0);
   $("n_completos").textContent = perfis.filter(p => p.completo).length;
 
-  if (fontes && fontes.contas && !$("fontes").dataset.tocado)
-    $("fontes").value = fontes.contas.join("\n");
+  // O CAMPO NÃO É MAIS PREENCHIDO COM O QUE JÁ FOI MINERADO.
+  // Aqui ele era reabastecido com a lista inteira do sistema a cada 25 segundos. O
+  // efeito era o campo devolver eternamente os mesmos perfis que já estavam no banco,
+  // como se nada tivesse sido registrado: apagar não adiantava, o relógio seguinte
+  // trazia de volta. O campo é de entrada, o banco é a aba de Minerados.
 
   // a tabela quer o que a varredura descobriu, e não só o avanço
   const itens = (sel && sel.itens) || [];
@@ -1715,29 +1782,33 @@ $("salvar").onclick = async () => {
   const contas = $("fontes").value.split("\n")
     .map(s => s.trim().replace(/^@/, "").replace(/\/+$/, "").split("/").pop())
     .filter(Boolean);
+  if (!contas.length) {
+    $("recado").textContent = "escreva ao menos um perfil acima";
+    return;
+  }
   $("recado").textContent = "salvando";
   anotar("salvando " + contas.length + " contas de origem");
   try {
     const d = await mandar("/contas", { contas });
-    (d.novos || []).filter(n => n.ok).forEach(n =>
-      anotar(`@${n.conta} identificado: ${num(n.publicacoes)} publicações`, "bom"));
-    // O PEDIDO DE RELEITURA VAI JUNTO. Sem ele, salvar uma lista que já foi minerada
-    // não fazia nada: a esteira abria, não achava perfil pendente e fechava. Quem
-    // ainda está no meio da varredura não é afetado, porque a releitura só vale para
-    // perfil que a esteira já deu por encerrado.
-    await mandar("/revisitar", { contas });
+    (d.novos || []).forEach(n => n.ok
+      ? anotar(`@${n.conta}${n.ja ? " já estava no banco" : " identificado"}: `
+               + `${num(n.publicacoes)} publicações`, "bom")
+      : anotar(`@${n.conta} não respondeu ao Instagram, tente daqui a pouco`, "ruim"));
     await mandar("/varrer");
-    $("recado").textContent = d.contas + " contas salvas, esteira acionada";
+    // O CAMPO ESVAZIA AQUI. Ele é o lugar de PEDIR, e o pedido acabou de ser aceito:
+    // daqui em diante o perfil vive na aba de Minerados. Deixar o texto no campo era o
+    // que fazia a mesma conta reaparecer para sempre, como se nada tivesse acontecido.
+    $("fontes").value = "";
+    delete $("fontes").dataset.tocado;
+    $("recado").textContent = contas.length === 1
+      ? "1 perfil na fila, veja em Minerados"
+      : contas.length + " perfis na fila, veja em Minerados";
     anotar("esteira acionada", "bom");
     setTimeout(() => { aoVivo(); atualizar(); }, 2500);
   } catch (e) { $("recado").textContent = e.message; anotar(e.message, "ruim"); }
 };
 
 $("varrer").onclick = async () => {
-  const contas = $("fontes").value.split("\n")
-    .map(s => s.trim().replace(/^@/, "").replace(/\/+$/, "").split("/").pop())
-    .filter(Boolean);
-  if (contas.length) return revisitar(contas, "recado");
   $("recado").textContent = "chamando a esteira";
   try {
     await mandar("/varrer");
