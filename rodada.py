@@ -122,6 +122,32 @@ def pendentes(contas: list[str]) -> list[str]:
     return [c for _, c in fila]
 
 
+ANDAMENTO = Path("dados/andamento")
+
+
+def bater_ponto(conta: str, estado: dict, vaga: int) -> None:
+    """Deixa um sinal pequeno de onde a varredura está NESTE momento.
+
+    POR QUE ISTO EXISTE: a tela só sabia do avanço quando a rodada fechava, e um perfil
+    recém-adicionado ficava minutos sem sinal nenhum enquanto vinte máquinas trabalhavam
+    nele. O arquivo do perfil tem o avanço, mas o do @boletimdamorte passa de 2 MB e
+    ninguém baixa isso de dez em dez segundos só para ver um número.
+
+    Este aqui tem menos de duzentos bytes e é reescrito a cada página lida.
+    """
+    perfil = estado.get("perfil") or {}
+    ANDAMENTO.mkdir(parents=True, exist_ok=True)
+    (ANDAMENTO / f"{conta}.json").write_text(json.dumps({
+        "conta": conta,
+        "lidos": len(estado.get("posts") or []),
+        "publicacoes": perfil.get("publicacoes") or 0,
+        "completo": bool(estado.get("completo")),
+        "relendo": bool(estado.get("relendo")),
+        "vaga": vaga,
+        "quando": int(time.time()),
+    }, ensure_ascii=False), encoding="utf-8")
+
+
 def main() -> int:
     vaga = int(os.environ.get("VAGA", "1"))
     contas = contas_pedidas()
@@ -206,6 +232,7 @@ def main() -> int:
             print(f"[{conta}] VARREDURA COMPLETA")
     estado["atualizado"] = int(time.time())
     grava(conta, estado)
+    bater_ponto(conta, estado, vaga)
 
     meta = (estado.get("perfil") or {}).get("publicacoes") or 0
     print(f"[{conta}] +{novos} posts (total {len(estado['posts'])} de {meta})")
