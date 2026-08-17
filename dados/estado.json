@@ -1,6 +1,6 @@
 {
  "prontas": 500,
- "hoje": 0,
+ "hoje": 25,
  "ultima_rodada": 1786929482,
  "camadas": [
   {
@@ -41,6 +41,16 @@
    "publicacoes": 286,
    "lidos": 280,
    "completo": true
+  }
+ ],
+ "lotes": [
+  {
+   "numero": 1,
+   "arquivos": 25,
+   "mb": 264,
+   "criterio": "reels acima de 1.5x",
+   "quando": 1786930090,
+   "execucao": "31985000345"
   }
  ]
 }
