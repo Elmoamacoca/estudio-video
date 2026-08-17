@@ -1438,8 +1438,19 @@ async function aoVivo() {
   const feitos = d.elos.filter(e => e.situacao === "success").length;
   const agora = d.elos.find(e => e.situacao === "in_progress");
 
+  // O QUE ESTA TELA PODE AFIRMAR, E O QUE ELA NÃO PODE.
+  // Ela enxerga o estado da máquina, e não o que a máquina fez. Máquina de pé não é
+  // máquina lendo: ela baixa o acervo, confere se há perfil com página por ler e
+  // desliga. Dizer "elo 10 lendo uma página" com todos os perfis em dia foi invenção
+  // pura, e fazia parecer que a esteira estava refazendo trabalho pronto.
+  // A conta de quem tem trabalho é a mesma que a esteira faz, e a tela já tem os dados
+  // para fazê-la: perfil pela metade, ou perfil em releitura.
+  const comTrabalho = MINERADOS.filter(p => p.relendo || !p.completo);
+
   $("vivo_titulo").textContent = d.rodando
-    ? (agora ? "Lendo agora: " + agora.nome : "A esteira está trabalhando")
+    ? (comTrabalho.length
+        ? (agora ? "Lendo agora: " + agora.nome : "A esteira está trabalhando")
+        : "Rodada aberta, sem trabalho pendente")
     : "Rodada " + d.numero + " encerrada";
   // POR QUE ELA ESTÁ LENDO UM PERFIL QUE JÁ FOI VARRIDO. Sem esta frase a esteira
   // parecia refazer trabalho pronto por conta própria; ela está atendendo um pedido de
@@ -1448,11 +1459,15 @@ async function aoVivo() {
   const porque = relendo.length
     ? ` Relendo ${relendo.join(" e ")} a pedido: só o que foi publicado desde a última vez.`
     : "";
-  $("vivo_resumo").textContent = (d.rodando
-    ? `${feitos} de ${d.elos.length} máquinas concluídas. Cada uma lê 12 posts com `
-      + `endereço próprio, porque o Instagram só libera uma leitura por endereço.`
-    : `${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números abaixo já estão atualizados.`)
-    + porque;
+  $("vivo_resumo").textContent = !comTrabalho.length
+    ? "Nenhum perfil tem página por ler, então nada foi lido: as máquinas conferem o "
+      + "acervo e desligam sem tocar no Instagram. Para trazer o que é novo em um perfil, "
+      + "use o botão de minerar de novo, na linha dele em Minerados."
+    : (d.rodando
+        ? `${feitos} de ${d.elos.length} máquinas concluídas. Cada uma lê 12 posts com `
+          + `endereço próprio, porque o Instagram só libera uma leitura por endereço.`
+        : `${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números abaixo já estão atualizados.`)
+      + porque;
   $("vivo_quando").textContent = d.comecou
     ? "começou " + new Date(d.comecou).toLocaleTimeString("pt-BR") : "";
 
@@ -1468,7 +1483,9 @@ async function aoVivo() {
 
   d.elos.filter(e => e.situacao === "success" && e.fim)
     .forEach(e => anotar(`${e.nome} concluída`, "bom"));
-  if (agora) anotar(`${agora.nome} lendo uma página`, "");
+  // só se afirma leitura quando existe perfil com página por ler. Antes esta linha saía
+  // sempre, e escrevia "lendo uma página" numa rodada que não leu nada.
+  if (agora && comTrabalho.length) anotar(`${agora.nome} lendo uma página`, "");
 
   if (d.rodando && !relogio) relogio = setInterval(() => { aoVivo(); atualizar(); }, 7000);
   if (!d.rodando && relogio) { clearInterval(relogio); relogio = null; atualizar(); }
@@ -1798,25 +1815,45 @@ $("salvar").onclick = async () => {
       ? anotar(`@${n.conta}${n.ja ? " já estava no banco" : " identificado"}: `
                + `${num(n.publicacoes)} publicações`, "bom")
       : anotar(`@${n.conta} não respondeu ao Instagram, tente daqui a pouco`, "ruim"));
-    await mandar("/varrer");
+
+    // A ESTEIRA SÓ É CHAMADA SE HÁ PERFIL NOVO.
+    // Aqui ela era chamada sempre, e salvar uma lista que já estava no banco acordava
+    // vinte máquinas para não ler nada. Na tela isso aparecia como a esteira relendo o
+    // que já tinha sido lido, e não era: era trabalho vazio que eu mandei fazer.
+    const entraram = (d.novos || []).filter(n => n.ok && !n.ja);
+    if (entraram.length) {
+      await mandar("/varrer");
+      anotar("esteira acionada", "bom");
+    }
+
     // O CAMPO ESVAZIA AQUI. Ele é o lugar de PEDIR, e o pedido acabou de ser aceito:
     // daqui em diante o perfil vive na aba de Minerados. Deixar o texto no campo era o
     // que fazia a mesma conta reaparecer para sempre, como se nada tivesse acontecido.
     $("fontes").value = "";
     delete $("fontes").dataset.tocado;
-    $("recado").textContent = contas.length === 1
-      ? "1 perfil na fila, veja em Minerados"
-      : contas.length + " perfis na fila, veja em Minerados";
-    anotar("esteira acionada", "bom");
+    $("recado").textContent = entraram.length
+      ? (entraram.length === 1 ? "1 perfil novo na fila, veja em Minerados"
+                               : entraram.length + " perfis novos na fila, veja em Minerados")
+      : "nada novo: esses perfis já estão no banco, a esteira não foi chamada";
     setTimeout(() => { aoVivo(); atualizar(); }, 2500);
   } catch (e) { $("recado").textContent = e.message; anotar(e.message, "ruim"); }
 };
 
 $("varrer").onclick = async () => {
+  // Acordar a esteira sem ter o que ela leia é gesto sem efeito, e um gesto sem efeito
+  // que mexe a tela parece efeito. Ela diz o que há em vez de fingir que fez algo.
+  const comTrabalho = MINERADOS.filter(p => p.relendo || !p.completo);
+  if (!comTrabalho.length) {
+    $("recado").textContent = "todos os perfis estão em dia, não há página por ler";
+    anotar("nada pendente: a esteira não foi chamada", "");
+    return;
+  }
   $("recado").textContent = "chamando a esteira";
   try {
     await mandar("/varrer");
-    $("recado").textContent = "esteira acionada";
+    $("recado").textContent = comTrabalho.length === 1
+      ? "esteira acionada para 1 perfil"
+      : `esteira acionada para ${comTrabalho.length} perfis`;
     anotar("esteira acionada", "bom");
     setTimeout(aoVivo, 2500);
   } catch (e) { $("recado").textContent = e.message; anotar(e.message, "ruim"); }
