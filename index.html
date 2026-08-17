@@ -1590,34 +1590,14 @@ document.addEventListener("click", ev => {
   revisitar([b.dataset.remina], "recado").then(() => { b.disabled = false; });
 });
 
-/* ---------------------------------------------------------------- desenhos */
-function desenhaPerfis(p) {
-  if (!p || !p.length) {
-    $("perfis").innerHTML = '<div class="vazio">Nenhum perfil varrido ainda.</div>';
-    return;
-  }
-  $("perfis").innerHTML = p.map(x => {
-    const pct = x.publicacoes ? Math.min(100, Math.round(100 * x.lidos / x.publicacoes)) : 0;
-    const desde = x.mais_antigo
-      ? new Date(x.mais_antigo * 1000).toLocaleDateString("pt-BR", { month: "short", year: "numeric" })
-      : null;
-    // completo com menos posts que o total não é falha: o Instagram corta a leitura
-    // anônima por profundidade, e o que sobra é histórico antigo demais para servir.
-    const parcial = x.completo && x.publicacoes && x.lidos < x.publicacoes;
-    const marca = x.completo
-      ? `<span class="tag ok">${parcial ? "varrido até o limite" : "completo"}</span>`
-      : '<span class="tag trab">varrendo</span>';
-    return `<div class="perfil-linha">
-      <div class="perfil-topo"><span><b>@${x.conta}</b> ${marca}</span>
-        <span class="nota">${num(x.lidos)} de ${num(x.publicacoes)} · ${pct}%</span></div>
-      <div class="barra"><i style="width:${pct}%"></i></div>
-      ${desde ? `<p class="nota" style="margin-top:8px;font-size:12.5px">${
-        parcial ? `O Instagram fecha a leitura por profundidade. Chegamos até <b>${desde}</b>.`
-                : `Cobre desde ${desde}.`}</p>` : ""}
-    </div>`;
-  }).join("");
-}
+/* ---------------------------------------------------------------- desenhos
 
+   AQUI MORAVA `desenhaPerfis`, e ela era um defeito de verdade, não sobra inofensiva.
+   Ela escrevia numa caixa `#perfis` que deixou de existir quando o avanço de cada
+   perfil virou coluna da tabela de Minerados. Escrever em caixa que não existe é erro
+   que INTERROMPE quem chamou: `atualizar()` morria ali, a cada 25 segundos, e as duas
+   linhas seguintes nunca rodavam. Era por isso que a aba de Baixar dizia "nenhum perfil
+   varrido ainda" com dois perfis varridos e mil e quinhentas peças acima da régua. */
 function desenhaProntos(sel, perfis) {
   const alvo = $("prontos");
   if (!perfis || !perfis.length) {
@@ -1706,7 +1686,6 @@ async function atualizar() {
   });
   desenhaMinerados();
 
-  desenhaPerfis(perfis);
   desenhaProntos(sel, perfis);
   desenhaLotes(estado && estado.lotes);
 }
