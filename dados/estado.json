@@ -1,7 +1,7 @@
 {
  "prontas": 500,
  "hoje": 25,
- "ultima_rodada": 1786934539,
+ "ultima_rodada": 1786934766,
  "camadas": [
   {
    "nome": "Processamento de vídeo",
@@ -43,7 +43,9 @@
    "mais_novo": 1786913128,
    "reels": 211,
    "imagens": 2531,
-   "carrosseis": 351
+   "carrosseis": 351,
+   "acima": 1415,
+   "baixaveis": 53
   },
   {
    "conta": "vinci.society",
@@ -58,7 +60,9 @@
    "mais_novo": 1786921564,
    "reels": 102,
    "imagens": 0,
-   "carrosseis": 178
+   "carrosseis": 178,
+   "acima": 130,
+   "baixaveis": 41
   }
  ],
  "lotes": [
