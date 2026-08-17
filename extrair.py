@@ -28,6 +28,11 @@ QUERO = (
     "nav-wrap", "nav-body", "nav-logo", "nav-itens", "nav-dir", "nav-hamb", "nav-menu",
     ".pilula", ".marca", ".status", ".troca", ".chave", ".bolinha", ".ind", ".ping",
     ".bola", ".ico", ".online", ".offline",
+    # `.tinta` é o bloco de desenhos reaproveitados que fica no topo do corpo. A regra
+    # dele o encolhe a tamanho zero. Sem ela o navegador dá a um `svg` sem medida o
+    # tamanho padrão de 300 por 150, e esse retângulo invisível empurrava o cabeçalho
+    # inteiro para baixo do meio da tela.
+    ".tinta",
 )
 
 # A base: sem ela o texto sai com fonte serifada do navegador e as caixas nascem sem
