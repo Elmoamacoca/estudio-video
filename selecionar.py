@@ -70,7 +70,16 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
         dados = json.loads(arq.read_text(encoding="utf-8"))
         if not dados.get("perfil"):
             continue
-        datas = sorted(x["data"] for x in dados.get("posts", []) if x.get("data"))
+        posts_todos = dados.get("posts", [])
+        datas = sorted(x["data"] for x in posts_todos if x.get("data"))
+        # A CONTAGEM POR FORMATO É DO QUE FOI VARRIDO, não do que passou na régua.
+        # Contar pela seleção fazia a tabela dizer "0 posts e 0 carrosséis" num perfil
+        # com 2.531 imagens, só porque o corte daquele momento era de reels.
+        por_formato = {"reels": 0, "post": 0, "carrossel": 0}
+        for x in posts_todos:
+            f = x.get("formato")
+            if f in por_formato:
+                por_formato[f] += 1
         perfis.append({
             "conta": dados["perfil"]["conta"],
             "nome": dados["perfil"].get("nome"),
@@ -85,6 +94,9 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
             # de junho de 2023 para ca. O resto exige sessao, e nao vale o risco.
             "mais_antigo": datas[0] if datas else None,
             "mais_novo": datas[-1] if datas else None,
+            "reels": por_formato["reels"],
+            "imagens": por_formato["post"],
+            "carrosseis": por_formato["carrossel"],
         })
         todos += mede_perfil(dados, formatos)
 
