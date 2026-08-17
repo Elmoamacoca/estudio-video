@@ -954,7 +954,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .liv-export{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
             background:rgba(0,0,0,.45);padding:20px}
 .liv-export[hidden]{display:none}
-.liv-folha{width:min(420px,100%);background:var(--branco);border-radius:var(--r-lg);
+.liv-folha{width:min(440px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:var(--branco);border-radius:var(--r-lg);
            border:1px solid var(--rule-solid);box-shadow:var(--sombra-balao);
            padding:22px}
 .liv-folha h3{font-size:15.5px;font-weight:650;color:var(--ink);margin:0 0 4px}
@@ -996,6 +996,48 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:var(--accent)}
 .liv-opcao:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
 .liv-pe{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+
+/* ------------------------------------------------------- os campos da folha de iniciar */
+.campo-bloco{margin-bottom:16px}
+.campo-rot{display:block;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:7px}
+.nota.mini{font-size:12px;line-height:1.5;margin:-3px 0 9px}
+.campo-bloco input[type=number]{height:38px;font:13.5px var(--fonte);
+  background:var(--paper);border:1px solid var(--rule-solid);border-radius:var(--r-filtro);
+  color:var(--ink);padding:0 12px;width:100%}
+.campo-bloco input[type=number]:focus{outline:none;border-color:var(--accent)}
+.campo-bloco[hidden]{display:none}
+
+/* A marcação, desenhada aqui: a caixinha do sistema operacional tem azul do Windows
+   dentro dela e ignora a paleta, como o botão redondo da folha de exportar. */
+.marcas{display:flex;gap:8px;flex-wrap:wrap}
+.marca{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;cursor:pointer;
+       border:1px solid var(--rule-solid);border-radius:var(--r-md);
+       transition:border-color .16s ease,background-color .16s ease}
+.marca.larga{width:100%}
+.marca:hover{border-color:var(--accent)}
+.marca:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
+.marca input{appearance:none;-webkit-appearance:none;flex:none;width:16px;height:16px;
+  margin-top:1px;border:1.5px solid var(--rule-solid);border-radius:5px;
+  background:var(--paper);cursor:pointer;position:relative}
+.marca input:checked{border-color:var(--accent);background:var(--accent)}
+.marca input:checked::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;
+  height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.marca span{font-size:13.5px;color:var(--ink);line-height:1.35}
+.marca small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;
+             font-weight:400;line-height:1.45}
+
+/* as três réguas lado a lado; a do formato que saiu da escolha some junto */
+.cortes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.cortes label{font-size:11.5px;color:var(--muted)}
+.cortes label[hidden]{display:none}
+.cortes input{margin-top:5px}
+.liv-pe .nota{margin-right:auto;text-align:left}
+
+/* a linha do que está acontecendo neste segundo, no topo do histórico */
+.liv-ev.agora{background:var(--accent-tint)}
+.liv-ev.agora i{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
+.liv-ev.agora .oque > b{color:var(--accent)}
+.liv-vivo{color:var(--accent);font-weight:600}
 
 </style>
 </head>
@@ -1143,12 +1185,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="caixa">
         <h3>Acrescentar contas de origem</h3>
         <p class="nota">Uma por linha, com ou sem arroba, ou o endereço inteiro do perfil.
-          Perfil que <b>já foi minerado é recusado na entrada</b>, e o campo esvazia ao
-          salvar. O que já existe vive na aba de Minerados e não se extrai duas vezes.</p>
+          Perfil que <b>já foi minerado é recusado na entrada</b>. Ao iniciar, tudo
+          acontece de uma vez: varredura, régua e separação dos links.</p>
         <textarea id="fontes" placeholder="boletimdamorte&#10;vinci.society&#10;https://www.instagram.com/outraconta/"></textarea>
         <div class="linha">
-          <button class="acao forte" id="salvar">Salvar e varrer</button>
-          <button class="acao" id="varrer">Acordar a esteira</button>
+          <button class="acao forte" id="iniciar">Iniciar</button>
         </div>
       </div>
     </div>
@@ -1350,6 +1391,61 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 </section>
 
 
+<!-- ============================================================ A FOLHA DE INICIAR
+     Ela existe porque a régua estava escondida: os campos moravam na aba de Baixar, e
+     a esteira nem os lia. Aqui a escolha é feita ANTES de qualquer leitura, é gravada
+     no acervo, e é ela que a esteira usa. -->
+<div class="liv-export" id="ini_folha" hidden>
+  <div class="liv-folha">
+    <h3>Iniciar a mineração</h3>
+    <p class="nota" id="ini_quantos">nenhum perfil escrito ainda</p>
+
+    <div class="campo-bloco">
+      <label class="campo-rot">Que formatos entram</label>
+      <div class="marcas">
+        <label class="marca"><input type="checkbox" id="f_reels" checked><span>Reels</span></label>
+        <label class="marca"><input type="checkbox" id="f_post" checked><span>Post isolado</span></label>
+        <label class="marca"><input type="checkbox" id="f_carrossel" checked><span>Carrossel</span></label>
+      </div>
+    </div>
+
+    <div class="campo-bloco">
+      <label class="campo-rot">O que conta como fora da curva</label>
+      <p class="nota mini">Desempenho é múltiplo da mediana da própria conta. Em 1,5x,
+        entra o post que fez uma vez e meia o que aquele perfil costuma fazer.</p>
+      <label class="marca larga">
+        <input type="checkbox" id="por_formato" checked>
+        <span>Calcular a mediana <b>separada por formato</b>
+          <small>vídeo vem com contagem de exibição, imagem vem só com curtida:
+            juntar os dois compara réguas diferentes</small></span>
+      </label>
+    </div>
+
+    <div class="campo-bloco" id="cortes_juntos" hidden>
+      <label class="campo-rot" for="corte_unico">Régua única, em vezes a mediana</label>
+      <input type="number" id="corte_unico" value="1.5" step="0.1" min="1" max="100">
+    </div>
+
+    <div class="campo-bloco" id="cortes_separados">
+      <label class="campo-rot">A régua de cada formato</label>
+      <div class="cortes">
+        <label data-de="reels">Reels<input type="number" id="c_reels" value="1.5"
+               step="0.1" min="1" max="100"></label>
+        <label data-de="post">Post<input type="number" id="c_post" value="1.5"
+               step="0.1" min="1" max="100"></label>
+        <label data-de="carrossel">Carrossel<input type="number" id="c_carrossel"
+               value="1.5" step="0.1" min="1" max="100"></label>
+      </div>
+    </div>
+
+    <div class="liv-pe">
+      <span class="nota" id="ini_recado"></span>
+      <button class="acao" id="ini_cancelar" type="button">Cancelar</button>
+      <button class="acao forte" id="ini_vai" type="button">Iniciar</button>
+    </div>
+  </div>
+</div>
+
 <!-- A folha de exportação, fora das abas porque cobre a tela inteira -->
 <div class="liv-export" id="liv_folha" hidden>
   <div class="liv-folha">
@@ -1385,25 +1481,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 <!-- ==================================================================== ABA 2 · BAIXAR -->
 <section class="aba" id="aba-baixar" hidden>
 
+  <!-- A RÉGUA NÃO SE EDITA MAIS AQUI. Ela é escolhida ao iniciar a mineração, na aba
+       anterior, e gravada no acervo: é de lá que a esteira lê. Ter dois lugares para
+       editar a mesma coisa era o que fazia estes campos não valerem nada. -->
   <div class="secao">
     <div class="secao-cab">
-      <h2>Régua</h2>
-      <div class="dir"><span class="nota">vale para os perfis abaixo</span></div>
+      <h2>Régua em vigor</h2>
+      <div class="dir"><span class="nota">escolhida ao iniciar, em Mineração</span></div>
     </div>
     <div class="caixa">
-      <h3>O que conta como bom desempenho</h3>
-      <p class="nota">Desempenho é múltiplo da mediana da própria conta, calculada
-        <b>por formato</b>. Vídeo tem contagem de exibição, imagem e carrossel não têm.</p>
-      <div class="linha">
-        <div class="campo">
-          <label>Corte, em vezes a mediana</label>
-          <input type="number" id="corte" value="1.5" step="0.5" min="1">
-        </div>
-        <div class="campo">
-          <label>Máximo de arquivos por lote</label>
-          <input type="number" id="quantos" value="150" step="10" min="1">
-        </div>
-      </div>
+      <h3 id="regua_titulo">carregando</h3>
+      <p class="nota" id="regua_texto">Buscando a régua gravada no acervo.</p>
     </div>
   </div>
 
@@ -2141,6 +2229,50 @@ function haQuanto(ts) {
                 : `há ${Math.round(d / 30)} ${d < 60 ? "mês" : "meses"}`;
 }
 
+/* ------------------------------------------------------------- o que acontece AGORA
+
+   Cada vaga da esteira deixa um bilhete de duzentos bytes com onde a varredura está
+   naquele segundo: quantos posts já entraram, qual vaga escreveu, quando. A tela lê
+   esses bilhetes de dez em dez segundos, e SÓ dos perfis que ainda têm página por ler.
+
+   POR QUE NÃO LER O ARQUIVO DO PERFIL: ele tem o mesmo número e passa de 2 MB depois de
+   algumas rodadas. Ninguém baixa isso de dez em dez segundos para ver um contador. */
+const BATIMENTOS = new Map();
+
+async function ouvirBatimentos() {
+  const ativos = LIVRO.filter(c => !c.completo);
+  if (!ativos.length) return;
+  await Promise.all(ativos.map(async c => {
+    const b = await ler(`dados/andamento/${c.conta}.json`);
+    if (b && b.conta) BATIMENTOS.set(c.conta, b);
+  }));
+  desenhaLivro();
+  for (const cartao of document.querySelectorAll(".liv-cartao.aberto")) {
+    const agora = cartao.querySelector(".liv-agora");
+    const b = BATIMENTOS.get(cartao.dataset.conta);
+    if (agora && b) agora.replaceWith(linhaDoAgora(b));
+  }
+}
+setInterval(ouvirBatimentos, 10000);
+
+/** A linha de "acontecendo agora", que só existe enquanto há o que ler. */
+function linhaDoAgora(b) {
+  const ln = document.createElement("div");
+  ln.className = "liv-ev agora liv-agora";
+  const pct = b.publicacoes ? Math.round(100 * b.lidos / b.publicacoes) : 0;
+  const quando = Math.round((Date.now() / 1000) - (b.quando || 0));
+  ln.innerHTML = `<i></i><span class="oque"><b></b>`
+    + `<span class="dados"><span><b>${num(b.lidos)}</b> de ${num(b.publicacoes)}</span>`
+    + `<span><b>${pct}%</b></span>`
+    + (b.vaga ? `<span>vaga <b>${b.vaga}</b></span>` : "")
+    + `</span></span>`
+    + `<span class="data">${quando < 90 ? "agora" : "há " + Math.round(quando / 60) + " min"}</span>`;
+  ln.querySelector(".oque > b").textContent = b.completo
+    ? "Leitura encerrada, aguardando o fechamento da rodada"
+    : "Varrendo agora: a esteira está lendo as páginas deste perfil";
+  return ln;
+}
+
 function livroFiltrado() {
   const q = ($("liv_q").value || "").trim().toLowerCase();
   return LIVRO.filter(c => {
@@ -2161,7 +2293,15 @@ function desenhaLivro() {
   $("liv_mais").textContent = `Ver mais ${Math.min(POR_LEVA, fila.length - livroMostra)}`;
   $("exp_tela").textContent = `${fila.length} de ${LIVRO.length} perfis`;
 
-  $("liv_lista").innerHTML = pedaco.map(c => {
+  $("liv_lista").innerHTML = pedaco.map(bruto => {
+    // O BILHETE MANDA quando ele é mais novo que a capa do livro. A capa é escrita no
+    // fim da rodada; o bilhete, a cada página. Um perfil entrando agora tem capa dizendo
+    // zero e bilhete dizendo cento e trinta e dois.
+    const b = BATIMENTOS.get(bruto.conta);
+    const c = b && b.quando > (bruto.ultimo || 0)
+      ? { ...bruto, lidos: b.lidos, publicacoes: b.publicacoes || bruto.publicacoes,
+          completo: b.completo, ultimo: b.quando, vivo: !b.completo }
+      : bruto;
     const grave = c.falhas ? "falha" : c.avisos ? "aviso" : "";
     const cob = c.publicacoes ? Math.round(100 * c.lidos / c.publicacoes) : null;
     return `<div class="liv-cartao ${grave}" data-conta="${c.conta}">
@@ -2170,9 +2310,10 @@ function desenhaLivro() {
         <span class="liv-id">
           <span class="liv-nome"><b>${c.nome || "sem nome no perfil"}</b>
             <span class="liv-etq">${TIPOS[c.ultimo_tipo] || c.ultimo_tipo}</span></span>
-          <span class="liv-sub">@${c.conta} · ${haQuanto(c.ultimo)}`
-            + (cob !== null ? ` · ${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)` : "")
-            + ` · ${c.eventos} ${c.eventos === 1 ? "registro" : "registros"}</span>
+          <span class="liv-sub">@${c.conta} · ${
+            c.vivo ? '<b class="liv-vivo">varrendo agora</b>' : haQuanto(c.ultimo)}${
+            cob !== null ? ` · ${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)` : ""} · ${
+            c.eventos} ${c.eventos === 1 ? "registro" : "registros"}</span>
         </span>
         <svg class="liv-seta" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </button>
@@ -2249,6 +2390,8 @@ document.addEventListener("click", async ev => {
   const caixa = cartao.querySelector(".liv-caixa");
   caixa.textContent = "buscando o histórico";
   pintarEventos(caixa, await historicoDe(cartao.dataset.conta));
+  const b = BATIMENTOS.get(cartao.dataset.conta);
+  if (b && !b.completo) caixa.prepend(linhaDoAgora(b));
 });
 
 $("liv_q").addEventListener("input", () => { livroMostra = POR_LEVA; desenhaLivro(); });
@@ -2328,6 +2471,29 @@ $("exp_baixar").onclick = async () => {
   $("liv_folha").hidden = true;
 };
 
+/** A régua em vigor, escrita por extenso na aba de Baixar. Ela não se edita ali: quem
+ *  escolhe é a folha de Iniciar, e este texto existe para não haver dúvida de qual
+ *  régua produziu os números da tela. */
+function mostrarRegua(cr) {
+  if (!cr) {
+    $("regua_titulo").textContent = "Nenhuma régua gravada ainda";
+    $("regua_texto").textContent = "Ela é escolhida ao iniciar a primeira mineração, "
+      + "na aba de Mineração.";
+    return;
+  }
+  const nomes = { reels: "reels", post: "post isolado", carrossel: "carrossel" };
+  const formatos = (cr.formatos || []).map(f => nomes[f] || f);
+  $("regua_titulo").textContent = cr.por_formato
+    ? (cr.formatos || []).map(f =>
+        `${nomes[f] || f} ${String(cr.cortes[f]).replace(".", ",")}x`).join(" · ")
+    : `${String(cr.corte).replace(".", ",")}x para todos os formatos`;
+  $("regua_texto").textContent = `Entram ${formatos.join(", ")}. `
+    + (cr.por_formato
+        ? "A mediana é calculada separada para cada formato."
+        : "A mediana é uma só, calculada com todos os formatos juntos.")
+    + ` Máximo de ${num(cr.teto)} peças por lote.`;
+}
+
 /* ---------------------------------------------------------------- desenhos
 
    AQUI MORAVA `desenhaPerfis`, e ela era um defeito de verdade, não sobra inofensiva.
@@ -2342,7 +2508,12 @@ function desenhaProntos(sel, perfis) {
     alvo.innerHTML = '<div class="vazio">Nenhum perfil varrido ainda.</div>';
     return;
   }
-  const corte = parseFloat($("corte").value) || 1.5;
+  // A RÉGUA VEM DO ACERVO, e não de um campo nesta aba. Havia dois lugares para editar
+  // a mesma coisa, e o desta aba não chegava à esteira.
+  const cr = (sel && sel.criterio) || {};
+  const corte = cr.por_formato
+    ? Math.min(...Object.values(cr.cortes || { reels: 1.5 }))
+    : (cr.corte || 1.5);
   const itens = (sel && sel.itens) || [];
 
   alvo.innerHTML = perfis.map(p => {
@@ -2366,7 +2537,7 @@ function desenhaProntos(sel, perfis) {
         <div><b>${num(p.publicacoes)}</b><span>posts na conta</span></div>
         <div><b>${num(p.lidos)}</b><span>varridos</span></div>
         <div><b>${num(acima)}</b><span>acima da régua</span></div>
-        <div><b>${corte.toString().replace(".", ",")}x</b><span>régua usada</span></div>
+        <div><b>${String(corte).replace(".", ",")}x</b><span>régua usada</span></div>
       </div>
       <div class="travado">
         <span>O destino é o <b>Google Drive</b>, e ele ainda não foi autorizado. Enquanto
@@ -2457,6 +2628,7 @@ async function atualizar() {
   });
   desenhaMinerados();
 
+  mostrarRegua((sel && sel.criterio) || null);
   LIVRO = (livro && livro.contas) || [];
   desenhaLivro();
   medirLivro();
@@ -2468,69 +2640,103 @@ async function atualizar() {
 /* ---------------------------------------------------------------- comandos */
 $("fontes").addEventListener("input", () => { $("fontes").dataset.tocado = "1"; });
 
-$("salvar").onclick = async () => {
-  const contas = $("fontes").value.split("\n")
+/* ============================================================== INICIAR A MINERAÇÃO
+
+   UM BOTÃO SÓ, e a escolha antes da leitura. Havia dois comandos aqui, "Salvar e
+   varrer" e "Acordar a esteira", e a régua morava noutra aba onde a esteira nem a lia.
+   Agora: escreve os perfis, aperta Iniciar, escolhe como medir, e o processo inteiro
+   começa: identificação, varredura, régua e separação dos links. */
+
+function reguaEscolhida() {
+  const formatos = ["reels", "post", "carrossel"].filter(f => $("f_" + f).checked);
+  const numero = campo => {
+    const n = parseFloat(String($(campo).value).replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : 1.5;
+  };
+  return {
+    formatos,
+    por_formato: $("por_formato").checked,
+    corte: numero("corte_unico"),
+    cortes: { reels: numero("c_reels"), post: numero("c_post"),
+              carrossel: numero("c_carrossel") },
+  };
+}
+
+function contasEscritas() {
+  return $("fontes").value.split("\n")
     .map(s => s.trim().replace(/^@/, "").replace(/\/+$/, "").split("/").pop())
     .filter(Boolean);
-  if (!contas.length) {
+}
+
+/** Mostra só as réguas dos formatos escolhidos, e troca entre única e separada. */
+function ajustarFolha() {
+  const separada = $("por_formato").checked;
+  $("cortes_separados").hidden = !separada;
+  $("cortes_juntos").hidden = separada;
+  document.querySelectorAll(".cortes label").forEach(l => {
+    l.hidden = !$("f_" + l.dataset.de).checked;
+  });
+  const n = contasEscritas().length;
+  $("ini_quantos").textContent = n === 1 ? "1 perfil escrito acima"
+    : n ? `${n} perfis escritos acima` : "escreva ao menos um perfil acima";
+}
+
+$("iniciar").onclick = () => {
+  if (!contasEscritas().length) {
     parado("recado", "escreva ao menos um perfil acima");
     return;
   }
-  // O SINAL FICA NO LUGAR DO RECADO enquanto a ordem está no ar. Identificar um
-  // perfil no Instagram e gravar no acervo leva alguns segundos, e sem nada na tela
-  // esse tempo se lê como travamento.
-  carregando("recado", contas.length === 1 ? "Salvando o perfil"
-                                           : `Salvando ${contas.length} perfis`, "onda");
+  parado("ini_recado", "");
+  ajustarFolha();
+  $("ini_folha").hidden = false;
+};
+$("ini_cancelar").onclick = () => { $("ini_folha").hidden = true; };
+$("ini_folha").addEventListener("click", ev => {
+  if (ev.target === $("ini_folha")) $("ini_folha").hidden = true;
+});
+["por_formato", "f_reels", "f_post", "f_carrossel"].forEach(id =>
+  $(id).addEventListener("change", ajustarFolha));
+
+$("ini_vai").onclick = async () => {
+  const contas = contasEscritas();
+  const regua = reguaEscolhida();
+  if (!regua.formatos.length) {
+    parado("ini_recado", "escolha ao menos um formato");
+    return;
+  }
+  $("ini_vai").disabled = true;
+  $("ini_cancelar").disabled = true;
+  // A ESPERA ACONTECE AQUI DENTRO, que é onde o Gabriel está olhando. Identificar cada
+  // perfil no Instagram leva alguns segundos, e a folha sem sinal parecia travada.
+  carregando("ini_recado", contas.length === 1 ? "Identificando o perfil"
+                                               : `Identificando ${contas.length} perfis`, "onda");
   try {
-    const d = await mandar("/contas", { contas });
-
-    // O QUE FOI RECUSADO NA PORTA. Perfil já minerado não entra de novo, e isso é dito
-    // com o nome dele: recusa sem nome vira "não funcionou", e não é isso.
+    const d = await mandar("/contas", { contas, regua });
     const barrados = d.bloqueados || [];
-
-    // A ESTEIRA SÓ É CHAMADA SE ENTROU PERFIL NOVO.
-    // Ela era chamada sempre, e salvar uma lista que já estava no banco acordava vinte
-    // máquinas para não ler nada. Na tela isso aparecia como a esteira relendo o que já
-    // tinha sido lido, e não era: era trabalho vazio que eu mandei fazer.
     const entraram = (d.novos || []).filter(n => n.ok);
     if (entraram.length) await mandar("/varrer");
 
-    // O CAMPO ESVAZIA AQUI. Ele é o lugar de PEDIR, e o pedido já foi respondido, seja
-    // com entrada, seja com recusa. Deixar o texto no campo era o que fazia a mesma
-    // conta reaparecer para sempre, como se nada tivesse acontecido.
     $("fontes").value = "";
     delete $("fontes").dataset.tocado;
-    parado("recado");
-    $("recado").textContent =
+    parado("ini_recado", "");
+    $("ini_folha").hidden = true;
+    parado("recado",
       entraram.length && barrados.length
         ? `${entraram.length} entrou, ${barrados.length} já estava no banco`
       : entraram.length
-        ? (entraram.length === 1 ? "1 perfil novo na fila, veja em Minerados"
-                                 : entraram.length + " perfis novos na fila, veja em Minerados")
+        ? (entraram.length === 1 ? "1 perfil na fila, acompanhe no registro abaixo"
+             : `${entraram.length} perfis na fila, acompanhe no registro abaixo`)
       : barrados.length === 1
         ? `@${barrados[0]} já está minerado, nada a fazer`
-        : `os ${barrados.length} perfis já estão minerados, nada a fazer`;
-    setTimeout(() => { aoVivo(); atualizar(); }, 2500);
-  } catch (e) { parado("recado", e.message); }
-};
-
-$("varrer").onclick = async () => {
-  // Acordar a esteira sem ter o que ela leia é gesto sem efeito, e um gesto sem efeito
-  // que mexe a tela parece efeito. Ela diz o que há em vez de fingir que fez algo.
-  const comTrabalho = MINERADOS.filter(p => p.relendo || !p.completo);
-  if (!comTrabalho.length) {
-    parado("recado", "todos os perfis estão em dia, não há página por ler");
-    return;
+        : `os ${barrados.length} perfis já estão minerados, nada a fazer`);
+    // o cartão de cada perfil já existe no acervo neste ponto: a ponte o abre junto
+    // com a identificação, então a lista mostra o perfil antes da primeira página.
+    setTimeout(() => { aoVivo(); atualizar(); }, 1200);
+  } catch (e) {
+    parado("ini_recado", e.message);
   }
-  carregando("recado", "Chamando a esteira", "orbita");
-  try {
-    await mandar("/varrer");
-    parado("recado");
-    $("recado").textContent = comTrabalho.length === 1
-      ? "esteira acionada para 1 perfil"
-      : `esteira acionada para ${comTrabalho.length} perfis`;
-    setTimeout(aoVivo, 2500);
-  } catch (e) { parado("recado", e.message); }
+  $("ini_vai").disabled = false;
+  $("ini_cancelar").disabled = false;
 };
 
 document.addEventListener("click", async ev => {
@@ -2540,16 +2746,14 @@ document.addEventListener("click", async ev => {
   // baixar um lote leva minutos, e é o carregamento mais longo do sistema
   carregando("recado_baixar", "Montando o lote de @" + b.dataset.baixar, "bolas");
   try {
-    await mandar("/baixar", {
-      formatos: "reels", corte: $("corte").value, quantos: $("quantos").value,
-      conta: b.dataset.baixar,
-    });
+    // sem números soltos aqui: a esteira lê a régua do acervo, a mesma que foi
+    // escolhida ao iniciar. Mandar outra por aqui criaria duas verdades.
+    await mandar("/baixar", { conta: b.dataset.baixar });
     parado("recado_baixar", "lote em preparo, aparece abaixo ao terminar");
   } catch (e) { parado("recado_baixar", e.message); }
   setTimeout(() => { b.disabled = false; atualizar(); }, 6000);
 });
 
-$("corte").addEventListener("change", atualizar);
 
 atualizar(); aoVivo();
 setInterval(atualizar, 25000);
