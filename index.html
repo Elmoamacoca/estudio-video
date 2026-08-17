@@ -905,6 +905,93 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .pix-rotulo{animation:none;background-image:none;color:var(--muted)}
 }
 
+/* ================================================================ LIVRO DE ATIVIDADE
+
+   Um cartão por perfil, que abre e fecha. Molde escolhido pelo Gabriel em 17/08, no
+   desenho da lista de auditoria: ponto de gravidade na esquerda, nome com etiqueta de
+   tipo, arroba e tempo embaixo, seta à direita, e o detalhe num painel recuado.
+
+   A LISTA VEM DE DEZ EM DEZ. O histórico de um perfil pode ter centenas de eventos e a
+   conta de perfis só cresce; carregar tudo para mostrar os dez primeiros é gasto sem
+   ganho. O botão embaixo traz a próxima leva. */
+.livro{border:1px solid var(--rule-solid);border-radius:var(--r-lg);
+       background:var(--branco);overflow:hidden;box-shadow:var(--sombra)}
+.liv-topo{display:flex;align-items:center;gap:16px;padding:18px 20px}
+.liv-quem{flex:1;min-width:0}
+.liv-quem b{display:block;font-size:14.5px;font-weight:650;color:var(--ink)}
+.liv-quem span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.liv-topo .acao{height:34px;padding:0 14px;font-size:12.5px;display:inline-flex;
+                align-items:center;gap:7px;flex:none}
+.liv-topo .acao svg{width:14px;height:14px}
+.liv-filtros{display:flex;gap:10px;flex-wrap:wrap;padding:0 20px 16px}
+.liv-filtros .ct-busca{flex:1 1 240px}
+.liv-filtros .sel-gatilho{height:var(--h-filtro)}
+
+/* --------------------------------------------------------------- o cartão do perfil */
+.liv-cartao{border-top:1px solid var(--rule)}
+.liv-cabeca{display:flex;align-items:center;gap:12px;width:100%;padding:14px 20px;
+            border:0;background:none;cursor:pointer;text-align:left;
+            font:inherit;color:inherit;transition:background-color .16s ease}
+.liv-cabeca:hover{background:var(--paper-2)}
+.liv-ponto{width:7px;height:7px;border-radius:50%;flex:none;background:var(--chart-2)}
+.liv-cartao.falha .liv-ponto{background:var(--chart-5)}
+.liv-cartao.aviso .liv-ponto{background:var(--chart-3)}
+.liv-id{flex:1;min-width:0}
+.liv-nome{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.liv-nome b{font-size:13.5px;font-weight:650;color:var(--ink)}
+.liv-etq{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:6px;
+         background:var(--paper-2);border:1px solid var(--rule-solid);color:var(--muted)}
+.liv-sub{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+.liv-seta{flex:none;width:16px;height:16px;color:var(--soft);fill:none;
+          stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+          transition:transform .2s cubic-bezier(.22,1,.36,1)}
+.liv-cartao.aberto .liv-seta{transform:rotate(90deg)}
+
+/* o painel do detalhe, recuado como no molde */
+.liv-corpo{display:none;padding:0 20px 18px 39px}
+.liv-cartao.aberto .liv-corpo{display:block}
+.liv-caixa{border:1px solid var(--rule-solid);border-radius:var(--r-md);
+           background:var(--paper);overflow:hidden}
+.liv-ev{display:flex;gap:12px;padding:11px 15px;border-bottom:1px solid var(--rule)}
+.liv-ev:last-child{border-bottom:0}
+.liv-ev i{width:6px;height:6px;border-radius:50%;flex:none;margin-top:6px;
+          background:var(--chart-2)}
+.liv-ev.falha i{background:var(--chart-5)}
+.liv-ev.aviso i{background:var(--chart-3)}
+.liv-ev .oque{flex:1;min-width:0}
+.liv-ev .oque b{display:block;font-weight:400;color:var(--ink);
+                font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.liv-ev .dados{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:6px;
+               font-size:11.5px;color:var(--muted)}
+.liv-ev .dados b{display:inline;font:inherit;font-weight:600;color:var(--ink)}
+.liv-ev .data{flex:none;font-size:11.5px;color:var(--soft);white-space:nowrap;
+              font-variant-numeric:tabular-nums}
+
+.liv-mais{padding:14px 20px;border-top:1px solid var(--rule);
+          display:flex;justify-content:center}
+.liv-mais .acao[hidden]{display:none}
+.liv-mais .acao{height:36px;padding:0 20px;font-size:13px}
+
+/* a folha de exportação, no molde de balão do sistema */
+.liv-export{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+            background:rgba(0,0,0,.45);padding:20px}
+.liv-export[hidden]{display:none}
+.liv-folha{width:min(420px,100%);background:var(--branco);border-radius:var(--r-lg);
+           border:1px solid var(--rule-solid);box-shadow:var(--sombra-balao);
+           padding:22px}
+.liv-folha h3{font-size:15.5px;font-weight:650;color:var(--ink);margin:0 0 4px}
+.liv-folha .nota{margin-bottom:16px}
+.liv-opcao{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;
+           border:1px solid var(--rule-solid);border-radius:var(--r-md);
+           margin-bottom:8px;cursor:pointer;transition:border-color .16s ease}
+.liv-opcao:hover{border-color:var(--accent)}
+.liv-opcao input{margin-top:3px;accent-color:var(--accent);flex:none;width:auto;height:auto}
+.liv-opcao span{font-size:13.5px;color:var(--ink)}
+.liv-opcao small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.liv-datas{display:flex;gap:10px;margin:2px 0 10px 34px}
+.liv-datas input{height:38px;font:13px var(--fonte)}
+.liv-pe{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+
 </style>
 </head>
 <body>
@@ -1125,6 +1212,65 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       </div>
     </div>
 
+    <!-- ================================================== O LIVRO DE ATIVIDADE
+         Um cartão por PERFIL, e não por mensagem. Fechado, ele diz o nome, o arroba e
+         quando foi a última coisa feita ali. Aberto, ele abre o histórico inteiro
+         daquele perfil: cada varredura, quantas máquinas, quantas páginas, o que deu
+         errado e onde fechou.
+
+         Isto vive no acervo, num arquivo por perfil, e não na memória do navegador:
+         é para continuar aqui daqui a noventa dias. -->
+    <div class="secao">
+      <div class="secao-cab"><h2>Atividade por perfil</h2></div>
+
+      <div class="livro">
+        <div class="liv-topo">
+          <div class="liv-quem">
+            <b>Livro de atividade</b>
+            <span id="liv_sub">carregando o acervo</span>
+          </div>
+          <button class="acao" id="liv_exportar" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0
+                 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
+        </div>
+
+        <div class="liv-filtros">
+          <input class="ct-busca" id="liv_q" type="text" autocomplete="off"
+                 spellcheck="false" placeholder="Buscar perfil pelo @ ou pelo nome">
+          <div class="sel" id="liv-tipo">
+            <button class="sel-gatilho" id="liv-tipog" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-valor" id="liv-tipov">Toda a atividade</span>
+              <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="sel-lista" id="liv-tipol" role="listbox">
+              <div class="sel-grupo" id="liv-tipogr"></div>
+            </div>
+          </div>
+          <div class="sel" id="liv-quando">
+            <button class="sel-gatilho" id="liv-quandog" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-valor" id="liv-quandov">Desde o começo</span>
+              <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="sel-lista" id="liv-quandol" role="listbox">
+              <div class="sel-grupo" id="liv-quandogr"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="liv_lista"></div>
+        <div class="gal-vazia" id="liv_vazio" hidden>Nenhum perfil com esses filtros.</div>
+        <div class="liv-mais"><button class="acao" id="liv_mais" type="button" hidden>
+          Ver mais</button></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ----------------------------------------------------------------- MINERADOS
@@ -1224,6 +1370,38 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   </div>
 
 </section>
+
+
+<!-- A folha de exportação, fora das abas porque cobre a tela inteira -->
+<div class="liv-export" id="liv_folha" hidden>
+  <div class="liv-folha">
+    <h3>Exportar a atividade</h3>
+    <p class="nota">Sai em planilha, que abre direto no Excel. Uma linha por evento,
+      com o perfil, a data, o tipo e os números daquela varredura.</p>
+
+    <label class="liv-opcao">
+      <input type="radio" name="exp" value="tudo" checked>
+      <span>Tudo<small>o histórico inteiro, de todos os perfis</small></span>
+    </label>
+    <label class="liv-opcao">
+      <input type="radio" name="exp" value="tela">
+      <span>Só o que está na tela<small id="exp_tela">o que os filtros deixaram</small></span>
+    </label>
+    <label class="liv-opcao">
+      <input type="radio" name="exp" value="periodo">
+      <span>Um período<small>escolha as datas abaixo</small></span>
+    </label>
+    <div class="liv-datas">
+      <input type="date" id="exp_de" aria-label="De">
+      <input type="date" id="exp_ate" aria-label="Até">
+    </div>
+
+    <div class="liv-pe">
+      <button class="acao" id="exp_cancelar" type="button">Cancelar</button>
+      <button class="acao forte" id="exp_baixar" type="button">Baixar planilha</button>
+    </div>
+  </div>
+</div>
 
 
 <!-- ==================================================================== ABA 2 · BAIXAR -->
@@ -1569,9 +1747,12 @@ async function ler(caminho) {
   // PELA PONTE, e não pelo endereço cru do GitHub. O cru tem cache de borda de alguns
   // minutos: a tela lia a rodada anterior e mostrava zero em coluna que já tinha valor
   // gravado. A ponte responde o commit do momento.
-  const arquivo = caminho.split("/").pop();
+  // O CAMINHO DE DENTRO SOBREVIVE. Antes ficava só o nome do arquivo, e pedir
+  // `dados/atividade/vinci.society.json` virava `dados/vinci.society.json`, que não
+  // existe. O livro de atividade mora em pasta própria e precisa da pasta.
+  const dentro = caminho.replace(/^dados\//, "");
   try {
-    const r = await fetch(`${PONTE}/dados/${arquivo}?t=${Date.now()}`, { cache: "no-store" });
+    const r = await fetch(`${PONTE}/dados/${dentro}?t=${Date.now()}`, { cache: "no-store" });
     if (r.ok) return await r.json();
   } catch (e) { /* cai para o endereço cru */ }
   try {
@@ -2059,6 +2240,220 @@ $("min-fim").onclick = () => { minPagina = 1e9; desenhaMinerados(); };
    um perfil encerrado, porque é ela quem atende um pedido gravado no acervo, mas a tela
    não oferece mais esse pedido a ninguém. */
 
+/* ========================================================= O LIVRO DE ATIVIDADE
+
+   UM CARTÃO POR PERFIL. Fechado, ele diz quem é e quando foi a última coisa feita.
+   Aberto, mostra o histórico inteiro daquele perfil: cada varredura, quantas máquinas
+   trabalharam nela, quantas páginas, o que deu errado e onde a leitura fechou.
+
+   A CAPA E O MIOLO SÃO ARQUIVOS SEPARADOS, e isso é o que faz a lista abrir rápido:
+   o índice traz o resumo de todos os perfis e pesa alguns quilobytes; o histórico de
+   um perfil só é buscado quando o cartão é aberto, e fica guardado depois disso.
+
+   E ELES VIVEM NO ACERVO, não no navegador. Recarregar a página não perde nada, e o
+   que foi feito hoje continua aqui daqui a noventa dias. */
+const POR_LEVA = 10;
+let LIVRO = [], livroMostra = POR_LEVA, livroTipo = "", livroDesde = 0;
+const HISTORICOS = new Map();
+
+const TIPOS = {
+  identificado: "identificação",
+  varredura: "varredura",
+  concluido: "conclusão",
+  limite: "limite do Instagram",
+  sem_avanco: "sem avanço",
+  lote: "lote baixado",
+};
+
+function dataHora(ts) {
+  return new Date(ts * 1000).toLocaleString("pt-BR",
+    { day: "2-digit", month: "2-digit", year: "2-digit",
+      hour: "2-digit", minute: "2-digit" });
+}
+
+function haQuanto(ts) {
+  const h = (Date.now() / 1000 - ts) / 3600;
+  if (h < 1) return "há " + Math.max(1, Math.round(h * 60)) + " min";
+  if (h < 24) return "há " + Math.round(h) + " h";
+  const d = Math.round(h / 24);
+  return d < 30 ? `há ${d} ${d === 1 ? "dia" : "dias"}`
+                : `há ${Math.round(d / 30)} ${d < 60 ? "mês" : "meses"}`;
+}
+
+function livroFiltrado() {
+  const q = ($("liv_q").value || "").trim().toLowerCase();
+  return LIVRO.filter(c => {
+    if (q && !((c.conta || "") + " " + (c.nome || "")).toLowerCase().includes(q))
+      return false;
+    if (livroTipo && c.ultimo_tipo !== livroTipo) return false;
+    if (livroDesde && c.ultimo < livroDesde) return false;
+    return true;
+  });
+}
+
+function desenhaLivro() {
+  const fila = livroFiltrado();
+  const pedaco = fila.slice(0, livroMostra);
+
+  $("liv_vazio").hidden = fila.length > 0;
+  $("liv_mais").hidden = fila.length <= livroMostra;
+  $("liv_mais").textContent = `Ver mais ${Math.min(POR_LEVA, fila.length - livroMostra)}`;
+  $("exp_tela").textContent = `${fila.length} de ${LIVRO.length} perfis`;
+  $("liv_sub").textContent = LIVRO.length
+    ? `${LIVRO.length} ${LIVRO.length === 1 ? "perfil" : "perfis"}`
+      + `, desde ${dataHora(Math.min(...LIVRO.map(c => c.primeiro))).slice(0, 8)}`
+    : "nenhum perfil registrado ainda";
+
+  $("liv_lista").innerHTML = pedaco.map(c => {
+    const grave = c.falhas ? "falha" : c.avisos ? "aviso" : "";
+    const cob = c.publicacoes ? Math.round(100 * c.lidos / c.publicacoes) : null;
+    return `<div class="liv-cartao ${grave}" data-conta="${c.conta}">
+      <button class="liv-cabeca" type="button" aria-expanded="false">
+        <span class="liv-ponto"></span>
+        <span class="liv-id">
+          <span class="liv-nome"><b>${c.nome || "sem nome no perfil"}</b>
+            <span class="liv-etq">${TIPOS[c.ultimo_tipo] || c.ultimo_tipo}</span></span>
+          <span class="liv-sub">@${c.conta} · ${haQuanto(c.ultimo)}`
+            + (cob !== null ? ` · ${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)` : "")
+            + ` · ${c.eventos} ${c.eventos === 1 ? "registro" : "registros"}</span>
+        </span>
+        <svg class="liv-seta" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <div class="liv-corpo"><div class="liv-caixa">carregando</div></div>
+    </div>`;
+  }).join("");
+}
+
+/** O histórico de um perfil, buscado só quando o cartão abre. */
+async function historicoDe(conta) {
+  if (HISTORICOS.has(conta)) return HISTORICOS.get(conta);
+  const d = await ler(`dados/atividade/${conta}.json`);
+  const ev = (d && d.eventos) || [];
+  HISTORICOS.set(conta, ev);
+  return ev;
+}
+
+/** Pinta o histórico dentro da caixa do cartão.
+ *
+ * O texto de cada evento entra como TEXTO, e não como marcação: ele vem do acervo, e
+ * conteúdo de arquivo montado dentro de HTML é como se abre buraco numa tela.
+ * Do mais novo para o mais antigo, que é como se lê histórico. */
+function pintarEventos(caixa, eventos) {
+  caixa.innerHTML = "";
+  if (!eventos.length) {
+    caixa.innerHTML = '<div class="liv-ev"><i></i><span class="oque">'
+      + "<b>Nada registrado para este perfil ainda.</b></span></div>";
+    return;
+  }
+  for (const e of [...eventos].reverse()) {
+    const d = e.detalhe || {};
+    const dados = [];
+    if (d.maquinas) dados.push(`<b>${d.maquinas}</b> máquinas`);
+    if (d.gravacoes) dados.push(`<b>${num(d.gravacoes)}</b> páginas`);
+    if (d.novos) dados.push(`<b>+${num(d.novos)}</b> posts`);
+    if (d.total) dados.push(`total <b>${num(d.total)}</b>`);
+    if (d.rodada) dados.push(`rodada <b>${d.rodada}</b>`);
+    if (d.seguidores) dados.push(`<b>${num(d.seguidores)}</b> seguidores`);
+    if (d.origem) dados.push(d.origem);
+
+    const ln = document.createElement("div");
+    ln.className = "liv-ev " + e.gravidade;
+    ln.innerHTML = `<i></i><span class="oque"><b></b>`
+      + (dados.length ? `<span class="dados">${dados.join("")}</span>` : "")
+      + `</span><span class="data">${dataHora(e.quando)}</span>`;
+    ln.querySelector(".oque > b").textContent = e.texto;
+    caixa.appendChild(ln);
+  }
+}
+
+document.addEventListener("click", async ev => {
+  const cabeca = ev.target.closest(".liv-cabeca");
+  if (!cabeca) return;
+  const cartao = cabeca.closest(".liv-cartao");
+  const abrir = !cartao.classList.contains("aberto");
+  cartao.classList.toggle("aberto", abrir);
+  cabeca.setAttribute("aria-expanded", abrir ? "true" : "false");
+  if (!abrir) return;
+  const caixa = cartao.querySelector(".liv-caixa");
+  caixa.textContent = "buscando o histórico";
+  pintarEventos(caixa, await historicoDe(cartao.dataset.conta));
+});
+
+$("liv_q").addEventListener("input", () => { livroMostra = POR_LEVA; desenhaLivro(); });
+$("liv_mais").onclick = () => { livroMostra += POR_LEVA; desenhaLivro(); };
+
+window.montarSelect("liv-tipo", [
+  { v: "", r: "Toda a atividade" },
+  { v: "varredura", r: "Em varredura" },
+  { v: "limite", r: "Fechados no limite" },
+  { v: "concluido", r: "Concluídos" },
+  { v: "sem_avanco", r: "Com falha na última" },
+  { v: "identificado", r: "Só identificados" },
+], "", v => { livroTipo = v; livroMostra = POR_LEVA; desenhaLivro(); });
+
+window.montarSelect("liv-quando", [
+  { v: "0", r: "Desde o começo" },
+  { v: "1", r: "Últimas 24 horas" },
+  { v: "7", r: "Últimos 7 dias" },
+  { v: "30", r: "Últimos 30 dias" },
+  { v: "90", r: "Últimos 90 dias" },
+], "0", v => {
+  const dias = parseInt(v, 10) || 0;
+  livroDesde = dias ? Math.floor(Date.now() / 1000) - dias * 86400 : 0;
+  livroMostra = POR_LEVA;
+  desenhaLivro();
+});
+
+/* ------------------------------------------------------------------ a exportação
+   Planilha, e não arquivo de programa: ele abre no Excel com dois cliques. O ponto e
+   vírgula é o separador que o Excel em português entende sem perguntar nada, e o BOM
+   na frente é o que faz o acento aparecer certo lá dentro. */
+$("liv_exportar").onclick = () => { $("liv_folha").hidden = false; };
+$("exp_cancelar").onclick = () => { $("liv_folha").hidden = true; };
+$("liv_folha").addEventListener("click", ev => {
+  if (ev.target === $("liv_folha")) $("liv_folha").hidden = true;
+});
+
+$("exp_baixar").onclick = async () => {
+  const modo = document.querySelector('input[name="exp"]:checked').value;
+  const botao = $("exp_baixar");
+  botao.disabled = true;
+  botao.textContent = "montando";
+
+  let contas = modo === "tela" ? livroFiltrado() : LIVRO;
+  let de = 0, ate = Infinity;
+  if (modo === "periodo") {
+    if ($("exp_de").value) de = new Date($("exp_de").value + "T00:00").getTime() / 1000;
+    if ($("exp_ate").value) ate = new Date($("exp_ate").value + "T23:59").getTime() / 1000;
+  }
+
+  const linhas = [["perfil", "nome", "quando", "tipo", "gravidade", "descrição",
+                   "máquinas", "páginas", "posts novos", "total lido", "rodada"]];
+  for (const c of contas) {
+    for (const e of await historicoDe(c.conta)) {
+      if (e.quando < de || e.quando > ate) continue;
+      const d = e.detalhe || {};
+      linhas.push([c.conta, c.nome || "", dataHora(e.quando), TIPOS[e.tipo] || e.tipo,
+                   e.gravidade, e.texto, d.maquinas || "", d.gravacoes || "",
+                   d.novos || "", d.total || "", d.rodada || ""]);
+    }
+  }
+
+  const csv = linhas.map(l => l.map(v =>
+    `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  const arquivo = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(arquivo);
+  a.download = `atividade-estudio-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+
+  botao.disabled = false;
+  botao.textContent = "Baixar planilha";
+  $("liv_folha").hidden = true;
+  anotar(`planilha exportada: ${linhas.length - 1} eventos`, "evento");
+};
+
 /* ---------------------------------------------------------------- desenhos
 
    AQUI MORAVA `desenhaPerfis`, e ela era um defeito de verdade, não sobra inofensiva.
@@ -2135,10 +2530,12 @@ async function atualizar() {
   // seria pisca-pisca: quem já viu o dado não precisa ver que ele está sendo conferido.
   if (primeiraCarga) carregando("carga", "Buscando o acervo", "onda");
 
-  const [estado, sel, fontes, retratos] = await Promise.all([
+  const [estado, sel, fontes, retratos, livro] = await Promise.all([
     ler("dados/estado.json"), ler("dados/selecao.json"), ler("dados/fontes.json"),
     // arquivo à parte: o do perfil varrido passa de 1 MB e a via de leitura corta ali
-    ler("dados/retratos.json")]);
+    ler("dados/retratos.json"),
+    // a capa do livro de atividade: só o resumo por perfil, o histórico vem ao abrir
+    ler("dados/atividade/indice.json")]);
 
   if (primeiraCarga) { parado("carga", ""); primeiraCarga = false; }
   selar(estado);
@@ -2185,6 +2582,9 @@ async function atualizar() {
              acima: p.acima != null ? p.acima : meus.length };
   });
   desenhaMinerados();
+
+  LIVRO = (livro && livro.contas) || [];
+  desenhaLivro();
 
   desenhaProntos(sel, perfis);
   desenhaLotes(estado && estado.lotes);
