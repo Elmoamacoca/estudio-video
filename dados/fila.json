@@ -2,127 +2,199 @@
  "itens": [
   {
    "origem": "@boletimdamorte",
-   "indice": 318.99,
+   "indice": 412.76,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 111.27,
+   "indice": 143.98,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 92.01,
+   "indice": 119.06,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 72.19,
+   "indice": 93.41,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 53.39,
+   "indice": 69.09,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 52.52,
+   "indice": 67.97,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 36.95,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 34.66,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 31.35,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 31.21,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 30.82,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 30.41,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 30.26,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 29.3,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 28.54,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 27.89,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 27.31,
+   "indice": 48.97,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 26.59,
+   "indice": 47.82,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 25.57,
+   "indice": 40.56,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 25.34,
+   "indice": 40.38,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 24.39,
+   "indice": 39.88,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 39.35,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 39.16,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 37.92,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 37.36,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 36.92,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 36.09,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 34.41,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 33.09,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 32.79,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 31.56,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 29.94,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 28.68,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 28.15,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 27.95,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 27.12,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 26.23,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 26.18,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 25.41,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 25.27,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 25.07,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 24.12,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 23.32,
    "etapa": "post",
    "situacao": "selecionada"
   },
@@ -134,8 +206,20 @@
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 22.17,
+   "indice": 22.65,
    "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 22.37,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 21.93,
+   "etapa": "reels",
    "situacao": "selecionada"
   },
   {
@@ -146,55 +230,91 @@
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 21.43,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 20.96,
+   "indice": 21.65,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 20.27,
+   "indice": 21.37,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 20.23,
+   "indice": 21.17,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 19.64,
+   "indice": 21.12,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 19.53,
+   "indice": 20.91,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 19.37,
+   "indice": 20.09,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 18.64,
+   "indice": 19.8,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 18.02,
+   "indice": 19.32,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 19.17,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 19.04,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 19.01,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 18.86,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 18.86,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 18.23,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 18.14,
    "etapa": "post",
    "situacao": "selecionada"
   },
@@ -206,49 +326,31 @@
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 17.51,
+   "indice": 15.96,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 17.29,
+   "indice": 15.83,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 16.81,
+   "indice": 15.74,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 16.73,
+   "indice": 15.69,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 16.51,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 16.36,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 16.32,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 16.16,
+   "indice": 15.57,
    "etapa": "post",
    "situacao": "selecionada"
   },
@@ -257,109 +359,7 @@
    "indice": 15.53,
    "etapa": "post",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 15.3,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 14.93,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 14.82,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 14.71,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 14.69,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 14.58,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 14.57,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 14.09,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 14.02,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 13.82,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 12.4,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 12.33,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 12.24,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 12.23,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 12.16,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 12.14,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 12.14,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1786926207
+ "atualizado": 1786926587
 }
