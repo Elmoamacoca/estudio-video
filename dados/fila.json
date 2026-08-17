@@ -8,6 +8,12 @@
   },
   {
    "origem": "@vinci.society",
+   "indice": 13634.67,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
    "indice": 13298.0,
    "etapa": "carrossel",
    "situacao": "selecionada"
@@ -146,6 +152,12 @@
   },
   {
    "origem": "@vinci.society",
+   "indice": 915.67,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
    "indice": 897.33,
    "etapa": "carrossel",
    "situacao": "selecionada"
@@ -176,6 +188,12 @@
   },
   {
    "origem": "@vinci.society",
+   "indice": 733.0,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
    "indice": 653.0,
    "etapa": "carrossel",
    "situacao": "selecionada"
@@ -193,6 +211,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@boletimdamorte",
+   "indice": 630.23,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@vinci.society",
    "indice": 605.67,
    "etapa": "carrossel",
@@ -202,12 +226,6 @@
    "origem": "@vinci.society",
    "indice": 545.0,
    "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 524.74,
-   "etapa": "post",
    "situacao": "selecionada"
   },
   {
@@ -266,100 +284,82 @@
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 183.04,
+   "indice": 219.84,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 151.36,
+   "indice": 181.79,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 118.75,
+   "indice": 142.62,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 87.84,
+   "indice": 105.49,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 86.4,
+   "indice": 103.77,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 60.79,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 54.2,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 51.56,
+   "indice": 73.01,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 51.34,
+   "indice": 61.93,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 50.7,
+   "indice": 61.66,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 50.02,
+   "indice": 60.89,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 49.78,
+   "indice": 60.08,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 49.01,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 48.2,
+   "indice": 59.79,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 46.94,
+   "indice": 57.9,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 45.88,
+   "indice": 56.38,
    "etapa": "post",
    "situacao": "selecionada"
   }
  ],
- "atualizado": 1786927747
+ "atualizado": 1786927973
 }

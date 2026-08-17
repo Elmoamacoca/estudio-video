@@ -1,7 +1,7 @@
 {
  "prontas": 500,
  "hoje": 0,
- "ultima_rodada": 1786927747,
+ "ultima_rodada": 1786927973,
  "camadas": [
   {
    "nome": "Processamento de vídeo",
@@ -28,18 +28,18 @@
    "teto": null
   }
  ],
- "avaliados": 2652,
+ "avaliados": 2868,
  "perfis": [
   {
    "conta": "boletimdamorte",
    "publicacoes": 4976,
-   "lidos": 2508,
+   "lidos": 2712,
    "completo": false
   },
   {
    "conta": "vinci.society",
    "publicacoes": 286,
-   "lidos": 144,
+   "lidos": 156,
    "completo": false
   }
  ]
