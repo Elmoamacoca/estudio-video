@@ -100,6 +100,20 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
         })
         todos += mede_perfil(dados, formatos)
 
+    # QUANTOS PASSARAM DA RÉGUA, POR PERFIL, e sem o teto do lote.
+    # Contar pela lista final fazia o primeiro perfil levar as 500 vagas e o segundo
+    # aparecer com zero, mesmo tendo dezenas acima do corte.
+    acima_por_perfil: dict[str, int] = {}
+    reels_por_perfil: dict[str, int] = {}
+    for x in todos:
+        if x["indice"] >= corte:
+            acima_por_perfil[x["conta"]] = acima_por_perfil.get(x["conta"], 0) + 1
+            if x["formato"] == "reels" and x.get("arquivo"):
+                reels_por_perfil[x["conta"]] = reels_por_perfil.get(x["conta"], 0) + 1
+    for pf in perfis:
+        pf["acima"] = acima_por_perfil.get(pf["conta"], 0)
+        pf["baixaveis"] = reels_por_perfil.get(pf["conta"], 0)
+
     escolhidos = sorted(
         (p for p in todos if p["indice"] >= corte),
         key=lambda p: (p["indice"], p.get("views") or p.get("curtidas") or 0),
