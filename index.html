@@ -2071,12 +2071,18 @@ function medir(eventos) {
   for (const g of Object.keys(series))
     series[g] = new Array(DIAS_DO_TRACO).fill(0);
 
+  // A TERCEIRA COLUNA É O TOTAL, e não a terceira fatia. "Registros: 13" ao lado de
+  // "avisos: 2" fazia parecer que havia 15 coisas em três caixas, quando a leitura
+  // certa é: quinze registros, dos quais dois são aviso e nenhum é falha.
   for (const e of eventos) {
-    const g = contas[e.gravidade] !== undefined ? e.gravidade : "evento";
-    contas[g] += 1;
     const atras = hoje - dia(e.quando);
-    if (atras >= 0 && atras < DIAS_DO_TRACO)
-      series[g][DIAS_DO_TRACO - 1 - atras] += 1;
+    const dentro = atras >= 0 && atras < DIAS_DO_TRACO;
+    contas.evento += 1;
+    if (dentro) series.evento[DIAS_DO_TRACO - 1 - atras] += 1;
+    if (e.gravidade === "falha" || e.gravidade === "aviso") {
+      contas[e.gravidade] += 1;
+      if (dentro) series[e.gravidade][DIAS_DO_TRACO - 1 - atras] += 1;
+    }
   }
 
   for (const g of Object.keys(contas)) {
