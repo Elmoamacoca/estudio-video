@@ -546,6 +546,13 @@ async function aoVivo() {
       viva = true; selo = "fechando";
       titulo = "Fechando a rodada";
       resumo = "Aplicando a régua, separando os links e carimbando o registro.";
+    } else if (!LIVRO.length) {
+      // BANCO VAZIO FALA DO VAZIO. Sem isto, a tela zerada abria anunciando a última
+      // rodada que existiu, com as vinte máquinas dela: número grande de trabalho antigo
+      // em cima de um banco sem um perfil sequer, que é a leitura errada mais fácil de
+      // fazer nesta tela.
+      titulo = "Nenhum perfil no banco";
+      resumo = "Escreva as contas no campo acima e aperte Iniciar.";
     } else if (d.numero) {
       // SKIPPED É A PORTA TENDO FUNCIONADO, e não falha: quando não há o que ler, as
       // vinte vagas são puladas de propósito. Dizer isso com todas as letras.
