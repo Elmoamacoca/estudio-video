@@ -64,6 +64,14 @@ code{font:12.5px ui-monospace,Consolas,monospace;background:var(--fundo);border:
 .chamada{background:var(--realce);border:1px solid color-mix(in srgb,var(--marca) 35%,transparent);border-radius:11px;padding:14px 17px;margin-bottom:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .chamada strong{color:var(--marca)}
 .chamada button{margin-left:auto}
+.elos{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:7px;margin-top:14px}
+.elo{border:1px solid var(--borda);border-radius:8px;padding:9px 11px;font-size:12.5px;display:flex;align-items:center;gap:7px}
+.elo .luz{width:7px;height:7px;border-radius:50%;background:var(--suave);flex:none}
+.elo.feito .luz{background:var(--ok)} .elo.feito{border-color:color-mix(in srgb,var(--ok) 35%,transparent)}
+.elo.agora .luz{background:var(--marca);animation:pulsa 1.1s ease-in-out infinite}
+.elo.agora{border-color:var(--marca);background:var(--realce);color:var(--marca);font-weight:550}
+.elo.falhou .luz{background:var(--alerta)}
+@keyframes pulsa{0%,100%{opacity:1}50%{opacity:.25}}
 footer{max-width:1120px;margin:0 auto;padding:0 22px 40px;color:var(--suave);font-size:12.5px}
 @media(max-width:640px){main{padding:16px 13px 60px}.bloco{padding:16px}}
 </style>
@@ -86,6 +94,14 @@ footer{max-width:1120px;margin:0 auto;padding:0 22px 40px;color:var(--suave);fon
       <div class="numero"><div class="valor" id="n_lote">0</div><div class="nome">no último lote</div></div>
     </div>
     <p class="nota" style="margin-top:12px" id="quando">A esteira ainda não rodou.</p>
+  </div>
+
+
+  <div class="bloco" id="bloco_vivo" style="display:none">
+    <h2>Ao vivo</h2>
+    <h3 id="vivo_titulo">A esteira está trabalhando</h3>
+    <p class="nota" id="vivo_resumo"></p>
+    <div id="vivo_elos" class="elos"></div>
   </div>
 
   <div class="bloco">
@@ -243,7 +259,7 @@ $("salvar").onclick=async()=>{
 $("varrer").onclick=async()=>{
   $("recado").textContent="chamando a esteira";
   try{ await mandar("/varrer");
-    $("recado").textContent="varredura em andamento, acompanhe acima"; }
+    $("recado").textContent="esteira acionada"; setTimeout(verAoVivo,2500); }
   catch(e){ $("recado").textContent=e.message; }
 };
 
@@ -256,7 +272,42 @@ $("baixar").onclick=async()=>{
   catch(e){ $("recado_baixar").textContent=e.message; }
 };
 
-atualizar(); setInterval(atualizar,25000);
+
+let relogioVivo=null;
+const NOMES={queued:"na fila",in_progress:"trabalhando",success:"pronto",
+             failure:"falhou",cancelled:"cancelado",skipped:"pulado",waiting:"esperando",pending:"na fila"};
+
+async function verAoVivo(){
+  let d;
+  try{ d=await (await fetch(PONTE+"/andamento?t="+Date.now())).json(); }catch{ return; }
+  const bloco=$("bloco_vivo");
+  if(!d.elos||!d.elos.length){ bloco.style.display="none"; return; }
+
+  bloco.style.display="block";
+  const feitos=d.elos.filter(e=>e.situacao==="success").length;
+  const agora=d.elos.find(e=>e.situacao==="in_progress");
+
+  $("vivo_titulo").textContent = d.rodando
+    ? (agora ? `Lendo agora: ${agora.nome}` : "A esteira está trabalhando")
+    : "Rodada encerrada";
+  $("vivo_resumo").textContent = d.rodando
+    ? `${feitos} de ${d.elos.length} máquinas concluídas. Cada uma lê 12 posts com endereço próprio, porque o Instagram só libera uma leitura por endereço.`
+    : `Rodada ${d.numero} terminou: ${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números acima já estão atualizados.`;
+
+  $("vivo_elos").innerHTML=d.elos
+    .sort((a,b)=>a.nome.localeCompare(b.nome,"pt",{numeric:true}))
+    .map(e=>{
+      const c=e.situacao==="success"?"feito":e.situacao==="in_progress"?"agora":
+              (e.situacao==="failure"?"falhou":"");
+      return `<div class="elo ${c}"><span class="luz"></span>${e.nome}<span style="margin-left:auto;opacity:.65">${NOMES[e.situacao]||e.situacao}</span></div>`;
+    }).join("");
+
+  if(d.rodando && !relogioVivo){ relogioVivo=setInterval(()=>{verAoVivo();atualizar();},7000); }
+  if(!d.rodando && relogioVivo){ clearInterval(relogioVivo); relogioVivo=null; atualizar(); }
+}
+
+atualizar(); verAoVivo();
+setInterval(atualizar,25000); setInterval(verAoVivo,15000);
 </script>
 </body>
 </html>
