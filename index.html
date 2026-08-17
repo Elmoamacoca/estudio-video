@@ -8,10 +8,58 @@
 <style>
 
 
+:root{
+  --paper:#FAFAFA; --paper-2:#F2F2F2; --branco:#FFFFFF;
+  --ink:#0E0E0E; --muted:#6D6D6D; --soft:#9A9A9A;
+  --rule:rgba(14,14,14,.10); --rule-solid:#EAEAEA;
+  --accent:#3F7D53; --accent-tint:#E7F0EA; --link:#2F6440;
+  --verde:#3F7D53; --vermelho:#B23A3A; --ambar:#B07D22;
+  
+  --chart-1:#3F7D53; --chart-2:#2F6FA8; --chart-3:#B07D22;
+  --chart-4:#7A4FA3; --chart-5:#B23A3A;
+  --sombra:0 1px 2px rgba(14,14,14,.05), 0 8px 26px rgba(14,14,14,.06);
+  --r-md:10px; --r-lg:16px;
+  
+  --h-filtro:44px; --r-filtro:12px; --l-filtro:240px;
+  
+  --r-balao:14px; --r-item:10px;
+  
+  --rodape-fundo:#EFEFEF;
+  
+  --sombra-balao:0 12px 34px rgba(14,14,14,.13);
+  --fonte:'Manrope',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+
+
+:root[data-theme="dark"]{
+  --paper:#0F0F0F; --paper-2:#1C1A18; --branco:#171717;
+  --ink:#FAFAFA; --muted:#A8A8A8; --soft:#7A7A7A;
+  --rule:rgba(250,250,250,.12); --rule-solid:#2A2724;
+  --accent:#3F7D53; --accent-tint:rgba(63,125,83,.16); --link:#7FB894;
+  
+  --chart-1:#5FA97A; --chart-2:#6FA8DC; --chart-3:#D6A24A;
+  --chart-4:#A98BD0; --chart-5:#D97070;
+  --sombra:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.4);
+  --sombra-balao:0 12px 34px rgba(0,0,0,.5);
+  --rodape-fundo:#1A1A1A;
+}
+
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+
 :root.trocando-tema, :root.trocando-tema *,
 :root.trocando-tema *::before, :root.trocando-tema *::after{
   transition:background-color .3s ease, border-color .3s ease, color .3s ease,
              fill .3s ease, stroke .3s ease, box-shadow .3s ease !important}
+
+
+html, body{scrollbar-width:none; -ms-overflow-style:none}
+
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--fonte);
+     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+a{color:var(--link)}
 
 
 
@@ -161,6 +209,13 @@
 
 .troca .chave[aria-checked="true"] .bolinha{transform:translateX(16px)}
 
+
+:root.com-revelar .secao > *,
+:root.com-revelar .rodape-pagina > *{
+  opacity:0;transform:translateY(18px);filter:blur(6px);
+  transition:opacity .5s ease-out, transform .5s cubic-bezier(.22,1,.36,1),
+             filter .5s ease-out}
+
 :root.com-revelar .secao[data-visto] > *,
 :root.com-revelar .rodape-pagina[data-visto] > *{
   opacity:1;transform:none;filter:none}
@@ -173,7 +228,20 @@
 
 :root.com-revelar .secao[data-visto] > *:nth-child(n+5){transition-delay:.28s}
 
+
+:root.com-revelar .secao:not([data-visto]) *{animation-play-state:paused !important}
+
+
+
+:root.com-revelar .entra{
+  opacity:0;transform:translateY(30px) scale(.975);filter:blur(5px);
+  transition:opacity .44s ease-out, transform .44s cubic-bezier(.22,1,.36,1),
+             filter .44s ease-out}
+
 :root.com-revelar .entra.entrou{opacity:1;transform:none;filter:none}
+
+
+:root.com-revelar .gal-4 > .entra:nth-child(4n+2).entrou{transition-delay:.05s}
 
 :root.com-revelar .gal-4 > .entra:nth-child(4n+3).entrou{transition-delay:.10s}
 
@@ -221,6 +289,11 @@
   background:hsl(var(--etq-h) 30% 15%);
   color:hsl(var(--etq-h) 62% 76%);
 }
+
+
+
+
+:root{--cor-seguidores:var(--accent)}
 
 
 .rodape-selo .marca{width:34px;height:34px}
