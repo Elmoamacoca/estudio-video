@@ -142,3 +142,82 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .caixa,.pronto{padding:16px}
   .por-vir{padding:22px 18px}
 }
+
+/* ---- a tabela de minerados, no molde da tabela de contas ---- */
+.tab{width:100%;border-collapse:collapse;font-size:13.5px}
+.tab thead th{text-align:left;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--muted);font-weight:600;white-space:nowrap;
+  padding:0 14px 10px 0;border-bottom:1px solid var(--rule-solid)}
+.tab td{padding:12px 14px 12px 0;border-bottom:1px solid var(--rule);
+        vertical-align:middle;color:var(--ink)}
+.tab tbody tr:last-child td{border-bottom:0}
+.tab tbody tr:hover{background:var(--paper)}
+.tab .tab-num{text-align:right;font-variant-numeric:tabular-nums;padding-right:18px}
+.tab thead th.tab-num{text-align:right;padding-right:18px}
+.tab-nulo{color:var(--soft);font-size:12.5px}
+.tab-perfil-in{display:flex;align-items:center;gap:11px}
+.tab-quem{display:flex;flex-direction:column;line-height:1.3}
+.tab-quem b{font-weight:650;color:var(--ink)}
+.tab-quem span{font-size:12px;color:var(--muted)}
+.tab-acao{text-align:right;white-space:nowrap}
+.tab-acao .acao{height:34px;padding:0 14px;font-size:13px;display:inline-flex;
+                align-items:center;text-decoration:none}
+
+/* retrato: a inicial é o fundo, a foto entra por cima. Foto do Instagram vence em
+   horas, e sem a inicial embaixo a tabela ficaria cheia de quadrado quebrado. */
+.pcard-retrato{flex:none}
+.pcard-avatar{position:relative;display:grid;place-items:center;width:36px;height:36px;
+  border-radius:50%;background:var(--paper-2);border:1px solid var(--rule-solid);
+  color:var(--muted);font-weight:700;font-size:14px;overflow:hidden}
+.pcard-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+.pino{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;
+      border-radius:999px;border:1px solid var(--rule-solid);color:var(--muted);
+      white-space:nowrap}
+.pino.ok{color:var(--verde);border-color:color-mix(in srgb,var(--verde) 40%,transparent)}
+.pino.ruim{color:var(--vermelho);border-color:color-mix(in srgb,var(--vermelho) 40%,transparent)}
+
+/* ---- cabeça de categoria, com o número na frente ---- */
+.cat-cab{display:flex;align-items:flex-start;gap:13px;margin-bottom:16px}
+.cat-num{flex:none;display:grid;place-items:center;width:26px;height:26px;
+  border-radius:50%;background:var(--accent-tint);color:var(--accent);
+  font-size:12.5px;font-weight:700}
+.cat-tit{font-size:16px;font-weight:650;margin:0 0 2px;color:var(--ink)}
+
+/* ---- filtros e listas ---- */
+.ct-topo{display:flex;align-items:center;justify-content:space-between;gap:16px;
+         margin-bottom:20px;flex-wrap:wrap}
+.ct-menu{display:flex;gap:4px;padding:4px;border:1px solid var(--rule-solid);
+         border-radius:var(--r-lg);background:var(--paper-2)}
+.ct-item{display:flex;align-items:center;gap:8px;border:0;cursor:pointer;
+  padding:8px 15px;border-radius:12px;background:transparent;color:var(--muted);
+  font:600 13.5px/1 inherit;transition:.16s}
+.ct-item:hover{color:var(--ink)}
+.ct-item.ativo{background:var(--branco);color:var(--ink);box-shadow:var(--sombra)}
+.ct-item b{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:999px;
+           background:var(--paper-2);color:var(--muted)}
+.ct-item.ativo b{background:var(--accent-tint);color:var(--accent)}
+
+.ct-filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.ct-busca{flex:1;min-width:var(--l-filtro);height:var(--h-filtro);
+  border:1px solid var(--rule-solid);border-radius:var(--r-filtro);
+  background:var(--branco);color:var(--ink);padding:0 15px;font:14px inherit}
+.ct-sel{height:var(--h-filtro);border:1px solid var(--rule-solid);
+  border-radius:var(--r-filtro);background:var(--branco);color:var(--ink);
+  padding:0 13px;font:14px inherit;cursor:pointer}
+.ct-busca:focus,.ct-sel:focus{outline:none;border-color:var(--accent)}
+.ct-painel[hidden]{display:none}
+
+.tab-rolo{overflow-x:auto;background:var(--branco);border:1px solid var(--rule-solid);
+          border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--sombra)}
+.gal-vazia{color:var(--muted);font-size:14px;padding:30px 0;text-align:center;
+           background:var(--branco);border:1px solid var(--rule-solid);
+           border-radius:var(--r-lg)}
+
+/* ---- paginação ---- */
+.pag{display:flex;align-items:center;justify-content:space-between;gap:16px;
+     margin-top:16px;flex-wrap:wrap}
+.pag[hidden]{display:none}
+.pag-quanto{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.pag-nav{display:flex;align-items:center;gap:12px}
+.pag-nav .acao{height:38px;padding:0 15px;font-size:13.5px}
