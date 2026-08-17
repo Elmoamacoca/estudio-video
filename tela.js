@@ -350,9 +350,9 @@ async function atualizar() {
   MINERADOS = perfis.map(p => {
     const meus = itens.filter(i => i.conta === p.conta);
     const r = (retratos && retratos[p.conta]) || {};
-    // formato vem do que foi VARRIDO (o seletor conta); `acima` é o que passou na régua
+    // tudo já vem contado pelo seletor, por perfil e sem teto de lote
     return { ...p, nome: p.nome || r.nome, avatar: p.avatar || r.avatar,
-             acima: meus.length };
+             acima: p.acima != null ? p.acima : meus.length };
   });
   desenhaMinerados();
 
