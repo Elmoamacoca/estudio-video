@@ -1015,22 +1015,51 @@ $("ini_vai").onclick = async () => {
   try {
     const d = await mandar("/contas", { contas, regua });
     const barrados = d.bloqueados || [];
-    const entraram = (d.novos || []).filter(n => n.ok);
-    if (entraram.length) await mandar("/varrer");
+    let entraram = (d.novos || []).filter(n => n.ok);
+    let teimosos = (d.novos || []).filter(n => !n.ok).map(n => n.conta);
+
+    // TENTAR DE NOVO, PORQUE A RECUSA É DE MOMENTO E NÃO DE PERFIL.
+    //
+    // Medido em 17/08: pedindo o mesmo @brandsdecoded__ quatro vezes seguidas pela
+    // ponte, três voltaram sem identificação e a quarta trouxe as 2.252 publicações.
+    // O Instagram limita por endereço de saída, e o endereço da ponte é compartilhado:
+    // é sorte de rodízio, não perfil inexistente.
+    //
+    // Antes disto, a primeira recusa era o fim. O perfil entrava na lista de origem, a
+    // esteira NÃO era chamada, e a tela ainda dizia "os 0 perfis já estão minerados".
+    // Foi exatamente esse silêncio que apareceu como perfil adicionado sem nada
+    // acontecer na tela.
+    for (let volta = 2; volta <= 4 && teimosos.length; volta++) {
+      carregando("ini_recado",
+        `O Instagram recusou a consulta, tentativa ${volta} de 4`, "orbita");
+      await new Promise(ok => setTimeout(ok, 4000));
+      const outra = await mandar("/contas", { contas: teimosos });
+      entraram = entraram.concat((outra.novos || []).filter(n => n.ok));
+      teimosos = (outra.novos || []).filter(n => !n.ok).map(n => n.conta);
+    }
+
+    // A ESTEIRA É CHAMADA MESMO SEM IDENTIFICAÇÃO. Quem entrou na lista de origem é
+    // trabalho pendente para ela, e as vinte máquinas dela têm vinte endereços de saída
+    // próprios: onde a ponte apanhou, alguma delas passa.
+    if (entraram.length || teimosos.length) await mandar("/varrer");
 
     $("fontes").value = "";
     delete $("fontes").dataset.tocado;
     parado("ini_recado", "");
     $("ini_folha").hidden = true;
-    parado("recado",
-      entraram.length && barrados.length
-        ? `${entraram.length} entrou, ${barrados.length} já estava no banco`
-      : entraram.length
-        ? (entraram.length === 1 ? "1 perfil na fila, acompanhe no registro abaixo"
-             : `${entraram.length} perfis na fila, acompanhe no registro abaixo`)
-      : barrados.length === 1
-        ? `@${barrados[0]} já está minerado, nada a fazer`
-        : `os ${barrados.length} perfis já estão minerados, nada a fazer`);
+    const recado = [];
+    if (entraram.length)
+      recado.push(entraram.length === 1 ? "1 perfil na fila"
+                                        : `${entraram.length} perfis na fila`);
+    if (teimosos.length)
+      recado.push(teimosos.length === 1
+        ? `@${teimosos[0]} entrou sem identificação, a esteira tenta pelos endereços dela`
+        : `${teimosos.length} entraram sem identificação, a esteira tenta pelos endereços dela`);
+    if (barrados.length)
+      recado.push(barrados.length === 1 ? `@${barrados[0]} já estava no banco`
+                                        : `${barrados.length} já estavam no banco`);
+    parado("recado", recado.join(" · ")
+      + (entraram.length || teimosos.length ? ", acompanhe no registro abaixo" : ""));
     // o cartão de cada perfil já existe no acervo neste ponto: a ponte o abre junto
     // com a identificação, então a lista mostra o perfil antes da primeira página.
     setTimeout(() => { aoVivo(); atualizar(); }, 1200);
