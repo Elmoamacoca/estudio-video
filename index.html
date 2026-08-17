@@ -2,334 +2,1219 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Estúdio</title>
 <style>
 :root{
-  --fundo:#f7f7f5; --painel:#fff; --borda:#e3e3df; --texto:#1c1c1a; --suave:#6b6b66;
-  --marca:#ba5a18; --ok:#2f7d4f; --alerta:#b4451c; --trilho:#efefec; --realce:#faf3ee;
+  --paper:#FAFAFA; --paper-2:#F2F2F2; --branco:#FFFFFF;
+  --ink:#0E0E0E; --muted:#6D6D6D; --soft:#9A9A9A;
+  --rule:rgba(14,14,14,.10); --rule-solid:#EAEAEA;
+  --accent:#3F7D53; --accent-tint:#E7F0EA; --link:#2F6440;
+  --verde:#3F7D53; --vermelho:#B23A3A; --ambar:#B07D22;
+  
+  --chart-1:#3F7D53; --chart-2:#2F6FA8; --chart-3:#B07D22;
+  --chart-4:#7A4FA3; --chart-5:#B23A3A;
+  --sombra:0 1px 2px rgba(14,14,14,.05), 0 8px 26px rgba(14,14,14,.06);
+  --r-md:10px; --r-lg:16px;
+  
+  --h-filtro:44px; --r-filtro:12px; --l-filtro:240px;
+  
+  --r-balao:14px; --r-item:10px;
+  
+  --rodape-fundo:#EFEFEF;
+  
+  --sombra-balao:0 12px 34px rgba(14,14,14,.13);
+  --fonte:'Manrope',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
-:root[data-tema="escuro"]{
-  --fundo:#141413; --painel:#1c1c1a; --borda:#2e2e2b; --texto:#f0efec; --suave:#9a9a93;
-  --marca:#e07b34; --ok:#4caf7d; --alerta:#e0703f; --trilho:#262623; --realce:#241d18;
+
+:root[data-theme="dark"]{
+  --paper:#0F0F0F; --paper-2:#1C1A18; --branco:#171717;
+  --ink:#FAFAFA; --muted:#A8A8A8; --soft:#7A7A7A;
+  --rule:rgba(250,250,250,.12); --rule-solid:#2A2724;
+  --accent:#3F7D53; --accent-tint:rgba(63,125,83,.16); --link:#7FB894;
+  
+  --chart-1:#5FA97A; --chart-2:#6FA8DC; --chart-3:#D6A24A;
+  --chart-4:#A98BD0; --chart-5:#D97070;
+  --sombra:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.4);
+  --sombra-balao:0 12px 34px rgba(0,0,0,.5);
+  --rodape-fundo:#1A1A1A;
 }
+
+:root.trocando-tema, :root.trocando-tema *,
+:root.trocando-tema *::before, :root.trocando-tema *::after{
+  transition:background-color .3s ease, border-color .3s ease, color .3s ease,
+             fill .3s ease, stroke .3s ease, box-shadow .3s ease !important}
+
+:root[data-theme="dark"] .marca-clara{display:none}
+
+:root[data-theme="dark"] .marca-escura{display:block}
+
+@keyframes ping{75%,100%{transform:scale(2);opacity:0}}
+
+:root.com-revelar .secao > *,
+:root.com-revelar .rodape-pagina > *{
+  opacity:0;transform:translateY(18px);filter:blur(6px);
+  transition:opacity .5s ease-out, transform .5s cubic-bezier(.22,1,.36,1),
+             filter .5s ease-out}
+
+:root.com-revelar .secao[data-visto] > *,
+:root.com-revelar .rodape-pagina[data-visto] > *{
+  opacity:1;transform:none;filter:none}
+
+:root.com-revelar .secao[data-visto] > *:nth-child(2){transition-delay:.07s}
+
+:root.com-revelar .secao[data-visto] > *:nth-child(3){transition-delay:.14s}
+
+:root.com-revelar .secao[data-visto] > *:nth-child(4){transition-delay:.21s}
+
+:root.com-revelar .secao[data-visto] > *:nth-child(n+5){transition-delay:.28s}
+
+:root.com-revelar .secao:not([data-visto]) *{animation-play-state:paused !important}
+
+:root.com-revelar .entra{
+  opacity:0;transform:translateY(30px) scale(.975);filter:blur(5px);
+  transition:opacity .44s ease-out, transform .44s cubic-bezier(.22,1,.36,1),
+             filter .44s ease-out}
+
+:root.com-revelar .entra.entrou{opacity:1;transform:none;filter:none}
+
+:root.com-revelar .gal-4 > .entra:nth-child(4n+2).entrou{transition-delay:.05s}
+
+:root.com-revelar .gal-4 > .entra:nth-child(4n+3).entrou{transition-delay:.10s}
+
+:root.com-revelar .gal-4 > .entra:nth-child(4n+0).entrou{transition-delay:.15s}
+
+:root.com-revelar .gal-6 > .entra:nth-child(6n+2).entrou{transition-delay:.04s}
+
+:root.com-revelar .gal-6 > .entra:nth-child(6n+3).entrou{transition-delay:.08s}
+
+:root.com-revelar .gal-6 > .entra:nth-child(6n+4).entrou{transition-delay:.12s}
+
+:root.com-revelar .gal-6 > .entra:nth-child(6n+5).entrou{transition-delay:.16s}
+
+:root.com-revelar .gal-6 > .entra:nth-child(6n+0).entrou{transition-delay:.20s}
+
+:root.com-revelar .destaques > .entra:nth-child(2n+0).entrou{transition-delay:.07s}
+
+:root.com-revelar .rank-tira > .entra:nth-child(2).entrou{transition-delay:.05s}
+
+:root.com-revelar .rank-tira > .entra:nth-child(3).entrou{transition-delay:.10s}
+
+:root.com-revelar .rank-tira > .entra:nth-child(n+4).entrou{transition-delay:.15s}
+
+:root.com-revelar .st-fita > .entra:nth-child(2).entrou{transition-delay:.04s}
+
+:root.com-revelar .st-fita > .entra:nth-child(3).entrou{transition-delay:.08s}
+
+:root.com-revelar .st-fita > .entra:nth-child(n+4).entrou{transition-delay:.12s}
+
+@keyframes tracar{to{stroke-dashoffset:0}}
+
+@keyframes subir{to{opacity:.10}}
+
+@keyframes crescer{to{transform:scaleY(1)}}
+
+@keyframes etqEntra{from{opacity:0;transform:scale(.95) translateY(-4px)}
+                    to{opacity:1;transform:none}}
+
+:root[data-theme="dark"] .badge-etq{
+  border-color:hsl(var(--etq-h) 26% 30%);
+  background:hsl(var(--etq-h) 30% 15%);
+  color:hsl(var(--etq-h) 62% 76%);
+}
+
+@keyframes pcEntra{to{opacity:1;transform:translateY(0)}}
+
+@keyframes pcSobe{to{opacity:1;transform:translateY(0)}}
+
+:root{--cor-seguidores:var(--accent)}
+
+@keyframes ftabEntra{to{opacity:1;transform:none;filter:blur(0)}}
+
+@keyframes ftabRisca{to{stroke-dashoffset:0}}
+
+@keyframes lgPisca{0%,100%{opacity:1}50%{opacity:.35}}
+
+@keyframes lgPasso{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+
+@keyframes mkPulso{0%{transform:scale(.75);opacity:.7}100%{transform:scale(1.7);opacity:0}}
+
+@keyframes pfFundo{from{opacity:0;backdrop-filter:blur(0)}
+                   to{opacity:1;backdrop-filter:blur(3px)}}
+
+@keyframes pfJanela{from{opacity:0;transform:translateY(22px) scale(.94)}
+                    to{opacity:1;transform:none}}
+
+@keyframes pfFundoSai{to{opacity:0}}
+
+@keyframes pfJanelaSai{to{opacity:0;transform:translateY(8px) scale(.985)}}
+
+@keyframes pfBrilho{to{transform:translateX(100%)}}
+
+@keyframes pfBloco{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+:root.trocando-tema *::before, :root.trocando-tema *::after{
+  transition:background-color .3s ease, border-color .3s ease, color .3s ease,
+             fill .3s ease, stroke .3s ease, box-shadow .3s ease !important}
+.nav-wrap{position:sticky;top:0;z-index:40;width:100%;padding:10px 0 0}
+.nav-body{position:relative;z-index:60;margin:0 auto;display:flex;align-items:center;
+          justify-content:space-between;width:calc(100% - 2 * clamp(20px,3.2vw,56px));
+          max-width:1340px;
+          padding:7px 10px 7px 14px;border-radius:999px;background:transparent;
+          transition:width .55s cubic-bezier(.34,1.25,.64,1),
+                     transform .55s cubic-bezier(.34,1.25,.64,1),
+                     background-color .3s ease, box-shadow .3s ease}
+.nav-body.encolhido{width:40%;min-width:880px;transform:translateY(16px);
+  background:color-mix(in srgb, var(--branco) 80%, transparent);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:0 0 24px rgba(34,42,53,.06), 0 1px 1px rgba(0,0,0,.05),
+             0 0 0 1px rgba(34,42,53,.04), 0 0 4px rgba(34,42,53,.08),
+             0 16px 68px rgba(47,48,55,.05), 0 1px 0 rgba(255,255,255,.1) inset}
+.nav-body.encolhido .status .rotulo{display:none}
+.nav-body.encolhido .status{padding:5px 7px}
+.nav-logo{position:relative;z-index:20;display:flex;align-items:center;gap:9px;
+          color:var(--ink);font-size:15.5px;font-weight:800;letter-spacing:-.3px;
+          text-decoration:none;padding:2px 6px 2px 2px;white-space:nowrap}
+.nav-logo:hover{text-decoration:none}
+.marca{width:26px;height:26px;display:block;object-fit:contain}
+.marca-escura{display:none}
+:root[data-theme="dark"] .marca-clara{display:none}
+:root[data-theme="dark"] .marca-escura{display:block}
+.nav-itens{position:absolute;inset:0;display:flex;align-items:center;
+           justify-content:center;gap:2px;font-size:13.5px;font-weight:500}
+.nav-itens a{position:relative;z-index:20;padding:8px 14px;color:var(--muted);
+             text-decoration:none;white-space:nowrap;transition:color .2s}
+.nav-itens a:hover{color:var(--ink);text-decoration:none}
+.nav-itens a.ativo{color:var(--ink);font-weight:700}
+.nav-itens a.ativo::after{content:"";position:absolute;left:14px;right:14px;
+  bottom:2px;height:2px;border-radius:2px;background:var(--ink);opacity:.85}
+.pilula{position:absolute;top:50%;left:0;height:33px;width:0;z-index:10;
+        border-radius:999px;background:var(--paper-2);opacity:0;
+        transform:translate(0,-50%);
+        transition:transform .3s cubic-bezier(.22,1,.36,1),
+                   width .3s cubic-bezier(.22,1,.36,1), opacity .18s}
+.nav-dir{position:relative;z-index:20;display:flex;align-items:center;gap:12px}
+.nav-hamb{display:none;width:34px;height:34px;border:0;border-radius:9px;
+          background:none;color:var(--ink);cursor:pointer;align-items:center;
+          justify-content:center;padding:0}
+.nav-hamb:hover{background:var(--paper-2)}
+.nav-hamb svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
+.nav-menu{position:absolute;inset-inline:0;top:calc(100% + 8px);z-index:50;
+          margin:0 auto;max-width:1340px;display:none;flex-direction:column;
+          gap:2px;padding:14px;border-radius:16px;background:var(--branco);
+          box-shadow:0 0 24px rgba(34,42,53,.06), 0 1px 1px rgba(0,0,0,.05),
+                     0 0 0 1px rgba(34,42,53,.04), 0 16px 68px rgba(47,48,55,.05)}
+.nav-menu.aberto{display:flex}
+.nav-menu a{padding:11px 12px;border-radius:9px;color:var(--muted);
+            text-decoration:none;font-size:14.5px;font-weight:600}
+.nav-menu a.ativo{color:var(--ink);background:var(--paper-2);font-weight:700}
+.nav-itens{display:none}
+.nav-hamb{display:flex}
+.status .rotulo{display:none}
+.nav-body{padding:7px 8px 7px 10px}
+.status{display:inline-flex;align-items:center;gap:8px;border-radius:999px;
+        border:1px solid var(--rule-solid);background:var(--paper-2);
+        padding:3px 11px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.status .ind{position:relative;display:flex;width:8px;height:8px;flex:0 0 8px}
+.status .ping{position:absolute;display:inline-flex;width:100%;height:100%;
+              border-radius:999px;opacity:.75;
+              animation:ping 1.6s cubic-bezier(0,0,.2,1) infinite}
+.status .bola{position:relative;display:inline-flex;width:8px;height:8px;
+              border-radius:999px}
+.status.online .ping,.status.online .bola{background:var(--verde)}
+.status.degraded .ping,.status.degraded .bola{background:var(--ambar)}
+.status.offline .ping,.status.offline .bola{background:var(--vermelho)}
+.status .rotulo{color:var(--muted)}
+.troca{display:inline-flex;align-items:center;gap:8px}
+.troca .ico{display:flex;cursor:pointer;color:var(--ink);line-height:0}
+.troca .ico svg{width:16px;height:16px}
+.troca .ico.apagado{opacity:.5}
+.troca .chave{width:36px;height:20px;flex:0 0 36px;border:0;border-radius:999px;
+              background:var(--rule-solid);cursor:pointer;padding:2px;
+              display:inline-flex;align-items:center;transition:background .2s}
+.troca .chave[aria-checked="true"]{background:var(--ink)}
+.troca .bolinha{width:16px;height:16px;border-radius:999px;background:var(--branco);
+                box-shadow:0 1px 2px rgba(14,14,14,.25);transition:transform .2s;
+                display:block}
+.troca .chave[aria-checked="true"] .bolinha{transform:translateX(16px)}
+.mcard .guia,.mcard .bola{transition:opacity .18s}
+.ac-lista button:hover,.ac-lista button.marcado{background:var(--paper-2)}
+.sel-item:hover,.sel-item.marcado{background:color-mix(in srgb, var(--ink) 10%, transparent)}
+.list-box-item.marcado{background:var(--paper-2)}
+.rodape-selo .marca{width:34px;height:34px}
+.chart .marca-x{font-size:11px}
+.chart-balao .marca{flex-shrink:0;width:10px;height:10px;border-radius:2px;
+                    background:var(--cor-seguidores);border:1px solid var(--cor-seguidores)}
+.lg-bola.indo{background:transparent;box-shadow:inset 0 0 0 2px var(--accent);
+              animation:lgPisca 1.4s ease-in-out infinite}
+.mk.indo{background:transparent;box-shadow:inset 0 0 0 2px var(--accent)}
+.mk.indo::after{content:"";position:absolute;inset:0;border-radius:99px;
+                box-shadow:0 0 0 2px var(--accent);
+                animation:mkPulso 1.5s cubic-bezier(.2,.7,.3,1) infinite}
+.mk.indo::after,.lg-bola.indo{animation:none}
+.pf-bt .ico{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;
+            stroke-linecap:round;stroke-linejoin:round}
+if (r.status === 401){
+          location.replace("entrar?de=" + encodeURIComponent(location.pathname));
+          return null;
+        }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--fundo);color:var(--texto);font:15px/1.55 ui-sans-serif,system-ui,"Segoe UI",Inter,sans-serif;-webkit-font-smoothing:antialiased}
-.faixa{position:sticky;top:0;z-index:20;background:var(--painel);border-bottom:1px solid var(--borda);padding:13px 22px;display:flex;align-items:center;gap:13px}
-.marca{font-weight:650;font-size:16px;letter-spacing:-.01em}
-.marca span{color:var(--marca)}
-.pilula{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--suave);border:1px solid var(--borda);padding:5px 11px;border-radius:100px}
-.ponto{width:7px;height:7px;border-radius:50%;background:var(--suave)}
-.ponto.vivo{background:var(--ok)} .ponto.morto{background:var(--alerta)}
-button{font:inherit;cursor:pointer;border:1px solid var(--borda);background:var(--painel);color:var(--texto);padding:7px 13px;border-radius:8px;transition:.15s}
-button:hover{border-color:var(--marca)}
-button.forte{background:var(--marca);border-color:var(--marca);color:#fff;font-weight:550}
-button.forte:hover{filter:brightness(1.08)}
-button:disabled{opacity:.45;cursor:not-allowed}
-main{max-width:1120px;margin:0 auto;padding:24px 22px 70px}
-.bloco{background:var(--painel);border:1px solid var(--borda);border-radius:12px;padding:20px;margin-bottom:18px}
-h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--suave);font-weight:600;margin-bottom:13px}
-h3{font-size:15px;font-weight:600;margin-bottom:4px}
-p.nota{color:var(--suave);font-size:13.5px}
-textarea{width:100%;min-height:96px;resize:vertical;font:14px/1.5 ui-monospace,Consolas,monospace;background:var(--fundo);color:var(--texto);border:1px solid var(--borda);border-radius:9px;padding:12px}
-textarea:focus,input:focus{outline:none;border-color:var(--marca)}
-input[type=password],input[type=text],input[type=number]{font:14px ui-monospace,Consolas,monospace;background:var(--fundo);color:var(--texto);border:1px solid var(--borda);border-radius:9px;padding:9px 11px;width:100%}
-.linha{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--borda);border:1px solid var(--borda);border-radius:11px;overflow:hidden}
-.numero{background:var(--painel);padding:15px 17px}
-.numero .valor{font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
-.numero .nome{font-size:12.5px;color:var(--suave);margin-top:2px}
-table{width:100%;border-collapse:collapse;font-size:13.5px}
-th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--suave);font-weight:600;padding:0 10px 9px 0;border-bottom:1px solid var(--borda);white-space:nowrap}
-td{padding:10px 10px 10px 0;border-bottom:1px solid var(--borda)}
-tr:last-child td{border-bottom:none}
-.rolagem{overflow-x:auto;margin:0 -4px;padding:0 4px}
-.vazio{color:var(--suave);font-size:14px;padding:24px 0;text-align:center}
-.escolha{display:flex;gap:8px;flex-wrap:wrap}
-.opcao{display:flex;align-items:center;gap:7px;border:1px solid var(--borda);padding:8px 14px;border-radius:9px;cursor:pointer;font-size:14px;user-select:none}
-.opcao.ligada{border-color:var(--marca);background:var(--realce);color:var(--marca);font-weight:550}
-.tag{font-size:11.5px;padding:3px 8px;border-radius:100px;border:1px solid var(--borda);color:var(--suave);white-space:nowrap}
-.tag.forte{color:var(--marca);border-color:color-mix(in srgb,var(--marca) 45%,transparent)}
-.tag.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
-.barra{height:5px;background:var(--trilho);border-radius:100px;overflow:hidden;margin-top:6px}
-.barra i{display:block;height:100%;background:var(--marca);border-radius:100px}
-.campo{flex:1;min-width:130px}
-.campo label{display:block;font-size:12px;color:var(--suave);margin-bottom:5px}
-a{color:var(--marca)}
-.passos{margin:12px 0 12px 20px;font-size:13.5px;color:var(--suave)}
-.passos li{margin-bottom:7px;padding-left:3px}
-.passos strong{color:var(--texto)}
-code{font:12.5px ui-monospace,Consolas,monospace;background:var(--fundo);border:1px solid var(--borda);border-radius:5px;padding:2px 6px;color:var(--texto);word-break:break-all}
-.chamada{background:var(--realce);border:1px solid color-mix(in srgb,var(--marca) 35%,transparent);border-radius:11px;padding:14px 17px;margin-bottom:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.chamada strong{color:var(--marca)}
-.chamada button{margin-left:auto}
-.elos{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:7px;margin-top:14px}
-.elo{border:1px solid var(--borda);border-radius:8px;padding:9px 11px;font-size:12.5px;display:flex;align-items:center;gap:7px}
-.elo .luz{width:7px;height:7px;border-radius:50%;background:var(--suave);flex:none}
-.elo.feito .luz{background:var(--ok)} .elo.feito{border-color:color-mix(in srgb,var(--ok) 35%,transparent)}
-.elo.agora .luz{background:var(--marca);animation:pulsa 1.1s ease-in-out infinite}
-.elo.agora{border-color:var(--marca);background:var(--realce);color:var(--marca);font-weight:550}
-.elo.falhou .luz{background:var(--alerta)}
-@keyframes pulsa{0%,100%{opacity:1}50%{opacity:.25}}
-footer{max-width:1120px;margin:0 auto;padding:0 22px 40px;color:var(--suave);font-size:12.5px}
-@media(max-width:640px){main{padding:16px 13px 60px}.bloco{padding:16px}}
+html, body{scrollbar-width:none; -ms-overflow-style:none}
+html::-webkit-scrollbar, body::-webkit-scrollbar{width:0; height:0; display:none}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--fonte);
+     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.corpo{max-width:1340px;margin:0 auto;
+       padding:26px clamp(20px, 3.2vw, 56px) 60px}
+.secao{margin-top:34px;scroll-margin-top:88px}
+.numeros{display:grid;gap:14px;margin-bottom:4px}
+.numeros.tres{grid-template-columns:repeat(3,1fr)}
+.numeros.quatro{grid-template-columns:repeat(4,1fr)}
+.num{background:var(--branco);border:1px solid var(--rule-solid);border-radius:var(--r-md);
+     padding:22px 16px;text-align:center}
+.num b{display:block;font-size:31px;font-weight:800;line-height:1.15;color:var(--ink);
+       font-variant-numeric:tabular-nums;letter-spacing:-.8px}
+.num span{display:block;margin-top:7px;font-size:10.5px;color:var(--soft);font-weight:700;
+          text-transform:uppercase;letter-spacing:.7px}
+.caixa{background:var(--branco);border:1px solid var(--rule-solid);
+       border-radius:var(--r-md);padding:18px 20px}
+.caixa h3{font-size:14px;font-weight:800;margin-bottom:11px}
+.uso{display:flex;align-items:center;gap:14px}
+.uso .barra{flex:1}
+.uso .uso-pct{font-size:13px;font-weight:700;min-width:48px;text-align:right;
+              font-variant-numeric:tabular-nums}
+.barra{height:13px;background:var(--paper-2);border-radius:999px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--verde);border-radius:999px}
+.barra i.meio{background:var(--ambar)}
+.barra i.cheio{background:var(--vermelho)}
+.btn{position:relative;display:inline-flex;align-items:center;gap:4px;overflow:hidden;
+     border-radius:100px;background:transparent;padding:8px 22px;
+     border:1.5px solid color-mix(in srgb, var(--ink) 40%, transparent);
+     font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;
+     text-decoration:none;
+     transition:border-color .6s cubic-bezier(.23,1,.32,1),
+                color .6s cubic-bezier(.23,1,.32,1),
+                border-radius .6s cubic-bezier(.23,1,.32,1)}
+.btn:hover{border-color:transparent;color:var(--paper);border-radius:12px;
+           text-decoration:none}
+.btn:active{transform:scale(.95)}
+.btn .seta use,.btn .seta{stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn .seta{position:absolute;width:14px;height:14px;stroke:var(--ink);fill:none;z-index:9;
+           transition:left .8s cubic-bezier(.34,1.56,.64,1),
+                      right .8s cubic-bezier(.34,1.56,.64,1),
+                      stroke .8s cubic-bezier(.34,1.56,.64,1)}
+.btn .seta-esq{left:-25%}
+.btn .seta-dir{right:11px}
+.btn:hover .seta-esq{left:11px;stroke:var(--paper)}
+.btn:hover .seta-dir{right:-25%;stroke:var(--paper)}
+.btn{--desl:9px}
+.btn .txt{position:relative;z-index:1;white-space:nowrap;
+          transform:translateX(calc(-1 * var(--desl)));
+          transition:transform .8s ease-out}
+.btn:hover .txt{transform:translateX(var(--desl))}
+.btn .circ{position:absolute;top:50%;left:50%;width:16px;height:16px;
+           transform:translate(-50%,-50%);background:var(--ink);border-radius:50%;
+           opacity:0;transition:all .8s cubic-bezier(.19,1,.22,1)}
+.btn:hover .circ{width:calc(100% + 80px);height:calc(100% + 180px);opacity:1}
+.btn.brasa{border-color:color-mix(in srgb, var(--accent) 40%, transparent);
+           color:var(--accent)}
+.btn.brasa .seta{stroke:var(--accent)}
+.btn.brasa .circ{background:var(--accent)}
+.btn.brasa:hover{color:#FFFFFF}
+.btn.brasa:hover .seta{stroke:#FFFFFF}
+.aviso{background:var(--accent-tint);border:1px solid rgba(63,125,83,.32);
+       border-radius:var(--r-md);padding:12px 16px;font-size:13.5px;
+       color:var(--link);margin-bottom:20px}
+.vazio{padding:44px;text-align:center;color:var(--soft);font-size:13.5px}
+body:has(.pf-pagina) .corpo{max-width:none;padding-top:18px}
+body.com-perfil{overflow:hidden}
+.numeros.quatro{grid-template-columns:repeat(2,1fr)}
+.numeros.tres{grid-template-columns:1fr}
+.corpo{padding:18px 14px 40px}
+/* O que é desta tela e não veio do Social Tracker.
+   Tudo aqui usa as variáveis de lá, para as duas telas envelhecerem juntas. */
+
+.corpo{max-width:1340px;margin:0 auto;padding:26px clamp(20px,3.2vw,56px) 80px}
+
+.aba[hidden]{display:none}
+/* A entrada da aba é a mesma do sistema: sobe pouco e aparece, sem chamar atenção. */
+.aba{animation:subir .34s cubic-bezier(.22,1,.36,1) both}
+
+.secao{margin-bottom:26px}
+.secao-cab{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+           margin-bottom:12px;flex-wrap:wrap}
+.secao-cab h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;
+              color:var(--muted);font-weight:600;margin:0}
+.secao-cab .dir{display:flex;align-items:center;gap:10px}
+
+.caixa{background:var(--branco);border:1px solid var(--rule-solid);
+       border-radius:var(--r-lg);padding:20px;box-shadow:var(--sombra)}
+.caixa h3{font-size:15.5px;font-weight:650;margin:0 0 5px;color:var(--ink)}
+.nota{color:var(--muted);font-size:13.5px;margin:0}
+
+.numeros{display:grid;gap:1px;background:var(--rule-solid);border:1px solid var(--rule-solid);
+         border-radius:var(--r-lg);overflow:hidden}
+.numeros.quatro{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.num{background:var(--branco);padding:17px 19px}
+.num b{display:block;font-size:27px;font-weight:650;letter-spacing:-.02em;line-height:1.1;
+       color:var(--ink);font-variant-numeric:tabular-nums}
+.num span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+
+textarea{width:100%;min-height:104px;resize:vertical;margin-top:12px;
+         font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+         background:var(--paper);color:var(--ink);border:1px solid var(--rule-solid);
+         border-radius:var(--r-md);padding:12px 13px}
+textarea:focus,input:focus{outline:none;border-color:var(--accent)}
+input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
+  font:14px ui-monospace,Consolas,monospace;background:var(--paper);color:var(--ink);
+  border:1px solid var(--rule-solid);border-radius:var(--r-filtro);padding:0 13px}
+
+.linha{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:14px}
+.campo{flex:1;min-width:160px}
+.campo label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+
+/* O botão do sistema tem quatro filhos e vive no molde de lá. Aqui as ações são de
+   comando, não de navegação, então usam a forma sóbria: retângulo, sem seta. */
+.acao{height:var(--h-filtro);padding:0 18px;border-radius:var(--r-filtro);cursor:pointer;
+      font:500 14px/1 inherit;color:var(--ink);background:var(--branco);
+      border:1px solid var(--rule-solid);transition:.16s}
+.acao:hover{border-color:var(--accent);color:var(--accent)}
+.acao.forte{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.acao.forte:hover{filter:brightness(1.07);color:#fff}
+.acao:disabled{opacity:.42;cursor:not-allowed}
+.acao:disabled:hover{border-color:var(--rule-solid);color:var(--ink)}
+
+.vazio{color:var(--muted);font-size:14px;padding:26px 0;text-align:center;
+       background:var(--branco);border:1px solid var(--rule-solid);
+       border-radius:var(--r-lg)}
+
+/* ---- as máquinas da rodada, uma pastilha cada ---- */
+.elos{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:7px;
+      margin-top:16px}
+.elo{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:9px 11px;
+     border:1px solid var(--rule-solid);border-radius:var(--r-md);background:var(--paper)}
+.elo .luz{width:7px;height:7px;border-radius:50%;background:var(--soft);flex:none}
+.elo .qual{margin-left:auto;color:var(--muted)}
+.elo.feito{border-color:color-mix(in srgb,var(--verde) 40%,transparent)}
+.elo.feito .luz{background:var(--verde)}
+.elo.agora{border-color:var(--accent);background:var(--accent-tint);color:var(--accent);
+           font-weight:600}
+.elo.agora .luz{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
+.elo.falhou .luz{background:var(--vermelho)}
+
+/* ---- o registro corrido, linha a linha ---- */
+.registro{margin-top:16px;border:1px solid var(--rule-solid);border-radius:var(--r-md);
+          background:var(--paper);max-height:260px;overflow-y:auto;
+          font:12.5px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.registro:empty{display:none}
+.registro .ln{display:flex;gap:12px;padding:5px 13px;border-bottom:1px solid var(--rule)}
+.registro .ln:last-child{border-bottom:0}
+.registro .hora{color:var(--soft);flex:none;font-variant-numeric:tabular-nums}
+.registro .txt{color:var(--ink)}
+.registro .ln.bom .txt{color:var(--verde)}
+.registro .ln.ruim .txt{color:var(--vermelho)}
+
+/* ---- perfil: barra de avanço ---- */
+.perfil-linha{background:var(--branco);border:1px solid var(--rule-solid);
+              border-radius:var(--r-lg);padding:16px 18px;margin-bottom:10px}
+.perfil-topo{display:flex;align-items:center;justify-content:space-between;gap:12px;
+             flex-wrap:wrap;font-size:14px}
+.perfil-topo b{color:var(--ink);font-weight:650}
+.barra{height:5px;background:var(--paper-2);border-radius:999px;overflow:hidden;margin-top:9px}
+.barra i{display:block;height:100%;background:var(--accent);border-radius:999px;
+         transition:width .5s cubic-bezier(.22,1,.36,1)}
+
+.tag{font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--rule-solid);
+     color:var(--muted);white-space:nowrap}
+.tag.ok{color:var(--verde);border-color:color-mix(in srgb,var(--verde) 40%,transparent)}
+.tag.trab{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+
+/* ---- cartão de perfil pronto para baixar ---- */
+.pronto{background:var(--branco);border:1px solid var(--rule-solid);
+        border-radius:var(--r-lg);padding:18px 20px;margin-bottom:12px;
+        box-shadow:var(--sombra)}
+.pronto-topo{display:flex;align-items:center;justify-content:space-between;gap:14px;
+             flex-wrap:wrap;margin-bottom:14px}
+.pronto-topo .quem{font-size:15.5px;font-weight:650;color:var(--ink)}
+.pronto-numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));
+                gap:1px;background:var(--rule-solid);border:1px solid var(--rule-solid);
+                border-radius:var(--r-md);overflow:hidden}
+.pronto-numeros div{background:var(--paper);padding:12px 14px}
+.pronto-numeros b{display:block;font-size:19px;font-weight:650;color:var(--ink);
+                  font-variant-numeric:tabular-nums;line-height:1.15}
+.pronto-numeros span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* ---- aba que ainda não existe ---- */
+.por-vir{background:var(--branco);border:1px dashed var(--rule-solid);
+         border-radius:var(--r-lg);padding:30px 28px;text-align:left}
+.por-vir-selo{display:inline-block;font-size:11px;text-transform:uppercase;
+              letter-spacing:.1em;font-weight:700;color:var(--ambar);
+              border:1px solid color-mix(in srgb,var(--ambar) 40%,transparent);
+              border-radius:999px;padding:4px 11px;margin-bottom:14px}
+.por-vir h2{font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+            margin:0 0 6px;text-transform:none}
+.por-vir-lista{margin:16px 0 0 20px;color:var(--muted);font-size:14px}
+.por-vir-lista li{margin-bottom:8px;padding-left:4px}
+
+/* ---- o aviso de que o Drive ainda não foi autorizado ---- */
+.travado{display:flex;gap:12px;align-items:flex-start;background:var(--paper);
+         border:1px solid color-mix(in srgb,var(--ambar) 35%,transparent);
+         border-radius:var(--r-md);padding:13px 15px;margin-top:14px;font-size:13.5px;
+         color:var(--muted)}
+.travado b{color:var(--ink)}
+
+@media(max-width:640px){
+  .corpo{padding:18px 14px 60px}
+  .caixa,.pronto{padding:16px}
+  .por-vir{padding:22px 18px}
+}
+
 </style>
 </head>
 <body>
+<svg class="tinta" aria-hidden="true" focusable="false">
+  <defs>
+  <!-- A SETA DO BOTAO E O SELO DO INSTAGRAM, desenhados uma vez cada.
 
-<div class="faixa">
-  <div class="marca">Estúdio<span>.</span></div>
-  <div class="pilula"><span class="ponto" id="ponto"></span><span id="conexao">verificando</span></div>
-  <button id="tema">Tema</button>
-</div>
+       Os dois se repetiam por inteiro em cada cartao: 1.312 botoes com duas setas dentro
+       davam 0,63 MB, e 1.316 selos davam 0,40 MB. Um megabyte de pagina para desenhar
+       dois desenhos. Agora cada cartao so' aponta para o desenho, com `use`. -->
+  <symbol id="i-seta" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></symbol>
+  <!-- OS DOIS DESENHOS DA ETIQUETA.
 
-<main>
-  <div class="bloco">
-    <h2>Situação</h2>
-    <div class="numeros">
-      <div class="numero"><div class="valor" id="n_contas">0</div><div class="nome">contas de origem</div></div>
-      <div class="numero"><div class="valor" id="n_lidos">0</div><div class="nome">posts varridos</div></div>
-      <div class="numero"><div class="valor" id="n_sel">0</div><div class="nome">acima do corte</div></div>
-      <div class="numero"><div class="valor" id="n_lote">0</div><div class="nome">no último lote</div></div>
+       `i-etq` e' a etiqueta comum: a forma de pingente com o furo, que e' como etiqueta
+       se le' sem precisar de legenda.
+
+       `i-adulto` e' a chama, e ela nao e' enfeite. Etiqueta com "modelo" no nome quer
+       dizer produtora de conteudo adulto, e essa e' informacao que muda a leitura de tudo
+       o que vem depois: taxa de engajamento, ritmo, tipo de publicacao. Ficar escrito
+       so' no nome da etiqueta deixa a distincao invisivel numa tabela cheia. -->
+  <symbol id="i-etq" viewBox="0 0 24 24">
+    <path d="M3 7.5v4.6a2 2 0 0 0 .6 1.4l7.3 7.3a2 2 0 0 0 2.8 0l5.6-5.6a2 2 0 0 0 0-2.8
+             L12 5.1a2 2 0 0 0-1.4-.6H6A3 3 0 0 0 3 7.5Z"/>
+    <circle cx="7.6" cy="8.6" r="1.25"/>
+  </symbol>
+  <symbol id="i-adulto" viewBox="0 0 24 24">
+    <path d="M12 2.7s5.6 4 5.6 9.1a5.6 5.6 0 1 1-11.2 0c0-1.9.8-3.6 1.8-5
+             .3 1.3 1 2.3 2 2.8.5-2.9 1.8-5.3 1.8-6.9Z"/>
+  </symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24">
+    <g fill="none" stroke="url(#selo-ig)" stroke-width="2" stroke-linecap="round"
+       stroke-linejoin="round"><rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.4"/>
+      <circle cx="12" cy="12" r="4.2"/></g>
+    <circle cx="17.4" cy="6.6" r="1.35" fill="url(#selo-ig)"/>
+  </symbol>
+  <!-- O MESMO DESENHO, MAS NA COR DE QUEM O USA. O selo colorido acima vive sobre fundo
+       parado e ali as cores do Instagram ajudam. Dentro de um botão que INVERTE no passar
+       do mouse elas atrapalham: o degradê não sabe que o fundo virou claro, e o selo some
+       ou vira um borrão. Este segue `currentColor`, então acompanha o texto do botão em
+       qualquer tema e em qualquer estado, sem truque de filtro. -->
+  <symbol id="i-ig-cor" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+       stroke-linejoin="round"><rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.4"/>
+      <circle cx="12" cy="12" r="4.2"/></g>
+    <circle cx="17.4" cy="6.6" r="1.35" fill="currentColor" stroke="none"/>
+  </symbol>
+  <linearGradient id="selo-ig" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="#FDF497"/><stop offset="25%" stop-color="#FD5949"/>
+    <stop offset="60%" stop-color="#D6249F"/><stop offset="100%" stop-color="#285AEB"/>
+  </linearGradient>
+  </defs>
+</svg>
+
+<header class="nav-wrap">
+ <div class="nav-body" id="barra">
+  <a class="nav-logo" href="#minerar" data-aba="minerar">
+    <img class="marca marca-clara" src="data:image/png;base64,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" alt="">
+    <img class="marca marca-escura" src="data:image/png;base64,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" alt="">Estúdio</a>
+  <nav class="nav-itens" id="itens">
+    <span class="pilula" id="pilula"></span>
+    <a href="#minerar" data-aba="minerar" class="ativo">Mineração</a><a href="#baixar" data-aba="baixar">Baixar</a><a href="#tratar" data-aba="tratar">Tratamento</a><a href="#editar" data-aba="editar">Edição</a>
+  </nav>
+  <div class="nav-dir">
+    <span class="status offline" id="estado">
+      <span class="ind"><span class="ping"></span><span class="bola"></span></span>
+      <span class="rotulo">verificando</span>
+    </span>
+    <div class="troca">
+      <span class="ico sol" id="ir-claro" role="button" tabindex="0" title="Tema claro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12
+             20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34
+             17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </span>
+      <button class="chave" id="chave-tema" type="button" role="switch"
+              aria-checked="false" aria-label="Alternar entre tema claro e escuro">
+        <span class="bolinha"></span>
+      </button>
+      <span class="ico lua" id="ir-escuro" role="button" tabindex="0" title="Tema escuro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9
+             9 9 0 1 1-9-9Z"/></svg>
+      </span>
     </div>
-    <p class="nota" style="margin-top:12px" id="quando">A esteira ainda não rodou.</p>
+    <button class="nav-hamb" id="hamb" type="button" aria-expanded="false"
+            aria-label="Abrir o menu">
+      <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
   </div>
+ </div>
+ <div class="nav-menu" id="menu">
+   <a href="#minerar" data-aba="minerar" class="ativo">Mineração</a><a href="#baixar" data-aba="baixar">Baixar</a><a href="#tratar" data-aba="tratar">Tratamento</a><a href="#editar" data-aba="editar">Edição</a>
+ </div>
+</header>
 
+<main class="corpo">
+<!-- ================================================================ ABA 1 · MINERAÇÃO
+     Duas categorias, na ordem que o Gabriel definiu: primeiro onde se manda trabalhar
+     e se acompanha ao vivo, depois onde se confere a situação de cada perfil. -->
+<section class="aba" id="aba-minerar">
 
-  <div class="bloco" id="bloco_vivo">
-    <h2>Ao vivo</h2>
-    <h3 id="vivo_titulo">A esteira está trabalhando</h3>
-    <p class="nota" id="vivo_resumo"></p>
-    <div id="vivo_elos" class="elos"></div>
-  </div>
-
-  <div class="bloco">
-    <h2>Passo 1 · Contas de origem</h2>
-    <h3>De onde os vídeos são minerados</h3>
-    <p class="nota">Uma por linha. A esteira varre o perfil inteiro, do post de hoje até o primeiro, guardando onde parou. Um perfil de cinco mil publicações não sai numa rodada, e não precisa sair.</p>
-    <textarea id="fontes" placeholder="boletimdamorte&#10;outraconta"></textarea>
-    <div class="linha">
-      <button class="forte" id="salvar">Salvar lista</button>
-      <button id="varrer">Varrer agora</button>
-      <span class="nota" id="recado"></span>
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>Contas de origem</h2>
+      <div class="dir"><span class="nota" id="recado"></span></div>
+    </div>
+    <div class="caixa">
+      <h3>De onde os vídeos são minerados</h3>
+      <p class="nota">Uma por linha, com ou sem arroba, ou o endereço inteiro do perfil.
+        A esteira varre o histórico até onde o Instagram deixa, guardando onde parou.</p>
+      <textarea id="fontes" placeholder="boletimdamorte&#10;vinci.society&#10;https://www.instagram.com/outraconta/"></textarea>
+      <div class="linha">
+        <button class="acao forte" id="salvar">Salvar e varrer</button>
+        <button class="acao" id="varrer">Varrer de novo</button>
+      </div>
     </div>
   </div>
 
-  <div class="bloco">
-    <h2>Passo 2 · Critério</h2>
-    <h3>O que conta como bom desempenho</h3>
-    <p class="nota">Desempenho é múltiplo da mediana da própria conta, e a mediana é calculada <strong>por formato</strong>. Vídeo tem contagem de exibição, imagem e carrossel não têm, então comparar os dois no mesmo ranking premiaria o formato errado.</p>
-    <div class="escolha" style="margin-top:14px" id="formatos">
-      <div class="opcao ligada" data-f="reels">Reels</div>
-      <div class="opcao" data-f="post">Post</div>
-      <div class="opcao" data-f="carrossel">Carrossel</div>
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>Registro ao vivo</h2>
+      <div class="dir"><span class="nota" id="vivo_quando"></span></div>
     </div>
-    <div class="linha">
-      <div class="campo"><label>Corte, em vezes a mediana</label><input type="number" id="corte" value="1.5" step="0.1" min="1"></div>
-      <div class="campo"><label>Máximo de arquivos no lote</label><input type="number" id="quantos" value="150" step="10" min="1"></div>
+    <div class="caixa">
+      <h3 id="vivo_titulo">Esteira parada</h3>
+      <p class="nota" id="vivo_resumo">Nenhuma rodada em andamento.</p>
+      <div id="vivo_elos" class="elos"></div>
+      <div class="registro" id="registro"></div>
     </div>
   </div>
 
-  <div class="bloco">
-    <h2>Passo 3 · Baixar</h2>
-    <h3>O lote inteiro num arquivo só</h3>
-    <p class="nota">Baixar não tem limite de ritmo. O que trava é descobrir o que baixar, e isso o passo 1 já resolveu. Ao terminar, o lote aparece abaixo com o link.</p>
-    <div class="linha">
-      <button class="forte" id="baixar">Montar lote e baixar</button>
-      <span class="nota" id="recado_baixar"></span>
+  <div class="secao">
+    <div class="secao-cab"><h2>Situação</h2></div>
+    <div class="numeros quatro">
+      <div class="num"><b id="n_contas">0</b><span>contas de origem</span></div>
+      <div class="num"><b id="n_lidos">0</b><span>posts varridos</span></div>
+      <div class="num"><b id="n_sel">0</b><span>acima do corte</span></div>
+      <div class="num"><b id="n_completos">0</b><span>perfis concluídos</span></div>
     </div>
-    <div id="lotes" style="margin-top:16px"></div>
+    <div class="caixa" style="margin-top:14px">
+      <h3>Por perfil</h3>
+      <div id="perfis"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
+    </div>
   </div>
 
-  <div class="bloco">
-    <h2>Perfis em varredura</h2>
-    <div id="perfis"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
+</section>
+
+
+<!-- ==================================================================== ABA 2 · BAIXAR
+     Quantidade, nunca lista: quantos posts a conta tem, quantos passaram na régua, e
+     qual régua foi. A lista de post por post vive no Instagram, não aqui. -->
+<section class="aba" id="aba-baixar" hidden>
+
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>Régua</h2>
+      <div class="dir"><span class="nota">vale para os perfis abaixo</span></div>
+    </div>
+    <div class="caixa">
+      <h3>O que conta como bom desempenho</h3>
+      <p class="nota">Desempenho é múltiplo da mediana da própria conta, calculada
+        <b>por formato</b>. Vídeo tem contagem de exibição, imagem e carrossel não têm.</p>
+      <div class="linha">
+        <div class="campo">
+          <label>Corte, em vezes a mediana</label>
+          <input type="number" id="corte" value="1.5" step="0.5" min="1">
+        </div>
+        <div class="campo">
+          <label>Máximo de arquivos por lote</label>
+          <input type="number" id="quantos" value="150" step="10" min="1">
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="bloco">
-    <h2>Melhores encontrados</h2>
-    <div class="rolagem" id="melhores"><div class="vazio">A seleção aparece depois da primeira varredura.</div></div>
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>Perfis varridos</h2>
+      <div class="dir"><span class="nota" id="recado_baixar"></span></div>
+    </div>
+    <div id="prontos"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
   </div>
+
+  <div class="secao">
+    <div class="secao-cab"><h2>Lotes montados</h2></div>
+    <div id="lotes"><div class="vazio">Nenhum lote ainda.</div></div>
+  </div>
+
+</section>
+
+
+<!-- ================================================================ ABA 3 · TRATAMENTO -->
+<section class="aba" id="aba-tratar" hidden>
+  <div class="secao">
+    <div class="por-vir">
+      <div class="por-vir-selo">a construir</div>
+      <h2>Tratamento</h2>
+      <p class="nota">Esta aba ainda não foi desenhada. Abaixo, o que vai morar aqui.</p>
+      <ul class="por-vir-lista">
+        <li>Limpeza completa de metadados de cada arquivo baixado.</li>
+        <li>Conferência automática, arquivo por arquivo, do que sobrou depois da limpeza.</li>
+        <li>Identidade nova para cada peça, para o arquivo deixar de ser o mesmo.</li>
+        <li>Entrega dos arquivos tratados para a aba de Edição.</li>
+      </ul>
+      <p class="nota" style="margin-top:14px">Já medido e valendo para esta aba: apagar
+        metadado com o comando padrão <b>não basta</b>. O codificador reescreve a própria
+        assinatura depois, no arquivo e nas duas faixas. Por isso a conferência é
+        obrigatória, e não opcional.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- =================================================================== ABA 4 · EDIÇÃO -->
+<section class="aba" id="aba-editar" hidden>
+  <div class="secao">
+    <div class="por-vir">
+      <div class="por-vir-selo">a construir</div>
+      <h2>Edição</h2>
+      <p class="nota">Esta aba ainda não foi desenhada, e o desenho dela ainda não foi
+        definido com você.</p>
+      <ul class="por-vir-lista">
+        <li>Aplicação do template da página em lote.</li>
+        <li>Título e legenda por peça.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 </main>
-
-<footer>Estúdio · esteira de produção de vídeo em lote · processamento sem teto de minutos · nada de acesso passa pelo navegador</footer>
-
 <script>
-const DONO="Elmoamacoca", REPO="estudio-video";
-const API=`https://api.github.com/repos/${DONO}/${REPO}`;
-const $=id=>document.getElementById(id);
-const num=n=>(n||0).toLocaleString("pt-BR");
+(function(){var s=localStorage.getItem("st-tema");
+if(!s)s=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+document.documentElement.setAttribute("data-theme",s);
 
-const t=localStorage.getItem("estudio_tema");
-if(t) document.documentElement.dataset.tema=t;
-else if(matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.dataset.tema="escuro";
-$("tema").onclick=()=>{const n=document.documentElement.dataset.tema==="escuro"?"claro":"escuro";
-  document.documentElement.dataset.tema=n; localStorage.setItem("estudio_tema",n);};
+if(matchMedia("(prefers-reduced-motion: reduce)").matches===false&&
+   "IntersectionObserver" in window)
+  document.documentElement.classList.add("com-revelar");})();
 
 
-$("fontes").addEventListener("input",()=>{$("fontes").dataset.tocado="1";});
-$("formatos").onclick=e=>{const o=e.target.closest(".opcao"); if(o) o.classList.toggle("ligada");};
-const formatosEscolhidos=()=>[...document.querySelectorAll(".opcao.ligada")].map(o=>o.dataset.f);
 
-async function ler(caminho){
-  // pelo endereco cru, e nao pela porta de programacao do GitHub: aquela corta em
-  // 60 consultas por hora sem identificacao, e a tela se atualiza sozinha o tempo todo.
-  try{
-    const r=await fetch(`https://raw.githubusercontent.com/${DONO}/${REPO}/main/${caminho}?t=${Date.now()}`,
-                        {cache:"no-store"});
-    if(!r.ok) return null;
-    return await r.json();
-  }catch{ return null; }
+(function(){
+  var barra = document.getElementById("barra"),
+      itens = document.getElementById("itens"),
+      pilula = document.getElementById("pilula"),
+      hamb = document.getElementById("hamb"),
+      menu = document.getElementById("menu");
+
+  var pedido = null;
+  function conferirRolagem(){
+    if (pedido) return;
+    pedido = requestAnimationFrame(function(){
+      pedido = null;
+      barra.classList.toggle("encolhido", window.scrollY > 4);
+    });
+  }
+  window.addEventListener("scroll", conferirRolagem, {passive: true});
+  conferirRolagem();
+
+  itens.querySelectorAll("a").forEach(function(a){
+    a.addEventListener("mouseenter", function(){
+      pilula.style.width = a.offsetWidth + "px";
+      pilula.style.transform = "translate(" + a.offsetLeft + "px,-50%)";
+      pilula.style.opacity = "1";
+    });
+  });
+  itens.addEventListener("mouseleave", function(){ pilula.style.opacity = "0"; });
+
+  hamb.addEventListener("click", function(ev){
+    ev.stopPropagation();
+    var abrir = !menu.classList.contains("aberto");
+    menu.classList.toggle("aberto", abrir);
+    hamb.setAttribute("aria-expanded", abrir ? "true" : "false");
+  });
+  document.addEventListener("click", function(){
+    menu.classList.remove("aberto");
+    hamb.setAttribute("aria-expanded", "false");
+  });
+})();
+
+
+(function(){
+  var raiz = document.documentElement, chave = document.getElementById("chave-tema"),
+      sol = document.getElementById("ir-claro"), lua = document.getElementById("ir-escuro");
+  function pintar(){
+    var escuro = raiz.getAttribute("data-theme") === "dark";
+    chave.setAttribute("aria-checked", escuro ? "true" : "false");
+    sol.classList.toggle("apagado", escuro);
+    lua.classList.toggle("apagado", !escuro);
+  }
+  var relogioTema;
+  function trocar(para){
+    // A classe liga a transição de cor por três décimos e sai sozinha. Se o Gabriel
+    // clicar duas vezes seguidas, o relógio antigo é cancelado para a classe não cair
+    // no meio da segunda troca.
+    raiz.classList.add("trocando-tema");
+    clearTimeout(relogioTema);
+    relogioTema = setTimeout(function(){ raiz.classList.remove("trocando-tema"); }, 340);
+    raiz.setAttribute("data-theme", para);
+    localStorage.setItem("st-tema", para);
+    pintar();
+  }
+  chave.addEventListener("click", function(){
+    trocar(raiz.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+  sol.addEventListener("click", function(){ trocar("light"); });
+  lua.addEventListener("click", function(){ trocar("dark"); });
+  pintar();
+})();
+
+
+(function(){
+  var raiz = document.documentElement;
+  if (!raiz.classList.contains("com-revelar")) return;
+  try {
+    // O escalonamento não mora aqui, mora no CSS, peça por peça dentro da seção. Aqui
+    // só se marca que a seção chegou.
+    // O QUE JÁ ESTÁ NA TELA QUANDO A PÁGINA ABRE NÃO ANIMA. Animar o primeiro ecrã a
+    // cada troca de aba é meio segundo de espera para ver o que já estava pronto, e é
+    // isso que fazia a troca parecer lenta mesmo quando a página chegava em 150 ms. O
+    // efeito foi pedido para a rolagem, e na rolagem ele continua inteiro: a primeira
+    // leva entra sem transição, e da segunda em diante tudo anima como antes.
+    var primeira = true;
+    var entrada = new IntersectionObserver(function(itens){
+      itens.forEach(function(it){
+        if (!it.isIntersecting) return;
+        var el = it.target;
+        if (primeira){
+          el.style.transition = "none";
+          el.dataset.visto = "1";
+          [].forEach.call(el.children, function(f){ f.style.transition = "none"; });
+          requestAnimationFrame(function(){
+            el.style.transition = "";
+            [].forEach.call(el.children, function(f){ f.style.transition = ""; });
+          });
+        } else {
+          el.dataset.visto = "1";
+        }
+        entrada.unobserve(el);
+      });
+      primeira = false;
+    }, {rootMargin: "0px 0px -40px 0px", threshold: 0});
+
+    document.querySelectorAll(".secao, .rodape-pagina").forEach(function(s){
+      entrada.observe(s);
+    });
+
+    // ---------------------------------------------------- a entrada peça por peça
+    //
+    // POR QUE ISTO EXISTE, ALÉM DO DE CIMA. O de cima anima os filhos diretos da seção.
+    // No painel isso são quatro peças e o efeito aparece. Na aba de Insights o conteúdo
+    // de uma categoria é UMA GRADE, ou seja, um filho só: os 24 cartões subiam juntos,
+    // como um bloco, e bloco inteiro subindo é movimento que o olho não registra.
+    //
+    // E ELE NÃO DESARMA. O de cima marca a seção e para de olhar; aqui o cartão anima ao
+    // entrar, se rearma ao sair, e anima de novo quando volta. Vale descendo e subindo,
+    // que era o pedido.
+    var pecas = document.querySelectorAll(
+      ".gal > *, .destaques > *, .rank-tira > *, .st-fita > *");
+    if (pecas.length){
+      var olho = new IntersectionObserver(function(itens){
+        itens.forEach(function(it){
+          it.target.classList.toggle("entrou", it.isIntersecting);
+        });
+      }, {rootMargin: "0px 0px -6% 0px", threshold: 0});
+      pecas.forEach(function(el){ el.classList.add("entra"); olho.observe(el); });
+      // A paginação e os filtros trocam os nós de lugar e trazem outros do nada. Quem
+      // chegou depois também precisa ser observado, senão a segunda página entra parada.
+      window.olharPecas = function(raizNova){
+        (raizNova || document).querySelectorAll(
+          ".gal > *, .destaques > *, .rank-tira > *, .st-fita > *"
+        ).forEach(function(el){
+          if (!el.classList.contains("entra")){
+            el.classList.add("entra"); olho.observe(el);
+          }
+        });
+      };
+    }
+  } catch (e) {
+    // Se o olho falhar por qualquer motivo, a página volta a ser uma página normal.
+    raiz.classList.remove("com-revelar");
+  }
+})();
+
+
+(function(){
+  var el = document.getElementById("estado"),
+      rotulo = el.querySelector(".rotulo"),
+      dado = __ESTADO__;
+  var HORAS_NO_RITMO = 3,      // ciclo roda a cada 150 minutos
+      HORAS_ATE_MORTO = 26;    // mesmo limite do alarme do sistema
+
+  function quanto(h){
+    if (h < 0.017) return "agora";
+    if (h < 1) return Math.round(h * 60) + " min";
+    if (h < 24) return (h < 10 ? h.toFixed(1) : Math.round(h)) + " h";
+    return Math.round(h / 24) + " d";
+  }
+  function classificar(){
+    el.classList.remove("online", "degraded", "offline");
+    if (!dado || !dado.ultima){
+      el.classList.add("offline");
+      rotulo.textContent = "nunca coletou";
+      return;
+    }
+    var h = (Date.now() - new Date(dado.ultima).getTime()) / 3600000;
+    if (h > HORAS_ATE_MORTO){
+      el.classList.add("offline");
+      rotulo.textContent = "fora do ar há " + quanto(h);
+    } else if (h > HORAS_NO_RITMO){
+      el.classList.add("degraded");
+      rotulo.textContent = "desatualizado há " + quanto(h);
+    } else {
+      el.classList.add("online");
+      rotulo.textContent = "ao vivo · coletou há " + quanto(h);
+    }
+  }
+  // ------------------------------------------------- a página sabe quando envelheceu
+  //
+  // O PROBLEMA, medido em 14/08: o Gabriel deixa a aba aberta, o computador publica uma
+  // versão nova, e a aba continua mostrando a antiga. Ele não vê o que foi construído e
+  // conclui, com razão, que não foi construído. A página pede ao navegador para guardá-la
+  // por dois minutos, mas o ponto nem é esse: aba aberta não recarrega nunca sozinha.
+  //
+  // A CONTA É SIMPLES: a marca da versão vem junto do estado, que a página já pergunta de
+  // minuto em minuto para manter o selo do cabeçalho vivo. Se a marca mudou, o que está
+  // na tela é velho.
+  //
+  // E O QUE ELA FAZ COM ISSO respeita quem está do outro lado:
+  //   aba escondida  -> recarrega na hora, ninguém está olhando e ninguém perde o lugar;
+  //   aba na frente  -> mostra o botão e espera, porque puxar a página debaixo de alguém
+  //                     que está lendo é pior que a página velha;
+  //   ao voltar      -> recarrega, que é quando a troca não custa nada.
+  var minhaVersao = null, envelheceu = false;
+
+  function conferirVersao(v){
+    if (!v) return;
+    if (minhaVersao === null){ minhaVersao = v; return; }
+    if (v === minhaVersao || envelheceu) return;
+    envelheceu = true;
+    // Escondida, ela troca na hora. Na frente, ela espera: puxar a pagina debaixo de
+    // quem esta' lendo e' pior que a pagina velha, e o `visibilitychange` la' embaixo
+    // resolve assim que a aba perde e recupera o foco.
+    if (document.hidden) location.reload();
+  }
+  document.addEventListener("visibilitychange", function(){
+    if (envelheceu && !document.hidden) location.reload();
+  });
+
+  function perguntar(){
+    fetch("estado", {cache: "no-store"})
+      .then(function(r){
+        // A PAGINA SE MANDA SE A SESSAO CAIU. Ela pode ter vindo do cache do navegador,
+        // e nesse caso ninguem passou pela porta para chegar aqui. Esta rota exige
+        // sessao, entao um 401 e' a prova de que a sessao acabou.
+        if (r.status === 401){
+          location.replace("entrar?de=" + encodeURIComponent(location.pathname));
+          return null;
+        }
+        return r.ok ? r.json() : null;
+      })
+      .then(function(d){
+        if (d){ conferirVersao(d.versao); if (d.ultima) dado = d; }
+        classificar();
+      })
+      .catch(function(){ classificar(); });
+  }
+  classificar();
+  setInterval(classificar, 15000);
+  setInterval(perguntar, 60000);
+  perguntar();
+})();
+
+</script>
+<script>
+/* O comportamento da tela do Estúdio.
+   Nada de acesso mora aqui: as ordens vão para a ponte, e é ela que guarda a chave. */
+
+const DONO = "Elmoamacoca", REPO = "estudio-video";
+const CRU = `https://raw.githubusercontent.com/${DONO}/${REPO}/main`;
+const PONTE = "https://estudio-ponte.gabrieltorres.workers.dev";
+const $ = id => document.getElementById(id);
+const num = n => (n || 0).toLocaleString("pt-BR");
+
+/* ---------------------------------------------------------------- troca de aba
+   Página única, então a aba troca a seção em vez de pedir outro arquivo. A pílula
+   do cabeçalho continua a mesma, só passa a seguir a aba escolhida. */
+function irPara(chave, empurrar) {
+  document.querySelectorAll(".aba").forEach(s => {
+    s.hidden = s.id !== "aba-" + chave;
+  });
+  document.querySelectorAll("[data-aba]").forEach(a => {
+    a.classList.toggle("ativo", a.dataset.aba === chave && a.classList.contains("ativo") || false);
+  });
+  document.querySelectorAll(".nav-itens a, .nav-menu a").forEach(a => {
+    a.classList.toggle("ativo", a.dataset.aba === chave);
+  });
+  if (empurrar !== false) history.replaceState(null, "", "#" + chave);
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+document.addEventListener("click", ev => {
+  const a = ev.target.closest("[data-aba]");
+  if (!a) return;
+  ev.preventDefault();
+  irPara(a.dataset.aba);
+  document.getElementById("menu")?.classList.remove("aberto");
+});
+irPara((location.hash || "#minerar").slice(1), false);
+
+/* ---------------------------------------------------------------- conversa */
+async function ler(caminho) {
+  // pelo endereço cru, e não pela porta de programação do GitHub: aquela corta em
+  // 60 consultas por hora sem identificação, e a tela se atualiza sozinha o tempo todo.
+  try {
+    const r = await fetch(`${CRU}/${caminho}?t=${Date.now()}`, { cache: "no-store" });
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
 }
 
-const PONTE="https://estudio-ponte.gabrieltorres.workers.dev";
-
-async function mandar(rota,corpo){
-  const r=await fetch(PONTE+rota,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(corpo||{})});
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok||d.erro) throw new Error(d.erro||"a esteira nao respondeu, tente de novo");
+async function mandar(rota, corpo) {
+  const r = await fetch(PONTE + rota, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(corpo || {}),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || d.erro) throw new Error(d.erro || "a esteira não respondeu, tente de novo");
   return d;
 }
 
-function desenhaPerfis(p){
-  if(!p||!p.length){$("perfis").innerHTML='<div class="vazio">Nenhum perfil varrido ainda.</div>';return;}
-  $("perfis").innerHTML=p.map(x=>{
-    const pct=x.publicacoes?Math.min(100,Math.round(100*x.lidos/x.publicacoes)):0;
-    const desde=x.mais_antigo?new Date(x.mais_antigo*1000).toLocaleDateString("pt-BR",{month:"short",year:"numeric"}):null;
-    // completo com menos posts que o total nao e' falha: o Instagram corta a leitura
-    // anonima por profundidade, e o que sobra e' historico antigo demais para servir.
-    const parcial = x.completo && x.publicacoes && x.lidos < x.publicacoes;
-    const marca = x.completo
-      ? (parcial ? '<span class="tag ok">varrido até o limite</span>' : '<span class="tag ok">completo</span>')
-      : '<span class="tag forte">varrendo</span>';
-    return `<div style="margin-bottom:16px">
-      <div style="display:flex;justify-content:space-between;font-size:13.5px;gap:10px">
-        <span><strong>@${x.conta}</strong> ${marca}</span>
-        <span class="nota">${num(x.lidos)} de ${num(x.publicacoes)} · ${pct}%</span>
-      </div>
-      <div class="barra"><i style="width:${pct}%"></i></div>
-      ${desde?`<p class="nota" style="margin-top:6px;font-size:12.5px">${
-        parcial ? `O Instagram fecha a leitura por profundidade. Chegamos até <strong>${desde}</strong>, e o que sobrou é histórico antigo demais para servir de referência.`
-                : `Cobre desde ${desde}.`}</p>`:""}
-    </div>`;}).join("");
+/* ---------------------------------------------------------------- registro ao vivo */
+const NOMES = { queued: "na fila", in_progress: "trabalhando", success: "pronto",
+                failure: "falhou", cancelled: "cancelado", skipped: "pulado",
+                waiting: "esperando", pending: "na fila" };
+let relogio = null, vistos = new Set();
+
+function anotar(texto, tipo) {
+  const reg = $("registro");
+  if (vistos.has(texto)) return;
+  vistos.add(texto);
+  const ln = document.createElement("div");
+  ln.className = "ln" + (tipo ? " " + tipo : "");
+  ln.innerHTML = `<span class="hora">${new Date().toLocaleTimeString("pt-BR")}</span>`
+               + `<span class="txt">${texto}</span>`;
+  reg.prepend(ln);
+  while (reg.children.length > 120) reg.lastChild.remove();
 }
 
-function desenhaMelhores(s){
-  const i=s&&s.itens||[];
-  if(!i.length){$("melhores").innerHTML='<div class="vazio">A seleção aparece depois da primeira varredura.</div>';return;}
-  $("melhores").innerHTML=`<table><thead><tr>
-    <th>desempenho</th><th>formato</th><th>alcance</th><th>base</th><th>mediana do formato</th><th>conta</th><th>post</th>
-    </tr></thead><tbody>${i.slice(0,60).map(p=>`<tr>
-      <td><strong>${p.indice}x</strong></td>
-      <td><span class="tag">${p.formato}</span></td>
-      <td>${num(p.views||p.curtidas)}</td>
-      <td class="nota">${p.escala}</td>
-      <td class="nota">${num(p.mediana_do_formato)}</td>
-      <td>@${p.conta}</td>
-      <td><a href="${p.endereco}" target="_blank" rel="noopener">abrir</a></td>
-    </tr>`).join("")}</tbody></table>
-    ${i.length>60?`<p class="nota" style="margin-top:11px">Mostrando 60 de ${num(i.length)}. O lote leva todos.</p>`:""}`;
-}
-
-function desenhaLotes(l){
-  if(!l||!l.length){$("lotes").innerHTML='<p class="nota">Nenhum lote montado ainda.</p>';return;}
-  $("lotes").innerHTML=`<table><thead><tr><th>lote</th><th>arquivos</th><th>tamanho</th><th>critério</th><th></th></tr></thead>
-    <tbody>${l.map(x=>`<tr>
-      <td><strong>${x.numero}</strong></td><td>${x.arquivos}</td><td>${x.mb} MB</td>
-      <td class="nota">${x.criterio||"-"}</td>
-      <td><a href="https://github.com/${DONO}/${REPO}/actions/runs/${x.execucao}" target="_blank" rel="noopener">baixar</a></td>
-    </tr>`).join("")}</tbody></table>`;
-}
-
-async function atualizar(){
-  const [estado,sel,fontes]=await Promise.all([ler("dados/estado.json"),ler("dados/selecao.json"),ler("dados/fontes.json")]);
-  const vivo=estado!==null;
-  $("ponto").className="ponto "+(vivo?"vivo":"morto");
-  $("conexao").textContent=vivo?"no ar":"sem resposta";
-
-  const perfis=(estado&&estado.perfis)||(sel&&sel.perfis)||[];
-  $("n_contas").textContent=fontes&&fontes.contas?fontes.contas.length:0;
-  $("n_lidos").textContent=num(perfis.reduce((a,b)=>a+(b.lidos||0),0));
-  $("n_sel").textContent=num(sel&&sel.itens?sel.itens.length:0);
-  $("n_lote").textContent=num(estado&&estado.lotes&&estado.lotes[0]?estado.lotes[0].arquivos:0);
-
-  if(estado&&estado.ultima_rodada){
-    const d=new Date(estado.ultima_rodada*1000);
-    $("quando").textContent="Última rodada em "+d.toLocaleString("pt-BR")+
-      (estado.avaliados?` · ${num(estado.avaliados)} posts avaliados`:"");
-  }
-  if(fontes&&fontes.contas&&!$("fontes").matches(":focus")) $("fontes").value=fontes.contas.join("\n");
-  desenhaPerfis(perfis); desenhaMelhores(sel); desenhaLotes(estado&&estado.lotes);
-}
-
-$("salvar").onclick=async()=>{
-  const contas=$("fontes").value.split("\n").map(s=>s.trim().replace(/^@/,"").replace(/\/$/,"").split("/").pop()).filter(Boolean);
-  $("recado").textContent="salvando";
-  try{ const d=await mandar("/contas",{contas});
-    $("recado").textContent=`${d.contas} contas salvas, chamando a esteira`;
-    await mandar("/varrer");
-    const achados=(d.novos||[]).filter(n=>n.ok);
-    $("recado").textContent = achados.length
-      ? `${achados.map(n=>"@"+n.conta+": "+n.publicacoes+" publicações").join(" · ")} · esteira acionada`
-      : `${d.contas} contas salvas e esteira acionada`;
-    setTimeout(()=>{verAoVivo();atualizar();},2500); }
-  catch(e){ $("recado").textContent=e.message; }
-};
-
-$("varrer").onclick=async()=>{
-  $("recado").textContent="chamando a esteira";
-  try{ await mandar("/varrer");
-    $("recado").textContent="esteira acionada"; setTimeout(verAoVivo,2500); }
-  catch(e){ $("recado").textContent=e.message; }
-};
-
-$("baixar").onclick=async()=>{
-  const f=formatosEscolhidos();
-  if(!f.length){ $("recado_baixar").textContent="escolha ao menos um formato"; return; }
-  $("recado_baixar").textContent="montando o lote";
-  try{ await mandar("/baixar",{formatos:f.join(","),corte:$("corte").value,quantos:$("quantos").value});
-    $("recado_baixar").textContent="lote em preparo, o link aparece aqui ao terminar"; }
-  catch(e){ $("recado_baixar").textContent=e.message; }
-};
-
-
-let relogioVivo=null;
-const NOMES={queued:"na fila",in_progress:"trabalhando",success:"pronto",
-             failure:"falhou",cancelled:"cancelado",skipped:"pulado",waiting:"esperando",pending:"na fila"};
-
-async function verAoVivo(){
+async function aoVivo() {
   let d;
-  try{ d=await (await fetch(PONTE+"/andamento?t="+Date.now())).json(); }catch{ return; }
-  const bloco=$("bloco_vivo");
-  if(!d.elos||!d.elos.length){ $("vivo_titulo").textContent="Esteira parada"; $("vivo_resumo").textContent="Nenhuma rodada em andamento. Ela acorda sozinha de meia em meia hora, ou agora se voce clicar em Varrer."; $("vivo_elos").innerHTML=""; return; }
+  try { d = await (await fetch(PONTE + "/andamento?t=" + Date.now())).json(); }
+  catch { return; }
 
-  
-  const feitos=d.elos.filter(e=>e.situacao==="success").length;
-  const agora=d.elos.find(e=>e.situacao==="in_progress");
+  if (!d.elos || !d.elos.length) {
+    $("vivo_titulo").textContent = "Esteira parada";
+    $("vivo_resumo").textContent = "Nenhuma rodada em andamento. Ela acorda sozinha "
+      + "de meia em meia hora, ou agora se você mandar varrer.";
+    $("vivo_elos").innerHTML = "";
+    return;
+  }
+
+  const feitos = d.elos.filter(e => e.situacao === "success").length;
+  const agora = d.elos.find(e => e.situacao === "in_progress");
 
   $("vivo_titulo").textContent = d.rodando
-    ? (agora ? `Lendo agora: ${agora.nome}` : "A esteira está trabalhando")
-    : "Rodada encerrada";
+    ? (agora ? "Lendo agora: " + agora.nome : "A esteira está trabalhando")
+    : "Rodada " + d.numero + " encerrada";
   $("vivo_resumo").textContent = d.rodando
-    ? `${feitos} de ${d.elos.length} máquinas concluídas. Cada uma lê 12 posts com endereço próprio, porque o Instagram só libera uma leitura por endereço.`
-    : `Rodada ${d.numero} terminou: ${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números acima já estão atualizados.`;
+    ? `${feitos} de ${d.elos.length} máquinas concluídas. Cada uma lê 12 posts com `
+      + `endereço próprio, porque o Instagram só libera uma leitura por endereço.`
+    : `${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números abaixo já estão atualizados.`;
+  $("vivo_quando").textContent = d.comecou
+    ? "começou " + new Date(d.comecou).toLocaleTimeString("pt-BR") : "";
 
-  $("vivo_elos").innerHTML=d.elos
-    .sort((a,b)=>a.nome.localeCompare(b.nome,"pt",{numeric:true}))
-    .map(e=>{
-      const c=e.situacao==="success"?"feito":e.situacao==="in_progress"?"agora":
-              (e.situacao==="failure"?"falhou":"");
-      return `<div class="elo ${c}"><span class="luz"></span>${e.nome}<span style="margin-left:auto;opacity:.65">${NOMES[e.situacao]||e.situacao}</span></div>`;
+  $("vivo_elos").innerHTML = d.elos
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt", { numeric: true }))
+    .map(e => {
+      const c = e.situacao === "success" ? "feito"
+              : e.situacao === "in_progress" ? "agora"
+              : e.situacao === "failure" ? "falhou" : "";
+      return `<div class="elo ${c}"><span class="luz"></span>${e.nome}`
+           + `<span class="qual">${NOMES[e.situacao] || e.situacao}</span></div>`;
     }).join("");
 
-  if(d.rodando && !relogioVivo){ relogioVivo=setInterval(()=>{verAoVivo();atualizar();},7000); }
-  if(!d.rodando && relogioVivo){ clearInterval(relogioVivo); relogioVivo=null; atualizar(); }
+  d.elos.filter(e => e.situacao === "success" && e.fim)
+    .forEach(e => anotar(`${e.nome} concluída`, "bom"));
+  if (agora) anotar(`${agora.nome} lendo uma página`, "");
+
+  if (d.rodando && !relogio) relogio = setInterval(() => { aoVivo(); atualizar(); }, 7000);
+  if (!d.rodando && relogio) { clearInterval(relogio); relogio = null; atualizar(); }
 }
 
-atualizar(); verAoVivo();
-setInterval(atualizar,25000); setInterval(verAoVivo,15000);
+/* ---------------------------------------------------------------- desenhos */
+function desenhaPerfis(p) {
+  if (!p || !p.length) {
+    $("perfis").innerHTML = '<div class="vazio">Nenhum perfil varrido ainda.</div>';
+    return;
+  }
+  $("perfis").innerHTML = p.map(x => {
+    const pct = x.publicacoes ? Math.min(100, Math.round(100 * x.lidos / x.publicacoes)) : 0;
+    const desde = x.mais_antigo
+      ? new Date(x.mais_antigo * 1000).toLocaleDateString("pt-BR", { month: "short", year: "numeric" })
+      : null;
+    // completo com menos posts que o total não é falha: o Instagram corta a leitura
+    // anônima por profundidade, e o que sobra é histórico antigo demais para servir.
+    const parcial = x.completo && x.publicacoes && x.lidos < x.publicacoes;
+    const marca = x.completo
+      ? `<span class="tag ok">${parcial ? "varrido até o limite" : "completo"}</span>`
+      : '<span class="tag trab">varrendo</span>';
+    return `<div class="perfil-linha">
+      <div class="perfil-topo"><span><b>@${x.conta}</b> ${marca}</span>
+        <span class="nota">${num(x.lidos)} de ${num(x.publicacoes)} · ${pct}%</span></div>
+      <div class="barra"><i style="width:${pct}%"></i></div>
+      ${desde ? `<p class="nota" style="margin-top:8px;font-size:12.5px">${
+        parcial ? `O Instagram fecha a leitura por profundidade. Chegamos até <b>${desde}</b>.`
+                : `Cobre desde ${desde}.`}</p>` : ""}
+    </div>`;
+  }).join("");
+}
+
+function desenhaProntos(sel, perfis) {
+  const alvo = $("prontos");
+  if (!perfis || !perfis.length) {
+    alvo.innerHTML = '<div class="vazio">Nenhum perfil varrido ainda.</div>';
+    return;
+  }
+  const corte = parseFloat($("corte").value) || 1.5;
+  const itens = (sel && sel.itens) || [];
+
+  alvo.innerHTML = perfis.map(p => {
+    const meus = itens.filter(i => i.conta === p.conta);
+    const reels = meus.filter(i => i.formato === "reels" && i.arquivo);
+    const acima = meus.filter(i => i.indice >= corte).length;
+    const baixaveis = reels.filter(i => i.indice >= corte).length;
+    return `<div class="pronto">
+      <div class="pronto-topo">
+        <span class="quem">@${p.conta}</span>
+        <button class="acao" data-baixar="${p.conta}" ${baixaveis ? "" : "disabled"}>
+          Baixar ${baixaveis || 0} reels</button>
+      </div>
+      <div class="pronto-numeros">
+        <div><b>${num(p.publicacoes)}</b><span>posts na conta</span></div>
+        <div><b>${num(p.lidos)}</b><span>varridos</span></div>
+        <div><b>${num(acima)}</b><span>acima da régua</span></div>
+        <div><b>${corte.toString().replace(".", ",")}x</b><span>régua usada</span></div>
+      </div>
+      <div class="travado">
+        <span>O destino é o <b>Google Drive</b>, e ele ainda não foi autorizado. Enquanto
+        isso o lote fica guardado no serviço e pode ser puxado de lá. Para ligar o Drive
+        é preciso uma autorização da sua conta Google, que só você pode dar.</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function desenhaLotes(l) {
+  if (!l || !l.length) {
+    $("lotes").innerHTML = '<div class="vazio">Nenhum lote ainda.</div>';
+    return;
+  }
+  $("lotes").innerHTML = l.map(x => `<div class="pronto">
+    <div class="pronto-topo">
+      <span class="quem">Lote ${x.numero}</span>
+      <a class="acao" target="_blank" rel="noopener"
+         href="https://github.com/${DONO}/${REPO}/actions/runs/${x.execucao}">Abrir</a>
+    </div>
+    <div class="pronto-numeros">
+      <div><b>${num(x.arquivos)}</b><span>arquivos</span></div>
+      <div><b>${x.mb} MB</b><span>tamanho</span></div>
+      <div><b>${x.criterio || "-"}</b><span>critério</span></div>
+    </div></div>`).join("");
+}
+
+/* ---------------------------------------------------------------- atualização */
+async function atualizar() {
+  const [estado, sel, fontes] = await Promise.all([
+    ler("dados/estado.json"), ler("dados/selecao.json"), ler("dados/fontes.json")]);
+
+  const vivo = estado !== null;
+  const selo = $("estado");
+  selo.className = "status " + (vivo ? "online" : "offline");
+  selo.querySelector(".rotulo").textContent = vivo ? "no ar" : "sem resposta";
+
+  const perfis = (estado && estado.perfis) || (sel && sel.perfis) || [];
+  $("n_contas").textContent = fontes && fontes.contas ? fontes.contas.length : 0;
+  $("n_lidos").textContent = num(perfis.reduce((a, b) => a + (b.lidos || 0), 0));
+  $("n_sel").textContent = num(sel && sel.itens ? sel.itens.length : 0);
+  $("n_completos").textContent = perfis.filter(p => p.completo).length;
+
+  if (fontes && fontes.contas && !$("fontes").dataset.tocado)
+    $("fontes").value = fontes.contas.join("\n");
+
+  desenhaPerfis(perfis);
+  desenhaProntos(sel, perfis);
+  desenhaLotes(estado && estado.lotes);
+}
+
+/* ---------------------------------------------------------------- comandos */
+$("fontes").addEventListener("input", () => { $("fontes").dataset.tocado = "1"; });
+
+$("salvar").onclick = async () => {
+  const contas = $("fontes").value.split("\n")
+    .map(s => s.trim().replace(/^@/, "").replace(/\/+$/, "").split("/").pop())
+    .filter(Boolean);
+  $("recado").textContent = "salvando";
+  anotar("salvando " + contas.length + " contas de origem");
+  try {
+    const d = await mandar("/contas", { contas });
+    (d.novos || []).filter(n => n.ok).forEach(n =>
+      anotar(`@${n.conta} identificado: ${num(n.publicacoes)} publicações`, "bom"));
+    await mandar("/varrer");
+    $("recado").textContent = d.contas + " contas salvas, esteira acionada";
+    anotar("esteira acionada", "bom");
+    setTimeout(() => { aoVivo(); atualizar(); }, 2500);
+  } catch (e) { $("recado").textContent = e.message; anotar(e.message, "ruim"); }
+};
+
+$("varrer").onclick = async () => {
+  $("recado").textContent = "chamando a esteira";
+  try {
+    await mandar("/varrer");
+    $("recado").textContent = "esteira acionada";
+    anotar("esteira acionada", "bom");
+    setTimeout(aoVivo, 2500);
+  } catch (e) { $("recado").textContent = e.message; anotar(e.message, "ruim"); }
+};
+
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-baixar]");
+  if (!b) return;
+  b.disabled = true;
+  $("recado_baixar").textContent = "montando o lote de @" + b.dataset.baixar;
+  try {
+    await mandar("/baixar", {
+      formatos: "reels", corte: $("corte").value, quantos: $("quantos").value,
+      conta: b.dataset.baixar,
+    });
+    $("recado_baixar").textContent = "lote em preparo, aparece abaixo ao terminar";
+  } catch (e) { $("recado_baixar").textContent = e.message; }
+  setTimeout(() => { b.disabled = false; atualizar(); }, 6000);
+});
+
+$("corte").addEventListener("change", atualizar);
+
+atualizar(); aoVivo();
+setInterval(atualizar, 25000);
+setInterval(aoVivo, 15000);
+
 </script>
 </body>
 </html>
