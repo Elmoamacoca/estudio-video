@@ -1007,27 +1007,31 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .campo-bloco input[type=number]:focus{outline:none;border-color:var(--accent)}
 .campo-bloco[hidden]{display:none}
 
-/* A marcação, desenhada aqui: a caixinha do sistema operacional tem azul do Windows
-   dentro dela e ignora a paleta, como o botão redondo da folha de exportar. */
-/* UMA POR LINHA, e não três lado a lado. Em fileira, cada opção encolhia abaixo do
-   próprio texto e as três se atropelavam: "Reels", "Post isolado" e "Carrossel" saíam
-   umas por cima das outras. Empilhadas, cada uma tem a linha inteira. */
-.marcas{display:grid;gap:8px}
-.marca{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer;
-       width:100%;box-sizing:border-box;
-       border:1px solid var(--rule-solid);border-radius:var(--r-md);
-       transition:border-color .16s ease,background-color .16s ease}
-.marca:hover{border-color:var(--accent)}
-.marca:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
-.marca input{appearance:none;-webkit-appearance:none;flex:none;width:16px;height:16px;
+/* A ESCOLHA, E O NOME DELA NÃO É `marca`.
+   Esta classe se chamava assim, e `marca` já é a LOGOMARCA no sistema copiado, com
+   26 pixels de largura e altura fixos. O resultado foi das duas: a logomarca do
+   cabeçalho ganhou borda e respiro de caixa de opção, e as três opções de formato
+   ganharam 26 pixels de altura, com o texto vazando por cima do bloco de baixo.
+
+   A caixinha em si é desenhada aqui porque a do sistema operacional tem azul do
+   Windows dentro dela e ignora a paleta, como o botão redondo da folha de exportar. */
+.escolhas{display:grid;gap:8px}
+.escolha{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer;
+         width:100%;box-sizing:border-box;
+         border:1px solid var(--rule-solid);border-radius:var(--r-md);
+         transition:border-color .16s ease,background-color .16s ease}
+.escolha:hover{border-color:var(--accent)}
+.escolha:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
+.escolha input{appearance:none;-webkit-appearance:none;flex:none;width:16px;height:16px;
   margin-top:1px;border:1.5px solid var(--rule-solid);border-radius:5px;
   background:var(--paper);cursor:pointer;position:relative}
-.marca input:checked{border-color:var(--accent);background:var(--accent)}
-.marca input:checked::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;
+.escolha input:checked{border-color:var(--accent);background:var(--accent)}
+.escolha input:checked::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;
   height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
-.marca span{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.35}
-.marca small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;
-             font-weight:400;line-height:1.45}
+.escolha > span{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.4}
+.escolha small{display:block;font-size:11.5px;color:var(--muted);margin-top:4px;
+               font-weight:400;line-height:1.5}
+
 
 /* as três réguas lado a lado; a do formato que saiu da escolha some junto */
 .cortes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
@@ -1405,10 +1409,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
     <div class="campo-bloco">
       <label class="campo-rot">Que formatos entram</label>
-      <div class="marcas">
-        <label class="marca"><input type="checkbox" id="f_reels" checked><span>Reels</span></label>
-        <label class="marca"><input type="checkbox" id="f_post" checked><span>Post isolado</span></label>
-        <label class="marca"><input type="checkbox" id="f_carrossel" checked><span>Carrossel</span></label>
+      <div class="escolhas">
+        <label class="escolha"><input type="checkbox" id="f_reels" checked><span>Reels</span></label>
+        <label class="escolha"><input type="checkbox" id="f_post" checked><span>Post isolado</span></label>
+        <label class="escolha"><input type="checkbox" id="f_carrossel" checked><span>Carrossel</span></label>
       </div>
     </div>
 
@@ -1416,7 +1420,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <label class="campo-rot">O que conta como fora da curva</label>
       <p class="nota mini">Desempenho é múltiplo da mediana da própria conta. Em 1,5x,
         entra o post que fez uma vez e meia o que aquele perfil costuma fazer.</p>
-      <label class="marca larga">
+      <label class="escolha larga">
         <input type="checkbox" id="por_formato" checked>
         <span>Calcular a mediana <b>separada por formato</b>
           <small>vídeo vem com contagem de exibição, imagem vem só com curtida:
