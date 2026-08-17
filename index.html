@@ -216,68 +216,6 @@ a{color:var(--link)}
 
 .troca .chave[aria-checked="true"] .bolinha{transform:translateX(16px)}
 
-
-:root.com-revelar .secao > *,
-:root.com-revelar .rodape-pagina > *{
-  opacity:0;transform:translateY(18px);filter:blur(6px);
-  transition:opacity .5s ease-out, transform .5s cubic-bezier(.22,1,.36,1),
-             filter .5s ease-out}
-
-:root.com-revelar .secao[data-visto] > *,
-:root.com-revelar .rodape-pagina[data-visto] > *{
-  opacity:1;transform:none;filter:none}
-
-:root.com-revelar .secao[data-visto] > *:nth-child(2){transition-delay:.07s}
-
-:root.com-revelar .secao[data-visto] > *:nth-child(3){transition-delay:.14s}
-
-:root.com-revelar .secao[data-visto] > *:nth-child(4){transition-delay:.21s}
-
-:root.com-revelar .secao[data-visto] > *:nth-child(n+5){transition-delay:.28s}
-
-
-:root.com-revelar .secao:not([data-visto]) *{animation-play-state:paused !important}
-
-
-
-:root.com-revelar .entra{
-  opacity:0;transform:translateY(30px) scale(.975);filter:blur(5px);
-  transition:opacity .44s ease-out, transform .44s cubic-bezier(.22,1,.36,1),
-             filter .44s ease-out}
-
-:root.com-revelar .entra.entrou{opacity:1;transform:none;filter:none}
-
-
-:root.com-revelar .gal-4 > .entra:nth-child(4n+2).entrou{transition-delay:.05s}
-
-:root.com-revelar .gal-4 > .entra:nth-child(4n+3).entrou{transition-delay:.10s}
-
-:root.com-revelar .gal-4 > .entra:nth-child(4n+0).entrou{transition-delay:.15s}
-
-:root.com-revelar .gal-6 > .entra:nth-child(6n+2).entrou{transition-delay:.04s}
-
-:root.com-revelar .gal-6 > .entra:nth-child(6n+3).entrou{transition-delay:.08s}
-
-:root.com-revelar .gal-6 > .entra:nth-child(6n+4).entrou{transition-delay:.12s}
-
-:root.com-revelar .gal-6 > .entra:nth-child(6n+5).entrou{transition-delay:.16s}
-
-:root.com-revelar .gal-6 > .entra:nth-child(6n+0).entrou{transition-delay:.20s}
-
-:root.com-revelar .destaques > .entra:nth-child(2n+0).entrou{transition-delay:.07s}
-
-:root.com-revelar .rank-tira > .entra:nth-child(2).entrou{transition-delay:.05s}
-
-:root.com-revelar .rank-tira > .entra:nth-child(3).entrou{transition-delay:.10s}
-
-:root.com-revelar .rank-tira > .entra:nth-child(n+4).entrou{transition-delay:.15s}
-
-:root.com-revelar .st-fita > .entra:nth-child(2).entrou{transition-delay:.04s}
-
-:root.com-revelar .st-fita > .entra:nth-child(3).entrou{transition-delay:.08s}
-
-:root.com-revelar .st-fita > .entra:nth-child(n+4).entrou{transition-delay:.12s}
-
 @keyframes tracar{to{stroke-dashoffset:0}}
 
 @keyframes subir{to{opacity:.10}}
