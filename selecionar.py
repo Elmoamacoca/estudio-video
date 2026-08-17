@@ -73,6 +73,10 @@ def selecionar(formatos: list[str], corte: float, teto: int) -> dict:
         datas = sorted(x["data"] for x in dados.get("posts", []) if x.get("data"))
         perfis.append({
             "conta": dados["perfil"]["conta"],
+            "nome": dados["perfil"].get("nome"),
+            "avatar": dados["perfil"].get("avatar"),
+            "seguidores": dados["perfil"].get("seguidores"),
+            "atualizado": dados.get("atualizado"),
             "publicacoes": dados["perfil"]["publicacoes"],
             "lidos": len(dados.get("posts", [])),
             "completo": bool(dados.get("completo")),
