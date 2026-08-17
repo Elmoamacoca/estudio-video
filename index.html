@@ -741,32 +741,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .kon-maquinas{padding:0 20px 16px;border-top:1px solid var(--rule);padding-top:16px}
 .kon-maquinas[hidden]{display:none}
 
-.kon-faixa{padding:8px 20px;background:var(--paper-2);
-           border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
-           font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
-           color:var(--muted)}
-
-.kon-fluxo{max-height:250px;overflow-y:auto;scrollbar-width:none}
-.kon-fluxo::-webkit-scrollbar{display:none}
-.kon-fluxo:empty::after{content:"Nada aconteceu ainda nesta sessão.";display:block;
-                        padding:18px 20px;font-size:12.5px;color:var(--soft)}
-.kon-ln{display:flex;align-items:center;gap:11px;padding:11px 20px}
-.kon-ln i{width:6px;height:6px;border-radius:50%;flex:none;background:var(--chart-2)}
-.kon-ln.falha i{background:var(--chart-5)}
-.kon-ln.aviso i{background:var(--chart-3)}
-.kon-ln .txt{flex:1;min-width:0;color:var(--ink);
-             font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-             overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kon-ln .quando{flex:none;font-size:11.5px;color:var(--soft);
-                font-variant-numeric:tabular-nums}
-
-.kon-pe{display:flex;align-items:center;justify-content:space-between;gap:14px;
-        padding:11px 20px;background:var(--paper-2);border-top:1px solid var(--rule);
-        font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
-        color:var(--muted)}
-.kon-pe a{font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;
-          color:var(--link);text-decoration:none}
-.kon-pe a:hover{text-decoration:underline}
+/* Os filtros dentro do cartão, na linha logo abaixo das medidas. */
+.liv-filtros{display:flex;gap:10px;flex-wrap:wrap;padding:15px 20px;
+             border-top:1px solid var(--rule)}
+.liv-filtros .ct-busca{flex:1 1 240px}
 
 @media(max-width:720px){
   .kon-medidas{grid-template-columns:1fr}
@@ -905,7 +883,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .pix-rotulo{animation:none;background-image:none;color:var(--muted)}
 }
 
-/* ================================================================ LIVRO DE ATIVIDADE
+/* ============================================ OS CARTÕES DE PERFIL, DENTRO DO CONSOLE
 
    Um cartão por perfil, que abre e fecha. Molde escolhido pelo Gabriel em 17/08, no
    desenho da lista de auditoria: ponto de gravidade na esquerda, nome com etiqueta de
@@ -914,18 +892,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    A LISTA VEM DE DEZ EM DEZ. O histórico de um perfil pode ter centenas de eventos e a
    conta de perfis só cresce; carregar tudo para mostrar os dez primeiros é gasto sem
    ganho. O botão embaixo traz a próxima leva. */
-.livro{border:1px solid var(--rule-solid);border-radius:var(--r-lg);
-       background:var(--branco);overflow:hidden;box-shadow:var(--sombra)}
-.liv-topo{display:flex;align-items:center;gap:16px;padding:18px 20px}
-.liv-quem{flex:1;min-width:0}
-.liv-quem b{display:block;font-size:14.5px;font-weight:650;color:var(--ink)}
-.liv-quem span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
-.liv-topo .acao{height:34px;padding:0 14px;font-size:12.5px;display:inline-flex;
-                align-items:center;gap:7px;flex:none}
-.liv-topo .acao svg{width:14px;height:14px}
-.liv-filtros{display:flex;gap:10px;flex-wrap:wrap;padding:0 20px 16px}
-.liv-filtros .ct-busca{flex:1 1 240px}
-.liv-filtros .sel-gatilho{height:var(--h-filtro)}
 
 /* --------------------------------------------------------------- o cartão do perfil */
 .liv-cartao{border-top:1px solid var(--rule)}
@@ -994,8 +960,35 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .liv-opcao input{margin-top:3px;accent-color:var(--accent);flex:none;width:auto;height:auto}
 .liv-opcao span{font-size:13.5px;color:var(--ink)}
 .liv-opcao small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
-.liv-datas{display:flex;gap:10px;margin:2px 0 10px 34px}
-.liv-datas input{height:38px;font:13px var(--fonte)}
+/* AS DATAS, NO DESENHO DA CASA E NÃO NO DO WINDOWS.
+   O campo de data do navegador nasce com a moldura do sistema operacional, a fonte do
+   sistema e o calendário branco com faixa azul, que é a única coisa da tela que não
+   pertence a ela. Aqui ele recebe a mesma medida dos outros campos, e o `color-scheme`
+   é o que faz o calendário abrir escuro quando o tema é escuro: sem ele, o balão sai
+   branco no meio da tela preta.
+
+   E ELAS SÓ APARECEM QUANDO SÃO PEDIDAS: escolher datas é uma das três opções, e as
+   outras duas não precisam ver campo nenhum. */
+.liv-datas{display:none;gap:10px;margin:-2px 0 10px 34px}
+.liv-datas.aberto{display:flex}
+.liv-datas label{flex:1;font-size:11.5px;color:var(--muted)}
+.liv-datas input{width:100%;height:38px;margin-top:5px;padding:0 11px;
+  color-scheme:light dark;
+  border:1px solid var(--rule-solid);border-radius:var(--r-filtro);
+  background:var(--paper);color:var(--ink);font:13px var(--fonte)}
+.liv-datas input:focus{outline:none;border-color:var(--accent)}
+.liv-datas input::-webkit-calendar-picker-indicator{opacity:.45;cursor:pointer}
+.liv-datas input:hover::-webkit-calendar-picker-indicator{opacity:.9}
+
+/* A escolha, com a marca desenhada aqui: o botão redondo do sistema operacional tem
+   azul do Windows dentro dele e não obedece à paleta. */
+.liv-opcao input{appearance:none;-webkit-appearance:none;width:16px;height:16px;
+  border:1.5px solid var(--rule-solid);border-radius:50%;background:var(--paper);
+  cursor:pointer;position:relative;transition:border-color .16s ease}
+.liv-opcao input:checked{border-color:var(--accent)}
+.liv-opcao input:checked::after{content:"";position:absolute;inset:3px;border-radius:50%;
+  background:var(--accent)}
+.liv-opcao:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
 .liv-pe{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
 
 </style>
@@ -1154,11 +1147,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       </div>
     </div>
 
-    <!-- O registro no molde de console que o Gabriel escolheu: identidade em cima, três
-         medidas por gravidade com traço de atividade, faixa de ao vivo, o fluxo em letra
-         de máquina e o pé com o tamanho da memória. As máquinas da rodada continuam
-         aqui, mas só aparecem enquanto uma rodada está no ar: fora disso são vinte
-         pastilhas ocupando o cartão para dizer que nada acontece. -->
+    <!-- ================================================ O REGISTRO, NUM BLOCO SÓ
+         Cabeça de identidade com o estado da esteira, três medidas por gravidade com
+         traço de atividade, os filtros, e a lista de perfis que abre e fecha.
+
+         AQUI HAVIA DOIS BLOCOS, e virou um. O de cima era um fluxo de mensagens da
+         sessão ("fechar concluída", "conferir concluída") que sumia ao recarregar a
+         página e não dizia nada sobre perfil nenhum. O que interessa é o histórico de
+         cada conta, que fica no acervo e não se perde. -->
     <div class="secao">
       <div class="secao-cab"><h2>Registro ao vivo</h2></div>
 
@@ -1174,6 +1170,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="kon-dir" id="vivo_quando">
             <span class="kon-vivo"><i></i>parada</span>
           </div>
+          <button class="acao" id="liv_exportar" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0
+                 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
         </div>
 
         <div class="kon-medidas">
@@ -1198,7 +1198,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="kon-medida evento">
             <div class="kon-rot">
               <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/>
-                <path d="m20 20-4.3-4.3"/></svg><span>eventos</span>
+                <path d="m20 20-4.3-4.3"/></svg><span>registros</span>
             </div>
             <b id="k_evento">0</b>
             <svg class="kon-traco parado" id="t_evento" viewBox="0 0 100 20"
@@ -1207,39 +1207,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
 
         <div class="kon-maquinas elos" id="vivo_elos" hidden></div>
-
-        <div class="kon-faixa">ao vivo</div>
-        <div class="kon-fluxo" id="registro"></div>
-        <div class="kon-pe">
-          <span id="kon_memoria">memória: 0 de 120 linhas</span>
-          <a href="https://github.com/Elmoamacoca/estudio-video/actions" target="_blank"
-             rel="noopener">Ver a esteira &rarr;</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- ================================================== O LIVRO DE ATIVIDADE
-         Um cartão por PERFIL, e não por mensagem. Fechado, ele diz o nome, o arroba e
-         quando foi a última coisa feita ali. Aberto, ele abre o histórico inteiro
-         daquele perfil: cada varredura, quantas máquinas, quantas páginas, o que deu
-         errado e onde fechou.
-
-         Isto vive no acervo, num arquivo por perfil, e não na memória do navegador:
-         é para continuar aqui daqui a noventa dias. -->
-    <div class="secao">
-      <div class="secao-cab"><h2>Atividade por perfil</h2></div>
-
-      <div class="livro">
-        <div class="liv-topo">
-          <div class="liv-quem">
-            <b>Livro de atividade</b>
-            <span id="liv_sub">carregando o acervo</span>
-          </div>
-          <button class="acao" id="liv_exportar" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0
-                 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
-        </div>
 
         <div class="liv-filtros">
           <input class="ct-busca" id="liv_q" type="text" autocomplete="off"
@@ -1276,7 +1243,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           Ver mais</button></div>
       </div>
     </div>
-
   </div>
 
   <!-- ----------------------------------------------------------------- MINERADOS
@@ -1397,9 +1363,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <input type="radio" name="exp" value="periodo">
       <span>Um período<small>escolha as datas abaixo</small></span>
     </label>
-    <div class="liv-datas">
-      <input type="date" id="exp_de" aria-label="De">
-      <input type="date" id="exp_ate" aria-label="Até">
+    <div class="liv-datas" id="exp_datas">
+      <label>De<input type="date" id="exp_de"></label>
+      <label>Até<input type="date" id="exp_ate"></label>
     </div>
 
     <div class="liv-pe">
@@ -1902,180 +1868,15 @@ setInterval(() => selar(null), 15000);
 const NOMES = { queued: "na fila", in_progress: "trabalhando", success: "pronto",
                 failure: "falhou", cancelled: "cancelado", skipped: "pulado",
                 waiting: "esperando", pending: "na fila" };
-let relogio = null, vistos = new Set();
+let relogio = null;
 
-/* ------------------------------------------------------------ o fluxo do console
+/* AQUI MORAVA O FLUXO DE MENSAGENS DA SESSÃO, e ele saiu por decisão do Gabriel em
+   17/08. Era uma lista corrida de "conferir concluída", "fechar concluída", que vivia
+   na memória do navegador, sumia ao recarregar e não dizia nada sobre perfil nenhum.
+   O que ficou no lugar dele é o histórico por conta, que mora no acervo.
 
-   TRÊS GRAVIDADES, e não quatro. O molde tem três colunas e três cores, e cada linha
-   do fluxo pertence a uma delas. Antes havia "bom", "ruim" e neutro, com verde e
-   vermelho: verde não existe neste desenho, e o que era vermelho misturava duas coisas
-   diferentes. Recusar um perfil já minerado não é falha, é aviso: o sistema fez o que
-   devia. Falha é a coisa que não devia ter acontecido.
-
-     falha   vermelho   o serviço não respondeu, o Instagram recusou
-     aviso   âmbar      pedido barrado de propósito, nada pendente para fazer
-     evento  azul       o andamento normal do trabalho
-
-   O TEMPO DE CADA LINHA É RELATIVO E ANDA SOZINHO. O relógio absoluto respondia "às
-   15:31:38", que obriga quem lê a fazer a conta de cabeça para saber se é de agora ou
-   de meia hora atrás. */
-const CONTAS = { falha: 0, aviso: 0, evento: 0 };
-const JANELAS = { falha: [], aviso: [], evento: [] };
-let desdeAmostra = { falha: 0, aviso: 0, evento: 0 };
-const MEMORIA = 120;
-
-function tempoDesde(ms) {
-  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
-  if (s < 60) return "há " + s + "s";
-  if (s < 3600) return "há " + Math.floor(s / 60) + "min";
-  return "há " + Math.floor(s / 3600) + "h";
-}
-
-function anotar(texto, tipo) {
-  const reg = $("registro");
-  if (vistos.has(texto)) return;
-  vistos.add(texto);
-  const gravidade = CONTAS[tipo] !== undefined ? tipo : "evento";
-  CONTAS[gravidade] += 1;
-  desdeAmostra[gravidade] += 1;
-
-  const ln = document.createElement("div");
-  ln.className = "kon-ln " + gravidade;
-  ln.dataset.quando = Date.now();
-  ln.innerHTML = `<i></i><span class="txt"></span>`
-               + `<span class="quando">há 0s</span>`;
-  ln.querySelector(".txt").textContent = texto;
-  reg.prepend(ln);
-  while (reg.children.length > MEMORIA) reg.lastChild.remove();
-
-  for (const g of Object.keys(CONTAS)) $("k_" + g).textContent = num(CONTAS[g]);
-  $("kon_memoria").textContent =
-    `memória: ${reg.children.length} de ${MEMORIA} linhas`;
-}
-
-/** Reescreve o "há quanto tempo" de cada linha, de segundo em segundo. */
-setInterval(() => {
-  document.querySelectorAll("#registro .kon-ln").forEach(ln => {
-    ln.querySelector(".quando").textContent = tempoDesde(Number(ln.dataset.quando));
-  });
-}, 1000);
-
-/* O traço de atividade: quantas linhas de cada gravidade entraram em cada janela de
-   cinco segundos, nos últimos dois minutos. Sem movimento ele sai reto e apagado, que
-   é o que aconteceu, em vez de uma onda desenhada para a tela parecer viva. */
-function tracar() {
-  for (const g of Object.keys(JANELAS)) {
-    const serie = JANELAS[g];
-    serie.push(desdeAmostra[g]);
-    desdeAmostra[g] = 0;
-    while (serie.length > 24) serie.shift();
-
-    const alvo = $("t_" + g);
-    const teto = Math.max(...serie, 0);
-    if (!teto) {
-      alvo.classList.add("parado");
-      alvo.querySelector("path").setAttribute("d", "M0 19H100");
-      continue;
-    }
-    alvo.classList.remove("parado");
-    const passo = serie.length > 1 ? 100 / (serie.length - 1) : 100;
-    const d = serie.map((v, i) =>
-      `${i ? "L" : "M"}${(i * passo).toFixed(1)} ${(19 - (v / teto) * 17).toFixed(1)}`
-    ).join(" ");
-    alvo.querySelector("path").setAttribute("d", d);
-  }
-}
-setInterval(tracar, 5000);
-
-/** O selo do cartão: ponto verde e a palavra, no molde do widget. */
-function selarConsole(ativa, palavra) {
-  const alvo = $("vivo_quando");
-  if (!alvo || RELOGIOS.has("vivo_quando")) return;
-  alvo.innerHTML = `<span class="kon-vivo${ativa ? " ativa" : ""}"><i></i>${palavra}</span>`;
-}
-
-async function aoVivo() {
-  let d;
-  try { d = await (await fetch(PONTE + "/andamento?t=" + Date.now())).json(); }
-  catch { return; }
-
-  if (!d.elos || !d.elos.length) {
-    $("vivo_titulo").textContent = "Esteira parada";
-    // FRASES CURTAS AQUI. O molde reserva UMA linha para o subtítulo, e o parágrafo
-    // que morava neste lugar quebrava em três, empurrando o selo e desalinhando o
-    // ícone. O detalhe, quando é preciso, entra no fluxo como linha.
-    $("vivo_resumo").textContent = "Acorda sozinha de meia em meia hora.";
-    $("vivo_elos").hidden = true;
-    selarConsole(false, "parada");
-    return;
-  }
-
-  const feitos = d.elos.filter(e => e.situacao === "success").length;
-  const agora = d.elos.find(e => e.situacao === "in_progress");
-
-  // O QUE ESTA TELA PODE AFIRMAR, E O QUE ELA NÃO PODE.
-  // Ela enxerga o estado da máquina, e não o que a máquina fez. Máquina de pé não é
-  // máquina lendo: ela baixa o acervo, confere se há perfil com página por ler e
-  // desliga. Dizer "elo 10 lendo uma página" com todos os perfis em dia foi invenção
-  // pura, e fazia parecer que a esteira estava refazendo trabalho pronto.
-  // A conta de quem tem trabalho é a mesma que a esteira faz, e a tela já tem os dados
-  // para fazê-la: perfil pela metade, ou perfil em releitura.
-  const comTrabalho = MINERADOS.filter(p => p.relendo || !p.completo);
-
-  $("vivo_titulo").textContent = d.rodando
-    ? (comTrabalho.length
-        ? (agora ? "Lendo agora: " + agora.nome : "A esteira está trabalhando")
-        : "Rodada aberta, sem trabalho pendente")
-    : "Rodada " + d.numero + " encerrada";
-  // POR QUE ELA ESTÁ LENDO UM PERFIL QUE JÁ FOI VARRIDO. Sem esta frase a esteira
-  // parecia refazer trabalho pronto por conta própria; ela está atendendo um pedido de
-  // releitura, e quem pediu tem direito de ver isso escrito.
-  const relendo = MINERADOS.filter(p => p.relendo).map(p => "@" + p.conta);
-  const porque = relendo.length
-    ? ` Relendo ${relendo.join(" e ")} a pedido: só o que foi publicado desde a última vez.`
-    : "";
-  $("vivo_resumo").textContent = !comTrabalho.length
-    ? "Nenhum perfil tem página por ler, então nada foi lido."
-    : (d.rodando
-        ? `${feitos} de ${d.elos.length} máquinas concluídas, uma página de 12 posts cada.`
-        : `${feitos} de ${d.elos.length} máquinas trouxeram posts.`)
-      + porque;
-  // ENQUANTO A RODADA ESTÁ NO AR, o canto do bloco vira sinal de carregamento, contando
-  // desde a hora real em que ela começou. O relógio não é reiniciado a cada consulta:
-  // se o sinal já está de pé, ele fica onde está, senão o número voltaria a zero de sete
-  // em sete segundos e a rodada pareceria não sair do lugar.
-  if (d.rodando) {
-    if (!RELOGIOS.has("vivo_quando"))
-      carregando("vivo_quando", "Rodada " + d.numero, "orbita", d.comecou);
-  } else {
-    parado("vivo_quando");
-    selarConsole(false, "encerrada");
-  }
-
-  // AS MÁQUINAS SÓ APARECEM ENQUANTO A RODADA ESTÁ NO AR. Fora disso são vinte
-  // pastilhas ocupando o cartão para dizer que nada está acontecendo.
-  $("vivo_elos").hidden = !d.rodando;
-
-  $("vivo_elos").innerHTML = d.elos
-    .sort((a, b) => a.nome.localeCompare(b.nome, "pt", { numeric: true }))
-    .map(e => {
-      const c = e.situacao === "success" ? "feito"
-              : e.situacao === "in_progress" ? "agora"
-              : e.situacao === "failure" ? "falhou" : "";
-      return `<div class="elo ${c}"><span class="luz"></span>${e.nome}`
-           + `<span class="qual">${NOMES[e.situacao] || e.situacao}</span></div>`;
-    }).join("");
-
-  d.elos.filter(e => e.situacao === "success" && e.fim)
-    .forEach(e => anotar(`${e.nome} concluída`, "evento"));
-  // só se afirma leitura quando existe perfil com página por ler. Antes esta linha saía
-  // sempre, e escrevia "lendo uma página" numa rodada que não leu nada.
-  if (agora && comTrabalho.length) anotar(`${agora.nome} lendo uma página`, "evento");
-
-  if (d.rodando && !relogio) relogio = setInterval(() => { aoVivo(); atualizar(); }, 7000);
-  if (!d.rodando && relogio) { clearInterval(relogio); relogio = null; atualizar(); }
-}
-
+   O retorno de cada comando continua aparecendo: ele é escrito ao lado do título da
+   seção que o Gabriel acabou de usar, que é onde o olho já está. */
 
 /* ------------------------------------------------------- sub-abas da Mineração
    Mesma mecânica das pastilhas da aba de Contas: trocam o painel de baixo e nada mais.
@@ -2246,6 +2047,48 @@ $("min-fim").onclick = () => { minPagina = 1e9; desenhaMinerados(); };
    um perfil encerrado, porque é ela quem atende um pedido gravado no acervo, mas a tela
    não oferece mais esse pedido a ninguém. */
 
+/* --------------------------------------------------- as três medidas do cartão
+
+   ELAS CONTAM O LIVRO, e não a sessão do navegador. Contavam as mensagens que tinham
+   aparecido na tela desde que a página abriu: fechar a aba zerava tudo, e o número
+   respondia "quanto tempo esta janela está aberta" em vez de "o que aconteceu".
+
+   O traço embaixo é a atividade dos últimos catorze dias, um ponto por dia. Sem
+   movimento ele sai reto e apagado, que é a verdade daquele período. */
+const DIAS_DO_TRACO = 14;
+
+function medir(eventos) {
+  const contas = { falha: 0, aviso: 0, evento: 0 };
+  const dia = t => Math.floor(t / 86400);
+  const hoje = dia(Date.now() / 1000);
+  const series = { falha: [], aviso: [], evento: [] };
+  for (const g of Object.keys(series))
+    series[g] = new Array(DIAS_DO_TRACO).fill(0);
+
+  for (const e of eventos) {
+    const g = contas[e.gravidade] !== undefined ? e.gravidade : "evento";
+    contas[g] += 1;
+    const atras = hoje - dia(e.quando);
+    if (atras >= 0 && atras < DIAS_DO_TRACO)
+      series[g][DIAS_DO_TRACO - 1 - atras] += 1;
+  }
+
+  for (const g of Object.keys(contas)) {
+    $("k_" + g).textContent = num(contas[g]);
+    const alvo = $("t_" + g), serie = series[g], teto = Math.max(...serie, 0);
+    if (!teto) {
+      alvo.classList.add("parado");
+      alvo.querySelector("path").setAttribute("d", "M0 19H100");
+      continue;
+    }
+    alvo.classList.remove("parado");
+    const passo = 100 / (serie.length - 1);
+    alvo.querySelector("path").setAttribute("d", serie.map((v, i) =>
+      `${i ? "L" : "M"}${(i * passo).toFixed(1)} ${(19 - (v / teto) * 17).toFixed(1)}`
+    ).join(" "));
+  }
+}
+
 /* ========================================================= O LIVRO DE ATIVIDADE
 
    UM CARTÃO POR PERFIL. Fechado, ele diz quem é e quando foi a última coisa feita.
@@ -2328,6 +2171,17 @@ function desenhaLivro() {
       <div class="liv-corpo"><div class="liv-caixa">carregando</div></div>
     </div>`;
   }).join("");
+}
+
+/** Junta os eventos de todos os perfis e alimenta as três medidas do topo.
+ *
+ * Busca o histórico de cada um, o que é uma requisição por perfil. Isso é barato
+ * porque cada arquivo é pequeno e fica guardado depois da primeira vez: abrir um
+ * cartão em seguida não custa nada. */
+async function medirLivro() {
+  const todos = [];
+  for (const c of LIVRO) todos.push(...await historicoDe(c.conta));
+  medir(todos);
 }
 
 /** O histórico de um perfil, buscado só quando o cartão abre. */
@@ -2419,6 +2273,9 @@ window.montarSelect("liv-quando", [
    vírgula é o separador que o Excel em português entende sem perguntar nada, e o BOM
    na frente é o que faz o acento aparecer certo lá dentro. */
 $("liv_exportar").onclick = () => { $("liv_folha").hidden = false; };
+// as datas só aparecem quando a opção de período é a escolhida
+document.querySelectorAll('input[name="exp"]').forEach(r => r.addEventListener("change",
+  () => $("exp_datas").classList.toggle("aberto", r.value === "periodo" && r.checked)));
 $("exp_cancelar").onclick = () => { $("liv_folha").hidden = true; };
 $("liv_folha").addEventListener("click", ev => {
   if (ev.target === $("liv_folha")) $("liv_folha").hidden = true;
@@ -2461,7 +2318,6 @@ $("exp_baixar").onclick = async () => {
   botao.disabled = false;
   botao.textContent = "Baixar planilha";
   $("liv_folha").hidden = true;
-  anotar(`planilha exportada: ${linhas.length - 1} eventos`, "evento");
 };
 
 /* ---------------------------------------------------------------- desenhos
@@ -2595,6 +2451,7 @@ async function atualizar() {
 
   LIVRO = (livro && livro.contas) || [];
   desenhaLivro();
+  medirLivro();
 
   desenhaProntos(sel, perfis);
   desenhaLotes(estado && estado.lotes);
@@ -2616,27 +2473,19 @@ $("salvar").onclick = async () => {
   // esse tempo se lê como travamento.
   carregando("recado", contas.length === 1 ? "Salvando o perfil"
                                            : `Salvando ${contas.length} perfis`, "onda");
-  anotar("salvando " + contas.length + " contas de origem", "evento");
   try {
     const d = await mandar("/contas", { contas });
 
     // O QUE FOI RECUSADO NA PORTA. Perfil já minerado não entra de novo, e isso é dito
     // com o nome dele: recusa sem nome vira "não funcionou", e não é isso.
     const barrados = d.bloqueados || [];
-    barrados.forEach(c => anotar(`@${c} já está minerado, não entra de novo`, "aviso"));
-    (d.novos || []).forEach(n => n.ok
-      ? anotar(`@${n.conta} identificado: ${num(n.publicacoes)} publicações`, "evento")
-      : anotar(`@${n.conta} não respondeu ao Instagram, tente daqui a pouco`, "falha"));
 
     // A ESTEIRA SÓ É CHAMADA SE ENTROU PERFIL NOVO.
     // Ela era chamada sempre, e salvar uma lista que já estava no banco acordava vinte
     // máquinas para não ler nada. Na tela isso aparecia como a esteira relendo o que já
     // tinha sido lido, e não era: era trabalho vazio que eu mandei fazer.
     const entraram = (d.novos || []).filter(n => n.ok);
-    if (entraram.length) {
-      await mandar("/varrer");
-      anotar("esteira acionada", "evento");
-    }
+    if (entraram.length) await mandar("/varrer");
 
     // O CAMPO ESVAZIA AQUI. Ele é o lugar de PEDIR, e o pedido já foi respondido, seja
     // com entrada, seja com recusa. Deixar o texto no campo era o que fazia a mesma
@@ -2654,7 +2503,7 @@ $("salvar").onclick = async () => {
         ? `@${barrados[0]} já está minerado, nada a fazer`
         : `os ${barrados.length} perfis já estão minerados, nada a fazer`;
     setTimeout(() => { aoVivo(); atualizar(); }, 2500);
-  } catch (e) { parado("recado", e.message); anotar(e.message, "falha"); }
+  } catch (e) { parado("recado", e.message); }
 };
 
 $("varrer").onclick = async () => {
@@ -2663,7 +2512,6 @@ $("varrer").onclick = async () => {
   const comTrabalho = MINERADOS.filter(p => p.relendo || !p.completo);
   if (!comTrabalho.length) {
     parado("recado", "todos os perfis estão em dia, não há página por ler");
-    anotar("nada pendente: a esteira não foi chamada", "aviso");
     return;
   }
   carregando("recado", "Chamando a esteira", "orbita");
@@ -2673,9 +2521,8 @@ $("varrer").onclick = async () => {
     $("recado").textContent = comTrabalho.length === 1
       ? "esteira acionada para 1 perfil"
       : `esteira acionada para ${comTrabalho.length} perfis`;
-    anotar("esteira acionada", "evento");
     setTimeout(aoVivo, 2500);
-  } catch (e) { parado("recado", e.message); anotar(e.message, "falha"); }
+  } catch (e) { parado("recado", e.message); }
 };
 
 document.addEventListener("click", async ev => {
