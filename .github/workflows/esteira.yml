@@ -107,3 +107,37 @@ jobs:
           git diff --staged --quiet || git commit -m "fecha a rodada"
           git pull --rebase --autostash origin main || true
           git push || true
+
+      - name: Emendar a proxima rodada
+        # Sem isto a esteira so acorda de meia em meia hora e parece travada na tela.
+        # Quem dispara e' a ponte, porque a chave que o proprio fluxo recebe nao tem
+        # permissao de acionar outro fluxo (protecao do GitHub contra laco infinito).
+        #
+        # Duas travas contra rodar a toa:
+        #   1. so emenda se ainda existe perfil pela metade;
+        #   2. so emenda se ESTA rodada trouxe post novo. Se nao trouxe nada, o
+        #      Instagram esta fechado para os enderecos de agora, e insistir e'
+        #      desperdicio: o horario marcado tenta de novo mais tarde.
+        run: |
+          python - <<'PY' > veredito.txt
+          import json, pathlib, subprocess
+          pendentes = sum(
+              1 for a in pathlib.Path("dados/perfis").glob("*.json")
+              if not json.loads(a.read_text(encoding="utf-8")).get("completo"))
+          # quantos commits de elo entraram nos ultimos 30 minutos
+          r = subprocess.run(["git", "log", "--since=30.minutes", "--oneline", "--grep=^elo"],
+                             capture_output=True, text=True)
+          avancou = len([l for l in r.stdout.splitlines() if l.strip()])
+          print(f"{pendentes} {avancou}")
+          PY
+          read PENDENTES AVANCOU < veredito.txt
+          echo "perfis pela metade: $PENDENTES | elos que gravaram nesta rodada: $AVANCOU"
+          if [ "$PENDENTES" -gt 0 ] && [ "$AVANCOU" -gt 0 ]; then
+            curl -s -o /dev/null -w "proxima rodada chamada: %{http_code}\n" \
+              -X POST -H "Content-Type: application/json" \
+              "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}'
+          elif [ "$PENDENTES" -eq 0 ]; then
+            echo "tudo varrido, a esteira descansa"
+          else
+            echo "nenhum elo gravou: o Instagram esta fechado agora, tento no horario marcado"
+          fi
