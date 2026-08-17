@@ -104,8 +104,17 @@ def mede_perfil(dados: dict, r: dict) -> list[dict]:
 def selecionar(r: dict | None = None) -> dict:
     r = r or regua()
     teto = int(r.get("teto") or PADRAO["teto"])
+    criterio = {"formatos": r["formatos"], "por_formato": bool(r.get("por_formato")),
+                "corte": r.get("corte"), "cortes": r["cortes"], "teto": teto}
+    # ACERVO VAZIO TEM A MESMA FORMA DO CHEIO, e nao uma forma curta com um recado.
+    #
+    # Aqui saia {"itens": [], "erro": ...}, sem "avaliados" e sem "perfis". Isso derrubou
+    # a rodada 60 inteira: o proprio programa estourou ao imprimir "avaliados", que
+    # naquele caminho nao existia, e junto com ele caiu o passo que fecha a rodada e
+    # carimba a hora na tela. Quem le a saida nao deve precisar saber se o banco esta
+    # vazio para saber quais campos existem.
     if not PASTA.exists():
-        return {"itens": [], "erro": "nenhum perfil minerado ainda"}
+        return {"criterio": criterio, "perfis": [], "avaliados": 0, "itens": []}
 
     todos: list[dict] = []
     perfis: list[dict] = []
@@ -168,8 +177,7 @@ def selecionar(r: dict | None = None) -> dict:
     )[:teto]
 
     return {
-        "criterio": {"formatos": r["formatos"], "por_formato": bool(r.get("por_formato")),
-                     "corte": r.get("corte"), "cortes": r["cortes"], "teto": teto},
+        "criterio": criterio,
         "perfis": perfis,
         "avaliados": len(todos),
         "itens": escolhidos,
