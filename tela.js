@@ -114,6 +114,128 @@ async function aoVivo() {
   if (!d.rodando && relogio) { clearInterval(relogio); relogio = null; atualizar(); }
 }
 
+
+/* ------------------------------------------------------- sub-abas da Mineração
+   Mesma mecânica das pastilhas da aba de Contas: trocam o painel de baixo e nada mais.
+   Não mexem no endereço da página, porque a aba de cima já manda nele. */
+document.getElementById("sub-menu").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-sub]");
+  if (!b) return;
+  document.querySelectorAll("#sub-menu .ct-item").forEach(i => {
+    const meu = i === b;
+    i.classList.toggle("ativo", meu);
+    i.setAttribute("aria-selected", meu ? "true" : "false");
+  });
+  document.getElementById("sub-p-minerar").hidden = b.dataset.sub !== "minerar";
+  document.getElementById("sub-p-minerados").hidden = b.dataset.sub !== "minerados";
+  if (b.dataset.sub === "minerados") desenhaMinerados();
+});
+
+/* ------------------------------------------------------------ tabela de minerados
+   SEM ANIMAÇÃO DE ENTRADA nas linhas, e isso está medido no sistema de origem: a
+   animação da casa desloca, reduz e DESFOCA cada peça. Numa galeria compensa; numa
+   tabela custou quadro de 61 ms ao rolar, fez a barra de rolagem piscar e deixou
+   artefato preto na passagem do mouse. Tabela não é galeria. */
+let MINERADOS = [], minPagina = 1;
+
+const ESTADOS = {
+  completo: ['<span class="pino ok">concluído</span>', "completo"],
+  limite: ['<span class="pino ok">até o limite</span>', "limite"],
+  varrendo: ['<span class="pino">varrendo</span>', "varrendo"],
+};
+
+function situacaoDe(p) {
+  if (!p.completo) return "varrendo";
+  return (p.publicacoes && p.lidos < p.publicacoes) ? "limite" : "completo";
+}
+
+function quando(ts) {
+  if (!ts) return '<span class="tab-nulo">nunca</span>';
+  const d = new Date(ts * 1000), h = (Date.now() / 1000 - ts) / 3600;
+  if (h < 1) return "há " + Math.max(1, Math.round(h * 60)) + " min";
+  if (h < 24) return "há " + Math.round(h) + " h";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+function retrato(p) {
+  // a foto do Instagram vence em horas, então a inicial é o fundo e a foto entra por
+  // cima. Se ela falhar, a inicial continua lá e ninguém vê um quadrado quebrado.
+  const ini = (p.conta || "?")[0].toUpperCase();
+  const foto = p.avatar
+    ? `<img src="${p.avatar}" alt="" loading="lazy" onerror="this.remove()">` : "";
+  return `<span class="pcard-retrato"><span class="pcard-avatar">${ini}${foto}</span></span>`;
+}
+
+function desenhaMinerados() {
+  const q = ($("min-q").value || "").trim().toLowerCase();
+  const est = $("min-estado").value;
+  const ordem = $("min-ordem").value;
+  const por = parseInt($("min-por").value, 10) || 10;
+
+  let fila = MINERADOS.filter(p => {
+    if (q && !((p.conta || "") + " " + (p.nome || "")).toLowerCase().includes(q)) return false;
+    if (est && situacaoDe(p) !== est) return false;
+    return true;
+  });
+
+  const chaves = {
+    varridos: p => -(p.lidos || 0),
+    cobertura: p => -(p.publicacoes ? p.lidos / p.publicacoes : 0),
+    acima: p => -(p.acima || 0),
+    reels: p => -(p.reels || 0),
+    conta: p => p.conta || "",
+  };
+  fila.sort((a, b) => {
+    const x = chaves[ordem](a), y = chaves[ordem](b);
+    return typeof x === "string" ? x.localeCompare(y, "pt") : x - y;
+  });
+
+  const paginas = Math.max(1, Math.ceil(fila.length / por));
+  if (minPagina > paginas) minPagina = paginas;
+  const pedaco = fila.slice((minPagina - 1) * por, minPagina * por);
+
+  $("min-vazio").hidden = fila.length > 0;
+  $("min-pag").hidden = fila.length <= por;
+  $("min-onde").textContent = fila.length
+    ? `${(minPagina - 1) * por + 1} a ${Math.min(minPagina * por, fila.length)} de ${fila.length}`
+    : "";
+  $("min-antes").disabled = minPagina <= 1;
+  $("min-depois").disabled = minPagina >= paginas;
+  $("min-sub").textContent = `${MINERADOS.length} ${MINERADOS.length === 1 ? "perfil varrido" : "perfis varridos"}`;
+  $("sub-conta").textContent = MINERADOS.length;
+
+  $("min-corpo").innerHTML = pedaco.map(p => {
+    const cob = p.publicacoes ? Math.round(100 * p.lidos / p.publicacoes) : 0;
+    const [selo] = ESTADOS[situacaoDe(p)];
+    const ate = p.mais_antigo
+      ? new Date(p.mais_antigo * 1000).toLocaleDateString("pt-BR",
+          { month: "short", year: "numeric" })
+      : '<span class="tab-nulo">sem data</span>';
+    return `<tr class="tab-linha">
+      <td class="tab-perfil"><div class="tab-perfil-in">${retrato(p)}
+        <span class="tab-quem"><b>@${p.conta}</b>
+          <span>${p.nome || "sem nome no perfil"}</span></span></div></td>
+      <td class="tab-num">${num(p.publicacoes)}</td>
+      <td class="tab-num">${num(p.lidos)}</td>
+      <td class="tab-num">${cob}%</td>
+      <td>${ate}</td>
+      <td class="tab-num">${num(p.reels)}</td>
+      <td class="tab-num">${num(p.imagens)}</td>
+      <td class="tab-num">${num(p.carrosseis)}</td>
+      <td class="tab-num">${num(p.acima)}</td>
+      <td>${selo}</td>
+      <td>${quando(p.atualizado)}</td>
+      <td class="tab-acao"><a class="acao" target="_blank" rel="noopener"
+        href="https://www.instagram.com/${p.conta}/">Instagram</a></td>
+    </tr>`;
+  }).join("");
+}
+
+["min-q", "min-estado", "min-ordem", "min-por"].forEach(id =>
+  $(id).addEventListener("input", () => { minPagina = 1; desenhaMinerados(); }));
+$("min-antes").onclick = () => { minPagina--; desenhaMinerados(); };
+$("min-depois").onclick = () => { minPagina++; desenhaMinerados(); };
+
 /* ---------------------------------------------------------------- desenhos */
 function desenhaPerfis(p) {
   if (!p || !p.length) {
@@ -213,6 +335,18 @@ async function atualizar() {
 
   if (fontes && fontes.contas && !$("fontes").dataset.tocado)
     $("fontes").value = fontes.contas.join("\n");
+
+  // a tabela quer o que a varredura descobriu, e não só o avanço
+  const itens = (sel && sel.itens) || [];
+  MINERADOS = perfis.map(p => {
+    const meus = itens.filter(i => i.conta === p.conta);
+    return { ...p,
+      reels: meus.filter(i => i.formato === "reels").length,
+      imagens: meus.filter(i => i.formato === "post").length,
+      carrosseis: meus.filter(i => i.formato === "carrossel").length,
+      acima: meus.length };
+  });
+  desenhaMinerados();
 
   desenhaPerfis(perfis);
   desenhaProntos(sel, perfis);
