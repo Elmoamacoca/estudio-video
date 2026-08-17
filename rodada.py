@@ -1,17 +1,28 @@
-"""Uma rodada de um elo: le UMA pagina do perfil que estiver mais atrasado.
+"""Uma vaga da rodada: lê UMA página de UM perfil, e sai.
 
-POR QUE UMA SO:
-medido em 16/08/2026 no proprio runner, um endereco de saida serve para uma unica
-leitura. A segunda pagina foi recusada com 401 em seis voltas seguidas, com 135
-segundos de espera entre elas. Nao existe pausa que devolva o orcamento a tempo.
+POR QUE UMA PÁGINA SÓ POR MÁQUINA:
+medido em 16/08/2026, um endereço de saída serve para uma única leitura de 12 posts.
+A segunda foi recusada em seis voltas seguidas com 135 segundos de espera entre elas.
+Não existe pausa que devolva o orçamento a tempo. Quem faz volume é a quantidade de
+máquinas, nunca a insistência de uma delas.
 
-Entao insistir e' desperdicio: o elo le uma pagina, grava e sai. O proximo elo da
-corrente entra com endereco novo e continua dali. Quem faz o volume e' a quantidade
-de maquinas, nunca a insistencia de uma delas.
+COMO O PARALELISMO FUNCIONA:
+perfis diferentes são independentes, então N máquinas leem N perfis ao mesmo tempo.
+O mesmo perfil é que é sequencial, porque a página seguinte só existe depois que a
+anterior devolveu o marcador.
+
+Então cada vaga escolhe o perfil pela sua posição:
+  - com 20 perfis pendentes e 20 vagas, cada vaga pega um: paralelo puro.
+  - com 1 perfil e 20 vagas, todas caem no mesmo, e aí elas se ESCALONAM no tempo:
+    a vaga 5 espera quatro passos antes de começar, e nesse meio tempo as anteriores
+    já gravaram o avanço. Vira escada em vez de colisão.
 """
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -20,10 +31,12 @@ from pathlib import Path
 from minerar import CABECALHO, PASTA, limpa_post, identifica, grava
 
 FONTES = Path("dados/fontes.json")
+# medido: leitura mais gravação levam por volta de 20s. 50s dá folga para a vaga
+# seguinte enxergar o avanço da anterior quando as duas caem no mesmo perfil.
+PASSO_DA_ESCADA = 50
 
 
 def _uma_pagina(uid: str, marcador: str | None) -> dict | None:
-    """Tenta a leitura nas duas vias. Se as duas recusarem, este elo acabou."""
     rabo = f"&max_id={marcador}" if marcador else ""
     for dominio in ("www.instagram.com", "i.instagram.com"):
         url = f"https://{dominio}/api/v1/feed/user/{uid}/?count=12{rabo}"
@@ -53,61 +66,72 @@ def estado_de(conta: str) -> dict:
     return {"perfil": None, "posts": [], "marcador": None, "completo": False}
 
 
-def escolhe_alvo(contas: list[str]) -> tuple[str, dict] | None:
-    """O perfil menos varrido em PROPORCAO ganha a vez.
+def puxar_avanco() -> None:
+    """Traz o que as outras vagas gravaram enquanto esta esperava na escada."""
+    for cmd in (["git", "fetch", "origin", "main", "--quiet"],
+                ["git", "reset", "--hard", "origin/main", "--quiet"]):
+        subprocess.run(cmd, capture_output=True, timeout=90)
 
-    Por quantidade absoluta nao funciona: um perfil de cinco mil publicacoes com
-    dois mil lidos tem 2.972 faltando, e um de 286 publicacoes com zero lidos tem
-    286. O grande vencia sempre e o pequeno nunca era atendido. Custou uma rodada
-    inteira com um perfil parado em zero.
-    """
-    candidatos = []
+
+def pendentes(contas: list[str]) -> list[str]:
+    """Perfis que ainda faltam, do menos varrido em proporção para o mais varrido."""
+    fila = []
     for c in contas:
         e = estado_de(c)
         if e.get("completo"):
             continue
         total = (e.get("perfil") or {}).get("publicacoes") or 0
-        lidos = len(e.get("posts", []))
-        if not total:
-            fatia = -1.0          # ainda sem identificador: passa na frente de todos
-        else:
-            fatia = lidos / total
-        candidatos.append((fatia, lidos, c, e))
-    if not candidatos:
-        return None
-    candidatos.sort()             # menor fatia varrida primeiro
-    _, _, conta, estado = candidatos[0]
-    return conta, estado
+        # sem identificador ainda entra na frente: descobrir quem é custa uma leitura
+        fatia = -1.0 if not total else len(e.get("posts", [])) / total
+        fila.append((fatia, c))
+    fila.sort()
+    return [c for _, c in fila]
 
 
 def main() -> int:
+    vaga = int(os.environ.get("VAGA", "1"))
     contas = contas_pedidas()
     if not contas:
         print("nenhuma conta de origem cadastrada")
         return 0
 
-    alvo = escolhe_alvo(contas)
-    if not alvo:
-        print("todos os perfis ja estao completos")
+    fila = pendentes(contas)
+    if not fila:
+        print("todos os perfis já estão completos")
         return 0
 
-    conta, estado = alvo
-    print(f"elo trabalhando em @{conta}")
+    # a vaga N atende o perfil N da fila. Sobrando vaga, ela gira e cai num perfil
+    # já atendido: aí espera a escada, para não ler a mesma página duas vezes.
+    posicao = (vaga - 1) % len(fila)
+    voltas = (vaga - 1) // len(fila)
+    conta = fila[posicao]
 
-    # sem identificador, este elo gasta a sua unica leitura descobrindo ele
+    if voltas:
+        espera = voltas * PASSO_DA_ESCADA
+        print(f"vaga {vaga}: @{conta} já tem vaga antes de mim, espero {espera}s")
+        time.sleep(espera)
+        puxar_avanco()
+
+    estado = estado_de(conta)
+    if estado.get("completo"):
+        print(f"[{conta}] já ficou completo enquanto eu esperava")
+        return 0
+
+    print(f"vaga {vaga} de {len(fila)} perfis pendentes, trabalhando em @{conta}")
+
     if not estado.get("perfil"):
-        perfil = identifica(conta, prazo=time.time() + 60)
+        perfil = identifica(conta, prazo=time.time() + 45)
         if not perfil:
-            print(f"[{conta}] identificador nao veio neste endereco. Outro elo tenta.")
+            print(f"[{conta}] identificador não veio neste endereço. A ponte resolve.")
             return 0
         estado["perfil"] = perfil
         grava(conta, estado)
-        print(f"[{conta}] identificado: {perfil['publicacoes']} publicacoes")
+        print(f"[{conta}] identificado: {perfil['publicacoes']} publicações")
         return 0
 
     j = _uma_pagina(estado["perfil"]["id"], estado.get("marcador"))
     if j is None:
-        print(f"[{conta}] endereco deste elo ja estava gasto. Proximo elo continua.")
+        print(f"[{conta}] endereço desta vaga já estava gasto")
         return 0
 
     vistos = {p["codigo"] for p in estado["posts"]}
@@ -126,9 +150,8 @@ def main() -> int:
     estado["atualizado"] = int(time.time())
     grava(conta, estado)
 
-    total = len(estado["posts"])
     meta = (estado.get("perfil") or {}).get("publicacoes") or 0
-    print(f"[{conta}] +{novos} posts (total {total} de {meta})")
+    print(f"[{conta}] +{novos} posts (total {len(estado['posts'])} de {meta})")
     return 0
 
 
