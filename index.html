@@ -1608,10 +1608,16 @@ function desenhaProntos(sel, perfis) {
   const itens = (sel && sel.itens) || [];
 
   alvo.innerHTML = perfis.map(p => {
+    // OS DOIS NÚMEROS VÊM CONTADOS DO SELETOR, e não desta lista aqui.
+    // Contar daqui era o mesmo defeito que a tabela tinha: `sel.itens` é o LOTE, com
+    // teto de 500 peças, e o teto é global. O primeiro perfil levava as 500 vagas e
+    // aparecia com "500 acima da régua"; o segundo aparecia com zero, e o botão de
+    // baixar nascia desligado nos dois. O seletor conta perfil a perfil, sem teto.
     const meus = itens.filter(i => i.conta === p.conta);
-    const reels = meus.filter(i => i.formato === "reels" && i.arquivo);
-    const acima = meus.filter(i => i.indice >= corte).length;
-    const baixaveis = reels.filter(i => i.indice >= corte).length;
+    const acima = p.acima != null ? p.acima
+                : meus.filter(i => i.indice >= corte).length;
+    const baixaveis = p.baixaveis != null ? p.baixaveis
+                : meus.filter(i => i.formato === "reels" && i.arquivo && i.indice >= corte).length;
     return `<div class="pronto">
       <div class="pronto-topo">
         <span class="quem">@${p.conta}</span>
