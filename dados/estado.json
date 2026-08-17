@@ -1,7 +1,7 @@
 {
  "prontas": 500,
  "hoje": 25,
- "ultima_rodada": 1786929482,
+ "ultima_rodada": 1786934479,
  "camadas": [
   {
    "nome": "Processamento de vídeo",
@@ -32,15 +32,33 @@
  "perfis": [
   {
    "conta": "boletimdamorte",
+   "nome": "Boletim da Morte",
+   "avatar": null,
+   "seguidores": 314206,
+   "atualizado": 1786928370,
    "publicacoes": 4976,
    "lidos": 3093,
-   "completo": true
+   "completo": true,
+   "mais_antigo": 1687058338,
+   "mais_novo": 1786913128,
+   "reels": 211,
+   "imagens": 2531,
+   "carrosseis": 351
   },
   {
    "conta": "vinci.society",
+   "nome": "Vinci",
+   "avatar": null,
+   "seguidores": 211420,
+   "atualizado": 1786928499,
    "publicacoes": 286,
    "lidos": 280,
-   "completo": true
+   "completo": true,
+   "mais_antigo": 1724513516,
+   "mais_novo": 1786921564,
+   "reels": 102,
+   "imagens": 0,
+   "carrosseis": 178
   }
  ],
  "lotes": [
