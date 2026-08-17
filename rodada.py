@@ -54,7 +54,13 @@ def estado_de(conta: str) -> dict:
 
 
 def escolhe_alvo(contas: list[str]) -> tuple[str, dict] | None:
-    """O perfil mais atrasado ganha a vez, para nenhum ficar para tras."""
+    """O perfil menos varrido em PROPORCAO ganha a vez.
+
+    Por quantidade absoluta nao funciona: um perfil de cinco mil publicacoes com
+    dois mil lidos tem 2.972 faltando, e um de 286 publicacoes com zero lidos tem
+    286. O grande vencia sempre e o pequeno nunca era atendido. Custou uma rodada
+    inteira com um perfil parado em zero.
+    """
     candidatos = []
     for c in contas:
         e = estado_de(c)
@@ -62,12 +68,15 @@ def escolhe_alvo(contas: list[str]) -> tuple[str, dict] | None:
             continue
         total = (e.get("perfil") or {}).get("publicacoes") or 0
         lidos = len(e.get("posts", []))
-        falta = (total - lidos) if total else 10 ** 9   # sem identificador ainda: prioridade
-        candidatos.append((falta, c, e))
+        if not total:
+            fatia = -1.0          # ainda sem identificador: passa na frente de todos
+        else:
+            fatia = lidos / total
+        candidatos.append((fatia, lidos, c, e))
     if not candidatos:
         return None
-    candidatos.sort(reverse=True)
-    _, conta, estado = candidatos[0]
+    candidatos.sort()             # menor fatia varrida primeiro
+    _, _, conta, estado = candidatos[0]
     return conta, estado
 
 
