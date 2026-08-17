@@ -782,6 +782,52 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tab-dupla{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tab-dupla i{font-style:normal;font-size:11.5px;color:var(--muted)}
 
+/* ============================================================== SINAL DE CARREGAMENTO
+
+   Traduzido do componente que o Gabriel mandou, que é React com Tailwind. Aqui não há
+   nem um nem outro, então o que veio foi a MECÂNICA, e ela veio inteira: a grade de
+   três por três com 4 pixels de célula e 1,5 de respiro, a frente de onda em galo que
+   corre para a direita, o rótulo com o brilho passando por dentro da letra e o relógio
+   em dígito de largura fixa.
+
+   As duas animações não vinham no arquivo dele, só os nomes. Escritas aqui:
+   `pixel-on` acende a célula e a devolve ao apagado no mesmo ciclo, e `shimmer-text`
+   arrasta a faixa clara de um lado ao outro do texto. Nenhuma das duas termina
+   invisível, que é a armadilha que já apagou esta tela uma vez.
+
+   O ciclo de 650 ms é mais curto que a varredura da onda de propósito: com o atraso
+   máximo em 270 ms, sempre há duas frentes no ar ao mesmo tempo. */
+.pixota{display:inline-flex;align-items:center;gap:10px;vertical-align:middle}
+.pix-grade{display:grid;grid-template-columns:repeat(3,4px);gap:1.5px}
+.pix-grade i{width:4px;height:4px;background:var(--ink);border-radius:1px;opacity:.15;
+             animation:pixel-on 650ms ease-in-out var(--atraso,0ms) infinite}
+.pix-grade.redondo i{border-radius:999px}
+/* a órbita é uma volta pela borda, e por isso é mais lenta e tem o miolo apagado */
+.pix-grade.orbita i{animation-duration:950ms}
+.pix-grade i.apagado{opacity:.07;animation:none}
+@keyframes pixel-on{0%,100%{opacity:.15}35%{opacity:1}}
+
+.pix-rotulo{font-size:13px;font-weight:500;color:transparent;
+  background-image:linear-gradient(90deg,var(--muted) 35%,var(--ink) 50%,var(--muted) 65%);
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  animation:shimmer-text 1.4s linear infinite}
+@keyframes shimmer-text{from{background-position:200% 0}to{background-position:-200% 0}}
+/* onde o recorte no texto não existir, o rótulo continua legível em vez de sumir */
+@supports not ((background-clip:text) or (-webkit-background-clip:text)){
+  .pix-rotulo{color:var(--muted);background-image:none;animation:none}
+}
+
+.pix-tempo{font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+           color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* Movimento reduzido congela a grade no apagado, e o relógio continua andando: quem
+   pediu menos movimento quer menos movimento, não menos informação. */
+@media (prefers-reduced-motion: reduce){
+  .pix-grade i{animation:none}
+  .pix-rotulo{animation:none;background-image:none;color:var(--muted)}
+}
+
 </style>
 </head>
 <body>
@@ -908,7 +954,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   <div class="ct-painel" id="sub-p-minerar">
 
     <div class="secao">
-      <div class="secao-cab"><h2>Situação</h2></div>
+      <div class="secao-cab">
+        <h2>Situação</h2>
+        <div class="dir"><span class="nota" id="carga"></span></div>
+      </div>
       <div class="numeros quatro">
         <div class="num"><b id="n_lidos">0</b><span>posts varridos</span></div>
         <div class="num"><b id="n_completos">0</b><span>perfis concluídos</span></div>
@@ -1413,6 +1462,71 @@ async function mandar(rota, corpo) {
   return d;
 }
 
+/* ---------------------------------------------------------- sinal de carregamento
+
+   O componente que o Gabriel escolheu, traduzido para esta tela. Os atrasos de cada
+   célula são calculados pelas MESMAS contas do arquivo dele, e não copiados já
+   resolvidos: assim, mexer numa constante continua mudando o desenho.
+
+     galo    o atraso cresce com a coluna e com a distância da linha do meio, então a
+             onda entra pela esquerda e sai pela direita em forma de seta
+     órbita  a borda é percorrida em volta, célula por célula, e o miolo fica apagado
+
+   O relógio anda de décimo em décimo de segundo e vira minutos depois de sessenta,
+   igual ao de lá. Ele existe para o carregamento longo não parecer travado. */
+const GALO = Array.from({ length: 9 }, (_, i) =>
+  ((i % 3) + Math.abs(Math.floor(i / 3) - 1)) * 90);
+const VOLTA = [0, 1, 2, 5, 8, 7, 6, 3];
+const ORBITA = Array.from({ length: 9 }, (_, i) => {
+  const k = VOLTA.indexOf(i);
+  return k === -1 ? null : k * 110;
+});
+const FEITIOS = {
+  onda:   { atrasos: GALO,   classe: "" },
+  bolas:  { atrasos: GALO,   classe: "redondo" },
+  orbita: { atrasos: ORBITA, classe: "orbita" },
+};
+
+function tempoCorrido(decimos) {
+  const t = decimos / 10;
+  return t < 60 ? t.toFixed(1).replace(".", ",") + "s"
+                : `${Math.floor(t / 60)}m ${(t % 60).toFixed(1).replace(".", ",")}s`;
+}
+
+const RELOGIOS = new Map();
+
+/** Põe o sinal de carregamento dentro de um elemento e começa a contar.
+ *
+ * `desde` é opcional e recebe um instante já passado. Serve para o que começou antes
+ * da tela abrir: uma rodada da esteira que já está no ar há dois minutos deve mostrar
+ * dois minutos, e não zero. */
+function carregando(id, rotulo, feitio, desde) {
+  const alvo = $(id);
+  if (!alvo) return;
+  parado(id);
+  const f = FEITIOS[feitio] || FEITIOS.onda;
+  const celulas = f.atrasos.map(a => a === null
+    ? '<i class="apagado"></i>'
+    : `<i style="--atraso:${a}ms"></i>`).join("");
+  const zero = desde ? new Date(desde).getTime() : Date.now();
+  const conta = () => Math.max(0, Math.round((Date.now() - zero) / 100));
+  alvo.innerHTML = `<span class="pixota">`
+    + `<span class="pix-grade ${f.classe}" aria-hidden="true">${celulas}</span>`
+    + `<span class="pix-rotulo">${rotulo}</span>`
+    + `<span class="pix-tempo">${tempoCorrido(conta())}</span></span>`;
+  const marcador = alvo.querySelector(".pix-tempo");
+  RELOGIOS.set(id, setInterval(() => {
+    marcador.textContent = tempoCorrido(conta());
+  }, 100));
+}
+
+/** Tira o sinal e deixa no lugar o texto do resultado. */
+function parado(id, texto) {
+  const r = RELOGIOS.get(id);
+  if (r) { clearInterval(r); RELOGIOS.delete(id); }
+  if (texto !== undefined && $(id)) $(id).textContent = texto;
+}
+
 /* ------------------------------------------------------------------ o selo do topo
 
    ELE DIZ "AO VIVO", e não "no ar", e a diferença não é de palavra.
@@ -1533,8 +1647,17 @@ async function aoVivo() {
           + `endereço próprio, porque o Instagram só libera uma leitura por endereço.`
         : `${feitos} de ${d.elos.length} máquinas trouxeram posts. Os números abaixo já estão atualizados.`)
       + porque;
-  $("vivo_quando").textContent = d.comecou
-    ? "começou " + new Date(d.comecou).toLocaleTimeString("pt-BR") : "";
+  // ENQUANTO A RODADA ESTÁ NO AR, o canto do bloco vira sinal de carregamento, contando
+  // desde a hora real em que ela começou. O relógio não é reiniciado a cada consulta:
+  // se o sinal já está de pé, ele fica onde está, senão o número voltaria a zero de sete
+  // em sete segundos e a rodada pareceria não sair do lugar.
+  if (d.rodando) {
+    if (!RELOGIOS.has("vivo_quando"))
+      carregando("vivo_quando", "Rodada " + d.numero, "orbita", d.comecou);
+  } else {
+    parado("vivo_quando", d.comecou
+      ? "começou " + new Date(d.comecou).toLocaleTimeString("pt-BR") : "");
+  }
 
   $("vivo_elos").innerHTML = d.elos
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt", { numeric: true }))
@@ -1794,12 +1917,20 @@ function desenhaLotes(l) {
 }
 
 /* ---------------------------------------------------------------- atualização */
+let primeiraCarga = true;
+
 async function atualizar() {
+  // SÓ NA PRIMEIRA VEZ o sinal aparece. Das seguintes em diante a tela já tem números
+  // na frente do Gabriel, e trocá-los por um sinal de carregamento de 25 em 25 segundos
+  // seria pisca-pisca: quem já viu o dado não precisa ver que ele está sendo conferido.
+  if (primeiraCarga) carregando("carga", "Buscando o acervo", "onda");
+
   const [estado, sel, fontes, retratos] = await Promise.all([
     ler("dados/estado.json"), ler("dados/selecao.json"), ler("dados/fontes.json"),
     // arquivo à parte: o do perfil varrido passa de 1 MB e a via de leitura corta ali
     ler("dados/retratos.json")]);
 
+  if (primeiraCarga) { parado("carga", ""); primeiraCarga = false; }
   selar(estado);
 
   // a seleção é quem calcula os números da tabela; o estado é a cópia dela
@@ -1857,10 +1988,14 @@ $("salvar").onclick = async () => {
     .map(s => s.trim().replace(/^@/, "").replace(/\/+$/, "").split("/").pop())
     .filter(Boolean);
   if (!contas.length) {
-    $("recado").textContent = "escreva ao menos um perfil acima";
+    parado("recado", "escreva ao menos um perfil acima");
     return;
   }
-  $("recado").textContent = "salvando";
+  // O SINAL FICA NO LUGAR DO RECADO enquanto a ordem está no ar. Identificar um
+  // perfil no Instagram e gravar no acervo leva alguns segundos, e sem nada na tela
+  // esse tempo se lê como travamento.
+  carregando("recado", contas.length === 1 ? "Salvando o perfil"
+                                           : `Salvando ${contas.length} perfis`, "onda");
   anotar("salvando " + contas.length + " contas de origem");
   try {
     const d = await mandar("/contas", { contas });
@@ -1888,6 +2023,7 @@ $("salvar").onclick = async () => {
     // conta reaparecer para sempre, como se nada tivesse acontecido.
     $("fontes").value = "";
     delete $("fontes").dataset.tocado;
+    parado("recado");
     $("recado").textContent =
       entraram.length && barrados.length
         ? `${entraram.length} entrou, ${barrados.length} já estava no banco`
@@ -1898,7 +2034,7 @@ $("salvar").onclick = async () => {
         ? `@${barrados[0]} já está minerado, nada a fazer`
         : `os ${barrados.length} perfis já estão minerados, nada a fazer`;
     setTimeout(() => { aoVivo(); atualizar(); }, 2500);
-  } catch (e) { $("recado").textContent = e.message; anotar(e.message, "ruim"); }
+  } catch (e) { parado("recado", e.message); anotar(e.message, "ruim"); }
 };
 
 $("varrer").onclick = async () => {
@@ -1906,33 +2042,35 @@ $("varrer").onclick = async () => {
   // que mexe a tela parece efeito. Ela diz o que há em vez de fingir que fez algo.
   const comTrabalho = MINERADOS.filter(p => p.relendo || !p.completo);
   if (!comTrabalho.length) {
-    $("recado").textContent = "todos os perfis estão em dia, não há página por ler";
+    parado("recado", "todos os perfis estão em dia, não há página por ler");
     anotar("nada pendente: a esteira não foi chamada", "");
     return;
   }
-  $("recado").textContent = "chamando a esteira";
+  carregando("recado", "Chamando a esteira", "orbita");
   try {
     await mandar("/varrer");
+    parado("recado");
     $("recado").textContent = comTrabalho.length === 1
       ? "esteira acionada para 1 perfil"
       : `esteira acionada para ${comTrabalho.length} perfis`;
     anotar("esteira acionada", "bom");
     setTimeout(aoVivo, 2500);
-  } catch (e) { $("recado").textContent = e.message; anotar(e.message, "ruim"); }
+  } catch (e) { parado("recado", e.message); anotar(e.message, "ruim"); }
 };
 
 document.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-baixar]");
   if (!b) return;
   b.disabled = true;
-  $("recado_baixar").textContent = "montando o lote de @" + b.dataset.baixar;
+  // baixar um lote leva minutos, e é o carregamento mais longo do sistema
+  carregando("recado_baixar", "Montando o lote de @" + b.dataset.baixar, "bolas");
   try {
     await mandar("/baixar", {
       formatos: "reels", corte: $("corte").value, quantos: $("quantos").value,
       conta: b.dataset.baixar,
     });
-    $("recado_baixar").textContent = "lote em preparo, aparece abaixo ao terminar";
-  } catch (e) { $("recado_baixar").textContent = e.message; }
+    parado("recado_baixar", "lote em preparo, aparece abaixo ao terminar");
+  } catch (e) { parado("recado_baixar", e.message); }
   setTimeout(() => { b.disabled = false; atualizar(); }, 6000);
 });
 
