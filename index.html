@@ -963,12 +963,18 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                 font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .liv-ev .dados{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:6px;
                font-size:11.5px;color:var(--muted)}
+.liv-ev .dados > span{display:inline-flex;gap:5px;align-items:baseline;white-space:nowrap}
 .liv-ev .dados b{display:inline;font:inherit;font-weight:600;color:var(--ink)}
+/* a marca de que aquele registro foi reconstruído do histórico, e não anotado na hora */
+.liv-ev .dados em{font-style:normal;color:var(--soft);font-size:11px;
+                  border:1px solid var(--rule-solid);border-radius:5px;padding:1px 6px}
 .liv-ev .data{flex:none;font-size:11.5px;color:var(--soft);white-space:nowrap;
               font-variant-numeric:tabular-nums}
 
 .liv-mais{padding:14px 20px;border-top:1px solid var(--rule);
           display:flex;justify-content:center}
+/* a faixa some junto com o botão: vazia, ela ficava como um degrau no pé do cartão */
+.liv-mais:has(.acao[hidden]){display:none}
 .liv-mais .acao[hidden]{display:none}
 .liv-mais .acao{height:36px;padding:0 20px;font-size:13px}
 
@@ -2354,12 +2360,16 @@ function pintarEventos(caixa, eventos) {
     if (d.total) dados.push(`total <b>${num(d.total)}</b>`);
     if (d.rodada) dados.push(`rodada <b>${d.rodada}</b>`);
     if (d.seguidores) dados.push(`<b>${num(d.seguidores)}</b> seguidores`);
-    if (d.origem) dados.push(d.origem);
+    if (d.origem) dados.push(`<em>${d.origem}</em>`);
 
     const ln = document.createElement("div");
     ln.className = "liv-ev " + e.gravidade;
+    // CADA DADO NUM ELEMENTO PRÓPRIO. Juntos numa string só, o respiro do arranjo não
+    // tinha onde pegar e saía "3 páginastotal 281histórico", tudo grudado.
     ln.innerHTML = `<i></i><span class="oque"><b></b>`
-      + (dados.length ? `<span class="dados">${dados.join("")}</span>` : "")
+      + (dados.length
+          ? `<span class="dados">${dados.map(x => `<span>${x}</span>`).join("")}</span>`
+          : "")
       + `</span><span class="data">${dataHora(e.quando)}</span>`;
     ln.querySelector(".oque > b").textContent = e.texto;
     caixa.appendChild(ln);
