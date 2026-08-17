@@ -31,6 +31,15 @@ from pathlib import Path
 from minerar import CABECALHO, PASTA, limpa_post, identifica, grava
 
 FONTES = Path("dados/fontes.json")
+# O PEDIDO DE RELEITURA, num arquivo só e pequeno de propósito.
+# Perfil dado por encerrado saía da fila para sempre: pedir para minerar de novo não
+# fazia nada, a rodada abria, não achava trabalho e fechava. Agora a tela grava aqui o
+# pedido, com a hora, e quem já foi encerrado volta para a fila até atender aquela hora.
+#
+# POR QUE UM ARQUIVO À PARTE, e não uma marca dentro do arquivo do perfil: quem escreve
+# o pedido é a ponte, e o arquivo de um perfil varrido passa de 1 MB. Reescrever aquilo
+# de dentro da ponte só para virar uma chave é caro e já quebrou o salvar uma vez.
+RELEITURA = Path("dados/revisitar.json")
 # medido: leitura mais gravação levam por volta de 20s. 50s dá folga para a vaga
 # seguinte enxergar o avanço da anterior quando as duas caem no mesmo perfil.
 PASSO_DA_ESCADA = 50
@@ -73,12 +82,37 @@ def puxar_avanco() -> None:
         subprocess.run(cmd, capture_output=True, timeout=90)
 
 
+def releitura_pedida() -> tuple[set[str], int]:
+    """Quais perfis foram pedidos de novo, e em que momento."""
+    if not RELEITURA.exists():
+        return set(), 0
+    try:
+        d = json.loads(RELEITURA.read_text(encoding="utf-8"))
+    except Exception:
+        return set(), 0
+    return ({c.strip().lstrip("@") for c in (d.get("contas") or []) if c.strip()},
+            int(d.get("quando") or 0))
+
+
+def quer_reler(conta: str, estado: dict, pedidas: set[str], quando: int) -> bool:
+    """Releitura já começada continua; pedido novo começa uma."""
+    if estado.get("relendo"):
+        return True
+    return conta in pedidas and quando > int(estado.get("releitura_em") or 0)
+
+
 def pendentes(contas: list[str]) -> list[str]:
     """Perfis que ainda faltam, do menos varrido em proporção para o mais varrido."""
+    pedidas, quando = releitura_pedida()
     fila = []
     for c in contas:
         e = estado_de(c)
         if e.get("completo"):
+            if not quer_reler(c, e, pedidas, quando):
+                continue
+            # releitura entra no fim da fila: ela é curta, e quem nunca foi varrido
+            # até o fim tem mais a ganhar com a vaga.
+            fila.append((2.0, c))
             continue
         total = (e.get("perfil") or {}).get("publicacoes") or 0
         # sem identificador ainda entra na frente: descobrir quem é custa uma leitura
@@ -113,9 +147,21 @@ def main() -> int:
         puxar_avanco()
 
     estado = estado_de(conta)
-    if estado.get("completo"):
+    pedidas, quando = releitura_pedida()
+    relendo = bool(estado.get("completo")) and quer_reler(conta, estado, pedidas, quando)
+    if estado.get("completo") and not relendo:
         print(f"[{conta}] já ficou completo enquanto eu esperava")
         return 0
+
+    # A RELEITURA COMEÇA DO TOPO, e não de onde a varredura parou. O que é novo está na
+    # primeira página; o marcador guardado aponta para o fundo do histórico, que já está
+    # todo aqui. Ela usa marcador próprio para não perder o lugar da varredura profunda,
+    # caso o Instagram volte a liberar mais fundo um dia.
+    if relendo and not estado.get("relendo"):
+        estado["relendo"] = True
+        estado["marcador_novo"] = None
+        estado["releitura_em"] = quando
+        print(f"[{conta}] releitura pedida: leio do topo até bater no que já tenho")
 
     print(f"vaga {vaga} de {len(fila)} perfis pendentes, trabalhando em @{conta}")
 
@@ -129,7 +175,8 @@ def main() -> int:
         print(f"[{conta}] identificado: {perfil['publicacoes']} publicações")
         return 0
 
-    j = _uma_pagina(estado["perfil"]["id"], estado.get("marcador"))
+    marcador = estado.get("marcador_novo") if relendo else estado.get("marcador")
+    j = _uma_pagina(estado["perfil"]["id"], marcador)
     if j is None:
         print(f"[{conta}] endereço desta vaga já estava gasto")
         return 0
@@ -143,10 +190,20 @@ def main() -> int:
             estado["posts"].append(p)
             novos += 1
 
-    estado["marcador"] = j.get("next_max_id")
-    if not j.get("more_available") or not estado["marcador"]:
-        estado["completo"] = True
-        print(f"[{conta}] VARREDURA COMPLETA")
+    if relendo:
+        estado["marcador_novo"] = j.get("next_max_id")
+        # A RELEITURA PARA QUANDO A PÁGINA INTEIRA JÁ ERA CONHECIDA. Dali para trás é
+        # histórico que já está guardado, e continuar seria reler o acervo inteiro para
+        # não achar nada. É isso que a torna barata: quem posta uma vez por dia gasta
+        # uma leitura, e não duzentas.
+        if novos == 0 or not j.get("more_available") or not estado["marcador_novo"]:
+            estado["relendo"] = False
+            print(f"[{conta}] RELEITURA ENCERRADA, {novos} posts novos nesta página")
+    else:
+        estado["marcador"] = j.get("next_max_id")
+        if not j.get("more_available") or not estado["marcador"]:
+            estado["completo"] = True
+            print(f"[{conta}] VARREDURA COMPLETA")
     estado["atualizado"] = int(time.time())
     grava(conta, estado)
 
