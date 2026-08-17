@@ -31,7 +31,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # UMA MAQUINA PERGUNTA ANTES DE VINTE ACORDAREM.
+  #
+  # Sem esta porta, toda chamada da esteira subia vinte maquinas, mesmo com todos os
+  # perfis em dia: cada uma baixava o acervo, rodava o programa, lia "todos os perfis ja
+  # estao completos" e desligava sem tocar no Instagram. Custava nada em dinheiro, mas
+  # aparecia na tela como esteira lendo de novo o que ja' tinha sido lido, que e' pior:
+  # quem olha conclui, com razao, que o sistema esta' refazendo trabalho pronto.
+  #
+  # Aqui a conta e' a mesma que a vaga faz: perfil pela metade, ou perfil encerrado com
+  # pedido de releitura em aberto. Zero significa que nao ha o que fazer, e ninguem sobe.
+  conferir:
+    runs-on: ubuntu-latest
+    outputs:
+      falta: ${{ steps.olhar.outputs.falta }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - id: olhar
+        run: |
+          FALTA=$(python -c "import rodada; print(len(rodada.pendentes(rodada.contas_pedidas())))")
+          echo "perfis com pagina por ler: $FALTA"
+          echo "falta=$FALTA" >> "$GITHUB_OUTPUT"
+
   elo:
+    needs: conferir
+    if: needs.conferir.outputs.falta != '0'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # TODAS as vagas ao mesmo tempo. Perfis diferentes sao independentes, entao vinte
@@ -76,7 +102,10 @@ jobs:
           echo "nao consegui gravar apos oito tentativas; a proxima rodada refaz"
 
   fechar:
-    needs: elo
+    # `always()` de proposito: quando nao ha trabalho, `elo` e' pulado e este trabalho
+    # ainda precisa rodar. E' ele que carimba a hora da rodada, e e' dessa hora que o
+    # selo do cabecalho tira o "ao vivo".
+    needs: [conferir, elo]
     if: always()
     runs-on: ubuntu-latest
     steps:
