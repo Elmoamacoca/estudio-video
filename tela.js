@@ -523,9 +523,14 @@ async function aoVivo() {
   // cartão logo abaixo dizendo "varrendo agora, 24 de 2.252". Duas frases contrárias na
   // mesma tela, e a errada era a de cima.
   await ouvirBatimentos();
+  // DEZ MINUTOS DE JANELA, e não três. As vagas se escalonam de cinquenta em cinquenta
+  // segundos quando caem todas no mesmo perfil, e boa parte delas ainda volta de mãos
+  // vazias porque o endereço de saída daquela máquina já tinha sido gasto. O bilhete
+  // então fica parado por minutos com a esteira trabalhando normalmente, e três minutos
+  // de janela declaravam a esteira morta no meio do serviço.
   const segundos = Date.now() / 1000;
   const batendo = [...BATIMENTOS.values()]
-    .filter(b => !b.completo && (segundos - (b.quando || 0)) < 180);
+    .filter(b => !b.completo && (segundos - (b.quando || 0)) < 600);
 
   let d = null;
   try {
@@ -1123,5 +1128,8 @@ document.addEventListener("click", async ev => {
    não o dia inteiro. */
 setInterval(atualizar, 25000);
 setInterval(aoVivo, 15000);
-atualizar();
-aoVivo();
+// NA ABERTURA, UM DEPOIS DO OUTRO. Quem lê os bilhetes precisa saber quais perfis
+// existem, e essa lista é justamente o que a primeira busca do acervo traz. Chamados
+// juntos, o leitor de bilhetes rodava com a lista ainda vazia, desistia na hora, e a
+// tela abria mostrando zero post num perfil que já tinha sessenta lidos.
+atualizar().then(aoVivo);
