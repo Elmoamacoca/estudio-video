@@ -1,58 +1,136 @@
 <!-- ================================================================ ABA 1 · MINERAÇÃO
-     Duas categorias, na ordem que o Gabriel definiu: primeiro onde se manda trabalhar
-     e se acompanha ao vivo, depois onde se confere a situação de cada perfil. -->
+     Duas sub-abas, na forma de pastilhas da aba de Contas do Social Tracker. Lá está
+     registrado por que esse menu não imita o cabeçalho do sistema: dois menus com o
+     mesmo desenho, um embaixo do outro, fariam o segundo parecer parte do primeiro. -->
 <section class="aba" id="aba-minerar">
 
   <div class="secao">
-    <div class="secao-cab">
-      <h2>Contas de origem</h2>
-      <div class="dir"><span class="nota" id="recado"></span></div>
+    <div class="ct-topo">
+      <nav class="ct-menu" id="sub-menu" role="tablist">
+        <button type="button" class="ct-item ativo" data-sub="minerar" role="tab"
+                aria-selected="true">Minerar</button>
+        <button type="button" class="ct-item" data-sub="minerados" role="tab"
+                aria-selected="false">Minerados<b id="sub-conta">0</b></button>
+      </nav>
     </div>
-    <div class="caixa">
-      <h3>De onde os vídeos são minerados</h3>
-      <p class="nota">Uma por linha, com ou sem arroba, ou o endereço inteiro do perfil.
-        A esteira varre o histórico até onde o Instagram deixa, guardando onde parou.</p>
-      <textarea id="fontes" placeholder="boletimdamorte&#10;vinci.society&#10;https://www.instagram.com/outraconta/"></textarea>
-      <div class="linha">
-        <button class="acao forte" id="salvar">Salvar e varrer</button>
-        <button class="acao" id="varrer">Varrer de novo</button>
+  </div>
+
+  <!-- ------------------------------------------------------------------- MINERAR -->
+  <div class="ct-painel" id="sub-p-minerar">
+
+    <div class="secao">
+      <div class="secao-cab">
+        <h2>Contas de origem</h2>
+        <div class="dir"><span class="nota" id="recado"></span></div>
+      </div>
+      <div class="caixa">
+        <h3>De onde os vídeos são minerados</h3>
+        <p class="nota">Uma por linha, com ou sem arroba, ou o endereço inteiro do perfil.
+          A esteira varre o histórico até onde o Instagram deixa, guardando onde parou.</p>
+        <textarea id="fontes" placeholder="boletimdamorte&#10;vinci.society&#10;https://www.instagram.com/outraconta/"></textarea>
+        <div class="linha">
+          <button class="acao forte" id="salvar">Salvar e varrer</button>
+          <button class="acao" id="varrer">Varrer de novo</button>
+        </div>
       </div>
     </div>
+
+    <div class="secao">
+      <div class="secao-cab">
+        <h2>Registro ao vivo</h2>
+        <div class="dir"><span class="nota" id="vivo_quando"></span></div>
+      </div>
+      <div class="caixa">
+        <h3 id="vivo_titulo">Esteira parada</h3>
+        <p class="nota" id="vivo_resumo">Nenhuma rodada em andamento.</p>
+        <div id="vivo_elos" class="elos"></div>
+        <div class="registro" id="registro"></div>
+      </div>
+    </div>
+
+    <div class="secao">
+      <div class="secao-cab"><h2>Situação</h2></div>
+      <div class="numeros quatro">
+        <div class="num"><b id="n_contas">0</b><span>contas de origem</span></div>
+        <div class="num"><b id="n_lidos">0</b><span>posts varridos</span></div>
+        <div class="num"><b id="n_sel">0</b><span>acima do corte</span></div>
+        <div class="num"><b id="n_completos">0</b><span>perfis concluídos</span></div>
+      </div>
+    </div>
+
   </div>
 
-  <div class="secao">
-    <div class="secao-cab">
-      <h2>Registro ao vivo</h2>
-      <div class="dir"><span class="nota" id="vivo_quando"></span></div>
-    </div>
-    <div class="caixa">
-      <h3 id="vivo_titulo">Esteira parada</h3>
-      <p class="nota" id="vivo_resumo">Nenhuma rodada em andamento.</p>
-      <div id="vivo_elos" class="elos"></div>
-      <div class="registro" id="registro"></div>
-    </div>
-  </div>
+  <!-- ----------------------------------------------------------------- MINERADOS -->
+  <div class="ct-painel" id="sub-p-minerados" hidden>
+    <div class="secao">
+      <div class="cat-cab">
+        <span class="cat-num">2</span>
+        <div>
+          <h3 class="cat-tit">Perfis minerados</h3>
+          <p class="nota" id="min-sub">o histórico de cada varredura</p>
+        </div>
+      </div>
 
-  <div class="secao">
-    <div class="secao-cab"><h2>Situação</h2></div>
-    <div class="numeros quatro">
-      <div class="num"><b id="n_contas">0</b><span>contas de origem</span></div>
-      <div class="num"><b id="n_lidos">0</b><span>posts varridos</span></div>
-      <div class="num"><b id="n_sel">0</b><span>acima do corte</span></div>
-      <div class="num"><b id="n_completos">0</b><span>perfis concluídos</span></div>
-    </div>
-    <div class="caixa" style="margin-top:14px">
-      <h3>Por perfil</h3>
-      <div id="perfis"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
+      <div class="ct-filtros">
+        <input class="ct-busca" id="min-q" type="text" autocomplete="off"
+               spellcheck="false" placeholder="Buscar perfil pelo @ ou pelo nome">
+        <select class="ct-sel" id="min-estado">
+          <option value="">Todos os estados</option>
+          <option value="completo">Concluídos</option>
+          <option value="limite">Varridos até o limite</option>
+          <option value="varrendo">Ainda varrendo</option>
+        </select>
+        <select class="ct-sel" id="min-ordem">
+          <option value="varridos">Mais varridos</option>
+          <option value="cobertura">Maior cobertura</option>
+          <option value="acima">Mais acima da régua</option>
+          <option value="reels">Mais reels</option>
+          <option value="conta">Nome do perfil</option>
+        </select>
+      </div>
+
+      <div class="tab-rolo">
+        <table class="tab">
+          <thead><tr>
+            <th>Perfil</th>
+            <th class="tab-num">Posts na conta</th>
+            <th class="tab-num">Varridos</th>
+            <th class="tab-num">Cobertura</th>
+            <th>Alcançou até</th>
+            <th class="tab-num">Reels</th>
+            <th class="tab-num">Posts</th>
+            <th class="tab-num">Carrosséis</th>
+            <th class="tab-num">Acima da régua</th>
+            <th>Estado</th>
+            <th>Última rodada</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="min-corpo"></tbody>
+        </table>
+      </div>
+      <div class="gal-vazia" id="min-vazio" hidden>Nenhum perfil com esses filtros.
+        Tire uma marcação para alargar a busca.</div>
+
+      <div class="pag" id="min-pag" hidden>
+        <span class="pag-quanto">
+          <label for="min-por">Perfis por página</label>
+          <select class="ct-sel" id="min-por">
+            <option>10</option><option>25</option><option>50</option>
+          </select>
+        </span>
+        <span class="pag-nav">
+          <button class="acao" id="min-antes" type="button">Anterior</button>
+          <span class="nota" id="min-onde"></span>
+          <button class="acao" id="min-depois" type="button">Próxima</button>
+        </span>
+      </div>
     </div>
   </div>
 
 </section>
 
 
-<!-- ==================================================================== ABA 2 · BAIXAR
-     Quantidade, nunca lista: quantos posts a conta tem, quantos passaram na régua, e
-     qual régua foi. A lista de post por post vive no Instagram, não aqui. -->
+<!-- ==================================================================== ABA 2 · BAIXAR -->
 <section class="aba" id="aba-baixar" hidden>
 
   <div class="secao">
