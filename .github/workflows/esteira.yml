@@ -117,7 +117,8 @@ jobs:
           fetch-depth: 0
       - name: Aplicar a regua e atualizar a tela
         run: |
-          python selecionar.py "reels,post,carrossel" 1.5 500
+          # sem argumentos: a regua vem de dados/regua.json, escolhida na tela
+          python selecionar.py
           python atividade.py "${{ github.run_number }}"
           python - <<'PY'
           import json, pathlib, time
