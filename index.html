@@ -700,7 +700,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .konsole{border:1px solid var(--rule-solid);border-radius:var(--r-lg);
          background:var(--branco);overflow:hidden;box-shadow:var(--sombra)}
 
-.kon-topo{display:flex;align-items:center;gap:13px;padding:18px 20px}
+.kon-topo{display:flex;align-items:center;gap:14px;padding:18px 20px;flex-wrap:wrap}
 .kon-selo{flex:none;display:grid;place-items:center;width:34px;height:34px;
           border-radius:9px;background:var(--paper-2);border:1px solid var(--rule-solid);
           color:var(--muted)}
@@ -711,6 +711,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .kon-quem span{display:block;font-size:12.5px;color:var(--muted);line-height:1.45;
                margin-top:2px}
 .kon-dir{flex:none;display:flex;align-items:center}
+/* O BOTÃO PRECISA DA MEDIDA AQUI. `.acao` sozinho nasce com a altura de campo de
+   filtro e o desenho dele não limita o ícone: o SVG assumia o tamanho natural e o
+   botão virava um quadrado gigante com a palavra embaixo. */
+.kon-topo .acao{flex:none;height:34px;padding:0 14px;font-size:12.5px;
+                display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.kon-topo .acao svg{width:14px;height:14px;flex:none}
 .kon-vivo{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;
           letter-spacing:.09em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 .kon-vivo i{width:6px;height:6px;border-radius:50%;background:var(--soft);flex:none}
