@@ -95,8 +95,18 @@ def extrair_css(html: str) -> tuple[str, list[str]]:
                 guardados.append(sel + "{\n  " + "\n  ".join(dentro) + "\n}")
             continue
         if sel.startswith("@keyframes"):
-            if any(k in sel for k in ("ping", "subir", "tracar")):
-                guardados.append(inteiro)
+            # Só as animações que a tela realmente usa, e só se terminarem VISÍVEIS.
+            # `subir`, de lá, termina em opacidade 0,10: ela serve para sumir com um
+            # elemento. Aplicada como entrada, deixou o corpo inteiro a 10% e a tela
+            # parecia quebrada. Animação de entrada agora é escrita aqui, com nome
+            # próprio, e nenhuma emprestada passa sem esta conferência.
+            if "ping" not in sel:
+                continue
+            fim = re.search(r"(?:to|100%)\s*\{[^}]*opacity\s*:\s*(0(?:\.\d+)?)", corpo)
+            if fim and float(fim.group(1)) < 0.9:
+                avisos.append(f"{sel} termina invisivel (opacidade {fim.group(1)}): fora")
+                continue
+            guardados.append(inteiro)
             continue
         if any(p in sel for p in PROIBIDO):
             avisos.append(f"{sel[:50]} é do sistema de revelação: fora")
