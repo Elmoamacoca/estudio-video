@@ -112,9 +112,13 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: main
+          # o livro de atividade conta as gravacoes de cada perfil pelo historico do
+          # proprio acervo, entao ele precisa do historico inteiro e nao do ultimo commit
+          fetch-depth: 0
       - name: Aplicar a regua e atualizar a tela
         run: |
           python selecionar.py "reels,post,carrossel" 1.5 500
+          python atividade.py "${{ github.run_number }}"
           python - <<'PY'
           import json, pathlib, time
           sel = json.loads(pathlib.Path("dados/selecao.json").read_text(encoding="utf-8"))
