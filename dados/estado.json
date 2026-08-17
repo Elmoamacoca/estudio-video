@@ -1,7 +1,7 @@
 {
  "prontas": 500,
  "hoje": 25,
- "ultima_rodada": 1786990751,
+ "ultima_rodada": 1786990773,
  "camadas": [
   {
    "nome": "Processamento de vídeo",
@@ -39,6 +39,7 @@
    "publicacoes": 4976,
    "lidos": 3095,
    "completo": true,
+   "relendo": false,
    "mais_antigo": 1687058338,
    "mais_novo": 1786983504,
    "reels": 211,
@@ -56,6 +57,7 @@
    "publicacoes": 286,
    "lidos": 281,
    "completo": true,
+   "relendo": false,
    "mais_antigo": 1724513516,
    "mais_novo": 1786989602,
    "reels": 102,
