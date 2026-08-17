@@ -129,7 +129,7 @@ jobs:
               1 for a in pathlib.Path("dados/perfis").glob("*.json")
               if not json.loads(a.read_text(encoding="utf-8")).get("completo"))
           # quantos commits de elo entraram nos ultimos 30 minutos
-          r = subprocess.run(["git", "log", "--since=30.minutes", "--oneline", "--grep=^elo"],
+          r = subprocess.run(["git", "log", "--since=30.minutes", "--oneline", "--grep=^vaga"],
                              capture_output=True, text=True)
           avancou = len([l for l in r.stdout.splitlines() if l.strip()])
           print(f"{pendentes} {avancou}")
