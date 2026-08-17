@@ -1,0 +1,13 @@
+{
+ "formatos": [
+  "reels"
+ ],
+ "por_formato": true,
+ "corte": 1.5,
+ "cortes": {
+  "reels": 1.5,
+  "post": 1.5,
+  "carrossel": 1.5
+ },
+ "atualizado": "2026-08-17T23:55:56.062Z"
+}
