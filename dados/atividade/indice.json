@@ -4,15 +4,15 @@
    "conta": "vinci.society",
    "nome": "Vinci",
    "primeiro": 1787002834,
-   "ultimo": 1787002834,
-   "eventos": 1,
+   "ultimo": 1787004922,
+   "eventos": 3,
    "falhas": 0,
-   "avisos": 0,
-   "ultimo_tipo": "identificado",
-   "lidos": 0,
+   "avisos": 1,
+   "ultimo_tipo": "limite",
+   "lidos": 282,
    "publicacoes": 288,
-   "completo": false
+   "completo": true
   }
  ],
- "atualizado": 1787002836
+ "atualizado": 1787004922
 }
