@@ -2280,6 +2280,77 @@ function linhaDoAgora(b) {
   return ln;
 }
 
+/* -------------------------------------------------- o cabeçalho do bloco ao vivo
+
+   ELE SÓ AFIRMA O QUE PODE PROVAR.
+
+   Esta linha já disse "varrendo" toda vez que havia uma corrida aberta no GitHub. Só
+   que a rodada abre com uma máquina que apenas CONFERE se há trabalho e fecha com outra
+   que carimba a hora: com os perfis todos em dia, a tela anunciava leitura sem ninguém
+   ter tocado no Instagram. Parecer que relê o que já foi lido é o pior defeito que este
+   sistema pode ter, e ele custa a confiança de quem olha mesmo quando é só aparência.
+
+   Agora a leitura é afirmada por uma coisa só: existe ELO EM ANDAMENTO neste momento.
+   Conferir e fechar têm nome próprio na tela, porque é isso que eles são.
+
+   Sem resposta da ponte, o cabeçalho fica com o texto que já estava. Chute nenhum. */
+const ANDANDO = new Set(["in_progress", "queued", "waiting", "pending", "requested"]);
+
+async function aoVivo() {
+  let d = null;
+  try {
+    const r = await fetch(`${PONTE}/andamento?t=${Date.now()}`, { cache: "no-store" });
+    if (r.ok) d = await r.json();
+  } catch (e) { /* sem sinal agora: o relógio tenta de novo em quinze segundos */ }
+
+  if (d && !d.erro) {
+    const elos = Array.isArray(d.elos) ? d.elos : [];
+    const emPe = e => ANDANDO.has(e.situacao);
+    const lendo = elos.filter(e => /^elo/.test(e.nome || "") && emPe(e));
+    const conferindo = elos.some(e => e.nome === "conferir" && emPe(e));
+    const fechando = elos.some(e => e.nome === "fechar" && emPe(e));
+    const rodada = d.numero ? `rodada ${d.numero}` : "";
+
+    let titulo = "Esteira parada", resumo = "Nenhuma rodada em andamento.";
+    let selo = "parada", viva = false, desde = null;
+
+    if (lendo.length) {
+      viva = true; selo = "ao vivo";
+      titulo = lendo.length === 1 ? "Uma máquina lendo o Instagram"
+                                  : `${lendo.length} máquinas lendo ao mesmo tempo`;
+      resumo = "Cada uma lê uma página de doze posts e passa a vez"
+             + (rodada ? `, ${rodada}.` : ".");
+      desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
+    } else if (conferindo) {
+      viva = true; selo = "conferindo";
+      titulo = "Conferindo se há página por ler";
+      resumo = "Uma máquina só. As outras vinte não sobem se estiver tudo em dia.";
+    } else if (fechando) {
+      viva = true; selo = "fechando";
+      titulo = "Fechando a rodada";
+      resumo = "Aplicando a régua, separando os links e carimbando o registro.";
+    } else if (d.numero) {
+      // SKIPPED É A PORTA TENDO FUNCIONADO, e não falha: quando não há o que ler, as
+      // vinte vagas são puladas de propósito. Dizer isso com todas as letras.
+      const subiram = elos.filter(e => /^elo/.test(e.nome || "")
+                                    && e.situacao !== "skipped").length;
+      titulo = d.resultado === "failure" ? `Rodada ${d.numero} terminou com falha`
+                                         : `Rodada ${d.numero} concluída`;
+      resumo = subiram
+        ? `${subiram} ${subiram === 1 ? "máquina leu" : "máquinas leram"} nesta rodada.`
+        : "Nada a ler: todos os perfis estavam em dia.";
+    }
+
+    $("vivo_titulo").textContent = titulo;
+    $("vivo_resumo").textContent = resumo;
+    const corrido = desde ? Math.round((Date.now() - new Date(desde).getTime()) / 60000) : 0;
+    $("vivo_quando").innerHTML = `<span class="kon-vivo${viva ? " ativa" : ""}"><i></i>`
+      + selo + (corrido > 0 ? ` · ${corrido} min` : "") + "</span>";
+  }
+
+  ouvirBatimentos();
+}
+
 function livroFiltrado() {
   const q = ($("liv_q").value || "").trim().toLowerCase();
   return LIVRO.filter(c => {
@@ -2762,9 +2833,22 @@ document.addEventListener("click", async ev => {
 });
 
 
-atualizar(); aoVivo();
+/* ------------------------------------------------------------------- a partida
+
+   OS RELÓGIOS SÃO LIGADOS ANTES DA PRIMEIRA PINTURA, de propósito.
+
+   Estas três linhas já foram na ordem contrária, e por causa disso a tela passou a
+   pintar uma vez e congelar. Uma função tinha trocado de nome numa reforma e as chamadas
+   ficaram apontando para o nome velho; o erro estourava na primeira linha e o arquivo
+   parava ali, então os dois relógios abaixo nunca chegavam a existir. Nada na tela
+   dizia isso: os números certos da abertura ficavam parados para sempre.
+
+   Com os relógios primeiro, um tropeço custa uma volta de vinte e cinco segundos, e
+   não o dia inteiro. */
 setInterval(atualizar, 25000);
 setInterval(aoVivo, 15000);
+atualizar();
+aoVivo();
 
 </script>
 </body>
