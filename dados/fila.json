@@ -175,6 +175,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@boletimdamorte",
+   "indice": 811.71,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@vinci.society",
    "indice": 800.0,
    "etapa": "carrossel",
@@ -211,9 +217,9 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@boletimdamorte",
-   "indice": 630.23,
-   "etapa": "post",
+   "origem": "@vinci.society",
+   "indice": 616.33,
+   "etapa": "carrossel",
    "situacao": "selecionada"
   },
   {
@@ -284,82 +290,76 @@
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 219.84,
+   "indice": 283.14,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 181.79,
+   "indice": 234.13,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 142.62,
+   "indice": 183.69,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 105.49,
+   "indice": 135.87,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 103.77,
+   "indice": 133.66,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 73.01,
+   "indice": 94.03,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 61.93,
+   "indice": 79.76,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 61.66,
+   "indice": 79.42,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 60.89,
+   "indice": 78.42,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 60.08,
+   "indice": 77.38,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 59.79,
+   "indice": 77.01,
    "etapa": "post",
    "situacao": "selecionada"
   },
   {
    "origem": "@boletimdamorte",
-   "indice": 57.9,
-   "etapa": "post",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@boletimdamorte",
-   "indice": 56.38,
+   "indice": 74.57,
    "etapa": "post",
    "situacao": "selecionada"
   }
  ],
- "atualizado": 1786927973
+ "atualizado": 1786928181
 }
