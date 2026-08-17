@@ -2,13 +2,49 @@
  "itens": [
   {
    "origem": "@brandsdecoded__",
-   "indice": 4.57,
+   "indice": 14.63,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 4.52,
+   "indice": 10.57,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 8.68,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 4.56,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 4.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 2.98,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 2.39,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 2.35,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -20,7 +56,25 @@
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 2.26,
+   "indice": 2.32,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 2.25,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 1.91,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 1.78,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -32,10 +86,10 @@
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 1.6,
+   "indice": 1.59,
    "etapa": "reels",
    "situacao": "selecionada"
   }
  ],
- "atualizado": 1787008016
+ "atualizado": 1787008494
 }

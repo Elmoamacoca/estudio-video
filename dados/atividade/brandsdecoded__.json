@@ -26,6 +26,20 @@
     "total": 204,
     "publicacoes": 2252
    }
+  },
+  {
+   "quando": 1787008494,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 108 posts novos, 312 de 2.252 lidos",
+   "detalhe": {
+    "rodada": 63,
+    "maquinas": 9,
+    "gravacoes": 9,
+    "novos": 108,
+    "total": 312,
+    "publicacoes": 2252
+   }
   }
  ]
 }
