@@ -1453,17 +1453,28 @@ function quando(ts) {
 }
 
 function retrato(p) {
-  // A FOTO VEM PELA PONTE, e não do endereço que o Instagram devolveu.
-  // Aquele endereço é assinado com prazo: conferido em 17/08, o que tinha sido guardado
-  // na véspera respondia 403, e a tabela ficava só com a inicial. A ponte guarda a
-  // imagem no acervo na hora de identificar o perfil e serve o arquivo daqui em diante,
-  // sem prazo e sem depender do Instagram de novo.
-  // A inicial continua desenhada embaixo: se a foto ainda não existir, ela é o que
-  // aparece, e ninguém vê quadrado quebrado.
-  const ini = (p.conta || "?")[0].toUpperCase();
-  const foto = `<img src="${PONTE}/retrato/${encodeURIComponent(p.conta)}" alt=""
-                 loading="lazy" onerror="this.remove()">`;
-  return `<span class="pcard-retrato"><span class="pcard-avatar">${ini}${foto}</span></span>`;
+  // O RETRATO É FUNDO DA CAIXA, E NÃO UMA IMAGEM DENTRO DELA.
+  // Esta é a mecânica do Social Tracker, copiada como é lá: a caixa redonda recebe a
+  // foto como fundo, com `cover` e centro, e a folha dele já traz essas duas regras em
+  // `span.pcard-avatar[class*="av-"]`. Por isso a classe `av-foto` está aqui: é ela
+  // que faz a regra copiada pegar.
+  //
+  // AQUI TINHA UMA IMAGEM SOLTA, e ela saía toda errada. A caixa tem 78 pixels e a foto
+  // do Instagram vem com 320: sem regra de tamanho, o navegador desenha os 320 e a caixa
+  // corta o excedente. O resultado é o miolo da foto ampliado quatro vezes, que foi o
+  // que apareceu na tela: do @boletimdamorte só a arcada dentária, do @vinci.society um
+  // pedaço do símbolo. Como fundo, `cover` encaixa a foto inteira na caixa.
+  //
+  // A INICIAL SÓ ENTRA QUANDO NÃO HÁ FOTO, e é assim lá também: a conta com foto tem a
+  // caixa vazia, a conta sem foto tem a letra. Desenhar as duas juntas poria a letra
+  // POR CIMA da foto, porque o fundo fica atrás do texto e não na frente dele.
+  if (!p.foto) {
+    const ini = (p.conta || "?")[0].toUpperCase();
+    return `<span class="pcard-retrato"><span class="pcard-avatar">${ini}</span></span>`;
+  }
+  const endereco = `${PONTE}/retrato/${encodeURIComponent(p.conta)}`;
+  return `<span class="pcard-retrato"><span class="pcard-avatar av-foto"
+            style="background-image:url('${endereco}')"></span></span>`;
 }
 
 /* Os três controles são o componente do sistema, montado pela função copiada de lá.
@@ -1684,10 +1695,11 @@ async function atualizar() {
   MINERADOS = perfis.map(p => {
     const meus = itens.filter(i => i.conta === p.conta);
     const r = (retratos && retratos[p.conta]) || {};
-    // A FOTO NÃO VEM DAQUI. Este arquivo guarda o nome e os números; a imagem tem
-    // endereço próprio na ponte, porque o que o Instagram devolve vence em horas.
+    // A IMAGEM NÃO VEM DAQUI, só o aviso de que ela existe. O arquivo guarda nome e
+    // números; a foto tem endereço próprio na ponte, porque o que o Instagram devolve
+    // vence em horas. Sem este aviso a tabela não sabe se desenha a foto ou a inicial.
     // tudo já vem contado pelo seletor, por perfil e sem teto de lote
-    return { ...p, nome: p.nome || r.nome,
+    return { ...p, nome: p.nome || r.nome, foto: !!r.foto,
              acima: p.acima != null ? p.acima : meus.length };
   });
   desenhaMinerados();
