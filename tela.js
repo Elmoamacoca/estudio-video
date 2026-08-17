@@ -34,8 +34,14 @@ irPara((location.hash || "#minerar").slice(1), false);
 
 /* ---------------------------------------------------------------- conversa */
 async function ler(caminho) {
-  // pelo endereço cru, e não pela porta de programação do GitHub: aquela corta em
-  // 60 consultas por hora sem identificação, e a tela se atualiza sozinha o tempo todo.
+  // PELA PONTE, e não pelo endereço cru do GitHub. O cru tem cache de borda de alguns
+  // minutos: a tela lia a rodada anterior e mostrava zero em coluna que já tinha valor
+  // gravado. A ponte responde o commit do momento.
+  const arquivo = caminho.split("/").pop();
+  try {
+    const r = await fetch(`${PONTE}/dados/${arquivo}?t=${Date.now()}`, { cache: "no-store" });
+    if (r.ok) return await r.json();
+  } catch (e) { /* cai para o endereço cru */ }
   try {
     const r = await fetch(`${CRU}/${caminho}?t=${Date.now()}`, { cache: "no-store" });
     return r.ok ? await r.json() : null;
@@ -329,7 +335,8 @@ async function atualizar() {
   selo.className = "status " + (vivo ? "online" : "offline");
   selo.querySelector(".rotulo").textContent = vivo ? "no ar" : "sem resposta";
 
-  const perfis = (estado && estado.perfis) || (sel && sel.perfis) || [];
+  // a seleção é quem calcula os números da tabela; o estado é a cópia dela
+  const perfis = (sel && sel.perfis) || (estado && estado.perfis) || [];
   $("n_contas").textContent = fontes && fontes.contas ? fontes.contas.length : 0;
   $("n_lidos").textContent = num(perfis.reduce((a, b) => a + (b.lidos || 0), 0));
   $("n_sel").textContent = num(sel && sel.itens ? sel.itens.length : 0);
