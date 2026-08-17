@@ -1506,8 +1506,10 @@ function desenhaLotes(l) {
 
 /* ---------------------------------------------------------------- atualização */
 async function atualizar() {
-  const [estado, sel, fontes] = await Promise.all([
-    ler("dados/estado.json"), ler("dados/selecao.json"), ler("dados/fontes.json")]);
+  const [estado, sel, fontes, retratos] = await Promise.all([
+    ler("dados/estado.json"), ler("dados/selecao.json"), ler("dados/fontes.json"),
+    // arquivo à parte: o do perfil varrido passa de 1 MB e a via de leitura corta ali
+    ler("dados/retratos.json")]);
 
   const vivo = estado !== null;
   const selo = $("estado");
@@ -1527,7 +1529,8 @@ async function atualizar() {
   const itens = (sel && sel.itens) || [];
   MINERADOS = perfis.map(p => {
     const meus = itens.filter(i => i.conta === p.conta);
-    return { ...p,
+    const r = (retratos && retratos[p.conta]) || {};
+    return { ...p, nome: p.nome || r.nome, avatar: p.avatar || r.avatar,
       reels: meus.filter(i => i.formato === "reels").length,
       imagens: meus.filter(i => i.formato === "post").length,
       carrosseis: meus.filter(i => i.formato === "carrossel").length,
