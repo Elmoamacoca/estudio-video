@@ -30,6 +30,11 @@ QUERO = (
     ".bola", ".ico", ".online", ".offline",
 )
 
+# A base: sem ela o texto sai com fonte serifada do navegador e as caixas nascem sem
+# fundo, porque `var(--branco)` aponta para uma variável que nunca foi definida. Foi
+# exatamente o que quebrou a tela na primeira montagem.
+BASE_SEL = ("*", "html", "body", "::selection", "a", "img", "button", "input", "textarea")
+
 
 def blocos_equilibrados(css: str):
     """Percorre o CSS devolvendo (seletor, corpo, bloco_inteiro), sem achatar aninhado."""
@@ -56,9 +61,19 @@ def interessa(sel: str) -> bool:
     return any(q in sel for q in QUERO)
 
 
+def e_base(sel: str) -> bool:
+    """Regra de base: o seletor inteiro é um dos elementos raiz, não um filho deles."""
+    return any(p.strip() in BASE_SEL for p in sel.split(","))
+
+
 def extrair_css(html: str) -> tuple[str, list[str]]:
     i = html.find("<style")
     css = html[html.find(">", i) + 1: html.find("</style>", i)]
+    # Os comentários saem ANTES de qualquer leitura. Com eles no meio, o seletor
+    # capturado vinha como "/* explicação */\n:root", e o teste de início de texto
+    # falhava: a paleta inteira era descartada em silêncio, e as caixas nasciam sem
+    # fundo porque as variáveis de cor nunca existiam.
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
 
     guardados, avisos = [], []
     for sel, corpo, inteiro in blocos_equilibrados(css):
@@ -72,8 +87,11 @@ def extrair_css(html: str) -> tuple[str, list[str]]:
             if any(k in sel for k in ("ping", "subir", "tracar")):
                 guardados.append(inteiro)
             continue
-        if sel.startswith(":root") or sel.startswith("html["):
+        if ":root" in sel or sel.startswith("html["):
             guardados.append(inteiro)          # a paleta inteira, dos dois temas
+            continue
+        if e_base(sel):
+            guardados.append(inteiro)          # fonte, fundo e medidas de partida
             continue
         if interessa(sel):
             # a armadilha: nascer invisível sem nada que desfaça
@@ -111,9 +129,16 @@ def main() -> None:
     print(f"cab.js: {sum(len(j) for j in js) // 1024} KB")
     for a in avisos:
         print("  descartado:", a)
-    # confere que o que quebrou da última vez não voltou
-    solta = re.search(r"(?<!\s)\n\.nav-itens\{display:none\}", css)
-    print("regra de celular vazando:", "SIM, ainda quebra" if solta else "não")
+
+    # As três conferências que existem porque as três já quebraram a tela uma vez.
+    faltando = []
+    if "--branco" not in css.split("var(")[0] and not re.search(r"--branco\s*:", css):
+        faltando.append("a paleta de cores (as caixas nascem sem fundo)")
+    if not re.search(r"(?:^|\n|\})\s*body\s*\{", css):
+        faltando.append("a base do corpo (o texto sai com fonte serifada)")
+    if re.search(r"(?:^|\n)\.nav-itens\{display:none\}", css):
+        faltando.append("a regra de celular vazou para fora do bloco (some com as abas)")
+    print("conferência:", "tudo no lugar" if not faltando else "FALTA " + "; ".join(faltando))
 
 
 if __name__ == "__main__":
