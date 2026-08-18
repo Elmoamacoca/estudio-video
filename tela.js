@@ -1176,14 +1176,12 @@ $("fontes").addEventListener("input", () => { $("fontes").dataset.tocado = "1"; 
 
 function reguaEscolhida() {
   const formatos = ["reels", "post", "carrossel"].filter(f => $("f_" + f).checked);
-  const alvo = Math.max(0, parseInt($("alvo").value, 10) || 0);
   const numero = campo => {
     const n = parseFloat(String($(campo).value).replace(",", "."));
     return Number.isFinite(n) && n > 0 ? n : 1.5;
   };
   return {
     formatos,
-    alvo,
     por_formato: $("por_formato").checked,
     corte: numero("corte_unico"),
     cortes: { reels: numero("c_reels"), post: numero("c_post"),
@@ -1205,6 +1203,20 @@ function ajustarFolha() {
   document.querySelectorAll(".cortes label").forEach(l => {
     l.hidden = !$("f_" + l.dataset.de).checked;
   });
+  // A LINHA QUE DIZ ATE' ONDE VAI, e ela muda conforme os formatos marcados.
+  // Só Reels tem caminho próprio no Instagram, e por isso é rápido. Com imagem no meio,
+  // o feed vem misturado e a esteira precisa ler tudo para achar o que interessa.
+  const fs = ["reels", "post", "carrossel"].filter(f => $("f_" + f).checked);
+  const soReels = fs.length === 1 && fs[0] === "reels";
+  $("ini_ate").textContent = !fs.length
+    ? "escolha ao menos um formato acima"
+    : soReels
+      ? "Só Reels tem caminho próprio no Instagram: a esteira busca reels puros e para "
+        + "ao juntar 200. Medido: 204 reels em 12 minutos."
+      : "Com imagem ou carrossel na conta, o Instagram só entrega o histórico misturado. "
+        + "A esteira lê do mais novo para o mais antigo e para em 800 publicações, "
+        + "cerca de 40 minutos por perfil.";
+
   const n = contasEscritas().length;
   $("ini_quantos").textContent = n === 1 ? "1 perfil escrito acima"
     : n ? `${n} perfis escritos acima` : "escreva ao menos um perfil acima";
