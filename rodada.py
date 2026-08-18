@@ -28,7 +28,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from minerar import CABECALHO, PASTA, abre_pelo_arroba, limpa_post, grava
+from minerar import (CABECALHO, PASTA, abre_pelo_arroba, limpa_post,
+                     pagina_de_reels, grava)
 
 FONTES = Path("dados/fontes.json")
 REGUA = Path("dados/regua.json")
@@ -65,6 +66,16 @@ def regua() -> dict:
         return json.loads(REGUA.read_text(encoding="utf-8"))
     except Exception:
         return {}
+
+
+def so_reels(r: dict) -> bool:
+    """A escolha da tela pede reels e mais nada?
+
+    E' a unica combinacao que ganha caminho proprio, porque e' a unica que o Instagram
+    entrega separada. Nao existe via so' de imagem nem so' de carrossel: para esses, o
+    jeito continua sendo ler o feed inteiro e separar depois.
+    """
+    return set(r.get("formatos") or []) == {"reels"}
 
 
 def ja_basta(estado: dict, r: dict) -> bool:
@@ -198,6 +209,19 @@ def pendentes(contas: list[str]) -> list[str]:
     return [c for _, c in fila]
 
 
+def _motivo_da_parada(estado: dict, r: dict) -> dict:
+    """O que fica escrito na ficha quando a varredura para por escolha, e nao por fim."""
+    formatos = set(r.get("formatos") or [])
+    return {
+        "alvo": ALVO_PADRAO if r.get("alvo") is None else int(r.get("alvo") or 0),
+        "teto": int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO),
+        "lidos": len(estado.get("posts") or []),
+        "do_formato": sum(1 for x in (estado.get("posts") or [])
+                          if x.get("formato") in formatos) if formatos else 0,
+        "formatos": sorted(formatos),
+    }
+
+
 ANDAMENTO = Path("dados/andamento")
 
 
@@ -308,6 +332,44 @@ def main() -> int:
     novos = 0
     paginas = 0
 
+    # O CAMINHO DOS REELS, quando é só isso que foi pedido.
+    #
+    # Aqui está a diferença entre varrer cinco mil publicações e varrer duzentas: o
+    # feed misturado obriga a ler tudo para achar os reels, e este caminho entrega
+    # reels puros, doze por página. No perfil medido, um ganho de vinte e quatro vezes.
+    if so_reels(r) and not relendo:
+        while paginas < PAGINAS_POR_VAGA:
+            d = pagina_de_reels(estado["perfil"]["id"], estado.get("marcador_reels"))
+            if d is None:
+                if paginas == 0:
+                    print(f"[{conta}] endereço desta vaga já estava gasto (reels)")
+                break
+            paginas += 1
+            for p in d["posts"]:
+                if p["codigo"] not in vistos:
+                    vistos.add(p["codigo"])
+                    estado["posts"].append(p)
+                    novos += 1
+            estado["marcador_reels"] = d["marcador"]
+            if d["acabou"]:
+                estado["completo"] = True
+                print(f"[{conta}] ACABARAM OS REELS deste perfil")
+                break
+            if ja_basta(estado, r):
+                estado["completo"] = True
+                estado["parou_no_alvo"] = _motivo_da_parada(estado, r)
+                print(f"[{conta}] PAREI: alvo de reels atingido")
+                break
+
+        if not paginas:
+            return 0
+        estado["atualizado"] = int(time.time())
+        grava(conta, estado)
+        bater_ponto(conta, estado, vaga)
+        reels_agora = sum(1 for x in estado["posts"] if x.get("formato") == "reels")
+        print(f"[{conta}] +{novos} reels em {paginas} página(s) (total {reels_agora})")
+        return 0
+
     # DUAS PÁGINAS POR VAGA, e não uma. Medido: o corte vem na terceira leitura.
     while paginas < PAGINAS_POR_VAGA:
         marcador = estado.get("marcador_novo") if relendo else estado.get("marcador")
@@ -345,18 +407,9 @@ def main() -> int:
                 break
             if ja_basta(estado, r):
                 estado["completo"] = True
-                formatos = set(r.get("formatos") or [])
-                do_formato = sum(1 for x in estado["posts"]
-                                 if x.get("formato") in formatos) if formatos else 0
-                estado["parou_no_alvo"] = {
-                    "alvo": ALVO_PADRAO if r.get("alvo") is None else int(r.get("alvo")),
-                    "teto": int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO),
-                    "lidos": len(estado["posts"]),
-                    "do_formato": do_formato,
-                    "formatos": sorted(formatos),
-                }
+                estado["parou_no_alvo"] = _motivo_da_parada(estado, r)
                 print(f"[{conta}] PAREI: {len(estado['posts'])} lidas, "
-                      f"{do_formato} dos formatos escolhidos")
+                      f"{estado['parou_no_alvo']['do_formato']} dos formatos escolhidos")
                 break
 
     if not paginas:
