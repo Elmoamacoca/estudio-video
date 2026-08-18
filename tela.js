@@ -814,7 +814,12 @@ function desenhaLivro() {
     // seis reels no total fecha em 53% do alvo de duzentos, e "53%" lido sozinho parece
     // varredura pela metade quando na verdade acabaram os reels do perfil.
     const quanto = cob === null
-      ? (c.lidos ? `${num(c.lidos)} ${nome} lidos` : "")
+      ? (c.lidos ? `${num(c.lidos)} ${nome} lidos`
+         // sem número nenhum e já encerrado: é conta fechada ou sem publicação, e a
+         // linha precisa dizer isso. Antes ficava só "há 2 min · 1 registro", que não
+         // informa nada sobre o motivo de não haver nada.
+         : c.ultimo_tipo === "vazio" ? "sem publicação pública"
+         : c.completo ? "nada a varrer" : "")
       : c.completo
         ? (cob >= 100 ? `${num(c.lidos)} ${nome}, alvo de ${num(c.publicacoes)} cumprido`
                       : `${num(c.lidos)} ${nome}, acabaram os ${nome} do perfil`)
@@ -825,7 +830,8 @@ function desenhaLivro() {
         <span class="liv-id">
           <span class="liv-nome"><b>${c.nome
             || (c.aguardando ? "Perfil ainda não identificado" : "sem nome no perfil")}</b>
-            <span class="liv-etq">${TIPOS[c.ultimo_tipo] || c.ultimo_tipo}</span></span>
+            <span class="liv-etq">${TIPOS[c.ultimo_tipo] || c.ultimo_tipo
+              || "na fila"}</span></span>
           <span class="liv-sub">@${c.conta} · ${
             c.vivo ? '<b class="liv-vivo">varrendo agora</b>'
             // sem marca de tempo nenhuma, "há" quanto tempo daria meio século
