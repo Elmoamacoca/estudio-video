@@ -2230,6 +2230,15 @@ const HISTORICOS = new Map();
    redesenho apagava o elemento e o cartão fechava sozinho: quem clicava via ele abrir e
    fechar na cara. Agora quem manda é este conjunto, e o desenho obedece a ele. */
 const ABERTOS = new Set();
+/* A RÉGUA QUE ESTÁ VALENDO, para a tela não depender do bilhete para saber o modo.
+   O bilhete só ganha o campo "modo" na rodada seguinte à publicação, e enquanto isso a
+   tela ficaria contando reels contra o total de publicações do perfil, que é a conta
+   errada e assusta. A régua está no acervo desde o Iniciar. */
+let REGUA_VALENDO = null;
+const modoReels = () => {
+  const f = (REGUA_VALENDO && REGUA_VALENDO.formatos) || [];
+  return f.length === 1 && f[0] === "reels";
+};
 
 /* A GRAVIDADE É DECIDIDA AQUI, e não lida do que ficou gravado.
    O tipo do evento é o dado; a gravidade é opinião sobre ele, e opinião muda. "Rodada
@@ -2303,15 +2312,17 @@ function linhaDoAgora(b) {
   const quando = Math.round((Date.now() / 1000) - (b.quando || 0));
   ln.innerHTML = `<i></i><span class="oque"><b></b>`
     + `<span class="dados"><span><b>${num(b.lidos)}</b>${
-        b.publicacoes ? ` de ${num(b.publicacoes)}${b.modo === "reels" ? " reels" : ""}`
-                      : " posts lidos"}</span>`
+        b.publicacoes
+          ? ` de ${num(b.publicacoes)}${
+              (b.modo === "reels" || (b.modo === undefined && modoReels())) ? " reels" : ""}`
+          : " posts lidos"}</span>`
     + (pct !== null ? `<span><b>${pct}%</b></span>` : "")
     + (b.vaga ? `<span>vaga <b>${b.vaga}</b></span>` : "")
     + `</span></span>`
     + `<span class="data">${quando < 90 ? "agora" : "há " + Math.round(quando / 60) + " min"}</span>`;
   ln.querySelector(".oque > b").textContent = b.completo
     ? "Leitura encerrada, aguardando o fechamento da rodada"
-    : b.modo === "reels"
+    : (b.modo === "reels" || (b.modo === undefined && modoReels()))
       ? "Varrendo agora: a esteira está buscando os REELS deste perfil, e mais nada"
       : "Varrendo agora: a esteira está lendo as páginas deste perfil";
   return ln;
@@ -2379,12 +2390,13 @@ async function aoVivo() {
 
     if (batendo.length) {
       viva = true; selo = "ao vivo";
-      const emReels = batendo.every(b => b.modo === "reels");
+      const emReels = batendo.every(b => b.modo === "reels" || modoReels());
       titulo = (batendo.length === 1 ? "Uma máquina" : `${batendo.length} máquinas`)
         + (emReels ? " buscando reels" : " lendo o Instagram");
       resumo = batendo.map(b => `@${b.conta}: ${num(b.lidos)}`
         + (b.publicacoes
-            ? ` de ${num(b.publicacoes)} ${b.modo === "reels" ? "reels" : "posts"}`
+            ? ` de ${num(b.publicacoes)} ${
+                (b.modo === "reels" || (b.modo === undefined && modoReels())) ? "reels" : "posts"}`
             : " posts lidos")).join(" · ");
       desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
     } else if (nenhumPronto) {
@@ -2560,7 +2572,7 @@ function desenhaLivro() {
     // EM VARREDURA DE REELS, A CONTA E' DE REELS. Comparar contra o total de
     // publicacoes do perfil fazia a tela dizer "72 de 2.254", numeros de duas coisas
     // diferentes, e a leitura obvia era que estava varrendo o perfil inteiro de novo.
-    const eReels = c.modo === "reels";
+    const eReels = c.modo === "reels" || (c.modo === undefined && modoReels());
     const quanto = cob !== null
       ? `${num(c.lidos)} de ${num(c.publicacoes)} ${eReels ? "reels" : "posts"} (${cob}%)`
       : c.lidos ? `${num(c.lidos)} ${eReels ? "reels" : "posts"} lidos` : "";
@@ -2937,6 +2949,7 @@ async function atualizar() {
   });
   desenhaMinerados();
 
+  REGUA_VALENDO = (sel && sel.criterio) || REGUA_VALENDO;
   mostrarRegua((sel && sel.criterio) || null);
 
   // O CARTÃO NASCE DA LISTA DE CONTAS, e não da identificação no Instagram.
