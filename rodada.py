@@ -122,6 +122,29 @@ def pendentes(contas: list[str]) -> list[str]:
     return [c for _, c in fila]
 
 
+PONTE = "https://estudio-ponte.gabrieltorres.workers.dev"
+
+
+def pedir_identificacao(conta: str) -> bool:
+    """Pede à ponte que descubra quem é o perfil, e diz se ela conseguiu.
+
+    A ponte grava o resultado no acervo por conta própria: aqui só se pergunta. Uma
+    tentativa por vaga, e não um laço: com vinte vagas na rodada, a insistência já vem
+    de graça, cada uma saindo num momento diferente.
+    """
+    corpo = json.dumps({"contas": [conta]}).encode()
+    req = urllib.request.Request(
+        f"{PONTE}/contas", data=corpo, method="POST",
+        headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=45) as r:
+            d = json.loads(r.read())
+    except Exception as e:
+        print(f"  a ponte não respondeu ({type(e).__name__})")
+        return False
+    return any(n.get("ok") for n in (d.get("novos") or []))
+
+
 ANDAMENTO = Path("dados/andamento")
 
 
@@ -194,7 +217,19 @@ def main() -> int:
     if not estado.get("perfil"):
         perfil = identifica(conta, prazo=time.time() + 45)
         if not perfil:
-            print(f"[{conta}] identificador não veio neste endereço. A ponte resolve.")
+            # MEDIDO EM 18/08/2026: daqui essa consulta responde 429 SEMPRE, nas duas
+            # vias, nas vinte máquinas. Não é limite de ritmo que passa esperando; é o
+            # endereço do GitHub barrado naquele caminho específico. Prova de que o
+            # bloqueio é só desse caminho: a leitura das páginas, logo abaixo, funciona
+            # normalmente daqui.
+            #
+            # Então quem pede é a ponte, que sai pela Cloudflare e passa. Antes isto
+            # ficava só num recado de log dizendo "a ponte resolve", e a ponte não era
+            # avisada de nada: se as tentativas do Iniciar tivessem falhado, o perfil
+            # ficava parado para sempre, esperando alguém abrir a tela.
+            print(f"[{conta}] 429 neste endereço. Peço à ponte, que sai por outro.")
+            if pedir_identificacao(conta):
+                print(f"[{conta}] a ponte identificou. A próxima vaga já lê as páginas.")
             return 0
         estado["perfil"] = perfil
         grava(conta, estado)
