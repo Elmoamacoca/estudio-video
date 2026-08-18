@@ -49,6 +49,12 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: main
+      # A CONFERENCIA ANTES DE QUALQUER COISA. Ela importa os programas e roda os
+      # caminhos principais: um nome perdido numa reescrita para aqui, e nao com as
+      # vinte maquinas ja' no ar e os perfis parados.
+      - name: Conferir os programas
+        run: python conferir.py
+
       - id: olhar
         run: |
           FALTA=$(python -c "import rodada; print(len(rodada.pendentes(rodada.contas_pedidas())))")
