@@ -1256,7 +1256,29 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .lote-campo .campo-rot{margin:0;font-size:12px;color:var(--muted)}
 /* o comando encosta no fim da linha: ele fecha o cartão, não divide espaço com filtro */
 .lote-linha .acao.forte{margin-left:auto}
-.lote-montar .nota + .nota{margin-top:14px}
+/* O RESPIRO DEPOIS DA LINHA DE FILTROS. Sem ele a contagem nascia colada na caixa da
+   etiqueta, parecendo legenda do filtro em vez de resposta do cartão. */
+#recado_lote{margin-top:18px}
+#recado_filtros{margin-top:10px}
+
+/* O LOTE PRONTO, colado no botão que o pediu */
+.lote-pronto{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px;
+             padding:14px 16px;border:1px solid var(--rule-solid);
+             border-radius:var(--r-md);background:var(--paper)}
+.lote-pronto[hidden]{display:none}
+.lote-pronto-quem{min-width:0;flex:1}
+.lote-pronto-quem b{display:block;font-size:14px;font-weight:650;color:var(--ink)}
+.lote-pronto-quem span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.lote-pronto .acao{flex:none;height:36px;padding:0 14px;font-size:13px;
+                   display:inline-flex;align-items:center;text-decoration:none}
+
+/* A MARCAÇÃO NA TABELA, embaixo do nome do perfil. Coluna nova alargaria a tabela, que
+   já rola de lado; aqui a marcação anda junto de quem ela descreve. */
+.tab-marca{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
+.tab-marca .mercado{font-size:11.5px;font-weight:600;color:var(--muted);
+                    text-transform:uppercase;letter-spacing:.05em}
+.tab-marca .sem{font-size:11.5px;color:var(--soft)}
+.tab-acao .acao + .acao{margin-left:6px}
 
 /* ------------------------------------------------- A FILEIRA DE PERFIS
    Um cartão por perfil que tem conteúdo esperando. Só a marca e, no rodapé, quanto há
@@ -1740,6 +1762,44 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 </div>
 
 
+<!-- ================================================== A FOLHA DE ETIQUETAR
+
+     ONDE A MARCAÇÃO É FEITA, e por que aqui e não na mineração.
+     Os dois filtros da aba de Baixar precisam de mercado e etiqueta por perfil, e isso
+     não existia em lugar nenhum. Na mineração seria tarde para os perfis já varridos:
+     eles teriam de ser lidos de novo só para ganhar um rótulo. A marcação mora na
+     tabela de Minerados, que é o cadastro dos perfis, e vale para quem já está lá e
+     para quem chegar depois. -->
+<div class="liv-export" id="etq_folha" hidden>
+  <div class="liv-folha">
+    <h3>Marcar <span id="etq_quem"></span></h3>
+    <p class="nota">Mercado é um só por perfil, e serve para escolher. Etiqueta é
+      livre e soma: um perfil pode ter várias, e o filtro traz todos os que tiverem
+      qualquer uma das marcadas.</p>
+
+    <div class="campo-bloco">
+      <label class="campo-rot" for="etq_mercado">Mercado</label>
+      <input type="text" id="etq_mercado" list="etq_mercados" autocomplete="off"
+             placeholder="finanças, moda, fitness...">
+      <datalist id="etq_mercados"></datalist>
+    </div>
+
+    <div class="campo-bloco">
+      <label class="campo-rot" for="etq_etiquetas">Etiquetas</label>
+      <input type="text" id="etq_etiquetas" autocomplete="off"
+             placeholder="separadas por vírgula">
+      <p class="nota mini" id="etq_usadas"></p>
+    </div>
+
+    <div class="liv-pe">
+      <span class="nota" id="etq_recado"></span>
+      <button class="acao" id="etq_cancelar" type="button">Cancelar</button>
+      <button class="acao forte" id="etq_vai" type="button">Salvar</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- ==================================================================== ABA 2 · BAIXAR -->
 <section class="aba" id="aba-baixar" hidden>
 
@@ -1819,6 +1879,19 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
            linha diz por quê. Controle que não faz nada e não explica é o que já fez
            esta tela mentir uma vez. -->
       <p class="nota mini" id="recado_filtros" hidden></p>
+
+      <!-- O ARQUIVO PRONTO MORA AQUI, e não numa seção à parte.
+           Havia uma seção "Lotes montados" no fim da aba, e ela guardava o link do ZIP
+           num lugar que não se ligava ao comando que o produziu. Agora o lote que
+           acabou de sair aparece colado no botão que o pediu. -->
+      <div class="lote-pronto" id="lote_pronto" hidden>
+        <div class="lote-pronto-quem">
+          <b id="lote_pronto_titulo"></b>
+          <span id="lote_pronto_dado"></span>
+        </div>
+        <a class="acao forte" id="lote_pronto_link" target="_blank" rel="noopener">
+          Baixar o ZIP</a>
+      </div>
     </div>
 
     <div class="fileira" id="prontos"><div class="vazio">Carregando.</div></div>
@@ -1836,11 +1909,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <h3 id="regua_titulo">carregando</h3>
       <p class="nota" id="regua_texto">Buscando a régua gravada no acervo.</p>
     </div>
-  </div>
-
-  <div class="secao">
-    <div class="secao-cab"><h2>Lotes montados</h2></div>
-    <div id="lotes"><div class="vazio">Nenhum lote ainda.</div></div>
   </div>
 
 </section>
@@ -2197,6 +2265,19 @@ window.montarMulti = function(pre, opcoes, vazio, aoMudar){
   pintarValor();
   return function(){ return escolhidas.slice(); };
 };
+
+window.etiquetaHTML = function(nome){
+  var t = String(nome == null ? "" : nome);
+  var seguro = t.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  var adulta = t.toLowerCase().indexOf("modelo") !== -1;
+  var h = 0;
+  for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) % 360;
+  return '<span class="badge badge-etq' + (adulta ? ' adulto' : '') + '"' +
+         (adulta ? '' : ' style="--etq-h:' + h + '"') + '>' +
+         '<svg viewBox="0 0 24 24"><use href="#' +
+         (adulta ? 'i-adulto' : 'i-etq') + '"/></svg>' + seguro + '</span>';
+};
 </script>
 <script>
 /* O comportamento da tela do Estúdio.
@@ -2536,6 +2617,15 @@ window.montarMulti("bx-etq", ETIQUETAS_BX, "Todas as etiquetas", vs => {
   desenhaProntos(MINERADOS);
 });
 
+/** A marcação do perfil, embaixo do nome: o mercado em versalete e as etiquetas em
+ *  pastilha. A pastilha é a do sistema de origem, com a cor saindo do próprio nome. */
+function marcaDe(p) {
+  const etq = (p.etiquetas || []).map(e => window.etiquetaHTML(e)).join("");
+  const merc = p.mercado ? `<span class="mercado">${p.mercado}</span>` : "";
+  return `<span class="tab-marca">${merc || etq ? merc + etq
+    : '<span class="sem">sem marcação</span>'}</span>`;
+}
+
 function desenhaMinerados() {
   const q = ($("min-q").value || "").trim().toLowerCase();
   const por = minPor;
@@ -2599,7 +2689,8 @@ function desenhaMinerados() {
     return `<tr class="tab-linha">
       <td class="tab-perfil"><div class="tab-perfil-in">${retrato(p)}
         <span class="tab-quem"><b>@${p.conta}</b>
-          <span>${p.nome || "sem nome no perfil"}</span></span></div></td>
+          <span>${p.nome || "sem nome no perfil"}</span>
+          ${marcaDe(p)}</span></div></td>
       <td class="tab-num">${num(p.lidos)}</td>
       <td class="tab-num">${coluna}</td>
       <td>${ate}</td>
@@ -2609,8 +2700,9 @@ function desenhaMinerados() {
       <td class="tab-num">${num(p.acima)}</td>
       <td>${selo}</td>
       <td>${quando(p.atualizado)}</td>
-      <td class="tab-acao"><a class="acao" target="_blank" rel="noopener"
-        href="https://www.instagram.com/${p.conta}/">Instagram</a></td>
+      <td class="tab-acao"><button class="acao" type="button"
+          data-etiquetar="${p.conta}">Marcar</button><a class="acao" target="_blank"
+          rel="noopener" href="https://www.instagram.com/${p.conta}/">Instagram</a></td>
     </tr>`;
   }).join("");
 }
@@ -3492,25 +3584,23 @@ document.addEventListener("click", ev => {
   contarLote(ULTIMOS_PRONTOS, rotuloDosFormatos(null, LIVRO[0] || null));
 });
 
-function desenhaLotes(l) {
-  if (!l || !l.length) {
-    $("lotes").innerHTML = '<div class="vazio">Nenhum lote ainda.</div>';
-    return;
-  }
-  $("lotes").innerHTML = l.map(x => `<div class="pronto">
-    <div class="pronto-topo">
-      <span class="quem">Lote ${x.numero}</span>
-      <a class="acao forte" target="_blank" rel="noopener"
-         href="https://github.com/${DONO}/${REPO}/actions/runs/${x.execucao}">Baixar o ZIP</a>
-    </div>
-    <div class="pronto-numeros">
-      <div><b>${num(x.arquivos)}</b><span>arquivos</span></div>
-      <div><b>${x.mb} MB</b><span>tamanho</span></div>
-      <div><b>${quando(x.quando)}</b><span>montado</span></div>
-    </div>
-    <p class="nota mini">${x.criterio || "sem critério anotado"} · o arquivo fica
-      guardado por 14 dias e abre na página da execução, no fim, em "Artifacts".</p>
-    </div>`).join("");
+/* O LOTE PRONTO, COLADO NO COMANDO QUE O PEDIU.
+   Havia uma seção "Lotes montados" no fim da aba, com um cartão por lote. Ela guardava
+   o link do arquivo longe do botão que o produziu, e quem chegava nela não sabia o que
+   era. Aqui fica só o último, dentro do cartão de montar: é o que se busca depois de
+   apertar o botão. Os anteriores continuam na esteira, que é onde eles moram. */
+function mostrarLotePronto(lotes) {
+  const cx = $("lote_pronto");
+  const x = (lotes || []).find(l => l && l.arquivos);
+  if (!x) { cx.hidden = true; return; }
+  cx.hidden = false;
+  $("lote_pronto_titulo").textContent = `Lote ${x.numero}: ${num(x.arquivos)} arquivos, `
+    + `${x.mb} MB`;
+  $("lote_pronto_dado").textContent = `${x.criterio || "sem critério anotado"} · pronto `
+    + `${quando(x.quando)} · o arquivo fica guardado por 14 dias e abre no fim da `
+    + `página da execução, em "Artifacts".`;
+  $("lote_pronto_link").href =
+    `https://github.com/${DONO}/${REPO}/actions/runs/${x.execucao}`;
 }
 
 /* ---------------------------------------------------------------- atualização */
@@ -3614,7 +3704,7 @@ async function atualizar() {
   medirLivro();
 
   desenhaProntos(MINERADOS);
-  desenhaLotes(estado && estado.lotes);
+  mostrarLotePronto(estado && estado.lotes);
 }
 
 /* ---------------------------------------------------------------- comandos */
@@ -3780,6 +3870,65 @@ $("ini_vai").onclick = async () => {
   $("ini_cancelar").disabled = false;
 };
 
+
+/* ============================================================ MARCAR UM PERFIL
+
+   MERCADO E ETIQUETA SAO A UNICA COISA DESTA TELA QUE NAO E' MEDIDA: elas sao a leitura
+   do Gabriel sobre o perfil, e ninguem tem como deduzi-las do que o Instagram devolve.
+   Por isso ha' um lugar para escrevê-las, e ele fica na tabela de Minerados, que e' o
+   cadastro dos perfis. Os dois filtros da aba de Baixar leem daqui.
+
+   O PEDIDO VIAJA COMO TEXTO SIMPLES, e nao como JSON: `etiquetar:conta|mercado|a;b`.
+   O caminho ate' a esteira e' o mesmo do lote, e quanto menos aspa e chave o texto
+   tiver, menos chance de alguma camada no meio mexer nele. */
+let etqConta = null;
+
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-etiquetar]");
+  if (b) abrirMarcacao(b.dataset.etiquetar);
+});
+
+function abrirMarcacao(conta) {
+  const p = MINERADOS.find(x => x.conta === conta);
+  if (!p) return;
+  etqConta = conta;
+  $("etq_quem").textContent = "@" + conta;
+  $("etq_mercado").value = p.mercado || "";
+  $("etq_etiquetas").value = (p.etiquetas || []).join(", ");
+
+  // O QUE JA' EXISTE FICA A' VISTA, e isso nao e' enfeite: sem a lista, "financas" e
+  // "finanças" viram dois mercados diferentes, e o filtro passa a separar o que devia
+  // estar junto.
+  const mercados = [...new Set(MINERADOS.map(x => x.mercado).filter(Boolean))].sort();
+  $("etq_mercados").innerHTML = mercados.map(m => `<option value="${m}">`).join("");
+  const usadas = [...new Set(MINERADOS.flatMap(x => x.etiquetas || []))].sort();
+  $("etq_usadas").textContent = usadas.length
+    ? "já em uso: " + usadas.join(", ")
+    : "nenhuma etiqueta em uso ainda: a primeira que você escrever abre a lista";
+  $("etq_recado").textContent = "";
+  $("etq_folha").hidden = false;
+}
+
+$("etq_cancelar").onclick = () => { $("etq_folha").hidden = true; };
+
+$("etq_vai").onclick = async () => {
+  if (!etqConta) return;
+  // os dois separadores saem do valor, senao um nome com barra parte o pedido em dois
+  const limpo = t => t.replace(/[|;]/g, " ").trim();
+  const mercado = limpo($("etq_mercado").value);
+  const etiquetas = $("etq_etiquetas").value.split(",").map(limpo).filter(Boolean);
+
+  $("etq_vai").disabled = true;
+  carregando("etq_recado", "Gravando a marcação", "bolas");
+  try {
+    await mandar("/baixar", { quantos:
+      `etiquetar:${etqConta}|${mercado}|${etiquetas.join(";")}` });
+    parado("etq_recado", "gravado. A tela mostra em menos de um minuto.");
+    setTimeout(() => { $("etq_folha").hidden = true; atualizar(); }, 2600);
+  } catch (e) { parado("etq_recado", e.message); }
+  $("etq_vai").disabled = false;
+};
+
 /* ============================================================ PEDIR O LOTE
 
    O PEDIDO VIAJA NO CAMPO `quantos`, E ISSO NÃO É DESLEIXO.
@@ -3804,8 +3953,8 @@ document.addEventListener("click", async ev => {
     // formato e corte não vão daqui: vêm da régua gravada no acervo, a mesma escolhida
     // ao iniciar. Mandar outra por aqui criaria duas verdades.
     await mandar("/baixar", { quantos: contas.join(",") });
-    parado("recado_lote", "lote em preparo. Ele aparece em Lotes montados ao terminar, "
-      + "e leva alguns minutos. O que vier some da fileira acima.");
+    parado("recado_lote", "lote em preparo. Ele leva alguns minutos e aparece "
+      + "aqui embaixo ao terminar. O que vier some da fileira.");
     ESCOLHIDOS.clear();
   } catch (e) { parado("recado_lote", e.message); }
   setTimeout(() => { b.disabled = false; atualizar(); }, 8000);
