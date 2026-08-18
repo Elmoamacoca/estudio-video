@@ -1325,18 +1325,28 @@ function ajustarFolha() {
     .map(x => NOMES_FORMATO[x]);
   const rot = nomes.length === 1 ? nomes[0]
     : nomes.slice(0, -1).join(", ") + " e " + nomes[nomes.length - 1];
+  // A ESTEIRA VAI ATÉ O FIM, e este texto diz isso e diz quanto custa.
+  //
+  // Aqui houve um recado dizendo que ela parava em duzentos, e ele fez o Gabriel parar
+  // no meio do trabalho, com razão: num perfil de mil reels, os melhores podem estar em
+  // qualquer ponto do histórico, e escolher entre os duzentos mais recentes é escolher o
+  // melhor de uma amostra, não o melhor do perfil.
+  //
+  // Os tempos são medidos, não estimados: 204 reels em 12 minutos pelo caminho de reels,
+  // e cerca de 25 publicações por minuto no histórico misturado.
   $("ini_ate").textContent = !fs.length
     ? "escolha ao menos um formato acima"
     : soReels
-      ? "Reels tem caminho próprio no Instagram: a esteira busca reels puros e para ao "
-        + "juntar 200. Medido: 204 reels em 12 minutos."
+      ? "Reels tem caminho próprio no Instagram, então a esteira busca reels puros, sem "
+        + "imagem nem carrossel no meio, e vai até o último reel do perfil. Medido: cerca "
+        + "de 17 reels por minuto, ou uma hora para mil reels. Ela trabalha sozinha."
       : fs.length === 3
-        ? "Todos os formatos: a esteira lê do mais novo para o mais antigo e para em 800 "
-          + "publicações, cerca de 40 minutos por perfil."
-        : `A esteira guarda só ${rot}. O Instagram entrega o histórico misturado e não `
-          + `deixa pedir esses formatos separados, então ela lê do mais novo para o mais `
-          + `antigo, guarda ${rot} e descarta o resto. Para ao juntar 200 ou ao ver 800 `
-          + `publicações, o que vier primeiro.`;
+        ? "A esteira lê o histórico inteiro do perfil, do mais novo para o mais antigo. "
+          + "Medido: cerca de 25 publicações por minuto, ou uma hora e meia para duas mil."
+        : `A esteira guarda só ${rot} e vai até o fim do histórico. O Instagram entrega `
+          + `tudo misturado e não deixa pedir esses formatos separados, então ela lê do `
+          + `mais novo para o mais antigo, guarda ${rot} e descarta o resto. Medido: cerca `
+          + `de 25 publicações lidas por minuto.`;
 
   const n = contasEscritas().length;
   $("ini_quantos").textContent = n === 1 ? "1 perfil escrito acima"
