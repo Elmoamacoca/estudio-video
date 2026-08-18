@@ -2303,14 +2303,17 @@ function linhaDoAgora(b) {
   const quando = Math.round((Date.now() / 1000) - (b.quando || 0));
   ln.innerHTML = `<i></i><span class="oque"><b></b>`
     + `<span class="dados"><span><b>${num(b.lidos)}</b>${
-        b.publicacoes ? " de " + num(b.publicacoes) : " posts lidos"}</span>`
+        b.publicacoes ? ` de ${num(b.publicacoes)}${b.modo === "reels" ? " reels" : ""}`
+                      : " posts lidos"}</span>`
     + (pct !== null ? `<span><b>${pct}%</b></span>` : "")
     + (b.vaga ? `<span>vaga <b>${b.vaga}</b></span>` : "")
     + `</span></span>`
     + `<span class="data">${quando < 90 ? "agora" : "há " + Math.round(quando / 60) + " min"}</span>`;
   ln.querySelector(".oque > b").textContent = b.completo
     ? "Leitura encerrada, aguardando o fechamento da rodada"
-    : "Varrendo agora: a esteira está lendo as páginas deste perfil";
+    : b.modo === "reels"
+      ? "Varrendo agora: a esteira está buscando os REELS deste perfil, e mais nada"
+      : "Varrendo agora: a esteira está lendo as páginas deste perfil";
   return ln;
 }
 
@@ -2376,10 +2379,13 @@ async function aoVivo() {
 
     if (batendo.length) {
       viva = true; selo = "ao vivo";
-      titulo = batendo.length === 1 ? "Uma máquina lendo o Instagram"
-                                    : `${batendo.length} máquinas lendo ao mesmo tempo`;
+      const emReels = batendo.every(b => b.modo === "reels");
+      titulo = (batendo.length === 1 ? "Uma máquina" : `${batendo.length} máquinas`)
+        + (emReels ? " buscando reels" : " lendo o Instagram");
       resumo = batendo.map(b => `@${b.conta}: ${num(b.lidos)}`
-        + (b.publicacoes ? ` de ${num(b.publicacoes)} posts` : " posts lidos")).join(" · ");
+        + (b.publicacoes
+            ? ` de ${num(b.publicacoes)} ${b.modo === "reels" ? "reels" : "posts"}`
+            : " posts lidos")).join(" · ");
       desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
     } else if (nenhumPronto) {
       viva = true; selo = "identificando";
@@ -2544,16 +2550,20 @@ function desenhaLivro() {
     const b = BATIMENTOS.get(bruto.conta);
     const c = b && b.quando > (bruto.ultimo || 0)
       ? { ...bruto, lidos: b.lidos, publicacoes: b.publicacoes || bruto.publicacoes,
-          completo: b.completo, ultimo: b.quando, vivo: !b.completo }
+          modo: b.modo, completo: b.completo, ultimo: b.quando, vivo: !b.completo }
       : bruto;
     const grave = c.falhas ? "falha" : c.avisos ? "aviso" : "";
     // O TOTAL DE PUBLICAÇÕES É OPCIONAL. O caminho que abre o perfil (o feed pedido
     // pelo arroba) não informa quantas publicações a conta tem, e isso não atrapalha
     // varrer: sem o total, mostra-se o que foi lido, sem fração inventada.
     const cob = c.publicacoes ? Math.round(100 * c.lidos / c.publicacoes) : null;
+    // EM VARREDURA DE REELS, A CONTA E' DE REELS. Comparar contra o total de
+    // publicacoes do perfil fazia a tela dizer "72 de 2.254", numeros de duas coisas
+    // diferentes, e a leitura obvia era que estava varrendo o perfil inteiro de novo.
+    const eReels = c.modo === "reels";
     const quanto = cob !== null
-      ? `${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)`
-      : c.lidos ? `${num(c.lidos)} posts lidos` : "";
+      ? `${num(c.lidos)} de ${num(c.publicacoes)} ${eReels ? "reels" : "posts"} (${cob}%)`
+      : c.lidos ? `${num(c.lidos)} ${eReels ? "reels" : "posts"} lidos` : "";
     return `<div class="liv-cartao ${grave}" data-conta="${c.conta}">
       <button class="liv-cabeca" type="button" aria-expanded="false">
         <span class="liv-ponto"></span>
