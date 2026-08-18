@@ -36,7 +36,10 @@ REGUA = Path("dados/regua.json")
 # MEDIDO EM 18/08/2026, tres maquinas do GitHub lendo em sequencia: o corte vem na
 # TERCEIRA leitura, com 401. Duas passam. Antes daqui so' se fazia uma por maquina, o
 # que era a medida certa do caminho antigo e virou desperdicio de metade da vaga.
-PAGINAS_POR_VAGA = 2
+# Duas passam sempre; a terceira passou em uma das tres maquinas medidas. Tentar a
+# terceira custa uma requisicao recusada quando nao passa, e rende doze posts quando
+# passa. Vale a pena tentar.
+PAGINAS_POR_VAGA = 3
 
 # Quantas publicacoes dos formatos escolhidos bastam para medir e escolher as melhores.
 # Com duzentas ja' ha' mediana firme e sobra fora-da-curva; o resto e' historico antigo,
@@ -105,7 +108,10 @@ def ja_basta(estado: dict, r: dict) -> bool:
 RELEITURA = Path("dados/revisitar.json")
 # medido: leitura mais gravação levam por volta de 20s. 50s dá folga para a vaga
 # seguinte enxergar o avanço da anterior quando as duas caem no mesmo perfil.
-PASSO_DA_ESCADA = 50
+# Era 50s, escolhido quando cada vaga fazia UMA leitura de doze posts. Agora ela faz
+# ate' tres, e o conjunto leva por volta de 25s medidos. 35s continua cobrindo a vaga
+# anterior com folga e devolve um terco do tempo que ficava parado.
+PASSO_DA_ESCADA = 35
 
 
 def _uma_pagina(uid: str, marcador: str | None) -> dict | None:
