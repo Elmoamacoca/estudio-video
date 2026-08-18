@@ -301,15 +301,26 @@ def registrar_rodada(rodada: int | None = None) -> int:
                 if livro["eventos"]:
                     gravar(livro)
                 continue
-            parcial = publicacoes and lidos < publicacoes
-            if parcial:
+            # COM FILTRO DE FORMATO, "menos que o total do perfil" e' o normal, e nao
+            # limite. O @vinci.society tem 287 publicacoes e 106 reels: fechar em 106
+            # numa varredura de reels quer dizer que acabaram os reels, e a ficha dizia
+            # "fechada no limite do Instagram, o resto exige sessao", que e' outra coisa
+            # e faz parecer que ficou material para tras.
+            rot = rotulo()
+            com_filtro = rot != "publicações"
+            parcial = publicacoes and lidos < publicacoes and not com_filtro
+            if com_filtro:
+                anotar(livro, "concluido", agora,
+                       f"Acabaram os {rot} deste perfil: {mil(lidos)} no total",
+                       total=lidos, publicacoes=publicacoes)
+            elif parcial:
                 anotar(livro, "limite", agora,
                        f"Varredura fechada no limite do Instagram: {mil(lidos)} de "
                        f"{mil(publicacoes)}, o resto exige sessão",
                        total=lidos, publicacoes=publicacoes)
             else:
                 anotar(livro, "concluido", agora,
-                       f"Varredura concluída: {mil(lidos)} posts",
+                       f"Varredura concluída: {mil(lidos)} {rot}",
                        total=lidos, publicacoes=publicacoes)
             entraram += 1
 
