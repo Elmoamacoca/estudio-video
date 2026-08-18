@@ -163,6 +163,16 @@ def abre_pelo_arroba(conta: str, prazo: float) -> dict | None:
     if not u.get("pk") and itens:
         u = itens[0].get("user") or {}
     if not u.get("pk"):
+        # RESPOSTA BOA E VAZIA NAO E' FALHA. Medido no @ftevidencias: o Instagram
+        # responde 200, com status "ok", zero itens e sem o bloco do perfil. E' o que
+        # ele devolve para conta sem publicacao nenhuma e para conta fechada.
+        #
+        # Isso precisa ter nome proprio, senao o perfil fica sendo tentado por todas as
+        # vagas de todas as rodadas, para sempre, sem nunca dar certo e sem ninguem
+        # entender por que. Com dez perfis de uma vez, basta um assim para a fila
+        # inteira parecer travada.
+        if d.get("status") == "ok":
+            return {"vazio": True}
         return None
     return {
         "perfil": {
