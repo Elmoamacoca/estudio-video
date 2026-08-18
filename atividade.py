@@ -119,6 +119,33 @@ def ultimo_total(livro: dict) -> int:
 
 
 FONTES = Path("dados/fontes.json")
+REGUA = Path("dados/regua.json")
+TODOS = {"reels", "post", "carrossel"}
+NOMES = {"reels": "reels", "post": "posts isolados", "carrossel": "carrosseis"}
+
+
+def regua() -> dict:
+    if not REGUA.exists():
+        return {}
+    try:
+        return json.loads(REGUA.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def rotulo() -> str:
+    """Como a capa do livro chama o que foi guardado.
+
+    A CAPA PRECISA DISSO tanto quanto o bilhete. Enquanto a varredura corre, a tela le'
+    o bilhete e mostra "carrosseis"; quando a rodada fecha, ela passa a ler a capa, e a
+    capa dizia "posts" contra o total de publicacoes do perfil. O cartao trocava de
+    lingua sozinho no meio do caminho.
+    """
+    f = {x for x in (regua().get("formatos") or []) if x in TODOS} or set(TODOS)
+    if f == TODOS:
+        return "publicacoes"
+    nomes = [NOMES[x] for x in ("reels", "carrossel", "post") if x in f]
+    return nomes[0] if len(nomes) == 1 else " e ".join([", ".join(nomes[:-1]), nomes[-1]])
 
 
 def contas_na_lista() -> list[str]:
@@ -313,9 +340,15 @@ def reconstruir_indice() -> dict:
                 }
             except Exception:
                 pass
+        # o alvo entra como meta quando ha' filtro de formato: e' contra ele que a tela
+        # compara, e nao contra o total de publicacoes do perfil, que nunca sera' lido
+        rot = rotulo()
+        if rot != "publicacoes" and estado_perfil:
+            estado_perfil["publicacoes"] = int(regua().get("alvo") or 200)
         contas.append({
             "conta": livro["conta"],
             "nome": livro.get("nome"),
+            "rotulo": rot,
             "primeiro": ev[0]["quando"],
             "ultimo": ev[-1]["quando"],
             "eventos": len(ev),
