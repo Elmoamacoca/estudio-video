@@ -491,11 +491,12 @@ setInterval(ouvirBatimentos, 10000);
 function linhaDoAgora(b) {
   const ln = document.createElement("div");
   ln.className = "liv-ev agora liv-agora";
-  const pct = b.publicacoes ? Math.round(100 * b.lidos / b.publicacoes) : 0;
+  const pct = b.publicacoes ? Math.round(100 * b.lidos / b.publicacoes) : null;
   const quando = Math.round((Date.now() / 1000) - (b.quando || 0));
   ln.innerHTML = `<i></i><span class="oque"><b></b>`
-    + `<span class="dados"><span><b>${num(b.lidos)}</b> de ${num(b.publicacoes)}</span>`
-    + `<span><b>${pct}%</b></span>`
+    + `<span class="dados"><span><b>${num(b.lidos)}</b>${
+        b.publicacoes ? " de " + num(b.publicacoes) : " posts lidos"}</span>`
+    + (pct !== null ? `<span><b>${pct}%</b></span>` : "")
     + (b.vaga ? `<span>vaga <b>${b.vaga}</b></span>` : "")
     + `</span></span>`
     + `<span class="data">${quando < 90 ? "agora" : "há " + Math.round(quando / 60) + " min"}</span>`;
@@ -569,19 +570,15 @@ async function aoVivo() {
       viva = true; selo = "ao vivo";
       titulo = batendo.length === 1 ? "Uma máquina lendo o Instagram"
                                     : `${batendo.length} máquinas lendo ao mesmo tempo`;
-      resumo = batendo.map(b =>
-        `@${b.conta}: ${num(b.lidos)} de ${num(b.publicacoes)} posts`).join(" · ");
+      resumo = batendo.map(b => `@${b.conta}: ${num(b.lidos)}`
+        + (b.publicacoes ? ` de ${num(b.publicacoes)} posts` : " posts lidos")).join(" · ");
       desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
     } else if (nenhumPronto) {
       viva = true; selo = "identificando";
-      const voltas = Math.max(...esperando.map(c => TENTATIVAS.get(c.conta) || 0));
-      const quando = Math.max(...esperando.map(c => ULTIMA_TENTATIVA.get(c.conta) || 0));
-      const ha = quando ? Math.round((Date.now() - quando) / 1000) : null;
-      titulo = "Descobrindo quem é o perfil no Instagram";
-      resumo = "O Instagram recusa essa consulta dos endereços do GitHub, então a esteira "
-        + "não passa daqui. Quem consegue é a ponte, e a tela está pedindo a ela: "
-        + (voltas ? `tentativa ${voltas} de ${TETO_TENTATIVAS}` : "primeira tentativa saindo")
-        + (ha !== null && voltas ? `, a última há ${ha}s.` : ".");
+      titulo = esperando.length === 1 ? "Abrindo o perfil pelo arroba"
+                                      : `Abrindo ${esperando.length} perfis pelo arroba`;
+      resumo = "A primeira chamada traz o identificador e os doze primeiros posts de "
+        + "uma vez. Cada vaga da esteira abre um perfil.";
     } else if (lendo.length) {
       viva = true; selo = "ao vivo";
       titulo = lendo.length === 1 ? "Uma máquina lendo o Instagram"
@@ -655,13 +652,18 @@ async function aoVivo() {
      3. só enquanto existir perfil sem identificação, que é o único caso que precisa. */
 const TENTATIVAS = new Map();
 const ULTIMA_TENTATIVA = new Map();
-const TETO_TENTATIVAS = 25;
+// TRÊS, E NÃO VINTE E CINCO. Este laço já foi a única saída para um perfil travado, e
+// por isso insistia muito. Não é mais: quem abre o perfil é a esteira, pelo arroba, e
+// ela passa sempre. O que a ponte ainda acrescenta é o total de publicações e o retrato,
+// que o caminho do arroba não traz. Isso é enfeite, e enfeite não justifica gravar no
+// acervo de quarenta em quarenta segundos, ainda mais com dez perfis de uma vez.
+const TETO_TENTATIVAS = 3;
 let insistindo = false;
 // RÁPIDO NO COMEÇO, e não a cada quarenta e cinco segundos desde a primeira. Com uma
 // espera fixa, o perfil recém-adicionado ficava quase um minuto marcando "tentativa 0",
 // que é a tela dizendo que não está fazendo nada. As cinco primeiras saem de oito em
 // oito segundos, e só depois o intervalo abre.
-const ESPERA_CURTA = 8000, ESPERA_LONGA = 45000, TENTATIVAS_RAPIDAS = 5;
+const ESPERA_CURTA = 8000, ESPERA_LONGA = 40000, TENTATIVAS_RAPIDAS = 1;
 
 async function insistirIdentificacao() {
   // SEM EXIGIR A ABA À VISTA. A trava de visibilidade parecia prudente e era um tiro no
@@ -737,7 +739,13 @@ function desenhaLivro() {
           completo: b.completo, ultimo: b.quando, vivo: !b.completo }
       : bruto;
     const grave = c.falhas ? "falha" : c.avisos ? "aviso" : "";
+    // O TOTAL DE PUBLICAÇÕES É OPCIONAL. O caminho que abre o perfil (o feed pedido
+    // pelo arroba) não informa quantas publicações a conta tem, e isso não atrapalha
+    // varrer: sem o total, mostra-se o que foi lido, sem fração inventada.
     const cob = c.publicacoes ? Math.round(100 * c.lidos / c.publicacoes) : null;
+    const quanto = cob !== null
+      ? `${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)`
+      : c.lidos ? `${num(c.lidos)} posts lidos` : "";
     return `<div class="liv-cartao ${grave}" data-conta="${c.conta}">
       <button class="liv-cabeca" type="button" aria-expanded="false">
         <span class="liv-ponto"></span>
@@ -749,14 +757,8 @@ function desenhaLivro() {
             c.vivo ? '<b class="liv-vivo">varrendo agora</b>'
             // sem marca de tempo nenhuma, "há" quanto tempo daria meio século
             : c.ultimo ? haQuanto(c.ultimo)
-            : (() => {
-                const v = TENTATIVAS.get(c.conta) || 0;
-                const q = ULTIMA_TENTATIVA.get(c.conta);
-                if (!v) return "primeira tentativa saindo";
-                return `tentativa ${v} de ${TETO_TENTATIVAS}`
-                  + (q ? ` · há ${Math.round((Date.now() - q) / 1000)}s` : "");
-              })()}${
-            cob !== null ? ` · ${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)` : ""} · ${
+            : "esperando a esteira abrir"}${
+            quanto ? ` · ${quanto}` : ""} · ${
             c.eventos} ${c.eventos === 1 ? "registro" : "registros"}</span>
         </span>
         <svg class="liv-seta" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
@@ -853,7 +855,7 @@ async function abrirCartao(cartao) {
   // CARTÃO SEM HISTÓRICO EXPLICA A ESPERA, em vez de dizer "nada registrado". Perfil
   // que a ponte não conseguiu identificar cai exatamente aqui, e o vazio dele não é
   // ausência de trabalho: é trabalho em curso, do lado da esteira.
-  if (ficha && ficha.aguardando && !eventos.length) explicarEspera(caixa, conta);
+  if (ficha && ficha.aguardando && !eventos.length) explicarEspera(caixa);
   else pintarEventos(caixa, eventos);
 
   const b = BATIMENTOS.get(conta);
@@ -861,17 +863,16 @@ async function abrirCartao(cartao) {
 }
 
 /** O que está acontecendo com um perfil que entrou na lista e ainda não tem ficha. */
-function explicarEspera(caixa, conta) {
-  const tentativas = TENTATIVAS.get(conta) || 0;
+function explicarEspera(caixa) {
   const linhas = [
     ["Perfil na lista de origem",
      "Ele já está gravado no acervo e não se perde ao fechar a tela."],
-    ["O Instagram recusou a identificação pela ponte",
-     "A recusa é por endereço de saída, e o da ponte é compartilhado com muita gente. "
-     + "Foram quatro tentativas seguidas ao adicionar."],
-    ["A tela está tentando de novo, sozinha",
-     `Uma tentativa a cada 45 segundos, com esta aba à vista. Já foram ${tentativas} de `
-     + `${TETO_TENTATIVAS}. Assim que uma passar, o cartão se enche e a varredura começa.`],
+    ["A esteira vai abri-lo pelo arroba",
+     "A primeira chamada descobre quem é o perfil e já traz os doze primeiros posts, "
+     + "sem depender da consulta de identificação que o Instagram recusa."],
+    ["Falta a esteira chegar neste perfil",
+     "Ela acorda a cada rodada e atende um perfil por vaga. Assim que abrir este, o "
+     + "nome e a contagem aparecem neste cartão sozinhos."],
   ];
   caixa.innerHTML = "";
   for (const [titulo, texto] of linhas) {
