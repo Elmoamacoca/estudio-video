@@ -611,7 +611,10 @@ async function aoVivo() {
                                       : `Abrindo ${esperando.length} perfis pelo arroba`;
       resumo = "A primeira chamada traz o identificador e os doze primeiros posts de "
         + "uma vez. Cada vaga da esteira abre um perfil.";
-    } else if (lendo.length) {
+    } else if (lendo.length && LIVRO.some(c => !c.completo)) {
+      // A RESSALVA IMPORTA: as vinte máquinas sobem e ficam no ar até o fim da rodada,
+      // mesmo quando já não há o que ler. Sem esta condição a tela anunciava leitura com
+      // todos os perfis fechados, que é a mesma mentira de sempre em roupa nova.
       viva = true; selo = "ao vivo";
       titulo = lendo.length === 1 ? "Uma máquina lendo o Instagram"
                                   : `${lendo.length} máquinas lendo ao mesmo tempo`;
@@ -626,6 +629,10 @@ async function aoVivo() {
       viva = true; selo = "fechando";
       titulo = "Fechando a rodada";
       resumo = "Aplicando a régua, separando os links e carimbando o registro.";
+    } else if (LIVRO.length && LIVRO.every(c => c.completo)) {
+      titulo = LIVRO.length === 1 ? "Perfil varrido, nada pendente"
+                                  : `${LIVRO.length} perfis varridos, nada pendente`;
+      resumo = "A esteira só volta a trabalhar quando entrar perfil novo.";
     } else if (d.rodando) {
       // CORRIDA ABERTA SEM MÁQUINA NENHUMA é fila, e não conclusão. O GitHub segura uma
       // rodada enquanto a anterior trabalha, de propósito, para as duas não gravarem por
@@ -779,9 +786,15 @@ function desenhaLivro() {
     // publicacoes do perfil fazia a tela dizer "72 de 2.254", numeros de duas coisas
     // diferentes, e a leitura obvia era que estava varrendo o perfil inteiro de novo.
     const eReels = c.modo === "reels" || (c.modo === undefined && modoReels());
-    const quanto = cob !== null
-      ? `${num(c.lidos)} de ${num(c.publicacoes)} ${eReels ? "reels" : "posts"} (${cob}%)`
-      : c.lidos ? `${num(c.lidos)} ${eReels ? "reels" : "posts"} lidos` : "";
+    const nome = eReels ? "reels" : "posts";
+    // A esteira para ao ATINGIR o alvo, e a última página costuma passar dele: pedir
+    // duzentos e trazer duzentos e quatro é o normal. Mostrar "102%" faz parecer conta
+    // errada, quando é a coisa tendo dado certo.
+    const quanto = cob === null
+      ? (c.lidos ? `${num(c.lidos)} ${nome} lidos` : "")
+      : cob >= 100
+        ? `${num(c.lidos)} ${nome}, alvo de ${num(c.publicacoes)} cumprido`
+        : `${num(c.lidos)} de ${num(c.publicacoes)} ${nome} (${cob}%)`;
     return `<div class="liv-cartao ${grave}" data-conta="${c.conta}">
       <button class="liv-cabeca" type="button" aria-expanded="false">
         <span class="liv-ponto"></span>
