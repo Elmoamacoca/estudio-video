@@ -1,9 +1,7 @@
 {
  "criterio": {
   "formatos": [
-   "reels",
-   "post",
-   "carrossel"
+   "reels"
   ],
   "por_formato": true,
   "corte": 1.5,

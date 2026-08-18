@@ -1,4 +1,15 @@
 {
- "contas": [],
- "atualizado": 1787010731
+ "contas": [
+  {
+   "conta": "brandsdecoded__",
+   "nome": null,
+   "primeiro": 1787011966,
+   "ultimo": 1787011966,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "aguardando"
+  }
+ ],
+ "atualizado": 1787011966
 }
