@@ -441,9 +441,21 @@ const ABERTOS = new Set();
    tela ficaria contando reels contra o total de publicações do perfil, que é a conta
    errada e assusta. A régua está no acervo desde o Iniciar. */
 let REGUA_VALENDO = null;
-const modoReels = () => {
+const NOMES_FORMATO = { reels: "reels", carrossel: "carrosséis", post: "posts isolados" };
+
+/** Como chamar o que está sendo buscado, na combinação que o Gabriel escolheu. */
+function rotuloDosFormatos(bilhete) {
+  if (bilhete && bilhete.rotulo) return bilhete.rotulo;
   const f = (REGUA_VALENDO && REGUA_VALENDO.formatos) || [];
-  return f.length === 1 && f[0] === "reels";
+  if (!f.length || f.length === 3) return "publicações";
+  const nomes = ["reels", "carrossel", "post"].filter(x => f.includes(x))
+    .map(x => NOMES_FORMATO[x]);
+  return nomes.length === 1 ? nomes[0]
+    : nomes.slice(0, -1).join(", ") + " e " + nomes[nomes.length - 1];
+}
+const filtrando = () => {
+  const f = (REGUA_VALENDO && REGUA_VALENDO.formatos) || [];
+  return f.length > 0 && f.length < 3;
 };
 
 /* A GRAVIDADE É DECIDIDA AQUI, e não lida do que ficou gravado.
@@ -518,19 +530,15 @@ function linhaDoAgora(b) {
   const quando = Math.round((Date.now() / 1000) - (b.quando || 0));
   ln.innerHTML = `<i></i><span class="oque"><b></b>`
     + `<span class="dados"><span><b>${num(b.lidos)}</b>${
-        b.publicacoes
-          ? ` de ${num(b.publicacoes)}${
-              (b.modo === "reels" || (b.modo === undefined && modoReels())) ? " reels" : ""}`
-          : " posts lidos"}</span>`
+        b.publicacoes ? ` de ${num(b.publicacoes)} ${rotuloDosFormatos(b)}`
+                      : ` ${rotuloDosFormatos(b)}`}</span>`
     + (pct !== null ? `<span><b>${pct}%</b></span>` : "")
     + (b.vaga ? `<span>vaga <b>${b.vaga}</b></span>` : "")
     + `</span></span>`
     + `<span class="data">${quando < 90 ? "agora" : "há " + Math.round(quando / 60) + " min"}</span>`;
   ln.querySelector(".oque > b").textContent = b.completo
     ? "Leitura encerrada, aguardando o fechamento da rodada"
-    : (b.modo === "reels" || (b.modo === undefined && modoReels()))
-      ? "Varrendo agora: a esteira está buscando os REELS deste perfil, e mais nada"
-      : "Varrendo agora: a esteira está lendo as páginas deste perfil";
+    : `Varrendo agora: a esteira está buscando ${rotuloDosFormatos(b)} deste perfil`;
   return ln;
 }
 
@@ -596,14 +604,16 @@ async function aoVivo() {
 
     if (batendo.length) {
       viva = true; selo = "ao vivo";
-      const emReels = batendo.every(b => b.modo === "reels" || modoReels());
+      const alvoDoTexto = rotuloDosFormatos(batendo[0]);
       titulo = (batendo.length === 1 ? "Uma máquina" : `${batendo.length} máquinas`)
-        + (emReels ? " buscando reels" : " lendo o Instagram");
-      resumo = batendo.map(b => `@${b.conta}: ${num(b.lidos)}`
-        + (b.publicacoes
-            ? ` de ${num(b.publicacoes)} ${
-                (b.modo === "reels" || (b.modo === undefined && modoReels())) ? "reels" : "posts"}`
-            : " posts lidos")).join(" · ");
+        + (filtrando() || (batendo[0] && batendo[0].rotulo
+                           && batendo[0].rotulo !== "publicacoes")
+            ? ` buscando ${alvoDoTexto}` : " lendo o Instagram");
+      resumo = batendo.map(b => {
+        const nome = rotuloDosFormatos(b);
+        return `@${b.conta}: ${num(b.lidos)}`
+          + (b.publicacoes ? ` de ${num(b.publicacoes)} ${nome}` : ` ${nome}`);
+      }).join(" · ");
       desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
     } else if (nenhumPronto) {
       viva = true; selo = "identificando";
@@ -785,8 +795,7 @@ function desenhaLivro() {
     // EM VARREDURA DE REELS, A CONTA E' DE REELS. Comparar contra o total de
     // publicacoes do perfil fazia a tela dizer "72 de 2.254", numeros de duas coisas
     // diferentes, e a leitura obvia era que estava varrendo o perfil inteiro de novo.
-    const eReels = c.modo === "reels" || (c.modo === undefined && modoReels());
-    const nome = eReels ? "reels" : "posts";
+    const nome = rotuloDosFormatos(b);
     // A esteira para ao ATINGIR o alvo, e a última página costuma passar dele: pedir
     // duzentos e trazer duzentos e quatro é o normal. Mostrar "102%" faz parecer conta
     // errada, quando é a coisa tendo dado certo.
@@ -1244,14 +1253,22 @@ function ajustarFolha() {
   // o feed vem misturado e a esteira precisa ler tudo para achar o que interessa.
   const fs = ["reels", "post", "carrossel"].filter(f => $("f_" + f).checked);
   const soReels = fs.length === 1 && fs[0] === "reels";
+  const nomes = ["reels", "carrossel", "post"].filter(x => fs.includes(x))
+    .map(x => NOMES_FORMATO[x]);
+  const rot = nomes.length === 1 ? nomes[0]
+    : nomes.slice(0, -1).join(", ") + " e " + nomes[nomes.length - 1];
   $("ini_ate").textContent = !fs.length
     ? "escolha ao menos um formato acima"
     : soReels
-      ? "Só Reels tem caminho próprio no Instagram: a esteira busca reels puros e para "
-        + "ao juntar 200. Medido: 204 reels em 12 minutos."
-      : "Com imagem ou carrossel na conta, o Instagram só entrega o histórico misturado. "
-        + "A esteira lê do mais novo para o mais antigo e para em 800 publicações, "
-        + "cerca de 40 minutos por perfil.";
+      ? "Reels tem caminho próprio no Instagram: a esteira busca reels puros e para ao "
+        + "juntar 200. Medido: 204 reels em 12 minutos."
+      : fs.length === 3
+        ? "Todos os formatos: a esteira lê do mais novo para o mais antigo e para em 800 "
+          + "publicações, cerca de 40 minutos por perfil."
+        : `A esteira guarda só ${rot}. O Instagram entrega o histórico misturado e não `
+          + `deixa pedir esses formatos separados, então ela lê do mais novo para o mais `
+          + `antigo, guarda ${rot} e descarta o resto. Para ao juntar 200 ou ao ver 800 `
+          + `publicações, o que vier primeiro.`;
 
   const n = contasEscritas().length;
   $("ini_quantos").textContent = n === 1 ? "1 perfil escrito acima"
