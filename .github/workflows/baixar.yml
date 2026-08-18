@@ -82,7 +82,11 @@ jobs:
 
       - name: Baixar
         if: inputs.quantos != 'sonda'
-        run: python baixar.py "${{ inputs.quantos }}"
+        # PELO AMBIENTE, e nao coladinho na linha de comando: o pedido vem de fora, e
+        # texto de fora colado dentro de um shell e' texto que pode virar comando.
+        env:
+          PEDIDO: ${{ inputs.quantos }}
+        run: python baixar.py "$PEDIDO"
 
       # A CONTA DO QUE FALTA E' REFEITA DEPOIS DE BAIXAR, e nao so' antes.
       # O passo la' de cima roda com a lista de baixados do lote ANTERIOR: sem este
