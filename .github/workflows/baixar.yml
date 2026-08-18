@@ -14,8 +14,11 @@ on:
         description: "quantas vezes a mediana do proprio formato"
         default: "1.5"
       quantos:
-        description: "teto de arquivos neste lote"
+        description: "teto de arquivos neste lote, ou 'sonda' para so' relatar o pedido"
         default: "150"
+      contas:
+        description: "de quais perfis, separados por virgula. Vazio = todos"
+        default: ""
 
 permissions:
   contents: write
@@ -27,10 +30,29 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # O QUE CHEGOU NO PEDIDO, escrito antes de qualquer trabalho.
+      # A tela nao fala com o GitHub: ela fala com a ponte, e a ponte copia campo a
+      # campo. Campo que ela nao conhece some no caminho sem avisar ninguem, e ja'
+      # houve um campo na tela que nunca chegou aqui por causa disso. Este passo existe
+      # para essa perda aparecer no registro em vez de virar mistério.
+      - name: O que chegou no pedido
+        env:
+          QUANTOS: ${{ inputs.quantos }}
+          CONTAS: ${{ inputs.contas }}
+          FORMATOS: ${{ inputs.formatos }}
+          CORTE: ${{ inputs.corte }}
+        run: |
+          echo "quantos  = [$QUANTOS]"
+          echo "contas   = [$CONTAS]"
+          echo "formatos = [$FORMATOS]"
+          echo "corte    = [$CORTE]"
+
       - name: Conferir os programas
+        if: inputs.quantos != 'sonda'
         run: python conferir.py
 
       - name: Aplicar a regua escolhida na tela
+        if: inputs.quantos != 'sonda'
         # SEM ARGUMENTOS, de proposito. Passar formato e corte por aqui refazia a
         # selecao com uma regua diferente da que foi escolhida ao iniciar: o lote saia
         # com outro criterio e ninguem via onde tinha mudado. A regua mora no acervo,
@@ -38,6 +60,7 @@ jobs:
         run: python selecionar.py
 
       - name: Renovar os links vencidos
+        if: inputs.quantos != 'sonda'
         # o link do arquivo dura poucas horas. Se a mineracao foi ontem, ele venceu,
         # e o unico jeito de ter link novo e' reler o perfil.
         run: |
@@ -52,9 +75,11 @@ jobs:
           PY
 
       - name: Baixar
+        if: inputs.quantos != 'sonda'
         run: python baixar.py "${{ inputs.quantos }}"
 
       - name: Entregar o lote
+        if: inputs.quantos != 'sonda'
         uses: actions/upload-artifact@v4
         with:
           name: lote-${{ github.run_number }}
@@ -64,7 +89,7 @@ jobs:
           compression-level: 0
 
       - name: Anotar o lote na tela
-        if: always()
+        if: always() && inputs.quantos != 'sonda'
         run: |
           python - <<'PY'
           import json, pathlib, time
