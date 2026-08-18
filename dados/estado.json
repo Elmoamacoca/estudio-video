@@ -1,13 +1,15 @@
 {
  "prontas": 390,
  "avaliados": 1137,
- "ultima_rodada": 1787092241,
+ "ultima_rodada": 1787095692,
  "perfis": [
   {
    "conta": "blankpartners",
    "nome": "Blank Partners",
    "avatar": "https://scontent-gig4-2.cdninstagram.com/v/t51.82787-19/754097621_17972911848095867_6665383546402145230_n.jpg?stp=dst-jpg_s320x320_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-gig4-2.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gEKqdt6QOt_c9zWanC4Y3YCrIrE2xqjMNt3u3YRtFYFzqixtzywEnh1y_4OzZSsuG0&_nc_ohc=NYnKC6oeKqgQ7kNvwH-8EKq&_nc_gid=XWFFUcJo2xspWgvkhAXTWQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AQGhY4T_ZkdOyPclZ4DXxwRDOBupL_HeLcEioETsvFHfwA&oe=6A8A59F9&_nc_sid=8b3546",
    "seguidores": 218062,
+   "mercado": null,
+   "etiquetas": [],
    "atualizado": 1787079903,
    "publicacoes": 1678,
    "lidos": 737,
@@ -19,13 +21,17 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 254,
-   "baixaveis": 254
+   "baixaveis": 254,
+   "baixados": 0,
+   "restam": 254
   },
   {
    "conta": "brandsdecoded__",
    "nome": "BrandsDecoded®️ | Conteúdo & Cultura",
    "avatar": "https://scontent-gig4-2.cdninstagram.com/v/t51.2885-19/470485463_447808955037948_7614817151307633884_n.jpg?stp=dst-jpg_s320x320_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDI4LmMyIn0&_nc_ht=scontent-gig4-2.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gHGYE3JuUICjD6r0MQ1cbyFmbjzZZ7afjxODPgspGEZlPMFqjPL91DtKT8RxAocpBE&_nc_ohc=No0Qj31HRiEQ7kNvwGgQPvx&_nc_gid=f-5jmot2U2UBaAp7RVxcuQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AQHYEyRs6ZIrY9va8u7BKXOhkhGfE5VPOFKV67wV96Tv8A&oe=6A8A5C4E&_nc_sid=8b3546",
    "seguidores": 311666,
+   "mercado": null,
+   "etiquetas": [],
    "atualizado": 1787077488,
    "publicacoes": 2256,
    "lidos": 294,
@@ -37,13 +43,19 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 95,
-   "baixaveis": 95
+   "baixaveis": 95,
+   "baixados": 0,
+   "restam": 95
   },
   {
    "conta": "vinci.society",
    "nome": "Vinci",
    "avatar": "https://scontent-fra5-1.cdninstagram.com/v/t51.2885-19/473003048_630709769621734_3825445525412961486_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby43MDAuYzIifQ&_nc_ht=scontent-fra5-1.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gGubpgtho4ckZe6Xbsju1Bcv7w1MhGDf6P0Sbn--MFFO-jPiqRU9NgBh5g0x2kT8Xg&_nc_ohc=XItzVbdNKVcQ7kNvwHnLwVi&_nc_gid=BQd9XpXFN6bZtRC9PFZ5MA&edm=ACWDqb8BAAAA&ccb=7-5&oh=00_AQGKM-YAodZCgBiUH_HH1eZot0bCyvxYO_v9qe7_zPC8qw&oe=6A8A7A02&_nc_sid=ee9879",
    "seguidores": 0,
+   "mercado": "luxo",
+   "etiquetas": [
+    "referencia"
+   ],
    "atualizado": 1787074280,
    "publicacoes": 0,
    "lidos": 106,
@@ -55,7 +67,9 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 41,
-   "baixaveis": 41
+   "baixaveis": 41,
+   "baixados": 0,
+   "restam": 41
   }
  ],
  "lotes": [
