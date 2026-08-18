@@ -240,9 +240,14 @@ def registrar_rodada(rodada: int | None = None) -> int:
 
         if lidos > antes:
             maquinas = len({a for _, a in marcas if a.startswith(("vaga", "elo"))})
+            # O EVENTO FALA NO FORMATO PEDIDO. Dizer "posts" numa varredura de
+            # carrossel e' o mesmo defeito do cartao, so' que gravado para sempre no
+            # historico: daqui a noventa dias a ficha continuaria mentindo.
+            rot = rotulo()
             anotar(livro, "varredura", agora,
-                   f"Varredura: {lidos - antes} posts novos, "
-                   f"{mil(lidos)} de {mil(publicacoes)} lidos",
+                   f"Varredura: {lidos - antes} {rot} novos, "
+                   + (f"{mil(lidos)} de {mil(publicacoes)} lidos" if publicacoes
+                      else f"{mil(lidos)} no total"),
                    rodada=rodada, maquinas=maquinas or None,
                    gravacoes=len(marcas) or None,
                    novos=lidos - antes, total=lidos, publicacoes=publicacoes)
