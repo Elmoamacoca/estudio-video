@@ -2406,15 +2406,19 @@ async function aoVivo() {
    material que existe. Cada tentativa aparece no cartão, com o número dela.
 
    TRÊS FREIOS, porque cada tentativa deixa duas gravações no acervo:
-     1. só com a aba à vista, para uma janela esquecida não gravar a noite inteira;
-     2. teto de vinte e cinco tentativas por perfil, e depois disso ele espera o Iniciar;
-     3. uma de cada vez, sem empilhar chamada em cima de chamada. */
+     1. teto de vinte e cinco tentativas por perfil, e depois disso ele espera o Iniciar;
+     2. uma de cada vez, sem empilhar chamada em cima de chamada;
+     3. só enquanto existir perfil sem identificação, que é o único caso que precisa. */
 const TENTATIVAS = new Map();
 const TETO_TENTATIVAS = 25;
 let insistindo = false;
 
 async function insistirIdentificacao() {
-  if (insistindo || document.visibilityState !== "visible") return;
+  // SEM EXIGIR A ABA À VISTA. A trava de visibilidade parecia prudente e era um tiro no
+  // pé: o normal é deixar esta tela aberta numa aba de fundo e ir fazer outra coisa, que
+  // é justamente quando o perfil precisa ser identificado sozinho. Quem limita o gasto é
+  // o teto de tentativas, que já basta: vinte e cinco chamadas e acabou.
+  if (insistindo) return;
   const alvos = LIVRO.filter(c => c.aguardando).map(c => c.conta)
     .filter(c => (TENTATIVAS.get(c) || 0) < TETO_TENTATIVAS);
   if (!alvos.length) return;
