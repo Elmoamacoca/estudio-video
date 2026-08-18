@@ -3,16 +3,17 @@
   {
    "conta": "vinci.society",
    "nome": "Vinci",
+   "rotulo": "reels",
    "primeiro": 1787062205,
-   "ultimo": 1787062205,
-   "eventos": 1,
+   "ultimo": 1787062898,
+   "eventos": 3,
    "falhas": 0,
-   "avisos": 0,
-   "ultimo_tipo": "identificado",
-   "lidos": 0,
-   "publicacoes": 287,
-   "completo": false
+   "avisos": 1,
+   "ultimo_tipo": "limite",
+   "lidos": 106,
+   "publicacoes": 200,
+   "completo": true
   }
  ],
- "atualizado": 1787062207
+ "atualizado": 1787062898
 }
