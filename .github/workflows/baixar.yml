@@ -27,8 +27,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Selecionar com o criterio pedido
-        run: python selecionar.py "${{ inputs.formatos }}" "${{ inputs.corte }}" "${{ inputs.quantos }}"
+      - name: Conferir os programas
+        run: python conferir.py
+
+      - name: Aplicar a regua escolhida na tela
+        # SEM ARGUMENTOS, de proposito. Passar formato e corte por aqui refazia a
+        # selecao com uma regua diferente da que foi escolhida ao iniciar: o lote saia
+        # com outro criterio e ninguem via onde tinha mudado. A regua mora no acervo,
+        # gravada pela tela, e e' de la' que este passo le'.
+        run: python selecionar.py
 
       - name: Renovar os links vencidos
         # o link do arquivo dura poucas horas. Se a mineracao foi ontem, ele venceu,
@@ -63,13 +70,25 @@ jobs:
           import json, pathlib, time
           reg = pathlib.Path("brutos/_lote.json")
           est = json.loads(pathlib.Path("dados/estado.json").read_text(encoding="utf-8"))
+          # o criterio do lote e' o que esta' gravado na regua, e nao um texto montado
+          # com os argumentos: os dois divergiam, e quem lia a tela via o errado.
+          sel = json.loads(pathlib.Path("dados/selecao.json").read_text(encoding="utf-8"))
+          c = sel.get("criterio") or {}
+          fmt = ", ".join(c.get("formatos") or []) or "todos os formatos"
+          if c.get("por_formato"):
+              cortes = c.get("cortes") or {}
+              quanto = ", ".join(f"{f} {cortes.get(f)}x" for f in (c.get("formatos") or [])
+                                 if f in cortes)
+          else:
+              quanto = f"{c.get('corte')}x"
+          criterio = f"{fmt} acima de {quanto}"
           itens = json.loads(reg.read_text(encoding="utf-8")).get("itens", []) if reg.exists() else []
           lotes = est.get("lotes", [])
           lotes.insert(0, {
               "numero": ${{ github.run_number }},
               "arquivos": len(itens),
               "mb": round(sum(i.get("bytes", 0) for i in itens) / 1048576),
-              "criterio": "${{ inputs.formatos }} acima de ${{ inputs.corte }}x",
+              "criterio": criterio,
               "quando": int(time.time()),
               "execucao": "${{ github.run_id }}",
           })
