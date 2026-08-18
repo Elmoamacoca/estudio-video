@@ -445,3 +445,29 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .liv-ev.passo .oque > b{font-weight:450;font-size:12px}
 .liv-ev.passo i{width:5px;height:5px;margin-top:6px}
 .liv-ev.passo .data{font-size:11px}
+
+/* ------------------------------------------------ A TABELA LARGA DE MINERADOS
+
+   Onze colunas não cabem em tela nenhuma sem rolagem, e a rolagem existe: `.tab-rolo`
+   já tem `overflow-x`. O que não existia era o AVISO de que ela existe. A barra vem
+   escondida do sistema de origem, onde a tabela é estreita e cabe inteira; aqui o botão
+   da última coluna ficava metade fora e a leitura era de tabela quebrada.
+
+   Duas correções, e nenhuma delas mexe no componente de origem:
+
+     1. a coluna de ação gruda na direita, então o botão nunca sai de vista, role-se
+        quanto for. O fundo dela é opaco para o texto das outras colunas passar por baixo;
+     2. as colunas param de se espremer: com largura mínima, a rolagem entra em vez de
+        o conteúdo virar sopa. */
+#tab_minerados{min-width:1080px}
+
+.tab td.tab-acao, .tab th.tab-acao{position:sticky;right:0;z-index:2;
+  background:var(--branco);box-shadow:-10px 0 12px -10px rgba(0,0,0,.45)}
+.tab thead th.tab-acao{background:var(--paper-2)}
+.tab tbody tr:hover td.tab-acao{background:var(--paper-2)}
+
+/* a rolagem passa a ser visível, discreta, para o olho saber que há mais à direita */
+.tab-rolo{scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
+.tab-rolo::-webkit-scrollbar{display:block;height:9px}
+.tab-rolo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
+.tab-rolo::-webkit-scrollbar-track{background:transparent}
