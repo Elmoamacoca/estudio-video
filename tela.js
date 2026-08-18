@@ -451,6 +451,7 @@ const pesoDe = e => PESO[e.tipo] || (e.tipo ? "evento" : (e.gravidade || "evento
 const TIPOS = {
   aguardando: "aguardando identificação",
   vazio: "sem posts públicos",
+  alvo: "alvo atingido",
   identificado: "identificação",
   varredura: "varredura",
   concluido: "conclusão",
@@ -1175,12 +1176,14 @@ $("fontes").addEventListener("input", () => { $("fontes").dataset.tocado = "1"; 
 
 function reguaEscolhida() {
   const formatos = ["reels", "post", "carrossel"].filter(f => $("f_" + f).checked);
+  const alvo = Math.max(0, parseInt($("alvo").value, 10) || 0);
   const numero = campo => {
     const n = parseFloat(String($(campo).value).replace(",", "."));
     return Number.isFinite(n) && n > 0 ? n : 1.5;
   };
   return {
     formatos,
+    alvo,
     por_formato: $("por_formato").checked,
     corte: numero("corte_unico"),
     cortes: { reels: numero("c_reels"), post: numero("c_post"),
