@@ -1,0 +1,27 @@
+name: reels
+
+# Testa se a paginacao dos reels depende do endereco de saida ou da falta de conta.
+# Cada maquina da matriz tem endereco proprio e nenhuma delas pediu a primeira pagina.
+
+on:
+  workflow_dispatch:
+    inputs:
+      uid:
+        description: "numero do perfil"
+        default: "71529565537"
+      marcador:
+        description: "marcador vindo de outro endereco (vazio = primeira pagina)"
+        default: "-"
+
+jobs:
+  tentar:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        maquina: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - run: python sondareels.py "${{ inputs.uid }}" "${{ inputs.marcador }}"
