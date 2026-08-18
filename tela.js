@@ -789,7 +789,7 @@ function desenhaLivro() {
   $("liv_mais").textContent = `Ver mais ${Math.min(POR_LEVA, fila.length - livroMostra)}`;
   $("exp_tela").textContent = `${fila.length} de ${LIVRO.length} perfis`;
 
-  $("liv_lista").innerHTML = pedaco.map(bruto => {
+  const html = pedaco.map(bruto => {
     // O BILHETE MANDA quando ele é mais novo que a capa do livro. A capa é escrita no
     // fim da rodada; o bilhete, a cada página. Um perfil entrando agora tem capa dizendo
     // zero e bilhete dizendo cento e trinta e dois.
@@ -824,8 +824,12 @@ function desenhaLivro() {
         ? (cob >= 100 ? `${num(c.lidos)} ${nome}, alvo de ${num(c.publicacoes)} cumprido`
                       : `${num(c.lidos)} ${nome}, acabaram os ${nome} do perfil`)
         : `${num(c.lidos)} de ${num(c.publicacoes)} ${nome} (${cob}%)`;
-    return `<div class="liv-cartao ${grave}" data-conta="${c.conta}">
-      <button class="liv-cabeca" type="button" aria-expanded="false">
+    // A MARCA DE ABERTO NASCE JUNTO COM O CARTÃO.
+    // Aplicá-la depois, no laço lá de baixo, fazia o cartão nascer fechado e abrir no
+    // quadro seguinte: de dez em dez segundos ele piscava na cara de quem estava lendo.
+    const jaAberto = ABERTOS.has(c.conta);
+    return `<div class="liv-cartao ${grave}${jaAberto ? " aberto" : ""}" data-conta="${c.conta}">
+      <button class="liv-cabeca" type="button" aria-expanded="${jaAberto}">
         <span class="liv-ponto"></span>
         <span class="liv-id">
           <span class="liv-nome"><b>${c.nome
@@ -846,9 +850,19 @@ function desenhaLivro() {
     </div>`;
   }).join("");
 
-  // e o que estava aberto continua aberto, com o conteúdo repintado
-  for (const cartao of $("liv_lista").querySelectorAll(".liv-cartao"))
-    if (ABERTOS.has(cartao.dataset.conta)) abrirCartao(cartao);
+  // DESENHO IGUAL NÃO SE REDESENHA.
+  //
+  // Esta lista é reconstruída a cada dez segundos pelo relógio dos bilhetes. Quando nada
+  // mudou, trocar o HTML por outro idêntico destrói e recria os elementos à toa: o
+  // cartão aberto fecha e reabre, o texto que estava sendo lido salta, e a rolagem
+  // pula. Comparar antes custa nada e resolve o piscar na raiz.
+  const lista = $("liv_lista");
+  if (lista.dataset.desenho === html) return;
+  lista.dataset.desenho = html;
+  lista.innerHTML = html;
+
+  // o conteúdo dos abertos é repintado; a marca de aberto já veio no HTML
+  for (const cartao of lista.querySelectorAll(".liv-cartao.aberto")) abrirCartao(cartao);
 }
 
 /** Junta os eventos de todos os perfis e alimenta as três medidas do topo.
@@ -946,8 +960,11 @@ async function abrirCartao(cartao) {
   cartao.classList.add("aberto");
   cartao.querySelector(".liv-cabeca").setAttribute("aria-expanded", "true");
   const caixa = cartao.querySelector(".liv-caixa");
-  caixa.textContent = "buscando o histórico";
   const conta = cartao.dataset.conta;
+  // "buscando" só quando realmente vai buscar: com o histórico já na mão, essa linha
+  // piscava a cada repintura e dava a impressão de que o cartão estava recarregando.
+  const guardado = HISTORICOS.get(conta);
+  if (!guardado) caixa.textContent = "buscando o histórico";
   const eventos = await historicoDe(conta);
   const ficha = LIVRO.find(c => c.conta === conta);
 
