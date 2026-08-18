@@ -35,6 +35,7 @@ PERFIS = Path("dados/perfis")
 GRAVIDADE = {
     "aguardando": "aviso",
     "vazio": "aviso",
+    "alvo": "evento",
     "identificado": "evento",
     "varredura": "evento",
     "concluido": "evento",
@@ -237,8 +238,21 @@ def registrar_rodada(rodada: int | None = None) -> int:
         # O FECHAMENTO, uma vez só. "Até o limite" não é conclusão limpa: o Instagram
         # corta a leitura anônima por profundidade, e o que sobrou de histórico ficou
         # fora do alcance. Isso é aviso, e não sucesso.
-        ja_fechou = any(e["tipo"] in ("concluido", "limite") for e in livro["eventos"])
+        ja_fechou = any(e["tipo"] in ("concluido", "limite", "alvo")
+                        for e in livro["eventos"])
         if estado.get("completo") and not ja_fechou:
+            # PAROU PORQUE JA' TINHA O BASTANTE, e isso nao e' limite nem conclusao: e'
+            # a escolha da tela sendo cumprida. Sem evento proprio, o perfil aparecia
+            # como "fechado no limite do Instagram", que e' outra coisa e assusta.
+            if estado.get("parou_no_alvo"):
+                anotar(livro, "alvo", agora,
+                       f"Varredura encerrada no alvo: {mil(estado['parou_no_alvo'])} "
+                       f"publicações dos formatos escolhidos, em {mil(lidos)} lidas",
+                       total=lidos, alvo=estado["parou_no_alvo"])
+                entraram += 1
+                if livro["eventos"]:
+                    gravar(livro)
+                continue
             parcial = publicacoes and lidos < publicacoes
             if parcial:
                 anotar(livro, "limite", agora,
