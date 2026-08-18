@@ -1416,19 +1416,15 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       </div>
     </div>
 
-    <!-- ATE ONDE VARRER.
-         O Instagram nao deixa pedir so' um formato sem sessao: a via de reels responde
-         "require_login", entao o feed vem misturado e nao ha' escolha quanto a isso.
-         O que da' para escolher e' quando parar. Medido no @brandsdecoded__: das 24
-         publicacoes mais recentes, 23 eram carrossel e 1 era reels; varrer as 2.253
-         para achar os reels leva umas tres horas de esteira. -->
+    <!-- ATE ONDE VARRER: E' CONTADO, E NAO PERGUNTADO.
+         Aqui houve um campo para digitar o numero, e ele nao funcionava: quem escreve a
+         regua no acervo e' a ponte, que copia uma lista fixa de campos e descartava esse
+         no caminho. Campo que promete e nao cumpre e' pior do que campo nenhum.
+         O limite agora sai dos formatos marcados, que a ponte copia, e esta linha diz em
+         voz alta o que vai acontecer. -->
     <div class="campo-bloco">
-      <label class="campo-rot" for="alvo">Varrer até juntar quantas dos formatos acima</label>
-      <p class="nota mini">O Instagram entrega o histórico misturado, sem deixar pedir um
-        formato só. Então a esteira lê em ordem, do mais novo para o mais antigo, e para
-        ao juntar esta quantidade. Zero significa varrer o perfil inteiro, que num perfil
-        de dois mil posts leva horas.</p>
-      <input type="number" id="alvo" value="200" step="10" min="0" max="5000">
+      <label class="campo-rot">Até onde a esteira vai</label>
+      <p class="nota" id="ini_ate">—</p>
     </div>
 
     <div class="campo-bloco">
@@ -2974,14 +2970,12 @@ $("fontes").addEventListener("input", () => { $("fontes").dataset.tocado = "1"; 
 
 function reguaEscolhida() {
   const formatos = ["reels", "post", "carrossel"].filter(f => $("f_" + f).checked);
-  const alvo = Math.max(0, parseInt($("alvo").value, 10) || 0);
   const numero = campo => {
     const n = parseFloat(String($(campo).value).replace(",", "."));
     return Number.isFinite(n) && n > 0 ? n : 1.5;
   };
   return {
     formatos,
-    alvo,
     por_formato: $("por_formato").checked,
     corte: numero("corte_unico"),
     cortes: { reels: numero("c_reels"), post: numero("c_post"),
@@ -3003,6 +2997,20 @@ function ajustarFolha() {
   document.querySelectorAll(".cortes label").forEach(l => {
     l.hidden = !$("f_" + l.dataset.de).checked;
   });
+  // A LINHA QUE DIZ ATE' ONDE VAI, e ela muda conforme os formatos marcados.
+  // Só Reels tem caminho próprio no Instagram, e por isso é rápido. Com imagem no meio,
+  // o feed vem misturado e a esteira precisa ler tudo para achar o que interessa.
+  const fs = ["reels", "post", "carrossel"].filter(f => $("f_" + f).checked);
+  const soReels = fs.length === 1 && fs[0] === "reels";
+  $("ini_ate").textContent = !fs.length
+    ? "escolha ao menos um formato acima"
+    : soReels
+      ? "Só Reels tem caminho próprio no Instagram: a esteira busca reels puros e para "
+        + "ao juntar 200. Medido: 204 reels em 12 minutos."
+      : "Com imagem ou carrossel na conta, o Instagram só entrega o histórico misturado. "
+        + "A esteira lê do mais novo para o mais antigo e para em 800 publicações, "
+        + "cerca de 40 minutos por perfil.";
+
   const n = contasEscritas().length;
   $("ini_quantos").textContent = n === 1 ? "1 perfil escrito acima"
     : n ? `${n} perfis escritos acima` : "escreva ao menos um perfil acima";
