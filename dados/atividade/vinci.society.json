@@ -1,0 +1,27 @@
+{
+ "conta": "vinci.society",
+ "nome": "Vinci",
+ "eventos": [
+  {
+   "quando": 1787074280,
+   "tipo": "identificado",
+   "gravidade": "evento",
+   "texto": "Perfil aberto no Instagram: 106 posts na primeira leitura",
+   "detalhe": {
+    "publicacoes": null,
+    "seguidores": null,
+    "total": 106
+   }
+  },
+  {
+   "quando": 1787074569,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os reels deste perfil: 106 no total",
+   "detalhe": {
+    "total": 106,
+    "publicacoes": 0
+   }
+  }
+ ]
+}
