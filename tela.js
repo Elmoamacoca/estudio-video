@@ -232,6 +232,13 @@ function situacaoDe(p) {
   // fazia a conta não fechar para quem olhava a esteira.
   if (p.relendo) return "relendo";
   if (!p.completo) return "varrendo";
+  // "ATÉ O LIMITE" É SOBRE O INSTAGRAM TER CORTADO A LEITURA, e não sobre ter lido
+  // menos que o total de publicações do perfil. Numa busca de reels, ler 294 de 2.256
+  // publicações é o esperado: as outras 1.962 são imagem e carrossel, e nunca seriam
+  // lidas. Os dois perfis apareciam como "até o limite" tendo chegado ao último reel.
+  const filtrado = rotuloDosFormatos(null, LIVRO.find(c => c.conta === p.conta))
+                     !== "publicações";
+  if (filtrado) return "completo";
   return (p.publicacoes && p.lidos < p.publicacoes) ? "limite" : "completo";
 }
 
