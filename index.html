@@ -289,16 +289,149 @@ a{color:var(--link)}
 
 .sel-marca svg{width:16px;height:16px}
 
+
+
+.autocomplete{position:relative;display:flex;flex-direction:column;gap:4px}
+
+.autocomplete__trigger{position:relative;isolation:isolate;display:flex;
+  min-height:var(--h-filtro);min-width:var(--l-filtro);align-items:center;gap:6px;
+  flex-wrap:wrap;
+  border-radius:var(--r-filtro);border:1px solid var(--rule-solid);background:var(--branco);
+  padding:6px 14px;font:inherit;font-size:14px;color:var(--ink);text-align:start;
+  box-shadow:0 2px 4px 0 rgba(14,14,14,.04), 0 1px 2px 0 rgba(14,14,14,.06),
+             0 0 1px 0 rgba(14,14,14,.06);
+  outline:0;user-select:none;cursor:pointer;
+  transition:background-color .15s ease, border-color .15s ease, box-shadow .15s ease}
+
+.autocomplete__trigger:has(.autocomplete__indicator){padding-inline-end:28px}
+@media (hover:hover){
+  
+  .autocomplete__trigger:hover:not(:has(.autocomplete__clear-button:hover))
+    {background:var(--paper-2)}
+}
+
+.autocomplete__trigger:focus-visible{border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 50%, transparent)}
+
+.autocomplete__trigger[aria-expanded="true"]{border-color:var(--accent)}
+
+.autocomplete__value{display:flex;flex:1;flex-wrap:wrap;gap:5px;align-items:center;
+                     text-align:start;color:currentColor}
+
+.autocomplete__value[data-placeholder="true"]{color:var(--muted)}
+
+.autocomplete__indicator{position:absolute;top:0;bottom:0;inset-inline-end:8px;
+  margin:auto 0;display:flex;width:16px;height:16px;flex-shrink:0;align-items:center;
+  justify-content:center;color:var(--muted);transition:transform .15s}
+
+.autocomplete__indicator[data-open="true"]{transform:rotate(180deg)}
+
+.autocomplete__clear-button{position:relative;display:inline-flex;width:20px;height:20px;
+  flex-shrink:0;align-self:center;align-items:center;justify-content:center;
+  border:0;border-radius:12px;padding:1px;background:transparent;color:var(--muted);
+  cursor:pointer;user-select:none;transform-origin:center;
+  transition:opacity .15s ease}
+
+.autocomplete__clear-button svg{width:14px;height:14px}
+
+.autocomplete__clear-button[data-empty="true"]{pointer-events:none;opacity:0}
+@media (hover:hover){
+  .autocomplete__clear-button:hover{background:var(--paper-2)}
+}
+
+.autocomplete__clear-button:active{transform:scale(.93)}
+
+
+
+.autocomplete__popover{position:absolute;top:calc(100% + 4px);right:0;z-index:50;
+  display:none;flex-direction:column;width:100%;min-width:240px;
+  overflow:hidden;overscroll-behavior:contain;background:var(--branco);
+  padding:8px 0 0;font-size:14px;border-radius:var(--r-balao);outline:0;
+  border:1px solid var(--rule-solid);box-shadow:var(--sombra-balao)}
+
+.autocomplete__popover.aberta{display:flex;
+  animation:etqEntra .25s cubic-bezier(.32,.72,0,1)}
+
+@keyframes etqEntra{from{opacity:0;transform:scale(.95) translateY(-4px)}
+                    to{opacity:1;transform:none}}
+
+.autocomplete__busca{flex-shrink:0;padding:4px 12px;outline:0}
+
+.autocomplete__busca input{width:100%;border:0;outline:0;background:none;font:inherit;
+  font-size:14px;color:var(--ink);padding:6px 0}
+
+.autocomplete__busca input::placeholder{color:var(--soft)}
+
+
+.list-box{position:relative;width:100%;max-height:320px;overflow-y:auto;padding:6px;
+          outline:0}
+
+.list-box > * + *{margin-top:4px}
+
+.list-box-item{position:relative;display:flex;min-height:36px;width:100%;
+  align-items:center;justify-content:flex-start;gap:12px;border:0;background:none;
+  border-radius:var(--r-item);padding:6px 10px;font:inherit;font-size:14px;
+  color:var(--ink);
+  text-align:left;outline:0;cursor:pointer;user-select:none;
+  transition:transform .25s cubic-bezier(.165,.84,.44,1), box-shadow .15s}
+
+.list-box-item:has(.list-box-item__indicator){padding-inline-end:28px}
+@media (hover:hover){
+  .list-box-item:hover{background:var(--paper-2)}
+}
+
+.list-box-item:active{transform:scale(.98)}
+
 .list-box-item.marcado{background:var(--paper-2)}
+
+.list-box-item__indicator{position:absolute;top:50%;inset-inline-end:8px;display:flex;
+  width:16px;height:16px;transform:translateY(-50%);align-items:center;
+  justify-content:center;color:var(--ink)}
+
+.list-box-item__indicator svg{width:10px;height:10px}
+
+.list-box-vazia{padding:10px;text-align:center;font-size:14px;color:var(--soft)}
 @media (max-width:720px){
   
   .filtros .ac,.filtros .sel,.filtros .autocomplete{flex:1 1 100%;width:100%}
   
   .sel-gatilho,.autocomplete__trigger{width:100%}
+  
+  .autocomplete__popover{left:0;right:0;min-width:0}
 }
 
 
+
+.badge{display:inline-flex;width:fit-content;flex:0 0 auto;align-items:center;
+       justify-content:center;overflow:hidden;white-space:nowrap;height:20px;gap:4px;
+       border-radius:32px;border:1px solid transparent;padding:2px 8px;
+       font-size:12px;line-height:16px;font-weight:500;transition:all .15s}
+
+.badge > svg{width:12px;height:12px;pointer-events:none}
+
+
 .selo-ig{width:18px;height:18px;display:block}
+
+.badge-default{background:var(--accent);color:#fff}
+
+.badge-secondary{background:var(--paper-2);color:var(--ink)}
+
+.badge-outline{border-color:var(--rule-solid);color:var(--ink)}
+
+
+
+.badge-etq{
+  --etq-h:210;
+  padding-left:6px;
+  border-color:hsl(var(--etq-h) 42% 84%);
+  background:hsl(var(--etq-h) 72% 96.5%);
+  color:hsl(var(--etq-h) 48% 33%);
+}
+
+.badge-etq > svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;
+                 stroke-linejoin:round;opacity:.9}
+
+.badge-etq.adulto{--etq-h:344}
 
 :root[data-theme="dark"] .badge-etq{
   border-color:hsl(var(--etq-h) 26% 30%);
@@ -349,7 +482,36 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
   .ins-ordenar .sel{flex:1 1 auto}
 }
 
+
+
+.badge-alta{border-color:transparent;background:var(--accent-tint);color:var(--link);
+            font-weight:600}
+
+.badge-alta.fria{background:var(--paper-2);color:var(--muted)}
+
+.sinal-cab.modelo .badge{margin-top:4px}
+
+.sinal-cab.modelo .badge-sinal{margin-left:auto}
+
+
+.badge-sinal{border-color:transparent;background:var(--accent-tint);color:var(--link)}
+
+.badge-sinal.queda{background:color-mix(in srgb,var(--vermelho) 12%,transparent);
+                   color:var(--vermelho)}
+
+.badge-sinal.duvida{background:color-mix(in srgb,var(--ambar) 14%,transparent);
+                    color:var(--ambar)}
+
+
+.badge-sinal.viral{background:var(--accent);color:#FFFFFF;font-weight:600}
+
+.badge-sinal .chama{width:12px;height:12px;flex:0 0 12px;margin-right:1px}
+
+.badge-idade{border-color:var(--rule-solid);color:var(--muted)}
+
 .sinal.modelo .pcard-retrato{flex:0 0 48px;width:48px;height:48px}
+
+.sinal.modelo .sinal-cab .badge{font-size:11px;height:19px}
 
 
 
@@ -1081,14 +1243,52 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tab-rolo::-webkit-scrollbar-track{background:transparent}
 
 /* ------------------------------------------------------- MONTAR UM LOTE
-   O comando de baixar era um botão por perfil, e ele prometia um recorte que não
-   existia: quem baixa percorre a seleção inteira, ordenada por desempenho. Agora é um
-   comando só, com a única escolha que muda o resultado, que é o tamanho do lote. */
-.lote-montar{margin-bottom:18px}
-.lote-linha{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
-.lote-linha .campo-rot{margin:0}
-.lote-linha input[type=number]{width:110px}
-.prontos-lista{display:grid;gap:12px}
+   O comando de baixar já foi um botão por perfil, e ele prometia um recorte que não
+   existia: quem baixa percorre a seleção inteira. Depois virou um botão só com um
+   campo de quantidade, e aí eram duas decisões para um pedido. Agora é uma decisão:
+   quais perfis. A conta do lote sai da marcação da fileira. */
+.lote-montar{margin-bottom:14px}
+.lote-linha{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-top:16px}
+.lote-campo{display:flex;flex-direction:column;gap:6px}
+/* Filtro sem nada para recortar fica apagado e não abre, e a linha embaixo do cartão
+   diz por quê. Deixá-lo aceso seria prometer um recorte que hoje não existe. */
+.lote-campo[data-inerte="true"]{opacity:.42;pointer-events:none}
+.lote-campo .campo-rot{margin:0;font-size:12px;color:var(--muted)}
+/* o comando encosta no fim da linha: ele fecha o cartão, não divide espaço com filtro */
+.lote-linha .acao.forte{margin-left:auto}
+.lote-montar .nota + .nota{margin-top:14px}
+
+/* ------------------------------------------------- A FILEIRA DE PERFIS
+   Um cartão por perfil que tem conteúdo esperando. Só a marca e, no rodapé, quanto há
+   para baixar dali: quem quiser o detalhe abre a tabela de Minerados, que é onde ele
+   mora. Perfil sem nada a baixar não aparece, e é isso que faz a fileira encolher
+   sozinha à medida que os lotes saem. */
+.fileira{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));
+            gap:12px}
+.fperfil{background:var(--branco);border:1px solid var(--rule-solid);
+      border-radius:var(--r-lg);box-shadow:var(--sombra);overflow:hidden;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;padding-top:18px;
+      transition:border-color .16s, box-shadow .16s}
+.fperfil:hover{border-color:var(--accent)}
+.fperfil .pcard-retrato{flex:0 0 58px;width:58px;height:58px;margin-bottom:16px}
+.fperfil .pcard-avatar{border-width:2px;font-size:19px}
+.fperfil-pe{width:100%;border-top:1px solid var(--rule);background:var(--paper);
+         padding:9px 6px;text-align:center}
+.fperfil-pe b{font-size:16px;font-weight:650;color:var(--ink);
+           font-variant-numeric:tabular-nums}
+.fperfil-pe span{font-size:11.5px;color:var(--muted);margin-left:4px}
+
+/* MARCADO: borda de destaque e o certo no canto. A cor sozinha não basta, porque o
+   cartão marcado e o cartão sob o cursor teriam o mesmo desenho. */
+.fperfil.marcado{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.fperfil.marcado .fperfil-pe{background:var(--accent-tint)}
+.fperfil-certo{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;
+            background:var(--accent);color:#fff;display:none;
+            align-items:center;justify-content:center}
+.fperfil-certo svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:3;
+                stroke-linecap:round;stroke-linejoin:round}
+.fperfil{position:relative}
+.fperfil.marcado .fperfil-certo{display:flex}
 
 </style>
 </head>
@@ -1543,6 +1743,87 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 <!-- ==================================================================== ABA 2 · BAIXAR -->
 <section class="aba" id="aba-baixar" hidden>
 
+  <!-- ================================================ O QUE HÁ PARA BAIXAR
+
+       O TAMANHO DO LOTE NÃO SE DIGITA MAIS: ELE É CONTADO.
+       Havia um campo de quantidade, e ele obrigava a decidir duas coisas para pedir
+       uma: quais perfis e quantos arquivos. Agora a escolha é uma só. Os perfis são
+       marcados na fileira de baixo e a conta aparece sozinha aqui em cima.
+
+       O CARTÃO É FIXO, e não redesenhado a cada volta. Os dois filtros são componentes
+       com comportamento preso ao elemento: reescrever o cartão de vinte e cinco em
+       vinte e cinco segundos apagaria essa ligação, e as listas parariam de abrir. Só
+       a fileira de perfis é redesenhada. -->
+  <div class="secao">
+    <div class="secao-cab">
+      <h2>O que há para baixar</h2>
+      <div class="dir"><span class="nota" id="recado_baixar"></span></div>
+    </div>
+
+    <div class="caixa lote-montar">
+      <h3>Montar um lote</h3>
+      <p class="nota">Marque os perfis na fileira abaixo. Sai tudo o que passou da
+        régua naqueles perfis, em ordem de desempenho, e some daqui o que já veio.</p>
+
+      <div class="lote-linha">
+        <div class="lote-campo">
+          <label class="campo-rot">Mercado</label>
+          <div class="sel" id="bx-nicho">
+            <button class="sel-gatilho" id="bx-nichog" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-valor" id="bx-nichov" data-vazio="true">Todos os nichos</span>
+              <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="sel-lista" id="bx-nichol" role="listbox">
+              <div class="sel-grupo" id="bx-nichogr"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lote-campo">
+          <label class="campo-rot">Etiqueta</label>
+          <div class="autocomplete" id="bx-etq">
+            <div class="autocomplete__trigger" id="bx-etqgatilho" role="combobox"
+                 tabindex="0" aria-haspopup="listbox" aria-expanded="false">
+              <span class="autocomplete__value" id="bx-etqvalor"
+                    data-placeholder="true">Todas as etiquetas</span>
+              <button class="autocomplete__clear-button" id="bx-etqlimpar" type="button"
+                      data-empty="true" aria-label="Limpar as etiquetas">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+              <span class="autocomplete__indicator" id="bx-etqseta" data-open="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m6 9 6 6 6-6"/></svg>
+              </span>
+            </div>
+            <div class="autocomplete__popover" id="bx-etqpop">
+              <div class="autocomplete__busca">
+                <input id="bx-etqq" type="text" autocomplete="off" spellcheck="false"
+                       placeholder="Buscar etiqueta">
+              </div>
+              <div class="list-box" id="bx-etqlista" role="listbox"
+                   aria-multiselectable="true"></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="acao forte" id="lote_vai" type="button" disabled>Montar lote</button>
+      </div>
+
+      <p class="nota" id="recado_lote">Carregando o acervo.</p>
+      <!-- Os dois filtros nascem apagados enquanto não houver o que recortar, e esta
+           linha diz por quê. Controle que não faz nada e não explica é o que já fez
+           esta tela mentir uma vez. -->
+      <p class="nota mini" id="recado_filtros" hidden></p>
+    </div>
+
+    <div class="fileira" id="prontos"><div class="vazio">Carregando.</div></div>
+  </div>
+
   <!-- A RÉGUA NÃO SE EDITA MAIS AQUI. Ela é escolhida ao iniciar a mineração, na aba
        anterior, e gravada no acervo: é de lá que a esteira lê. Ter dois lugares para
        editar a mesma coisa era o que fazia estes campos não valerem nada. -->
@@ -1555,14 +1836,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <h3 id="regua_titulo">carregando</h3>
       <p class="nota" id="regua_texto">Buscando a régua gravada no acervo.</p>
     </div>
-  </div>
-
-  <div class="secao">
-    <div class="secao-cab">
-      <h2>Perfis varridos</h2>
-      <div class="dir"><span class="nota" id="recado_baixar"></span></div>
-    </div>
-    <div id="prontos"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
   </div>
 
   <div class="secao">
@@ -1833,6 +2106,96 @@ window.montarSelect = function(pre, opcoes, escolhido, aoEscolher){
   });
   val.textContent = rotulo(atual);
   return function(){ return atual; };
+};
+
+window.montarMulti = function(pre, opcoes, vazio, aoMudar){
+  var gat = document.getElementById(pre + "gatilho"),
+      val = document.getElementById(pre + "valor"),
+      seta = document.getElementById(pre + "seta"),
+      pop = document.getElementById(pre + "pop"),
+      campo = document.getElementById(pre + "q"),
+      lista = document.getElementById(pre + "lista"),
+      limpar = document.getElementById(pre + "limpar");
+  if (!gat || !lista) return function(){ return []; };
+  var escolhidas = [], marcado = -1;
+  var CERTO = '<span class="list-box-item__indicator"><svg viewBox="0 0 24 24" ' +
+              'fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" ' +
+              'stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>';
+  function seguro(s){
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function pintarLista(){
+    var termo = campo ? campo.value.trim().toLowerCase() : "";
+    var vistas = opcoes.filter(function(o){
+      return !termo || o.r.toLowerCase().indexOf(termo) !== -1;
+    });
+    if (!vistas.length){
+      lista.innerHTML = '<div class="list-box-vazia">Nada com esse nome.</div>';
+      return;
+    }
+    lista.innerHTML = vistas.map(function(o, i){
+      var tem = escolhidas.indexOf(o.v) !== -1;
+      return '<button class="list-box-item' + (i === marcado ? " marcado" : "") +
+             '" type="button" role="option" data-v="' + seguro(o.v) + '"' +
+             ' aria-selected="' + tem + '"><span>' + seguro(o.r) + "</span>" +
+             (tem ? CERTO : "") + "</button>";
+    }).join("");
+  }
+  function rotuloDe(v){
+    for (var i = 0; i < opcoes.length; i++) if (opcoes[i].v === v) return opcoes[i].r;
+    return v;
+  }
+  function pintarValor(){
+    val.innerHTML = escolhidas.length
+      ? escolhidas.map(function(v){
+          return '<span class="badge badge-outline">' + seguro(rotuloDe(v)) + "</span>";
+        }).join("")
+      : vazio;
+    val.setAttribute("data-placeholder", escolhidas.length ? "false" : "true");
+    limpar.setAttribute("data-empty", escolhidas.length ? "false" : "true");
+  }
+  function abrir(sim){
+    pop.classList.toggle("aberta", sim);
+    gat.setAttribute("aria-expanded", sim ? "true" : "false");
+    seta.setAttribute("data-open", sim ? "true" : "false");
+    if (sim){ marcado = -1; if (campo){ campo.value = ""; } pintarLista();
+              if (campo) campo.focus(); }
+  }
+  function alternar(v){
+    var i = escolhidas.indexOf(v);
+    if (i === -1) escolhidas.push(v); else escolhidas.splice(i, 1);
+    pintarValor(); pintarLista(); aoMudar(escolhidas.slice());
+  }
+  gat.addEventListener("click", function(ev){
+    if (ev.target.closest(".autocomplete__clear-button")) return;
+    abrir(!pop.classList.contains("aberta"));
+  });
+  gat.addEventListener("keydown", function(ev){
+    if (ev.target !== gat) return;
+    if (ev.key === "ArrowDown" || ev.key === "Enter" || ev.key === " "){
+      ev.preventDefault(); abrir(true);
+    }
+  });
+  limpar.addEventListener("click", function(ev){
+    ev.stopPropagation();
+    escolhidas = []; pintarValor(); pintarLista(); aoMudar([]);
+  });
+  lista.addEventListener("click", function(ev){
+    var b = ev.target.closest(".list-box-item");
+    if (b) alternar(b.dataset.v);
+  });
+  if (campo) campo.addEventListener("input", function(){ marcado = -1; pintarLista(); });
+  // Clicar fora fecha. O caminho do evento e' lido com `composedPath` porque a lista e'
+  // reescrita a cada marcacao, e `closest` num no' ja' descartado devolve nada.
+  document.addEventListener("click", function(ev){
+    var c = ev.composedPath ? ev.composedPath() : [ev.target];
+    var dentro = c.some(function(x){
+      return x && x.matches && x.matches("#" + pre + ", #" + pre + " *"); });
+    if (!dentro) abrir(false);
+  });
+  pintarValor();
+  return function(){ return escolhidas.slice(); };
 };
 </script>
 <script>
@@ -2136,6 +2499,42 @@ window.montarSelect("min-ordem", [
 window.montarSelect("min-por", [
   { v: "10", r: "10" }, { v: "25", r: "25" }, { v: "50", r: "50" },
 ], "10", v => { minPor = parseInt(v, 10) || 10; minPagina = 1; desenhaMinerados(); });
+
+/* ------------------------------ o estado da fileira de Baixar
+
+   ELE MORA AQUI EM CIMA, e não junto do desenho, porque a montagem dos dois
+   filtros logo abaixo já o usa. Declarado depois, o `const` fica na zona morta
+   do JavaScript e a montagem estoura na abertura, matando o arquivo inteiro. */
+const ESCOLHIDOS = new Set();
+let bxNicho = "", bxEtiquetas = [];
+// o que a última pintura mostrou, para a contagem ao marcar não precisar de uma leitura
+let ULTIMOS_PRONTOS = [];
+
+// As duas listas são MUTÁVEIS de propósito. Os componentes de lá guardam a referência
+// que receberam e a releem toda vez que a lista abre; trocá-la por outra obrigaria a
+// remontar o componente, e remontar significa pendurar os mesmos ouvintes de novo.
+const NICHOS_BX = [{ v: "", r: "Todos os nichos" }];
+const ETIQUETAS_BX = [];
+
+// O recado do pedido não é atropelado pela contagem: a tela se redesenha de 25 em 25
+// segundos, e "lote em preparo" sumia antes de dar tempo de ler.
+let travaDoRecado = 0;
+
+const CERTO_FILEIRA = '<span class="fperfil-certo"><svg viewBox="0 0 24 24">'
+  + '<path d="M20 6 9 17l-5-5"/></svg></span>';
+
+/* OS DOIS FILTROS DA ABA DE BAIXAR, montados uma vez só, na abertura.
+   As listas de opção são as mesmas variáveis que a fileira reescreve a cada leitura do
+   acervo: por isso são montados aqui, com a lista vazia, e não a cada volta. Remontar
+   penduraria um ouvinte novo em cima do antigo, e cada clique valeria por dois. */
+window.montarSelect("bx-nicho", NICHOS_BX, "", v => {
+  bxNicho = v;
+  desenhaProntos(MINERADOS);
+});
+window.montarMulti("bx-etq", ETIQUETAS_BX, "Todas as etiquetas", vs => {
+  bxEtiquetas = vs;
+  desenhaProntos(MINERADOS);
+});
 
 function desenhaMinerados() {
   const q = ($("min-q").value || "").trim().toLowerCase();
@@ -2981,55 +3380,117 @@ function mostrarRegua(cr) {
    que INTERROMPE quem chamou: `atualizar()` morria ali, a cada 25 segundos, e as duas
    linhas seguintes nunca rodavam. Era por isso que a aba de Baixar dizia "nenhum perfil
    varrido ainda" com dois perfis varridos e mil e quinhentas peças acima da régua. */
-function desenhaProntos(sel, perfis) {
-  const alvo = $("prontos");
-  if (!perfis || !perfis.length) {
-    alvo.innerHTML = '<div class="vazio">Nenhum perfil varrido ainda.</div>';
-    return;
-  }
-  const cr = (sel && sel.criterio) || {};
-  const corte = cr.por_formato
-    ? Math.min(...Object.values(cr.cortes || { reels: 1.5 }))
-    : (cr.corte || 1.5);
-  const itens = (sel && sel.itens) || [];
-  const baixaveis = itens.filter(i => i.formato === "reels" && i.arquivo).length;
-  const acimaTotal = perfis.reduce((a, b) => a + (b.acima || 0), 0);
+/* ==================================================== O QUE HÁ PARA BAIXAR
 
-  /* UM LOTE SÓ, COM OS MELHORES DE TODOS OS PERFIS.
-     Havia um botão por perfil escrito "Baixar 254 reels", e ele mentia: quem baixa é
-     um trabalho que percorre a SELEÇÃO INTEIRA, ordenada do maior índice para o menor,
-     sem separar por conta. Apertar no @blankpartners trazia os melhores de todo mundo.
-     Agora o botão diz o que acontece, e a escolha que existe de verdade é quantos. */
+   O TAMANHO DO LOTE É CONTADO, E NÃO DIGITADO.
+   Aqui houve um campo de quantidade, e ele obrigava a decidir duas coisas para pedir
+   uma: de quem e quantos. Agora a decisão é uma só. Os perfis são marcados na fileira,
+   e a soma do que eles têm esperando é o lote.
+
+   A FILEIRA MOSTRA O QUE FALTA, e não o acervo. Perfil cujo conteúdo já veio inteiro
+   sai dela: é isso que faz a lista encolher a cada lote em vez de repetir para sempre
+   os mesmos três cartões. */
+function desenhaProntos(perfis) {
+  const alvo = $("prontos");
   const nome = rotuloDosFormatos(null, LIVRO[0] || null);
-  alvo.innerHTML = `
-    <div class="caixa lote-montar">
-      <h3>Montar um lote</h3>
-      <p class="nota">Os arquivos saem em ordem de desempenho, do maior múltiplo da
-        mediana para o menor, juntando todos os perfis. Só reels têm arquivo de vídeo:
-        imagem e carrossel entram na lista, mas não têm o que baixar.</p>
-      <div class="lote-linha">
-        <label class="campo-rot" for="lote_quantos">Quantos arquivos neste lote</label>
-        <input type="number" id="lote_quantos" value="${Math.min(150, baixaveis) || 50}"
-               min="1" max="500" step="10">
-        <button class="acao forte" id="lote_vai" ${baixaveis ? "" : "disabled"}>
-          Montar lote</button>
-      </div>
-      <p class="nota" id="recado_lote">${baixaveis
-        ? `${num(baixaveis)} reels com arquivo disponível, de ${num(acimaTotal)} acima da régua.`
-        : "Nenhum reels com arquivo disponível: os links vencem em algumas horas, e a esteira renova ao varrer de novo."}</p>
-    </div>
-    <div class="prontos-lista">${perfis.map(p => {
-      const meus = itens.filter(i => i.conta === p.conta);
-      const acima = p.acima != null ? p.acima : meus.filter(i => i.indice >= corte).length;
-      return `<div class="pronto">
-        <div class="pronto-topo"><span class="quem">@${p.conta}</span></div>
-        <div class="pronto-numeros">
-          <div><b>${num(p.lidos)}</b><span>${nome} varridos</span></div>
-          <div><b>${num(acima)}</b><span>acima da régua</span></div>
-          <div><b>${String(corte).replace(".", ",")}x</b><span>régua usada</span></div>
-        </div></div>`;
-    }).join("")}</div>`;
+  // O SALDO VEM DO SELETOR, mas a tela sabe se virar sem ele. `restam` nasceu hoje, e
+  // o acervo so' passa a trazer o campo depois que o seletor rodar de novo: sem esta
+  // saida, a fileira abriria vazia dizendo que tudo ja' foi baixado, que e' o contrario
+  // da verdade.
+  const saldoDe = p => (p.restam != null ? p.restam : (p.baixaveis || 0));
+  const comSaldo = (perfis || []).filter(p => saldoDe(p) > 0);
+
+  // AS OPÇÕES SAEM DO PRÓPRIO CONTEÚDO, que é a regra do sistema de origem: mercado ou
+  // etiqueta que nenhum perfil tem não vira opção, porque só saberia devolver lista
+  // vazia. Hoje nenhum perfil tem nenhum dos dois, e por isso os dois nascem apagados.
+  const nichos = [...new Set(comSaldo.map(p => p.mercado).filter(Boolean))].sort();
+  const etiquetas = [...new Set(comSaldo.flatMap(p => p.etiquetas || []))].sort();
+  NICHOS_BX.length = 1;
+  NICHOS_BX.push(...nichos.map(n => ({ v: n, r: n })));
+  ETIQUETAS_BX.length = 0;
+  ETIQUETAS_BX.push(...etiquetas.map(e => ({ v: e, r: e })));
+  $("bx-nicho").parentElement.dataset.inerte = nichos.length ? "false" : "true";
+  $("bx-etq").parentElement.dataset.inerte = etiquetas.length ? "false" : "true";
+  const semRotulo = !nichos.length && !etiquetas.length;
+  $("recado_filtros").hidden = !semRotulo;
+  if (semRotulo) {
+    $("recado_filtros").textContent = "Mercado e etiqueta ainda não são gravados na "
+      + "mineração, então os dois filtros acima ficam apagados. Assim que um perfil "
+      + "entrar com essa marcação, eles acendem sozinhos.";
+  }
+
+  const filtrados = comSaldo.filter(p =>
+    (!bxNicho || p.mercado === bxNicho)
+    && (!bxEtiquetas.length || (p.etiquetas || []).some(e => bxEtiquetas.includes(e))));
+
+  // marcação de perfil que saiu da fileira não fica pendurada: o lote seria montado com
+  // um perfil que ninguém está mais vendo.
+  const visiveis = new Set(filtrados.map(p => p.conta));
+  for (const c of [...ESCOLHIDOS]) if (!visiveis.has(c)) ESCOLHIDOS.delete(c);
+
+  const html = filtrados.length
+    ? filtrados.map(p => `<div class="fperfil${ESCOLHIDOS.has(p.conta) ? " marcado" : ""}"
+         data-conta="${p.conta}" title="@${p.conta}">${CERTO_FILEIRA}${retrato(p)}
+         <div class="fperfil-pe"><b>${num(saldoDe(p))}</b><span>${nome}</span></div>
+       </div>`).join("")
+    : `<div class="vazio">${comSaldo.length
+        ? "Nenhum perfil com essa marcação."
+        : !(perfis || []).length
+          ? "Nenhum perfil varrido ainda."
+          /* VAZIO TEM DOIS MOTIVOS, e eles não se confundem: ou tudo já desceu, ou nunca
+             houve arquivo. Só reels têm arquivo de vídeo; imagem e carrossel passam da
+             régua e não têm o que baixar. Dizer "já foi baixado" no segundo caso seria
+             a tela inventando um lote que nunca existiu. */
+          : (perfis.some(p => (p.baixaveis || 0) > 0)
+              ? "Tudo o que passou da régua já foi baixado."
+              : "Nenhum arquivo de vídeo à vista: só reels têm arquivo, e imagem e "
+                + "carrossel entram na conta da régua sem ter o que baixar.")}</div>`;
+
+  // desenho igual não se redesenha: reescrever a fileira a cada volta apagava o cartão
+  // aberto sob o cursor e piscava a marcação.
+  if (alvo.dataset.desenho !== html) {
+    alvo.innerHTML = html;
+    alvo.dataset.desenho = html;
+  }
+  // guardado ja com o saldo resolvido, para a contagem nao repetir a conta
+  ULTIMOS_PRONTOS = filtrados.map(p => ({ ...p, restam: saldoDe(p) }));
+  contarLote(ULTIMOS_PRONTOS, nome);
 }
+
+/** A conta do lote: quantos perfis estão marcados e quanto eles somam. */
+function contarLote(filtrados, nome) {
+  const marcados = (filtrados || []).filter(p => ESCOLHIDOS.has(p.conta));
+  const total = marcados.reduce((a, p) => a + (p.restam || 0), 0);
+  const espera = (filtrados || []).reduce((a, p) => a + (p.restam || 0), 0);
+
+  const b = $("lote_vai");
+  b.disabled = !total;
+  b.textContent = total ? `Montar lote de ${num(total)}` : "Montar lote";
+
+  $("recado_baixar").textContent = espera
+    ? `${num(espera)} ${nome} esperando, em ${filtrados.length} `
+      + (filtrados.length === 1 ? "perfil" : "perfis")
+    : "";
+  if (Date.now() < travaDoRecado) return;
+  $("recado_lote").textContent = !espera
+    ? "Nada esperando. Cada lote que sai apaga daqui o que ele levou."
+    : total
+      ? `${num(total)} ${nome} de ${marcados.length} `
+        + (marcados.length === 1 ? "perfil marcado" : "perfis marcados")
+      : "Marque um perfil na fileira abaixo para montar o lote.";
+}
+
+/* A marcação da fileira. O ouvinte é da página, e não de cada cartão: a fileira é
+   redesenhada, e ouvinte preso a um cartão morre junto com ele. */
+document.addEventListener("click", ev => {
+  const card = ev.target.closest("#prontos .fperfil");
+  if (!card) return;
+  const conta = card.dataset.conta;
+  if (ESCOLHIDOS.has(conta)) ESCOLHIDOS.delete(conta);
+  else ESCOLHIDOS.add(conta);
+  card.classList.toggle("marcado", ESCOLHIDOS.has(conta));
+  contarLote(ULTIMOS_PRONTOS, rotuloDosFormatos(null, LIVRO[0] || null));
+});
 
 function desenhaLotes(l) {
   if (!l || !l.length) {
@@ -3152,7 +3613,7 @@ async function atualizar() {
   desenhaLivro();
   medirLivro();
 
-  desenhaProntos(sel, perfis);
+  desenhaProntos(MINERADOS);
   desenhaLotes(estado && estado.lotes);
 }
 
@@ -3319,19 +3780,33 @@ $("ini_vai").onclick = async () => {
   $("ini_cancelar").disabled = false;
 };
 
+/* ============================================================ PEDIR O LOTE
+
+   O PEDIDO VIAJA NO CAMPO `quantos`, E ISSO NÃO É DESLEIXO.
+   Quem fala com o GitHub é a ponte, e ela copia campo a campo: só o que está na lista
+   dela atravessa. Medido em 18/08/2026, com uma sonda que imprimiu o pedido do lado de
+   lá: mandando `contas`, `perfis`, `quem`, `alvo`, `conta`, `lista`, `selecionados` e
+   `de`, os oito chegaram vazios. `quantos` chegou inteiro, com o texto que foi mandado.
+
+   A ponte não pode ser mexida daqui (a chave dela é da Cloudflare, e não está nesta
+   máquina), então o canal que existe é esse. A esteira do outro lado sabe ler os dois
+   formatos: um número é teto de arquivos, uma lista de nomes é de quais perfis. */
 document.addEventListener("click", async ev => {
   if (!ev.target.closest("#lote_vai")) return;
   const b = $("lote_vai");
+  const contas = [...ESCOLHIDOS];
+  if (!contas.length) return;
   b.disabled = true;
-  const quantos = Math.max(1, parseInt($("lote_quantos").value, 10) || 50);
-  // baixar um lote leva minutos, e é o carregamento mais longo do sistema
-  carregando("recado_lote", `Montando o lote com ${quantos} arquivos`, "bolas");
+  travaDoRecado = Date.now() + 30000;
+  carregando("recado_lote", `Montando o lote de ${contas.length} `
+    + (contas.length === 1 ? "perfil" : "perfis"), "bolas");
   try {
-    // só o tamanho vai daqui. Formato e corte vêm da régua gravada no acervo, a mesma
-    // escolhida ao iniciar: mandar outra por aqui criaria duas verdades.
-    await mandar("/baixar", { quantos });
+    // formato e corte não vão daqui: vêm da régua gravada no acervo, a mesma escolhida
+    // ao iniciar. Mandar outra por aqui criaria duas verdades.
+    await mandar("/baixar", { quantos: contas.join(",") });
     parado("recado_lote", "lote em preparo. Ele aparece em Lotes montados ao terminar, "
-      + "e leva alguns minutos.");
+      + "e leva alguns minutos. O que vier some da fileira acima.");
+    ESCOLHIDOS.clear();
   } catch (e) { parado("recado_lote", e.message); }
   setTimeout(() => { b.disabled = false; atualizar(); }, 8000);
 });
