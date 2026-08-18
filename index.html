@@ -1261,17 +1261,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 #recado_lote{margin-top:18px}
 #recado_filtros{margin-top:10px}
 
-/* O LOTE PRONTO, colado no botão que o pediu */
-.lote-pronto{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px;
-             padding:14px 16px;border:1px solid var(--rule-solid);
-             border-radius:var(--r-md);background:var(--paper)}
-.lote-pronto[hidden]{display:none}
-.lote-pronto-quem{min-width:0;flex:1}
-.lote-pronto-quem b{display:block;font-size:14px;font-weight:650;color:var(--ink)}
-.lote-pronto-quem span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
-.lote-pronto .acao{flex:none;height:36px;padding:0 14px;font-size:13px;
-                   display:inline-flex;align-items:center;text-decoration:none}
-
 /* A MARCAÇÃO NA TABELA, embaixo do nome do perfil. Coluna nova alargaria a tabela, que
    já rola de lado; aqui a marcação anda junto de quem ela descreve. */
 .tab-marca{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
@@ -1879,36 +1868,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
            linha diz por quê. Controle que não faz nada e não explica é o que já fez
            esta tela mentir uma vez. -->
       <p class="nota mini" id="recado_filtros" hidden></p>
-
-      <!-- O ARQUIVO PRONTO MORA AQUI, e não numa seção à parte.
-           Havia uma seção "Lotes montados" no fim da aba, e ela guardava o link do ZIP
-           num lugar que não se ligava ao comando que o produziu. Agora o lote que
-           acabou de sair aparece colado no botão que o pediu. -->
-      <div class="lote-pronto" id="lote_pronto" hidden>
-        <div class="lote-pronto-quem">
-          <b id="lote_pronto_titulo"></b>
-          <span id="lote_pronto_dado"></span>
-        </div>
-        <a class="acao forte" id="lote_pronto_link" target="_blank" rel="noopener">
-          Baixar o ZIP</a>
-      </div>
     </div>
 
     <div class="fileira" id="prontos"><div class="vazio">Carregando.</div></div>
-  </div>
-
-  <!-- A RÉGUA NÃO SE EDITA MAIS AQUI. Ela é escolhida ao iniciar a mineração, na aba
-       anterior, e gravada no acervo: é de lá que a esteira lê. Ter dois lugares para
-       editar a mesma coisa era o que fazia estes campos não valerem nada. -->
-  <div class="secao">
-    <div class="secao-cab">
-      <h2>Régua em vigor</h2>
-      <div class="dir"><span class="nota">escolhida ao iniciar, em Mineração</span></div>
-    </div>
-    <div class="caixa">
-      <h3 id="regua_titulo">carregando</h3>
-      <p class="nota" id="regua_texto">Buscando a régua gravada no acervo.</p>
-    </div>
   </div>
 
 </section>
@@ -3441,29 +3403,6 @@ $("exp_baixar").onclick = async () => {
   $("liv_folha").hidden = true;
 };
 
-/** A régua em vigor, escrita por extenso na aba de Baixar. Ela não se edita ali: quem
- *  escolhe é a folha de Iniciar, e este texto existe para não haver dúvida de qual
- *  régua produziu os números da tela. */
-function mostrarRegua(cr) {
-  if (!cr) {
-    $("regua_titulo").textContent = "Nenhuma régua gravada ainda";
-    $("regua_texto").textContent = "Ela é escolhida ao iniciar a primeira mineração, "
-      + "na aba de Mineração.";
-    return;
-  }
-  const nomes = { reels: "reels", post: "post isolado", carrossel: "carrossel" };
-  const formatos = (cr.formatos || []).map(f => nomes[f] || f);
-  $("regua_titulo").textContent = cr.por_formato
-    ? (cr.formatos || []).map(f =>
-        `${nomes[f] || f} ${String(cr.cortes[f]).replace(".", ",")}x`).join(" · ")
-    : `${String(cr.corte).replace(".", ",")}x para todos os formatos`;
-  $("regua_texto").textContent = `Entram ${formatos.join(", ")}. `
-    + (cr.por_formato
-        ? "A mediana é calculada separada para cada formato."
-        : "A mediana é uma só, calculada com todos os formatos juntos.")
-    + ` Máximo de ${num(cr.teto)} peças por lote.`;
-}
-
 /* ---------------------------------------------------------------- desenhos
 
    AQUI MORAVA `desenhaPerfis`, e ela era um defeito de verdade, não sobra inofensiva.
@@ -3584,25 +3523,6 @@ document.addEventListener("click", ev => {
   contarLote(ULTIMOS_PRONTOS, rotuloDosFormatos(null, LIVRO[0] || null));
 });
 
-/* O LOTE PRONTO, COLADO NO COMANDO QUE O PEDIU.
-   Havia uma seção "Lotes montados" no fim da aba, com um cartão por lote. Ela guardava
-   o link do arquivo longe do botão que o produziu, e quem chegava nela não sabia o que
-   era. Aqui fica só o último, dentro do cartão de montar: é o que se busca depois de
-   apertar o botão. Os anteriores continuam na esteira, que é onde eles moram. */
-function mostrarLotePronto(lotes) {
-  const cx = $("lote_pronto");
-  const x = (lotes || []).find(l => l && l.arquivos);
-  if (!x) { cx.hidden = true; return; }
-  cx.hidden = false;
-  $("lote_pronto_titulo").textContent = `Lote ${x.numero}: ${num(x.arquivos)} arquivos, `
-    + `${x.mb} MB`;
-  $("lote_pronto_dado").textContent = `${x.criterio || "sem critério anotado"} · pronto `
-    + `${quando(x.quando)} · o arquivo fica guardado por 14 dias e abre no fim da `
-    + `página da execução, em "Artifacts".`;
-  $("lote_pronto_link").href =
-    `https://github.com/${DONO}/${REPO}/actions/runs/${x.execucao}`;
-}
-
 /* ---------------------------------------------------------------- atualização */
 let primeiraCarga = true;
 
@@ -3669,7 +3589,6 @@ async function atualizar() {
   desenhaMinerados();
 
   REGUA_VALENDO = (sel && sel.criterio) || REGUA_VALENDO;
-  mostrarRegua((sel && sel.criterio) || null);
 
   // O CARTÃO NASCE DA LISTA DE CONTAS, e não da identificação no Instagram.
   //
@@ -3704,7 +3623,6 @@ async function atualizar() {
   medirLivro();
 
   desenhaProntos(MINERADOS);
-  mostrarLotePronto(estado && estado.lotes);
 }
 
 /* ---------------------------------------------------------------- comandos */
