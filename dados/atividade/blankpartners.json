@@ -247,6 +247,48 @@
     "total": 678,
     "publicacoes": 1678
    }
+  },
+  {
+   "quando": 1787080298,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 59 reels novos, 737 no total",
+   "detalhe": {
+    "rodada": 113,
+    "maquinas": 4,
+    "gravacoes": 4,
+    "passos": [
+     {
+      "quando": 1787079691,
+      "maquina": "vaga 3"
+     },
+     {
+      "quando": 1787079830,
+      "maquina": "vaga 7"
+     },
+     {
+      "quando": 1787079869,
+      "maquina": "vaga 8"
+     },
+     {
+      "quando": 1787079903,
+      "maquina": "vaga 9"
+     }
+    ],
+    "novos": 59,
+    "total": 737,
+    "publicacoes": 1678
+   }
+  },
+  {
+   "quando": 1787080298,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os reels deste perfil: 737 no total",
+   "detalhe": {
+    "total": 737,
+    "publicacoes": 1678
+   }
   }
  ]
 }

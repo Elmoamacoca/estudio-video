@@ -5,14 +5,14 @@
    "nome": "Blank Partners",
    "rotulo": "reels",
    "primeiro": 1787076365,
-   "ultimo": 1787079598,
-   "eventos": 7,
+   "ultimo": 1787080298,
+   "eventos": 9,
    "falhas": 0,
    "avisos": 1,
-   "ultimo_tipo": "varredura",
-   "lidos": 678,
+   "ultimo_tipo": "concluido",
+   "lidos": 737,
    "publicacoes": 0,
-   "completo": false
+   "completo": true
   },
   {
    "conta": "brandsdecoded__",
@@ -43,5 +43,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787079598
+ "atualizado": 1787080298
 }
