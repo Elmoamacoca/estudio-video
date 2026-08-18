@@ -1177,9 +1177,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         <div class="dir"><span class="nota" id="carga"></span></div>
       </div>
       <div class="numeros quatro">
-        <div class="num"><b id="n_lidos">0</b><span>posts varridos</span></div>
+        <div class="num"><b id="n_lidos">0</b><span id="rot_lidos">publicações varridas</span></div>
         <div class="num"><b id="n_completos">0</b><span>perfis concluídos</span></div>
-        <div class="num"><b id="n_reels">0</b><span>reels acima da régua</span></div>
+        <div class="num"><b id="n_reels">0</b><span id="rot_acima">acima da régua</span></div>
         <div class="num"><b id="n_baixados">0</b><span>vídeos baixados</span></div>
       </div>
     </div>
@@ -2939,7 +2939,13 @@ async function atualizar() {
   const lotes = (estado && estado.lotes) || [];
   $("n_lidos").textContent = num(perfis.reduce((a, b) => a + (b.lidos || 0), 0));
   $("n_completos").textContent = perfis.filter(p => p.completo).length;
-  $("n_reels").textContent = num(perfis.reduce((a, b) => a + (b.baixaveis || 0), 0));
+  // O QUE ESTA' ACIMA DA REGUA, no formato que foi pedido. Este numero contava so'
+  // reels baixaveis: numa varredura de carrossel ele marcava zero para sempre, e zero
+  // num painel quer dizer "nao achou nada", que era o contrario da verdade.
+  $("n_reels").textContent = num(perfis.reduce((a, b) => a + (b.acima || 0), 0));
+  const rot = rotuloDosFormatos(null, (LIVRO && LIVRO[0]) || null);
+  $("rot_lidos").textContent = rot === "publicações" ? "publicações varridas" : rot + " varridos";
+  $("rot_acima").textContent = "acima da régua";
   $("n_baixados").textContent = num(lotes.reduce((a, b) => a + (b.arquivos || 0), 0));
 
   // a linha do rodapé conta o que ele tem de útil: quantos perfis e desde quando
