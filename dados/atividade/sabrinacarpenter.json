@@ -23,6 +23,20 @@
     "gravacoes": 1,
     "total": 24
    }
+  },
+  {
+   "quando": 1787014345,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 36 posts novos, 60 de 0 lidos",
+   "detalhe": {
+    "rodada": 73,
+    "maquinas": 3,
+    "gravacoes": 3,
+    "novos": 36,
+    "total": 60,
+    "publicacoes": 0
+   }
   }
  ]
 }

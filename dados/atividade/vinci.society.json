@@ -26,6 +26,20 @@
     "total": 24,
     "publicacoes": 288
    }
+  },
+  {
+   "quando": 1787014345,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 24 posts novos, 48 de 288 lidos",
+   "detalhe": {
+    "rodada": 73,
+    "maquinas": 2,
+    "gravacoes": 2,
+    "novos": 24,
+    "total": 48,
+    "publicacoes": 288
+   }
   }
  ]
 }
