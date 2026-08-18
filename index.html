@@ -1046,6 +1046,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .liv-ev.agora .oque > b{color:var(--accent)}
 .liv-vivo{color:var(--accent);font-weight:600}
 
+/* AS PÁGINAS DE UMA RODADA, recuadas sob o evento que as resume. Menores e mais
+   apagadas de propósito: são o detalhe de quem quer conferir, e não a leitura principal
+   de quem só quer saber como está o perfil. */
+.liv-ev.passo{padding-left:44px;opacity:.62}
+.liv-ev.passo .oque > b{font-weight:450;font-size:12px}
+.liv-ev.passo i{width:5px;height:5px;margin-top:6px}
+.liv-ev.passo .data{font-size:11px}
+
 </style>
 </head>
 <body>
@@ -2683,7 +2691,7 @@ function pintarEventos(caixa, eventos) {
     const dados = [];
     if (d.maquinas) dados.push(`<b>${d.maquinas}</b> máquinas`);
     if (d.gravacoes) dados.push(`<b>${num(d.gravacoes)}</b> páginas`);
-    if (d.novos) dados.push(`<b>+${num(d.novos)}</b> posts`);
+    if (d.novos) dados.push(`<b>+${num(d.novos)}</b> novos`);
     if (d.total) dados.push(`total <b>${num(d.total)}</b>`);
     if (d.rodada) dados.push(`rodada <b>${d.rodada}</b>`);
     if (d.seguidores) dados.push(`<b>${num(d.seguidores)}</b> seguidores`);
@@ -2700,6 +2708,19 @@ function pintarEventos(caixa, eventos) {
       + `</span><span class="data">${dataHora(e.quando)}</span>`;
     ln.querySelector(".oque > b").textContent = e.texto;
     caixa.appendChild(ln);
+
+    // AS PÁGINAS DAQUELA RODADA, uma linha cada, com a hora e a máquina que gravou.
+    // É o nível que faltava: o resumo dizia "4 máquinas, 8 páginas" e parava aí, sem
+    // mostrar o trabalho. Cada linha destas é um commit real no acervo.
+    for (const passo of [...(d.passos || [])].reverse()) {
+      const sub = document.createElement("div");
+      sub.className = "liv-ev passo";
+      sub.innerHTML = `<i></i><span class="oque"><b></b></span>`
+        + `<span class="data">${dataHora(passo.quando)}</span>`;
+      sub.querySelector(".oque > b").textContent =
+        "página lida e gravada pela " + (passo.maquina || "esteira");
+      caixa.appendChild(sub);
+    }
   }
 }
 
