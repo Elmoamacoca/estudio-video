@@ -471,3 +471,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tab-rolo::-webkit-scrollbar{display:block;height:9px}
 .tab-rolo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
 .tab-rolo::-webkit-scrollbar-track{background:transparent}
+
+/* ------------------------------------------------------- MONTAR UM LOTE
+   O comando de baixar era um botão por perfil, e ele prometia um recorte que não
+   existia: quem baixa percorre a seleção inteira, ordenada por desempenho. Agora é um
+   comando só, com a única escolha que muda o resultado, que é o tamanho do lote. */
+.lote-montar{margin-bottom:18px}
+.lote-linha{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.lote-linha .campo-rot{margin:0}
+.lote-linha input[type=number]{width:110px}
+.prontos-lista{display:grid;gap:12px}
