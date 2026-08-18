@@ -128,6 +128,13 @@ def ja_basta(estado: dict, r: dict) -> bool:
     alvo = ALVO_PADRAO if alvo is None else int(alvo or 0)
     if alvo <= 0:
         return False
+
+    # SEM FILTRO, O ALVO E' O TETO. Com os tres formatos marcados, "duzentos do formato
+    # escolhido" vira "duzentas publicacoes", e a varredura parava em duzentas num perfil
+    # de duas mil. Quem marca tudo quer amplitude, e nao a mesma amostra de quem pediu um
+    # formato so'. Entao vale o teto de leitura, que e' quatro vezes maior.
+    if formatos_pedidos(r) == TODOS_OS_FORMATOS:
+        alvo = int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO)
     posts = estado.get("posts") or []
     # VISTAS, e nao guardadas: quem pede so' carrossel descarta o resto, e contar so' o
     # que ficou faria o teto nunca chegar num perfil que posta pouco daquele formato.
