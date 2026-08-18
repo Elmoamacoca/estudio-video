@@ -258,6 +258,11 @@ def registrar_rodada(rodada: int | None = None) -> int:
     return entraram
 
 
+def peso(evento: dict) -> str:
+    """A gravidade de um evento, decidida pelo tipo dele."""
+    return GRAVIDADE.get(evento.get("tipo"), evento.get("gravidade") or "evento")
+
+
 def reconstruir_indice() -> dict:
     """A capa da lista: um resumo por perfil, do mais recente para o mais antigo."""
     contas = []
@@ -291,8 +296,12 @@ def reconstruir_indice() -> dict:
             "primeiro": ev[0]["quando"],
             "ultimo": ev[-1]["quando"],
             "eventos": len(ev),
-            "falhas": sum(1 for e in ev if e["gravidade"] == "falha"),
-            "avisos": sum(1 for e in ev if e["gravidade"] == "aviso"),
+            # PELA TABELA DE AGORA, e nao pela marca que ficou escrita no evento. O
+            # tipo e' o dado e nao muda; a gravidade e' opiniao sobre ele, e ja' mudou
+            # uma vez. Lendo a marca antiga, o historico inteiro continuaria vermelho
+            # depois da correcao.
+            "falhas": sum(1 for e in ev if peso(e) == "falha"),
+            "avisos": sum(1 for e in ev if peso(e) == "aviso"),
             "ultimo_tipo": ev[-1]["tipo"],
             **estado_perfil,
         })
