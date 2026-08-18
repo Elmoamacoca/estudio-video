@@ -77,8 +77,11 @@ jobs:
           fmt = ", ".join(c.get("formatos") or []) or "todos os formatos"
           if c.get("por_formato"):
               cortes = c.get("cortes") or {}
-              quanto = ", ".join(f"{f} {cortes.get(f)}x" for f in (c.get("formatos") or [])
-                                 if f in cortes)
+              # so' repete o nome do formato quando ha' mais de um: com um so',
+              # "reels acima de reels 1.5x" era o nome dito duas vezes
+              pedidos = [f for f in (c.get("formatos") or []) if f in cortes]
+              quanto = (f"{cortes[pedidos[0]]}x" if len(pedidos) == 1
+                        else ", ".join(f"{f} {cortes[f]}x" for f in pedidos))
           else:
               quanto = f"{c.get('corte')}x"
           criterio = f"{fmt} acima de {quanto}"
