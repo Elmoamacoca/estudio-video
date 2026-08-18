@@ -1145,7 +1145,13 @@ async function atualizar() {
   const lotes = (estado && estado.lotes) || [];
   $("n_lidos").textContent = num(perfis.reduce((a, b) => a + (b.lidos || 0), 0));
   $("n_completos").textContent = perfis.filter(p => p.completo).length;
-  $("n_reels").textContent = num(perfis.reduce((a, b) => a + (b.baixaveis || 0), 0));
+  // O QUE ESTA' ACIMA DA REGUA, no formato que foi pedido. Este numero contava so'
+  // reels baixaveis: numa varredura de carrossel ele marcava zero para sempre, e zero
+  // num painel quer dizer "nao achou nada", que era o contrario da verdade.
+  $("n_reels").textContent = num(perfis.reduce((a, b) => a + (b.acima || 0), 0));
+  const rot = rotuloDosFormatos(null, (LIVRO && LIVRO[0]) || null);
+  $("rot_lidos").textContent = rot === "publicações" ? "publicações varridas" : rot + " varridos";
+  $("rot_acima").textContent = "acima da régua";
   $("n_baixados").textContent = num(lotes.reduce((a, b) => a + (b.arquivos || 0), 0));
 
   // a linha do rodapé conta o que ele tem de útil: quantos perfis e desde quando
