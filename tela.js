@@ -889,7 +889,7 @@ function pintarEventos(caixa, eventos) {
     const dados = [];
     if (d.maquinas) dados.push(`<b>${d.maquinas}</b> máquinas`);
     if (d.gravacoes) dados.push(`<b>${num(d.gravacoes)}</b> páginas`);
-    if (d.novos) dados.push(`<b>+${num(d.novos)}</b> posts`);
+    if (d.novos) dados.push(`<b>+${num(d.novos)}</b> novos`);
     if (d.total) dados.push(`total <b>${num(d.total)}</b>`);
     if (d.rodada) dados.push(`rodada <b>${d.rodada}</b>`);
     if (d.seguidores) dados.push(`<b>${num(d.seguidores)}</b> seguidores`);
@@ -906,6 +906,19 @@ function pintarEventos(caixa, eventos) {
       + `</span><span class="data">${dataHora(e.quando)}</span>`;
     ln.querySelector(".oque > b").textContent = e.texto;
     caixa.appendChild(ln);
+
+    // AS PÁGINAS DAQUELA RODADA, uma linha cada, com a hora e a máquina que gravou.
+    // É o nível que faltava: o resumo dizia "4 máquinas, 8 páginas" e parava aí, sem
+    // mostrar o trabalho. Cada linha destas é um commit real no acervo.
+    for (const passo of [...(d.passos || [])].reverse()) {
+      const sub = document.createElement("div");
+      sub.className = "liv-ev passo";
+      sub.innerHTML = `<i></i><span class="oque"><b></b></span>`
+        + `<span class="data">${dataHora(passo.quando)}</span>`;
+      sub.querySelector(".oque > b").textContent =
+        "página lida e gravada pela " + (passo.maquina || "esteira");
+      caixa.appendChild(sub);
+    }
   }
 }
 
