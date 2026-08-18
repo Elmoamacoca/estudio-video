@@ -2238,8 +2238,9 @@ let REGUA_VALENDO = null;
 const NOMES_FORMATO = { reels: "reels", carrossel: "carrosséis", post: "posts isolados" };
 
 /** Como chamar o que está sendo buscado, na combinação que o Gabriel escolheu. */
-function rotuloDosFormatos(bilhete) {
+function rotuloDosFormatos(bilhete, ficha) {
   if (bilhete && bilhete.rotulo) return bilhete.rotulo;
+  if (ficha && ficha.rotulo) return ficha.rotulo;
   const f = (REGUA_VALENDO && REGUA_VALENDO.formatos) || [];
   if (!f.length || f.length === 3) return "publicações";
   const nomes = ["reels", "carrossel", "post"].filter(x => f.includes(x))
@@ -2404,7 +2405,7 @@ async function aoVivo() {
                            && batendo[0].rotulo !== "publicacoes")
             ? ` buscando ${alvoDoTexto}` : " lendo o Instagram");
       resumo = batendo.map(b => {
-        const nome = rotuloDosFormatos(b);
+        const nome = rotuloDosFormatos(b, bruto);
         return `@${b.conta}: ${num(b.lidos)}`
           + (b.publicacoes ? ` de ${num(b.publicacoes)} ${nome}` : ` ${nome}`);
       }).join(" · ");
