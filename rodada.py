@@ -213,6 +213,16 @@ def main() -> int:
         if not aberto:
             print(f"[{conta}] a abertura não passou nesta vaga. A próxima tenta.")
             return 0
+        if aberto.get("vazio"):
+            # sai da fila com motivo escrito, em vez de ser tentado para sempre
+            estado["perfil"] = {"conta": conta, "id": None, "nome": None,
+                                "seguidores": 0, "publicacoes": 0, "privado": None}
+            estado["vazio"] = True
+            estado["completo"] = True
+            estado["atualizado"] = int(time.time())
+            grava(conta, estado)
+            print(f"[{conta}] SEM POSTS PÚBLICOS: conta fechada ou sem publicação.")
+            return 0
         estado["perfil"] = aberto["perfil"]
         estado["posts"] = aberto["posts"]
         estado["marcador"] = aberto["marcador"]
