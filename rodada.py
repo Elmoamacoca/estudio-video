@@ -42,20 +42,27 @@ REGUA = Path("dados/regua.json")
 # passa. Vale a pena tentar.
 PAGINAS_POR_VAGA = 3
 
-# Quantas publicacoes dos formatos escolhidos bastam para medir e escolher as melhores.
-# Com duzentas ja' ha' mediana firme e sobra fora-da-curva; o resto e' historico antigo,
-# que e' o que menos serve e o que mais custa.
-ALVO_PADRAO = 200
+# SEM TETO: VARRE O PERFIL INTEIRO.
+#
+# Aqui houve um limite de duzentas, inventado quando varrer reels custava ler o feed
+# misturado inteiro: no @brandsdecoded__ eram quase cinco mil publicacoes para juntar
+# duzentos reels, e a espera passava de tres horas. O limite resolvia a espera destruindo
+# o proposito.
+#
+# O PROPOSITO E' ACHAR OS FORA DA CURVA DE UM PERFIL. Num perfil com mil reels, os
+# melhores podem estar em qualquer lugar do historico, e varrer so' os duzentos mais
+# recentes e' escolher o melhor de uma amostra qualquer, nao o melhor do perfil.
+#
+# O que tornou isso viavel foi o caminho proprio de reels, medido em 18/08/2026: doze
+# reels por pagina, sem imagem nem carrossel no meio, 204 reels em 12 minutos. Mil reels
+# levam por volta de uma hora de esteira, que trabalha sozinha, sem ninguem esperando na
+# frente da tela.
+ALVO_PADRAO = 0
 
-# O SEGUNDO FREIO, e ele e' o que garante que a coisa acaba.
-#
-# So' o alvo por formato nao basta: no @brandsdecoded__, das 24 publicacoes mais
-# recentes 23 eram carrossel e 1 era reels. Nessa proporcao, juntar 200 reels exigiria
-# ler quase cinco mil publicacoes, e o perfil tem 2.253. O alvo nunca seria atingido e a
-# varredura leria tudo assim mesmo, que e' exatamente o que se queria evitar.
-#
-# Entao vale o que vier primeiro: juntou o alvo do formato, ou leu este tanto no total.
-LIDOS_NO_MAXIMO = 800
+# Sem teto de leitura tambem. O que encerra uma varredura agora e' uma coisa so': acabou
+# o que havia para ler naquele caminho. Quem quiser um teto pede, e ele vira um numero
+# aqui; enquanto ninguem pedir, o acervo do perfil e' varrido inteiro.
+LIDOS_NO_MAXIMO = 0
 
 
 def regua() -> dict:
@@ -104,60 +111,37 @@ def rotulo_dos_formatos(r: dict) -> str:
 def ja_basta(estado: dict, r: dict) -> bool:
     """O perfil ja' tem o que foi pedido?
 
-    O PROBLEMA QUE ISTO RESOLVE: quem escolhe varrer so' reels nao quer esperar o
-    historico inteiro do perfil ser lido. E ele e' lido de qualquer jeito, porque o
-    Instagram nao deixa pedir so' um formato sem sessao: a via de reels responde
-    "require_login". O feed vem misturado, e nao ha' escolha quanto a isso.
+    POR PADRAO A RESPOSTA E' NAO, E ISSO E' DE PROPOSITO.
 
-    O que da' para escolher e' QUANDO PARAR. Medido no @brandsdecoded__: das 24
-    publicacoes mais recentes, 23 eram carrossel e 1 era reels. Varrer as 2.253 para
-    achar os reels custa umas tres horas de esteira; parar ao juntar o bastante deles
-    custa minutos, e o que fica de fora e' o mais antigo, que e' o que menos serve.
+    O proposito da ferramenta e' achar os fora da curva de um perfil. Num perfil com mil
+    reels, os melhores podem estar em qualquer ponto do historico: varrer so' um pedaco
+    e' escolher o melhor de uma amostra, e nao o melhor do perfil. Entao a varredura vai
+    ate' o fim do que existe naquele caminho.
+
+    Os dois freios abaixo continuam no codigo, desligados, para o dia em que alguem
+    pedir um limite. Quem manda e' a regua gravada na tela:
+
+      lidos_no_maximo  para depois de tantas publicacoes VISTAS (nao guardadas: quem
+                       pede so' carrossel descarta o resto, e contar so' o que ficou
+                       faria o teto nunca chegar num perfil que posta pouco daquele
+                       formato)
+      alvo             para depois de tantas publicacoes GUARDADAS dos formatos pedidos
     """
-    # O LIMITE E' CONTADO AQUI, e nao vem digitado da tela.
-    #
-    # Houve um campo para o Gabriel digitar esse numero, e ele nao chegava: quem escreve
-    # a regua no acervo e' a ponte, que copia uma lista fixa de campos. O campo novo era
-    # descartado no caminho, e a tela prometia um controle que nao existia.
-    #
-    # Como os FORMATOS chegam, o limite sai deles, que e' o que de fato muda o custo:
-    # so' reels tem caminho proprio no Instagram e rende reels puros, entao duzentos
-    # saem em doze minutos; com imagem no meio, o historico vem misturado e o freio que
-    # importa e' o teto de publicacoes lidas.
+    posts = estado.get("posts") or []
+
+    # O TETO DE LEITURA PRIMEIRO, e antes de qualquer saida por alvo vazio: sem esta
+    # ordem, um teto pedido na regua era ignorado porque a funcao ja' tinha desistido
+    # ao ver o alvo em zero.
+    teto = int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO)
+    if teto > 0 and int(estado.get("vistas") or len(posts)) >= teto:
+        return True
+
     alvo = r.get("alvo")
     alvo = ALVO_PADRAO if alvo is None else int(alvo or 0)
     if alvo <= 0:
         return False
-
-    # SEM FILTRO, O ALVO E' O TETO. Com os tres formatos marcados, "duzentos do formato
-    # escolhido" vira "duzentas publicacoes", e a varredura parava em duzentas num perfil
-    # de duas mil. Quem marca tudo quer amplitude, e nao a mesma amostra de quem pediu um
-    # formato so'. Entao vale o teto de leitura, que e' quatro vezes maior.
-    if formatos_pedidos(r) == TODOS_OS_FORMATOS:
-        alvo = int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO)
-    posts = estado.get("posts") or []
-    # VISTAS, e nao guardadas: quem pede so' carrossel descarta o resto, e contar so' o
-    # que ficou faria o teto nunca chegar num perfil que posta pouco daquele formato.
-    vistas = int(estado.get("vistas") or len(posts))
-    if vistas >= int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO):
-        return True
     formatos = formatos_pedidos(r)
     return sum(1 for p in posts if p.get("formato") in formatos) >= alvo
-# O PEDIDO DE RELEITURA, num arquivo só e pequeno de propósito.
-# Perfil dado por encerrado saía da fila para sempre: pedir para minerar de novo não
-# fazia nada, a rodada abria, não achava trabalho e fechava. Agora a tela grava aqui o
-# pedido, com a hora, e quem já foi encerrado volta para a fila até atender aquela hora.
-#
-# POR QUE UM ARQUIVO À PARTE, e não uma marca dentro do arquivo do perfil: quem escreve
-# o pedido é a ponte, e o arquivo de um perfil varrido passa de 1 MB. Reescrever aquilo
-# de dentro da ponte só para virar uma chave é caro e já quebrou o salvar uma vez.
-RELEITURA = Path("dados/revisitar.json")
-# medido: leitura mais gravação levam por volta de 20s. 50s dá folga para a vaga
-# seguinte enxergar o avanço da anterior quando as duas caem no mesmo perfil.
-# Era 50s, escolhido quando cada vaga fazia UMA leitura de doze posts. Agora ela faz
-# ate' tres, e o conjunto leva por volta de 25s medidos. 35s continua cobrindo a vaga
-# anterior com folga e devolve um terco do tempo que ficava parado.
-PASSO_DA_ESCADA = 35
 
 
 def _uma_pagina(uid: str, marcador: str | None) -> dict | None:
