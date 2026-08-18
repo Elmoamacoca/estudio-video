@@ -1080,6 +1080,16 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tab-rolo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
 .tab-rolo::-webkit-scrollbar-track{background:transparent}
 
+/* ------------------------------------------------------- MONTAR UM LOTE
+   O comando de baixar era um botão por perfil, e ele prometia um recorte que não
+   existia: quem baixa percorre a seleção inteira, ordenada por desempenho. Agora é um
+   comando só, com a única escolha que muda o resultado, que é o tamanho do lote. */
+.lote-montar{margin-bottom:18px}
+.lote-linha{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.lote-linha .campo-rot{margin:0}
+.lote-linha input[type=number]{width:110px}
+.prontos-lista{display:grid;gap:12px}
+
 </style>
 </head>
 <body>
@@ -2977,44 +2987,48 @@ function desenhaProntos(sel, perfis) {
     alvo.innerHTML = '<div class="vazio">Nenhum perfil varrido ainda.</div>';
     return;
   }
-  // A RÉGUA VEM DO ACERVO, e não de um campo nesta aba. Havia dois lugares para editar
-  // a mesma coisa, e o desta aba não chegava à esteira.
   const cr = (sel && sel.criterio) || {};
   const corte = cr.por_formato
     ? Math.min(...Object.values(cr.cortes || { reels: 1.5 }))
     : (cr.corte || 1.5);
   const itens = (sel && sel.itens) || [];
+  const baixaveis = itens.filter(i => i.formato === "reels" && i.arquivo).length;
+  const acimaTotal = perfis.reduce((a, b) => a + (b.acima || 0), 0);
 
-  alvo.innerHTML = perfis.map(p => {
-    // OS DOIS NÚMEROS VÊM CONTADOS DO SELETOR, e não desta lista aqui.
-    // Contar daqui era o mesmo defeito que a tabela tinha: `sel.itens` é o LOTE, com
-    // teto de 500 peças, e o teto é global. O primeiro perfil levava as 500 vagas e
-    // aparecia com "500 acima da régua"; o segundo aparecia com zero, e o botão de
-    // baixar nascia desligado nos dois. O seletor conta perfil a perfil, sem teto.
-    const meus = itens.filter(i => i.conta === p.conta);
-    const acima = p.acima != null ? p.acima
-                : meus.filter(i => i.indice >= corte).length;
-    const baixaveis = p.baixaveis != null ? p.baixaveis
-                : meus.filter(i => i.formato === "reels" && i.arquivo && i.indice >= corte).length;
-    return `<div class="pronto">
-      <div class="pronto-topo">
-        <span class="quem">@${p.conta}</span>
-        <button class="acao" data-baixar="${p.conta}" ${baixaveis ? "" : "disabled"}>
-          Baixar ${baixaveis || 0} reels</button>
+  /* UM LOTE SÓ, COM OS MELHORES DE TODOS OS PERFIS.
+     Havia um botão por perfil escrito "Baixar 254 reels", e ele mentia: quem baixa é
+     um trabalho que percorre a SELEÇÃO INTEIRA, ordenada do maior índice para o menor,
+     sem separar por conta. Apertar no @blankpartners trazia os melhores de todo mundo.
+     Agora o botão diz o que acontece, e a escolha que existe de verdade é quantos. */
+  const nome = rotuloDosFormatos(null, LIVRO[0] || null);
+  alvo.innerHTML = `
+    <div class="caixa lote-montar">
+      <h3>Montar um lote</h3>
+      <p class="nota">Os arquivos saem em ordem de desempenho, do maior múltiplo da
+        mediana para o menor, juntando todos os perfis. Só reels têm arquivo de vídeo:
+        imagem e carrossel entram na lista, mas não têm o que baixar.</p>
+      <div class="lote-linha">
+        <label class="campo-rot" for="lote_quantos">Quantos arquivos neste lote</label>
+        <input type="number" id="lote_quantos" value="${Math.min(150, baixaveis) || 50}"
+               min="1" max="500" step="10">
+        <button class="acao forte" id="lote_vai" ${baixaveis ? "" : "disabled"}>
+          Montar lote</button>
       </div>
-      <div class="pronto-numeros">
-        <div><b>${num(p.publicacoes)}</b><span>posts na conta</span></div>
-        <div><b>${num(p.lidos)}</b><span>varridos</span></div>
-        <div><b>${num(acima)}</b><span>acima da régua</span></div>
-        <div><b>${String(corte).replace(".", ",")}x</b><span>régua usada</span></div>
-      </div>
-      <div class="travado">
-        <span>O destino é o <b>Google Drive</b>, e ele ainda não foi autorizado. Enquanto
-        isso o lote fica guardado no serviço e pode ser puxado de lá. Para ligar o Drive
-        é preciso uma autorização da sua conta Google, que só você pode dar.</span>
-      </div>
-    </div>`;
-  }).join("");
+      <p class="nota" id="recado_lote">${baixaveis
+        ? `${num(baixaveis)} reels com arquivo disponível, de ${num(acimaTotal)} acima da régua.`
+        : "Nenhum reels com arquivo disponível: os links vencem em algumas horas, e a esteira renova ao varrer de novo."}</p>
+    </div>
+    <div class="prontos-lista">${perfis.map(p => {
+      const meus = itens.filter(i => i.conta === p.conta);
+      const acima = p.acima != null ? p.acima : meus.filter(i => i.indice >= corte).length;
+      return `<div class="pronto">
+        <div class="pronto-topo"><span class="quem">@${p.conta}</span></div>
+        <div class="pronto-numeros">
+          <div><b>${num(p.lidos)}</b><span>${nome} varridos</span></div>
+          <div><b>${num(acima)}</b><span>acima da régua</span></div>
+          <div><b>${String(corte).replace(".", ",")}x</b><span>régua usada</span></div>
+        </div></div>`;
+    }).join("")}</div>`;
 }
 
 function desenhaLotes(l) {
@@ -3025,14 +3039,17 @@ function desenhaLotes(l) {
   $("lotes").innerHTML = l.map(x => `<div class="pronto">
     <div class="pronto-topo">
       <span class="quem">Lote ${x.numero}</span>
-      <a class="acao" target="_blank" rel="noopener"
-         href="https://github.com/${DONO}/${REPO}/actions/runs/${x.execucao}">Abrir</a>
+      <a class="acao forte" target="_blank" rel="noopener"
+         href="https://github.com/${DONO}/${REPO}/actions/runs/${x.execucao}">Baixar o ZIP</a>
     </div>
     <div class="pronto-numeros">
       <div><b>${num(x.arquivos)}</b><span>arquivos</span></div>
       <div><b>${x.mb} MB</b><span>tamanho</span></div>
-      <div><b>${x.criterio || "-"}</b><span>critério</span></div>
-    </div></div>`).join("");
+      <div><b>${quando(x.quando)}</b><span>montado</span></div>
+    </div>
+    <p class="nota mini">${x.criterio || "sem critério anotado"} · o arquivo fica
+      guardado por 14 dias e abre na página da execução, no fim, em "Artifacts".</p>
+    </div>`).join("");
 }
 
 /* ---------------------------------------------------------------- atualização */
@@ -3303,18 +3320,20 @@ $("ini_vai").onclick = async () => {
 };
 
 document.addEventListener("click", async ev => {
-  const b = ev.target.closest("[data-baixar]");
-  if (!b) return;
+  if (!ev.target.closest("#lote_vai")) return;
+  const b = $("lote_vai");
   b.disabled = true;
+  const quantos = Math.max(1, parseInt($("lote_quantos").value, 10) || 50);
   // baixar um lote leva minutos, e é o carregamento mais longo do sistema
-  carregando("recado_baixar", "Montando o lote de @" + b.dataset.baixar, "bolas");
+  carregando("recado_lote", `Montando o lote com ${quantos} arquivos`, "bolas");
   try {
-    // sem números soltos aqui: a esteira lê a régua do acervo, a mesma que foi
-    // escolhida ao iniciar. Mandar outra por aqui criaria duas verdades.
-    await mandar("/baixar", { conta: b.dataset.baixar });
-    parado("recado_baixar", "lote em preparo, aparece abaixo ao terminar");
-  } catch (e) { parado("recado_baixar", e.message); }
-  setTimeout(() => { b.disabled = false; atualizar(); }, 6000);
+    // só o tamanho vai daqui. Formato e corte vêm da régua gravada no acervo, a mesma
+    // escolhida ao iniciar: mandar outra por aqui criaria duas verdades.
+    await mandar("/baixar", { quantos });
+    parado("recado_lote", "lote em preparo. Ele aparece em Lotes montados ao terminar, "
+      + "e leva alguns minutos.");
+  } catch (e) { parado("recado_lote", e.message); }
+  setTimeout(() => { b.disabled = false; atualizar(); }, 8000);
 });
 
 
