@@ -32,6 +32,8 @@ CABECALHO = {
 
 # medido: o endereco volta a responder por volta de 120s. 135 da folga.
 ESPERA_APOS_CORTE = 135
+# doze e' o que o Instagram devolve por pagina neste caminho, e pedir mais nao aumenta
+POR_PAGINA = 12
 PASTA = Path("dados/perfis")
 
 # o Instagram numera o tipo de midia assim
@@ -121,6 +123,61 @@ def identifica(conta: str, prazo: float) -> dict | None:
         "seguidores": u["edge_followed_by"]["count"],
         "publicacoes": u["edge_owner_to_timeline_media"]["count"],
         "privado": u.get("is_private"),
+    }
+
+
+def abre_pelo_arroba(conta: str, prazo: float) -> dict | None:
+    """A primeira pagina de um perfil, pedida pelo @, sem numero nenhum.
+
+    ESTE E' O CAMINHO PRINCIPAL, e a razao esta' medida.
+
+    Em 18/08/2026 uma sonda rodou em tres maquinas do GitHub ao mesmo tempo, testando
+    seis vias de descobrir quem e' um perfil. Nas tres maquinas, o resultado foi igual:
+
+      identificacao pelo caminho de sempre .... 429
+      a mesma, com biscoitos de visita ........ nem chegou a responder
+      busca do topo do site ................... 429
+      caminho do aplicativo ................... 429
+      pagina de incorporacao .................. responde, mas o numero nao esta' la'
+      FEED PEDIDO PELO ARROBA ................. 200, com tudo dentro
+
+    O bloqueio, entao, nunca foi do Instagram inteiro: e' de um caminho so'. E este
+    aqui, alem de passar, resolve duas coisas de uma vez, porque a resposta traz o
+    numero do perfil E os doze primeiros posts.
+
+    Com isso o sistema deixa de precisar identificar perfil como etapa separada. Some
+    junto a dependencia da ponte para isso, que acertava mais ou menos uma vez em tres
+    e transformava cada perfil novo numa loteria.
+
+    O que NAO vem aqui e' o total de publicacoes do perfil. Ele nao faz falta para
+    varrer: serve so' para a tela dizer "300 de 2.253". A ponte preenche esse numero
+    quando consegue, e quando nao consegue a tela mostra o que foi lido, sem fracao.
+    """
+    url = (f"https://www.instagram.com/api/v1/feed/user/{conta}/username/"
+           f"?count={POR_PAGINA}")
+    d = _pega_alternando([url], voltas=3, prazo=prazo, rotulo=f"[{conta}] abertura")
+    if not d:
+        return None
+    u = d.get("user") or {}
+    itens = d.get("items") or []
+    if not u.get("pk") and itens:
+        u = itens[0].get("user") or {}
+    if not u.get("pk"):
+        return None
+    return {
+        "perfil": {
+            "conta": u.get("username") or conta,
+            "id": str(u["pk"]),
+            "nome": u.get("full_name"),
+            "seguidores": u.get("follower_count") or 0,
+            # desconhecido por enquanto: quem preenche e' a ponte, se conseguir
+            "publicacoes": u.get("media_count") or 0,
+            "privado": bool(u.get("is_private")),
+            "avatar": u.get("profile_pic_url"),
+        },
+        "posts": [limpa_post(x) for x in itens],
+        "marcador": d.get("next_max_id"),
+        "acabou": not d.get("more_available") or not d.get("next_max_id"),
     }
 
 
