@@ -28,7 +28,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from minerar import CABECALHO, PASTA, limpa_post, identifica, grava
+from minerar import CABECALHO, PASTA, abre_pelo_arroba, limpa_post, grava
 
 FONTES = Path("dados/fontes.json")
 # O PEDIDO DE RELEITURA, num arquivo só e pequeno de propósito.
@@ -114,35 +114,19 @@ def pendentes(contas: list[str]) -> list[str]:
             # até o fim tem mais a ganhar com a vaga.
             fila.append((2.0, c))
             continue
+        # QUEM AINDA NAO FOI ABERTO VEM PRIMEIRO: uma chamada resolve o perfil inteiro
+        # e ja' traz doze posts, entao e' a vaga mais bem gasta da rodada.
+        if not e.get("perfil"):
+            fila.append((-1.0, c))
+            continue
         total = (e.get("perfil") or {}).get("publicacoes") or 0
-        # sem identificador ainda entra na frente: descobrir quem é custa uma leitura
-        fatia = -1.0 if not total else len(e.get("posts", [])) / total
-        fila.append((fatia, c))
+        lidos = len(e.get("posts", []))
+        # COM TOTAL, ordena por fracao varrida. SEM TOTAL, por quantidade lida: o feed
+        # pelo arroba nao informa quantas publicacoes o perfil tem, e tratar isso como
+        # "nao identificado" mandava todo perfil para a frente da fila, para sempre.
+        fila.append((lidos / total if total else lidos / 10000.0, c))
     fila.sort()
     return [c for _, c in fila]
-
-
-PONTE = "https://estudio-ponte.gabrieltorres.workers.dev"
-
-
-def pedir_identificacao(conta: str) -> bool:
-    """Pede à ponte que descubra quem é o perfil, e diz se ela conseguiu.
-
-    A ponte grava o resultado no acervo por conta própria: aqui só se pergunta. Uma
-    tentativa por vaga, e não um laço: com vinte vagas na rodada, a insistência já vem
-    de graça, cada uma saindo num momento diferente.
-    """
-    corpo = json.dumps({"contas": [conta]}).encode()
-    req = urllib.request.Request(
-        f"{PONTE}/contas", data=corpo, method="POST",
-        headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=45) as r:
-            d = json.loads(r.read())
-    except Exception as e:
-        print(f"  a ponte não respondeu ({type(e).__name__})")
-        return False
-    return any(n.get("ok") for n in (d.get("novos") or []))
 
 
 ANDAMENTO = Path("dados/andamento")
@@ -214,26 +198,30 @@ def main() -> int:
 
     print(f"vaga {vaga} de {len(fila)} perfis pendentes, trabalhando em @{conta}")
 
+    # A ABERTURA DE UM PERFIL NOVO, PELO ARROBA.
+    #
+    # Aqui se pedia a identificação pelo caminho antigo, que responde 429 destes
+    # endereços SEMPRE: sonda de 18/08/2026, três máquinas, mesmo resultado nas três.
+    # O perfil então dependia da ponte, que acerta mais ou menos uma vez em três, e
+    # cada perfil novo virava sorteio. Com dez perfis de uma vez, sorteio dez vezes.
+    #
+    # O feed pedido pelo arroba passa destes mesmos endereços, e traz o número do
+    # perfil junto dos doze primeiros posts. Uma chamada faz o que antes eram duas
+    # etapas e uma reza.
     if not estado.get("perfil"):
-        perfil = identifica(conta, prazo=time.time() + 45)
-        if not perfil:
-            # MEDIDO EM 18/08/2026: daqui essa consulta responde 429 SEMPRE, nas duas
-            # vias, nas vinte máquinas. Não é limite de ritmo que passa esperando; é o
-            # endereço do GitHub barrado naquele caminho específico. Prova de que o
-            # bloqueio é só desse caminho: a leitura das páginas, logo abaixo, funciona
-            # normalmente daqui.
-            #
-            # Então quem pede é a ponte, que sai pela Cloudflare e passa. Antes isto
-            # ficava só num recado de log dizendo "a ponte resolve", e a ponte não era
-            # avisada de nada: se as tentativas do Iniciar tivessem falhado, o perfil
-            # ficava parado para sempre, esperando alguém abrir a tela.
-            print(f"[{conta}] 429 neste endereço. Peço à ponte, que sai por outro.")
-            if pedir_identificacao(conta):
-                print(f"[{conta}] a ponte identificou. A próxima vaga já lê as páginas.")
+        aberto = abre_pelo_arroba(conta, prazo=time.time() + 45)
+        if not aberto:
+            print(f"[{conta}] a abertura não passou nesta vaga. A próxima tenta.")
             return 0
-        estado["perfil"] = perfil
+        estado["perfil"] = aberto["perfil"]
+        estado["posts"] = aberto["posts"]
+        estado["marcador"] = aberto["marcador"]
+        estado["completo"] = bool(aberto["acabou"])
+        estado["atualizado"] = int(time.time())
         grava(conta, estado)
-        print(f"[{conta}] identificado: {perfil['publicacoes']} publicações")
+        bater_ponto(conta, estado, vaga)
+        print(f"[{conta}] ABERTO pelo arroba: id {aberto['perfil']['id']}, "
+              f"{len(aberto['posts'])} posts já na primeira página")
         return 0
 
     marcador = estado.get("marcador_novo") if relendo else estado.get("marcador")
