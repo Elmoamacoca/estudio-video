@@ -75,6 +75,15 @@ def regua() -> dict:
         return {}
 
 
+# O PEDIDO DE RELEITURA, num arquivo so' e pequeno de proposito. Perfil dado por
+# encerrado saia da fila para sempre; a tela grava aqui o pedido, com a hora, e quem ja'
+# foi encerrado volta para a fila ate' atender aquela hora.
+RELEITURA = Path("dados/revisitar.json")
+
+# Medido: leitura mais gravacao levam por volta de 25s com tres paginas por vaga. 35s
+# cobre a vaga anterior com folga quando varias caem no mesmo perfil.
+PASSO_DA_ESCADA = 35
+
 TODOS_OS_FORMATOS = {"reels", "post", "carrossel"}
 NOMES = {"reels": "reels", "post": "posts isolados", "carrossel": "carrosséis"}
 
