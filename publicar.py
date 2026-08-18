@@ -67,6 +67,21 @@ def pedir(caminho: str, ficha: str, metodo: str = "GET", corpo: dict | None = No
 
 
 def main() -> int:
+    # A TRAVA ANTES DO ENVIO.
+    #
+    # Uma reescrita apagou duas constantes de rodada.py e o arquivo continuou valido em
+    # sintaxe: o nome perdido so' estoura quando a linha roda. Foi publicado assim, e o
+    # defeito apareceu na rodada seguinte, no ar, com os perfis parados. Aqui a
+    # conferencia roda primeiro; se ela reclamar, nada sobe.
+    if any(a.endswith(".py") for a in (sys.argv[1:] or PADRAO)):
+        import subprocess
+        r = subprocess.run([sys.executable, str(BASE / "conferir.py")],
+                           cwd=str(BASE), capture_output=True, text=True)
+        print(r.stdout.strip())
+        if r.returncode != 0:
+            print("  nada foi publicado: conserte o que a conferencia apontou")
+            return 1
+
     ficha = chave()
     alvos = sys.argv[1:] or PADRAO
     for rel in alvos:
