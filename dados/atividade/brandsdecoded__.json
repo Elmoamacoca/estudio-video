@@ -23,6 +23,33 @@
     "gravacoes": 1,
     "total": 192
    }
+  },
+  {
+   "quando": 1787019117,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 24 posts novos, 216 de 0 lidos",
+   "detalhe": {
+    "rodada": 82,
+    "maquinas": 1,
+    "gravacoes": 1,
+    "novos": 24,
+    "total": 216,
+    "publicacoes": 0
+   }
+  },
+  {
+   "quando": 1787019117,
+   "tipo": "alvo",
+   "gravidade": "evento",
+   "texto": "Juntou o que foi pedido: 204 de reels, em 216 publicações lidas",
+   "detalhe": {
+    "total": 216,
+    "alvo": 200,
+    "teto": 800,
+    "lidos": 216,
+    "do_formato": 204
+   }
   }
  ]
 }
