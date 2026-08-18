@@ -14,32 +14,15 @@ on:
         description: "quantas vezes a mediana do proprio formato"
         default: "1.5"
       quantos:
-        description: "teto de arquivos neste lote, ou 'sonda' para so' relatar o pedido"
+        # O PEDIDO INTEIRO VIAJA NESTE CAMPO, e o nome ficou do tempo em que ele so'
+        # carregava um numero. Entre a tela e aqui ha' uma ponte que copia campo a
+        # campo, e so' o que esta' na lista dela atravessa: medido em 18/08/2026, com
+        # uma sonda que imprimiu o pedido deste lado, oito nomes diferentes para "de
+        # quais perfis" chegaram todos vazios, e so' este chegou inteiro. A ponte nao
+        # pode ser mexida da bancada, entao o canal e' este. Quem separa os dois
+        # sentidos e' a funcao `pedido` do baixar.py.
+        description: "de quais perfis (nomes separados por virgula) ou um teto de arquivos"
         default: "150"
-      contas:
-        description: "de quais perfis, separados por virgula. Vazio = todos"
-        default: ""
-      perfis:
-        description: "sonda"
-        default: ""
-      quem:
-        description: "sonda"
-        default: ""
-      alvo:
-        description: "sonda"
-        default: ""
-      conta:
-        description: "sonda"
-        default: ""
-      lista:
-        description: "sonda"
-        default: ""
-      selecionados:
-        description: "sonda"
-        default: ""
-      de:
-        description: "sonda"
-        default: ""
 
 permissions:
   contents: write
@@ -55,32 +38,20 @@ jobs:
       # A tela nao fala com o GitHub: ela fala com a ponte, e a ponte copia campo a
       # campo. Campo que ela nao conhece some no caminho sem avisar ninguem, e ja'
       # houve um campo na tela que nunca chegou aqui por causa disso. Este passo existe
-      # para essa perda aparecer no registro em vez de virar mistério.
+      # para essa perda aparecer no registro em vez de virar misterio.
+      #
+      # E E' TAMBEM A SONDA: pedindo `quantos` = sonda, este passo e' o unico que roda.
+      # Serve para descobrir o que a ponte deixa passar sem gastar um lote inteiro, e
+      # foi assim que se descobriu que so' `quantos` atravessa.
       - name: O que chegou no pedido
         env:
           QUANTOS: ${{ inputs.quantos }}
-          CONTAS: ${{ inputs.contas }}
           FORMATOS: ${{ inputs.formatos }}
           CORTE: ${{ inputs.corte }}
-          X_PERFIS: ${{ inputs.perfis }}
-          X_QUEM: ${{ inputs.quem }}
-          X_ALVO: ${{ inputs.alvo }}
-          X_CONTA: ${{ inputs.conta }}
-          X_LISTA: ${{ inputs.lista }}
-          X_SELECIONADOS: ${{ inputs.selecionados }}
-          X_DE: ${{ inputs.de }}
         run: |
           echo "quantos  = [$QUANTOS]"
-          echo "contas   = [$CONTAS]"
           echo "formatos = [$FORMATOS]"
           echo "corte    = [$CORTE]"
-          echo "perfis   = [$X_PERFIS]"
-          echo "quem     = [$X_QUEM]"
-          echo "alvo     = [$X_ALVO]"
-          echo "conta    = [$X_CONTA]"
-          echo "lista    = [$X_LISTA]"
-          echo "selecionados = [$X_SELECIONADOS]"
-          echo "de       = [$X_DE]"
 
       - name: Conferir os programas
         if: inputs.quantos != 'sonda'
@@ -112,6 +83,14 @@ jobs:
       - name: Baixar
         if: inputs.quantos != 'sonda'
         run: python baixar.py "${{ inputs.quantos }}"
+
+      # A CONTA DO QUE FALTA E' REFEITA DEPOIS DE BAIXAR, e nao so' antes.
+      # O passo la' de cima roda com a lista de baixados do lote ANTERIOR: sem este
+      # aqui, o perfil de onde acabou de sair um lote continuava na fileira da tela com
+      # o mesmo numero, e o Gabriel so' veria a mudanca na proxima rodada da esteira.
+      - name: Refazer a conta do que falta
+        if: always() && inputs.quantos != 'sonda'
+        run: python selecionar.py
 
       - name: Entregar o lote
         if: inputs.quantos != 'sonda'
@@ -145,6 +124,12 @@ jobs:
           else:
               quanto = f"{c.get('corte')}x"
           criterio = f"{fmt} acima de {quanto}"
+          # DE QUEM VEIO O LOTE, quando ele foi pedido por perfil. Sem isto, dois lotes
+          # de perfis diferentes ficavam com a mesma linha na tela.
+          pedido = """${{ inputs.quantos }}""".strip()
+          if pedido and not pedido.isdigit():
+              quem = [c.strip().lstrip("@") for c in pedido.split(",") if c.strip()]
+              criterio += " · de @" + ", @".join(quem)
           itens = json.loads(reg.read_text(encoding="utf-8")).get("itens", []) if reg.exists() else []
           lotes = est.get("lotes", [])
           lotes.insert(0, {
