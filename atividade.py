@@ -251,10 +251,16 @@ def registrar_rodada(rodada: int | None = None) -> int:
             # arquivo do perfil, uma por leitura, com a hora exata e a vaga que gravou.
             # Nao e' estimativa: e' o registro do que aconteceu, e ele fica guardado.
             passos = [{"quando": q, "maquina": a} for q, a in marcas][-40:]
+            # COM FILTRO, NAO SE COMPARA COM O TOTAL DE PUBLICACOES. O @blankpartners
+            # tem 1.678 publicacoes e a varredura era de reels: escrever "251 de 1.678
+            # lidos" mistura duas contagens e faz parecer que faltam 1.427 reels, quando
+            # o que falta e' o que ainda houver de reels, numero que ninguem sabe antes
+            # de acabar.
+            com_filtro = rot != "publicações"
             anotar(livro, "varredura", agora,
                    f"Varredura: {lidos - antes} {rot} novos, "
-                   + (f"{mil(lidos)} de {mil(publicacoes)} lidos" if publicacoes
-                      else f"{mil(lidos)} no total"),
+                   + (f"{mil(lidos)} no total" if com_filtro or not publicacoes
+                      else f"{mil(lidos)} de {mil(publicacoes)} lidos"),
                    rodada=rodada, maquinas=maquinas or None,
                    gravacoes=len(marcas) or None, passos=passos or None,
                    novos=lidos - antes, total=lidos, publicacoes=publicacoes)
