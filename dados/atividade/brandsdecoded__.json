@@ -26,6 +26,33 @@
     "total": 192,
     "publicacoes": 2254
    }
+  },
+  {
+   "quando": 1787059806,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 12 posts novos, 204 de 2.254 lidos",
+   "detalhe": {
+    "rodada": 95,
+    "maquinas": 1,
+    "gravacoes": 1,
+    "novos": 12,
+    "total": 204,
+    "publicacoes": 2254
+   }
+  },
+  {
+   "quando": 1787059806,
+   "tipo": "alvo",
+   "gravidade": "evento",
+   "texto": "Juntou o que foi pedido: 204 de reels, em 204 publicações lidas",
+   "detalhe": {
+    "total": 204,
+    "alvo": 200,
+    "teto": 800,
+    "lidos": 204,
+    "do_formato": 204
+   }
   }
  ]
 }
