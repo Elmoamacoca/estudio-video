@@ -1,0 +1,25 @@
+name: sonda
+
+# Mede, deste endereco, por onde da' para ler um perfil do Instagram.
+# Nao grava nada no acervo: so' imprime o que cada via respondeu.
+# Tres maquinas ao mesmo tempo, para nao tirar conclusao de um endereco so'.
+
+on:
+  workflow_dispatch:
+    inputs:
+      conta:
+        description: "perfil a sondar"
+        default: "brandsdecoded__"
+
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        amostra: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - run: python sonda.py "${{ inputs.conta }}"
