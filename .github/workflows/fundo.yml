@@ -1,0 +1,27 @@
+name: fundo
+
+# Mede quantas paginas seguidas uma maquina consegue ler. Nao grava nada no acervo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      conta:
+        description: "perfil"
+        default: "brandsdecoded__"
+      teto:
+        description: "ate quantas paginas tentar"
+        default: "30"
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        espera: ["1", "3", "8"]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - run: python fundo.py "${{ inputs.conta }}" "${{ matrix.espera }}" "${{ inputs.teto }}"
