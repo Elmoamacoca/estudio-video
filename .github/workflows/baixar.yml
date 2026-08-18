@@ -19,6 +19,27 @@ on:
       contas:
         description: "de quais perfis, separados por virgula. Vazio = todos"
         default: ""
+      perfis:
+        description: "sonda"
+        default: ""
+      quem:
+        description: "sonda"
+        default: ""
+      alvo:
+        description: "sonda"
+        default: ""
+      conta:
+        description: "sonda"
+        default: ""
+      lista:
+        description: "sonda"
+        default: ""
+      selecionados:
+        description: "sonda"
+        default: ""
+      de:
+        description: "sonda"
+        default: ""
 
 permissions:
   contents: write
@@ -41,11 +62,25 @@ jobs:
           CONTAS: ${{ inputs.contas }}
           FORMATOS: ${{ inputs.formatos }}
           CORTE: ${{ inputs.corte }}
+          X_PERFIS: ${{ inputs.perfis }}
+          X_QUEM: ${{ inputs.quem }}
+          X_ALVO: ${{ inputs.alvo }}
+          X_CONTA: ${{ inputs.conta }}
+          X_LISTA: ${{ inputs.lista }}
+          X_SELECIONADOS: ${{ inputs.selecionados }}
+          X_DE: ${{ inputs.de }}
         run: |
           echo "quantos  = [$QUANTOS]"
           echo "contas   = [$CONTAS]"
           echo "formatos = [$FORMATOS]"
           echo "corte    = [$CORTE]"
+          echo "perfis   = [$X_PERFIS]"
+          echo "quem     = [$X_QUEM]"
+          echo "alvo     = [$X_ALVO]"
+          echo "conta    = [$X_CONTA]"
+          echo "lista    = [$X_LISTA]"
+          echo "selecionados = [$X_SELECIONADOS]"
+          echo "de       = [$X_DE]"
 
       - name: Conferir os programas
         if: inputs.quantos != 'sonda'
