@@ -438,6 +438,7 @@ const ABERTOS = new Set();
 
 const TIPOS = {
   aguardando: "aguardando identificação",
+  vazio: "sem posts públicos",
   identificado: "identificação",
   varredura: "varredura",
   concluido: "conclusão",
