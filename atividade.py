@@ -33,6 +33,7 @@ PERFIS = Path("dados/perfis")
 # do console: falha é o que não devia ter acontecido, aviso é o que foi barrado de
 # propósito, evento é o andamento normal.
 GRAVIDADE = {
+    "aguardando": "aviso",
     "identificado": "evento",
     "varredura": "evento",
     "concluido": "evento",
@@ -115,13 +116,52 @@ def ultimo_total(livro: dict) -> int:
     return 0
 
 
+FONTES = Path("dados/fontes.json")
+
+
+def contas_na_lista() -> list[str]:
+    if not FONTES.exists():
+        return []
+    try:
+        d = json.loads(FONTES.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    return [str(c).strip().lstrip("@") for c in (d.get("contas") or []) if str(c).strip()]
+
+
+def registrar_espera(agora: int) -> int:
+    """Abre ficha para quem entrou na lista e o Instagram ainda nao deixou identificar.
+
+    POR QUE ISTO EXISTE: a ficha de um perfil so nascia depois que o Instagram
+    confirmasse quem ele e'. So que a recusa e' comum, porque o limite e' por endereco
+    de saida. O perfil entrava na lista, a tela nao mostrava cartao nenhum, e a leitura
+    inevitavel era que nada tinha acontecido. Aconteceu: ele esta na fila, e a espera
+    agora fica escrita, com hora, e sobrevive ao fechar da tela.
+
+    A ficha nao se repete: uma vez aberta, so ganha evento novo quando a situacao muda.
+    """
+    entraram = 0
+    for conta in contas_na_lista():
+        if (PERFIS / f"{conta}.json").exists():
+            continue
+        livro = carregar(conta)
+        if livro["eventos"]:
+            continue
+        anotar(livro, "aguardando", agora,
+               "Perfil na fila: o Instagram recusou a identificacao pela ponte, "
+               "a esteira tenta pelos enderecos dela")
+        gravar(livro)
+        entraram += 1
+    return entraram
+
+
 def registrar_rodada(rodada: int | None = None) -> int:
     """Anota o que esta rodada fez com cada perfil. Devolve quantos eventos entraram."""
     agora = int(time.time())
-    entraram = 0
+    entraram = registrar_espera(agora)
     if not PERFIS.exists():
         reconstruir_indice()
-        return 0
+        return entraram
 
     for arq in sorted(PERFIS.glob("*.json")):
         conta = arq.stem
@@ -138,7 +178,10 @@ def registrar_rodada(rodada: int | None = None) -> int:
         publicacoes = perfil.get("publicacoes") or 0
 
         # PRIMEIRA VEZ: o perfil acabou de entrar no banco.
-        if not livro["eventos"]:
+        # A pergunta e' se JA' FOI IDENTIFICADO, e nao se o livro esta' vazio: quem
+        # passou pela espera ja' tem um evento escrito, e com a pergunta antiga a
+        # identificacao dele nunca seria registrada.
+        if not any(e["tipo"] == "identificado" for e in livro["eventos"]):
             anotar(livro, "identificado",
                    estado.get("atualizado") or agora,
                    f"Perfil identificado no Instagram: {mil(publicacoes)} publicações",
