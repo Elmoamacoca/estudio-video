@@ -1,6 +1,25 @@
 {
  "prontas": 0,
- "avaliados": 0,
- "ultima_rodada": 1787011966,
- "perfis": []
+ "avaliados": 3,
+ "ultima_rodada": 1787012229,
+ "perfis": [
+  {
+   "conta": "brandsdecoded__",
+   "nome": "BrandsDecoded®️ | Conteúdo & Cultura",
+   "avatar": "https://scontent-gig4-1.cdninstagram.com/v/t51.2885-19/470485463_447808955037948_7614817151307633884_n.jpg?stp=dst-jpg_s320x320_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDI4LmMyIn0&_nc_ht=scontent-gig4-1.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gEjyn27R3Y_HU5o6PgBVhPMCDbGNCFCSsI9fQT0pxjwtXfRqngHJ9kLvtPdTwOiEFg&_nc_ohc=iVARMzPBjq4Q7kNvwFT5oJt&_nc_gid=q_II79YKq1uDGCRf-6AlbQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AQHO6pPVQuxvrvFzgP6KWYUiEZd0mG-t-zPNOuEnruRsVQ&oe=6A897B4E&_nc_sid=8b3546",
+   "seguidores": 311524,
+   "atualizado": 1787012186,
+   "publicacoes": 2253,
+   "lidos": 36,
+   "completo": false,
+   "relendo": false,
+   "mais_antigo": 1768917650,
+   "mais_novo": 1787007256,
+   "reels": 3,
+   "imagens": 1,
+   "carrosseis": 32,
+   "acima": 0,
+   "baixaveis": 0
+  }
+ ]
 }
