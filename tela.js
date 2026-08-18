@@ -622,7 +622,14 @@ async function aoVivo() {
                                       : `Abrindo ${esperando.length} perfis pelo arroba`;
       resumo = "A primeira chamada traz o identificador e os doze primeiros posts de "
         + "uma vez. Cada vaga da esteira abre um perfil.";
-    } else if (lendo.length && LIVRO.some(c => !c.completo)) {
+    } else if (lendo.length && LIVRO.some(c => {
+      // O BILHETE MANDA TAMBÉM AQUI. A capa do livro só é reescrita quando a rodada
+      // fecha, então um perfil que acabou de terminar continua marcado como pendente
+      // por mais alguns minutos, e a tela anunciava "onze máquinas lendo" com a
+      // varredura encerrada.
+      const b = BATIMENTOS.get(c.conta);
+      return b ? !b.completo : !c.completo;
+    })) {
       // A RESSALVA IMPORTA: as vinte máquinas sobem e ficam no ar até o fim da rodada,
       // mesmo quando já não há o que ler. Sem esta condição a tela anunciava leitura com
       // todos os perfis fechados, que é a mesma mentira de sempre em roupa nova.
@@ -640,7 +647,10 @@ async function aoVivo() {
       viva = true; selo = "fechando";
       titulo = "Fechando a rodada";
       resumo = "Aplicando a régua, separando os links e carimbando o registro.";
-    } else if (LIVRO.length && LIVRO.every(c => c.completo)) {
+    } else if (LIVRO.length && LIVRO.every(c => {
+      const b = BATIMENTOS.get(c.conta);
+      return b ? b.completo : c.completo;
+    })) {
       titulo = LIVRO.length === 1 ? "Perfil varrido, nada pendente"
                                   : `${LIVRO.length} perfis varridos, nada pendente`;
       resumo = "A esteira só volta a trabalhar quando entrar perfil novo.";
@@ -800,10 +810,14 @@ function desenhaLivro() {
     // A esteira para ao ATINGIR o alvo, e a última página costuma passar dele: pedir
     // duzentos e trazer duzentos e quatro é o normal. Mostrar "102%" faz parecer conta
     // errada, quando é a coisa tendo dado certo.
+    // VARREDURA ENCERRADA NÃO MOSTRA PORCENTAGEM DE MEIO CAMINHO. Um perfil com cento e
+    // seis reels no total fecha em 53% do alvo de duzentos, e "53%" lido sozinho parece
+    // varredura pela metade quando na verdade acabaram os reels do perfil.
     const quanto = cob === null
       ? (c.lidos ? `${num(c.lidos)} ${nome} lidos` : "")
-      : cob >= 100
-        ? `${num(c.lidos)} ${nome}, alvo de ${num(c.publicacoes)} cumprido`
+      : c.completo
+        ? (cob >= 100 ? `${num(c.lidos)} ${nome}, alvo de ${num(c.publicacoes)} cumprido`
+                      : `${num(c.lidos)} ${nome}, acabaram os ${nome} do perfil`)
         : `${num(c.lidos)} de ${num(c.publicacoes)} ${nome} (${cob}%)`;
     return `<div class="liv-cartao ${grave}" data-conta="${c.conta}">
       <button class="liv-cabeca" type="button" aria-expanded="false">
@@ -844,10 +858,17 @@ async function medirLivro() {
 
 /** O histórico de um perfil, buscado só quando o cartão abre. */
 async function historicoDe(conta) {
-  if (HISTORICOS.has(conta)) return HISTORICOS.get(conta);
+  // VAZIO NÃO SE GUARDA.
+  //
+  // Este era o defeito que fazia o cartão dizer "1 registro" no cabeçalho e "nada
+  // registrado" ao abrir: nos primeiros segundos de um perfil novo a ficha ainda não
+  // existe no acervo, a busca voltava vazia, e a resposta vazia ficava guardada para
+  // sempre. A ficha nascia meio minuto depois e ninguém mais ia olhar.
+  const guardado = HISTORICOS.get(conta);
+  if (guardado && guardado.length) return guardado;
   const d = await ler(`dados/atividade/${conta}.json`);
   const ev = (d && d.eventos) || [];
-  HISTORICOS.set(conta, ev);
+  if (ev.length) HISTORICOS.set(conta, ev);
   return ev;
 }
 
