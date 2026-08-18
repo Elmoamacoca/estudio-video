@@ -1,4 +1,53 @@
 {
- "itens": [],
- "atualizado": 1787014434
+ "itens": [
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 4.32,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 4.28,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 2.2,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 2.2,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 2.15,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 1.81,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 1.68,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 1.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  }
+ ],
+ "atualizado": 1787015543
 }
