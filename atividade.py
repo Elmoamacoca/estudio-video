@@ -148,8 +148,7 @@ def registrar_espera(agora: int) -> int:
         if livro["eventos"]:
             continue
         anotar(livro, "aguardando", agora,
-               "Perfil na fila: o Instagram recusou a identificacao pela ponte, "
-               "a esteira tenta pelos enderecos dela")
+               "Perfil na fila de origem, esperando a esteira abrir pelo arroba")
         gravar(livro)
         entraram += 1
     return entraram
@@ -182,11 +181,16 @@ def registrar_rodada(rodada: int | None = None) -> int:
         # passou pela espera ja' tem um evento escrito, e com a pergunta antiga a
         # identificacao dele nunca seria registrada.
         if not any(e["tipo"] == "identificado" for e in livro["eventos"]):
+            # SEM O TOTAL, NAO SE INVENTA O TOTAL. O caminho que abre o perfil nao
+            # informa quantas publicacoes a conta tem, e escrever "0 publicacoes" seria
+            # a ficha nascendo com uma informacao falsa.
             anotar(livro, "identificado",
                    estado.get("atualizado") or agora,
-                   f"Perfil identificado no Instagram: {mil(publicacoes)} publicações",
-                   publicacoes=publicacoes, seguidores=perfil.get("seguidores"),
-                   total=0)
+                   f"Perfil aberto no Instagram: {mil(publicacoes)} publicações"
+                   if publicacoes else
+                   f"Perfil aberto no Instagram: {mil(lidos)} posts na primeira leitura",
+                   publicacoes=publicacoes or None,
+                   seguidores=perfil.get("seguidores") or None, total=lidos)
             entraram += 1
 
         antes = ultimo_total(livro)
