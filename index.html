@@ -2387,6 +2387,57 @@ async function aoVivo() {
   }
 }
 
+/* ------------------------------------------ A INSISTÊNCIA PELA IDENTIFICAÇÃO
+
+   POR QUE ISTO PRECISA EXISTIR, com o que foi medido em 17/08/2026:
+
+     - do GitHub, o Instagram devolve 429 nas DUAS vias. Está no log da rodada 67:
+       "identificacao via 1 recusou (429)", idem via 2, nas vinte máquinas. Quer dizer
+       que a esteira NÃO identifica perfil nenhum, por mais vagas que tenha;
+     - da ponte, ele responde, mas não sempre: quatro chamadas seguidas ao mesmo perfil
+       deram três recusas e um acerto.
+
+   Junte os dois e aparece o beco: se as quatro tentativas do Iniciar caírem todas no
+   lado ruim do rodízio, ninguém mais tenta, e o perfil fica parado na fila para sempre
+   sem nada acontecer. Foi exatamente isso que apareceu como "adicionei e não deu nada".
+
+   Então quem insiste é a tela, de quarenta e cinco em quarenta e cinco segundos,
+   enquanto houver perfil sem identificação. Não é elegante; é o que funciona com o
+   material que existe. Cada tentativa aparece no cartão, com o número dela.
+
+   TRÊS FREIOS, porque cada tentativa deixa duas gravações no acervo:
+     1. só com a aba à vista, para uma janela esquecida não gravar a noite inteira;
+     2. teto de vinte e cinco tentativas por perfil, e depois disso ele espera o Iniciar;
+     3. uma de cada vez, sem empilhar chamada em cima de chamada. */
+const TENTATIVAS = new Map();
+const TETO_TENTATIVAS = 25;
+let insistindo = false;
+
+async function insistirIdentificacao() {
+  if (insistindo || document.visibilityState !== "visible") return;
+  const alvos = LIVRO.filter(c => c.aguardando).map(c => c.conta)
+    .filter(c => (TENTATIVAS.get(c) || 0) < TETO_TENTATIVAS);
+  if (!alvos.length) return;
+
+  insistindo = true;
+  try {
+    for (const c of alvos) TENTATIVAS.set(c, (TENTATIVAS.get(c) || 0) + 1);
+    desenhaLivro();
+    const d = await mandar("/contas", { contas: alvos });
+    const passaram = (d.novos || []).filter(n => n.ok);
+    if (passaram.length) {
+      // o perfil nasceu: a esteira tem o que ler, e o cartão tem o que mostrar
+      HISTORICOS.clear();
+      await mandar("/varrer").catch(() => {});
+      await atualizar();
+    } else {
+      desenhaLivro();
+    }
+  } catch (e) { /* a ponte não respondeu agora; o relógio seguinte tenta */ }
+  insistindo = false;
+}
+setInterval(insistirIdentificacao, 45000);
+
 function livroFiltrado() {
   const q = ($("liv_q").value || "").trim().toLowerCase();
   return LIVRO.filter(c => {
@@ -2428,7 +2479,8 @@ function desenhaLivro() {
           <span class="liv-sub">@${c.conta} · ${
             c.vivo ? '<b class="liv-vivo">varrendo agora</b>'
             // sem marca de tempo nenhuma, "há" quanto tempo daria meio século
-            : c.ultimo ? haQuanto(c.ultimo) : "na fila da esteira"}${
+            : c.ultimo ? haQuanto(c.ultimo)
+            : `tentativa ${TENTATIVAS.get(c.conta) || 0} de ${TETO_TENTATIVAS}`}${
             cob !== null ? ` · ${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)` : ""} · ${
             c.eventos} ${c.eventos === 1 ? "registro" : "registros"}</span>
         </span>
@@ -2513,7 +2565,7 @@ document.addEventListener("click", async ev => {
   // CARTÃO SEM HISTÓRICO EXPLICA A ESPERA, em vez de dizer "nada registrado". Perfil
   // que a ponte não conseguiu identificar cai exatamente aqui, e o vazio dele não é
   // ausência de trabalho: é trabalho em curso, do lado da esteira.
-  if (ficha && ficha.aguardando && !eventos.length) explicarEspera(caixa);
+  if (ficha && ficha.aguardando && !eventos.length) explicarEspera(caixa, conta);
   else pintarEventos(caixa, eventos);
 
   const b = BATIMENTOS.get(conta);
@@ -2521,16 +2573,17 @@ document.addEventListener("click", async ev => {
 });
 
 /** O que está acontecendo com um perfil que entrou na lista e ainda não tem ficha. */
-function explicarEspera(caixa) {
+function explicarEspera(caixa, conta) {
+  const tentativas = TENTATIVAS.get(conta) || 0;
   const linhas = [
     ["Perfil na lista de origem",
      "Ele já está gravado no acervo e não se perde ao fechar a tela."],
     ["O Instagram recusou a identificação pela ponte",
      "A recusa é por endereço de saída, e o da ponte é compartilhado com muita gente. "
      + "Foram quatro tentativas seguidas ao adicionar."],
-    ["A esteira assumiu a tentativa",
-     "As vinte máquinas dela têm vinte endereços próprios. A primeira que passar grava "
-     + "quem é o perfil, e este cartão se enche sozinho."],
+    ["A tela está tentando de novo, sozinha",
+     `Uma tentativa a cada 45 segundos, com esta aba à vista. Já foram ${tentativas} de `
+     + `${TETO_TENTATIVAS}. Assim que uma passar, o cartão se enche e a varredura começa.`],
   ];
   caixa.innerHTML = "";
   for (const [titulo, texto] of linhas) {
