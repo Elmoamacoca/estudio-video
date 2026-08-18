@@ -43,6 +43,16 @@ PAGINAS_POR_VAGA = 2
 # que e' o que menos serve e o que mais custa.
 ALVO_PADRAO = 200
 
+# O SEGUNDO FREIO, e ele e' o que garante que a coisa acaba.
+#
+# So' o alvo por formato nao basta: no @brandsdecoded__, das 24 publicacoes mais
+# recentes 23 eram carrossel e 1 era reels. Nessa proporcao, juntar 200 reels exigiria
+# ler quase cinco mil publicacoes, e o perfil tem 2.253. O alvo nunca seria atingido e a
+# varredura leria tudo assim mesmo, que e' exatamente o que se queria evitar.
+#
+# Entao vale o que vier primeiro: juntou o alvo do formato, ou leu este tanto no total.
+LIDOS_NO_MAXIMO = 800
+
 
 def regua() -> dict:
     """A regua escolhida na tela. A varredura le' dela quanto e' 'o bastante'."""
@@ -76,8 +86,11 @@ def ja_basta(estado: dict, r: dict) -> bool:
     alvo = ALVO_PADRAO if alvo is None else int(alvo or 0)
     if alvo <= 0:
         return False
-    formatos = set(r.get("formatos") or [])
     posts = estado.get("posts") or []
+    teto = int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO)
+    if len(posts) >= teto:
+        return True
+    formatos = set(r.get("formatos") or [])
     if not formatos:
         return len(posts) >= alvo
     return sum(1 for p in posts if p.get("formato") in formatos) >= alvo
@@ -326,9 +339,18 @@ def main() -> int:
                 break
             if ja_basta(estado, r):
                 estado["completo"] = True
-                estado["parou_no_alvo"] = int(r.get("alvo") or 0)
-                print(f"[{conta}] ALVO ATINGIDO: {r.get('alvo')} publicações dos "
-                      f"formatos escolhidos. Paro por aqui.")
+                formatos = set(r.get("formatos") or [])
+                do_formato = sum(1 for x in estado["posts"]
+                                 if x.get("formato") in formatos) if formatos else 0
+                estado["parou_no_alvo"] = {
+                    "alvo": ALVO_PADRAO if r.get("alvo") is None else int(r.get("alvo")),
+                    "teto": int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO),
+                    "lidos": len(estado["posts"]),
+                    "do_formato": do_formato,
+                    "formatos": sorted(formatos),
+                }
+                print(f"[{conta}] PAREI: {len(estado['posts'])} lidas, "
+                      f"{do_formato} dos formatos escolhidos")
                 break
 
     if not paginas:
