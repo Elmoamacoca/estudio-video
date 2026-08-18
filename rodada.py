@@ -241,11 +241,24 @@ def bater_ponto(conta: str, estado: dict, vaga: int) -> None:
     Este aqui tem menos de duzentos bytes e é reescrito a cada página lida.
     """
     perfil = estado.get("perfil") or {}
+    posts = estado.get("posts") or []
+    # A TELA PRECISA SABER CONTRA O QUE COMPARAR.
+    #
+    # Sem isto, o bilhete dizia "72 de 2.254", porque 2.254 e' quantas publicacoes o
+    # perfil tem no total. So' que numa varredura de reels esses 2.254 nunca serao
+    # lidos: a esteira busca reels puros e para em duzentos. O numero estava certo e a
+    # frase estava errada, e quem le' conclui, com razao, que esta' varrendo tudo de novo.
+    r = regua()
+    reels = so_reels(r)
+    alvo = ALVO_PADRAO if r.get("alvo") is None else int(r.get("alvo") or 0)
     ANDAMENTO.mkdir(parents=True, exist_ok=True)
     (ANDAMENTO / f"{conta}.json").write_text(json.dumps({
         "conta": conta,
-        "lidos": len(estado.get("posts") or []),
-        "publicacoes": perfil.get("publicacoes") or 0,
+        "modo": "reels" if reels else "tudo",
+        "alvo": alvo,
+        "lidos": (sum(1 for x in posts if x.get("formato") == "reels")
+                  if reels else len(posts)),
+        "publicacoes": (alvo if reels else (perfil.get("publicacoes") or 0)),
         "completo": bool(estado.get("completo")),
         "relendo": bool(estado.get("relendo")),
         "vaga": vaga,
