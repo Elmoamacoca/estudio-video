@@ -34,6 +34,7 @@ PERFIS = Path("dados/perfis")
 # propósito, evento é o andamento normal.
 GRAVIDADE = {
     "aguardando": "aviso",
+    "vazio": "aviso",
     "identificado": "evento",
     "varredura": "evento",
     "concluido": "evento",
@@ -180,6 +181,18 @@ def registrar_rodada(rodada: int | None = None) -> int:
         # A pergunta e' se JA' FOI IDENTIFICADO, e nao se o livro esta' vazio: quem
         # passou pela espera ja' tem um evento escrito, e com a pergunta antiga a
         # identificacao dele nunca seria registrada.
+        # CONTA FECHADA OU SEM POST tem evento proprio, e nao vira "identificado" com
+        # zero em tudo: quem le a ficha precisa saber que nao ha o que varrer ali.
+        if estado.get("vazio"):
+            if not any(e["tipo"] == "vazio" for e in livro["eventos"]):
+                anotar(livro, "vazio", estado.get("atualizado") or agora,
+                       "Sem posts públicos: conta fechada ou sem publicação. "
+                       "Nada a varredura aqui.", total=0)
+                entraram += 1
+            if livro["eventos"]:
+                gravar(livro)
+            continue
+
         if not any(e["tipo"] == "identificado" for e in livro["eventos"]):
             # SEM O TOTAL, NAO SE INVENTA O TOTAL. O caminho que abre o perfil nao
             # informa quantas publicacoes a conta tem, e escrever "0 publicacoes" seria
