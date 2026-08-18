@@ -68,14 +68,37 @@ def regua() -> dict:
         return {}
 
 
-def so_reels(r: dict) -> bool:
-    """A escolha da tela pede reels e mais nada?
+TODOS_OS_FORMATOS = {"reels", "post", "carrossel"}
+NOMES = {"reels": "reels", "post": "posts isolados", "carrossel": "carrosseis"}
 
-    E' a unica combinacao que ganha caminho proprio, porque e' a unica que o Instagram
-    entrega separada. Nao existe via so' de imagem nem so' de carrossel: para esses, o
-    jeito continua sendo ler o feed inteiro e separar depois.
+
+def formatos_pedidos(r: dict) -> set:
+    """Os formatos escolhidos na tela. Sem escolha, valem todos."""
+    f = {x for x in (r.get("formatos") or []) if x in TODOS_OS_FORMATOS}
+    return f or set(TODOS_OS_FORMATOS)
+
+
+def so_reels(r: dict) -> bool:
+    """A escolha pede reels e mais nada?
+
+    E' a UNICA combinacao com caminho proprio no Instagram: existe uma via que devolve
+    reels puros, e nao existe via equivalente para imagem nem para carrossel.
+
+    ISSO NAO PODE VAZAR PARA A TELA. Nas outras combinacoes o feed vem misturado por
+    imposicao do Instagram, e o sistema resolve por dentro: le' o que ele manda e GUARDA
+    SO' O QUE FOI PEDIDO. Quem olha ve' a escolha sendo cumprida, que e' o unico
+    compromisso que a tela assumiu.
     """
-    return set(r.get("formatos") or []) == {"reels"}
+    return formatos_pedidos(r) == {"reels"}
+
+
+def rotulo_dos_formatos(r: dict) -> str:
+    """Como a tela chama o que esta' sendo buscado. Um so', ou dois, ou 'publicacoes'."""
+    f = formatos_pedidos(r)
+    if f == TODOS_OS_FORMATOS:
+        return "publicacoes"
+    nomes = [NOMES[x] for x in ("reels", "carrossel", "post") if x in f]
+    return nomes[0] if len(nomes) == 1 else " e ".join([", ".join(nomes[:-1]), nomes[-1]])
 
 
 def ja_basta(estado: dict, r: dict) -> bool:
@@ -106,12 +129,12 @@ def ja_basta(estado: dict, r: dict) -> bool:
     if alvo <= 0:
         return False
     posts = estado.get("posts") or []
-    teto = int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO)
-    if len(posts) >= teto:
+    # VISTAS, e nao guardadas: quem pede so' carrossel descarta o resto, e contar so' o
+    # que ficou faria o teto nunca chegar num perfil que posta pouco daquele formato.
+    vistas = int(estado.get("vistas") or len(posts))
+    if vistas >= int(r.get("lidos_no_maximo") or LIDOS_NO_MAXIMO):
         return True
-    formatos = set(r.get("formatos") or [])
-    if not formatos:
-        return len(posts) >= alvo
+    formatos = formatos_pedidos(r)
     return sum(1 for p in posts if p.get("formato") in formatos) >= alvo
 # O PEDIDO DE RELEITURA, num arquivo só e pequeno de propósito.
 # Perfil dado por encerrado saía da fila para sempre: pedir para minerar de novo não
@@ -249,16 +272,20 @@ def bater_ponto(conta: str, estado: dict, vaga: int) -> None:
     # lidos: a esteira busca reels puros e para em duzentos. O numero estava certo e a
     # frase estava errada, e quem le' conclui, com razao, que esta' varrendo tudo de novo.
     r = regua()
-    reels = so_reels(r)
+    pedidos = formatos_pedidos(r)
     alvo = ALVO_PADRAO if r.get("alvo") is None else int(r.get("alvo") or 0)
+    tudo = pedidos == TODOS_OS_FORMATOS
     ANDAMENTO.mkdir(parents=True, exist_ok=True)
     (ANDAMENTO / f"{conta}.json").write_text(json.dumps({
         "conta": conta,
-        "modo": "reels" if reels else "tudo",
+        # O QUE A TELA MOSTRA E' O QUE FOI PEDIDO. Este rotulo existe para o cartao nunca
+        # mais dizer "72 de 2.254 posts" numa varredura de reels: sao coisas diferentes,
+        # e a leitura obvia era que estava varrendo o perfil inteiro.
+        "modo": "reels" if so_reels(r) else "tudo",
+        "rotulo": rotulo_dos_formatos(r),
         "alvo": alvo,
-        "lidos": (sum(1 for x in posts if x.get("formato") == "reels")
-                  if reels else len(posts)),
-        "publicacoes": (alvo if reels else (perfil.get("publicacoes") or 0)),
+        "lidos": sum(1 for x in posts if x.get("formato") in pedidos),
+        "publicacoes": ((perfil.get("publicacoes") or 0) if tudo and not alvo else alvo),
         "completo": bool(estado.get("completo")),
         "relendo": bool(estado.get("relendo")),
         "vaga": vaga,
@@ -334,8 +361,11 @@ def main() -> int:
             grava(conta, estado)
             print(f"[{conta}] SEM POSTS PÚBLICOS: conta fechada ou sem publicação.")
             return 0
+        # SO' O QUE FOI PEDIDO ENTRA, ja' na abertura. A primeira leitura vem misturada
+        # porque e' assim que o Instagram entrega, mas o que fica guardado e' a escolha.
+        pedidos = formatos_pedidos(regua())
         estado["perfil"] = aberto["perfil"]
-        estado["posts"] = aberto["posts"]
+        estado["posts"] = [x for x in aberto["posts"] if x.get("formato") in pedidos]
         estado["marcador"] = aberto["marcador"]
         estado["completo"] = bool(aberto["acabou"])
         estado["atualizado"] = int(time.time())
@@ -398,14 +428,27 @@ def main() -> int:
             break
         paginas += 1
 
+        # O FILTRO ACONTECE AQUI, e nao la' na frente.
+        #
+        # O Instagram so' entrega o historico misturado, sem deixar pedir um formato
+        # (a unica excecao e' o reels, que tem via propria e e' tratado antes daqui).
+        # Ler misturado e' obrigacao; GUARDAR misturado nao e'. Quem pediu carrossel
+        # recebe carrossel, e o resto passa sem deixar rastro.
+        pedidos = formatos_pedidos(r)
         entraram = 0
         for bruto in j.get("items", []):
             p = limpa_post(bruto)
-            if p["codigo"] and p["codigo"] not in vistos:
-                vistos.add(p["codigo"])
-                estado["posts"].append(p)
-                entraram += 1
+            if not p["codigo"] or p["codigo"] in vistos:
+                continue
+            vistos.add(p["codigo"])
+            if p.get("formato") not in pedidos:
+                continue
+            estado["posts"].append(p)
+            entraram += 1
         novos += entraram
+        # o teto de leitura conta PAGINAS VISTAS, e nao so' o que foi guardado: e' ele
+        # que garante que a varredura acaba mesmo num perfil sem nada do formato pedido
+        estado["vistas"] = int(estado.get("vistas") or 0) + len(j.get("items", []))
 
         if relendo:
             estado["marcador_novo"] = j.get("next_max_id")
@@ -437,9 +480,10 @@ def main() -> int:
     grava(conta, estado)
     bater_ponto(conta, estado, vaga)
 
-    meta = (estado.get("perfil") or {}).get("publicacoes") or 0
-    print(f"[{conta}] +{novos} posts em {paginas} página(s) "
-          f"(total {len(estado['posts'])}{f' de {meta}' if meta else ''})")
+    rotulo = rotulo_dos_formatos(r)
+    print(f"[{conta}] +{novos} {rotulo} em {paginas} página(s) "
+          f"(total {len(estado['posts'])} {rotulo}, "
+          f"{estado.get('vistas') or 0} publicações vistas)")
     return 0
 
 
