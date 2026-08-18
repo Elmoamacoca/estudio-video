@@ -53,12 +53,23 @@ jobs:
           echo "formatos = [$FORMATOS]"
           echo "corte    = [$CORTE]"
 
+      # ETIQUETAR NAO E' BAIXAR, e mesmo assim entra por aqui: o caminho da tela ate' a
+      # esteira e' um so'. O comeco do texto do pedido diz qual dos dois e', e cada
+      # passo abaixo so' roda no seu.
+      - name: Marcar o perfil
+        if: startsWith(inputs.quantos, 'etiquetar:')
+        env:
+          PEDIDO: ${{ inputs.quantos }}
+        run: |
+          python etiquetar.py "$PEDIDO"
+          python selecionar.py
+
       - name: Conferir os programas
-        if: inputs.quantos != 'sonda'
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         run: python conferir.py
 
       - name: Aplicar a regua escolhida na tela
-        if: inputs.quantos != 'sonda'
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         # SEM ARGUMENTOS, de proposito. Passar formato e corte por aqui refazia a
         # selecao com uma regua diferente da que foi escolhida ao iniciar: o lote saia
         # com outro criterio e ninguem via onde tinha mudado. A regua mora no acervo,
@@ -66,7 +77,7 @@ jobs:
         run: python selecionar.py
 
       - name: Renovar os links vencidos
-        if: inputs.quantos != 'sonda'
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         # o link do arquivo dura poucas horas. Se a mineracao foi ontem, ele venceu,
         # e o unico jeito de ter link novo e' reler o perfil.
         run: |
@@ -81,7 +92,7 @@ jobs:
           PY
 
       - name: Baixar
-        if: inputs.quantos != 'sonda'
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         # PELO AMBIENTE, e nao coladinho na linha de comando: o pedido vem de fora, e
         # texto de fora colado dentro de um shell e' texto que pode virar comando.
         env:
@@ -93,11 +104,11 @@ jobs:
       # aqui, o perfil de onde acabou de sair um lote continuava na fileira da tela com
       # o mesmo numero, e o Gabriel so' veria a mudanca na proxima rodada da esteira.
       - name: Refazer a conta do que falta
-        if: always() && inputs.quantos != 'sonda'
+        if: always() && inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         run: python selecionar.py
 
       - name: Entregar o lote
-        if: inputs.quantos != 'sonda'
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         uses: actions/upload-artifact@v4
         with:
           name: lote-${{ github.run_number }}
@@ -107,7 +118,7 @@ jobs:
           compression-level: 0
 
       - name: Anotar o lote na tela
-        if: always() && inputs.quantos != 'sonda'
+        if: always() && inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         run: |
           python - <<'PY'
           import json, pathlib, time
@@ -149,8 +160,17 @@ jobs:
           pathlib.Path("dados/estado.json").write_text(
               json.dumps(est, ensure_ascii=False, indent=1), encoding="utf-8")
           PY
+
+      # A GRAVACAO E' UM PASSO SO', PARA OS DOIS CAMINHOS.
+      # Ela morava dentro do passo que anota o lote, e esse passo nao roda quando o
+      # pedido e' de etiquetar: a marcacao era escrita no disco da maquina e morria com
+      # ela, sem nunca chegar ao acervo nem, portanto, a tela.
+      - name: Gravar no acervo
+        if: always() && inputs.quantos != 'sonda'
+        run: |
           git config user.name "esteira"
           git config user.email "esteira@users.noreply.github.com"
-          git add dados/ && git diff --staged --quiet || git commit -m "lote ${{ github.run_number }}"
+          git add dados/
+          git diff --staged --quiet || git commit -m "pedido ${{ github.run_number }}"
           git pull --rebase --autostash origin main || true
           git push || true
