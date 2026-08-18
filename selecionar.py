@@ -20,6 +20,20 @@ from pathlib import Path
 PASTA = Path("dados/perfis")
 SAIDA = Path("dados/selecao.json")
 REGUA = Path("dados/regua.json")
+# O QUE JA' DESCEU, por conta. Sem esta lista a fileira de Baixar repetiria para sempre
+# os mesmos perfis com os mesmos números: baixar não mudaria nada na tela, e a unica
+# forma de saber o que ja' veio seria abrir os lotes um por um.
+BAIXADOS = Path("dados/baixados.json")
+
+
+def ja_baixados() -> dict[str, set]:
+    if not BAIXADOS.exists():
+        return {}
+    try:
+        d = json.loads(BAIXADOS.read_text(encoding="utf-8"))
+        return {c: set(v) for c, v in d.items()}
+    except Exception:
+        return {}
 
 # O QUE VALE QUANDO O GABRIEL NÃO ESCOLHEU NADA. Antes estes números moravam na linha
 # de comando dentro do arquivo da esteira, escolhidos por mim: a tela tinha campos para
@@ -137,6 +151,11 @@ def selecionar(r: dict | None = None) -> dict:
             "nome": dados["perfil"].get("nome"),
             "avatar": dados["perfil"].get("avatar"),
             "seguidores": dados["perfil"].get("seguidores"),
+            # MERCADO E ETIQUETA AINDA NAO SAO GRAVADOS pela mineracao. Passam por aqui
+            # vazios de proposito: o dia em que ela comecar a grava-los, os dois filtros
+            # da aba de Baixar acendem sozinhos, sem mexer em mais nada.
+            "mercado": dados["perfil"].get("mercado"),
+            "etiquetas": dados["perfil"].get("etiquetas") or [],
             "atualizado": dados.get("atualizado"),
             "publicacoes": dados["perfil"]["publicacoes"],
             "lidos": len(dados.get("posts", [])),
@@ -160,21 +179,37 @@ def selecionar(r: dict | None = None) -> dict:
     # Contar pela lista final fazia o primeiro perfil levar as 500 vagas e o segundo
     # aparecer com zero, mesmo tendo dezenas acima do corte.
     acima_por_perfil: dict[str, int] = {}
-    reels_por_perfil: dict[str, int] = {}
     for x in todos:
         if x["indice"] >= x["corte_usado"]:
             acima_por_perfil[x["conta"]] = acima_por_perfil.get(x["conta"], 0) + 1
-            if x["formato"] == "reels" and x.get("arquivo"):
-                reels_por_perfil[x["conta"]] = reels_por_perfil.get(x["conta"], 0) + 1
-    for pf in perfis:
-        pf["acima"] = acima_por_perfil.get(pf["conta"], 0)
-        pf["baixaveis"] = reels_por_perfil.get(pf["conta"], 0)
 
     escolhidos = sorted(
         (p for p in todos if p["indice"] >= p["corte_usado"]),
         key=lambda p: (p["indice"], p.get("views") or p.get("curtidas") or 0),
         reverse=True,
     )[:teto]
+
+    # O QUE DA' PARA BAIXAR CONTA-SE NA LISTA JA' CORTADA PELO TETO, e nao no acervo
+    # inteiro. Quem baixa le' `itens`, que para aqui no teto: contando antes do corte,
+    # o cartao do perfil na tela prometia 737 e o lote entregava 500, sem nada explicar
+    # a diferenca. Agora o numero do cartao e' exatamente o que desce.
+    reels_por_perfil: dict[str, int] = {}
+    feitos = ja_baixados()
+    baixados_por_perfil: dict[str, int] = {}
+    for x in escolhidos:
+        if x["formato"] == "reels" and x.get("arquivo"):
+            reels_por_perfil[x["conta"]] = reels_por_perfil.get(x["conta"], 0) + 1
+            if x["codigo"] in feitos.get(x["conta"], ()):
+                baixados_por_perfil[x["conta"]] = \
+                    baixados_por_perfil.get(x["conta"], 0) + 1
+
+    for pf in perfis:
+        pf["acima"] = acima_por_perfil.get(pf["conta"], 0)
+        pf["baixaveis"] = reels_por_perfil.get(pf["conta"], 0)
+        pf["baixados"] = baixados_por_perfil.get(pf["conta"], 0)
+        # O QUE A FILEIRA DE BAIXAR MOSTRA. Zero aqui tira o perfil da fileira, e e' o
+        # que faz ela encolher a cada lote em vez de repetir os mesmos cartoes.
+        pf["restam"] = max(0, pf["baixaveis"] - pf["baixados"])
 
     return {
         "criterio": criterio,
