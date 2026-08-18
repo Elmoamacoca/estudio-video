@@ -2,13 +2,25 @@
  "itens": [
   {
    "origem": "@blankpartners",
-   "indice": 176.68,
+   "indice": 324.88,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 142.06,
+   "indice": 189.15,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 177.12,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 142.41,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -20,7 +32,7 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 96.1,
+   "indice": 96.34,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -32,25 +44,25 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 61.55,
+   "indice": 61.7,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 58.6,
+   "indice": 58.74,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 50.96,
+   "indice": 51.09,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 43.73,
+   "indice": 43.84,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -74,7 +86,7 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 34.08,
+   "indice": 34.16,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -110,7 +122,7 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 23.48,
+   "indice": 23.54,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -122,7 +134,7 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 22.75,
+   "indice": 22.8,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -140,7 +152,7 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 20.77,
+   "indice": 20.82,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -158,7 +170,7 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 17.61,
+   "indice": 17.66,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -170,13 +182,19 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 17.43,
+   "indice": 17.47,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 16.47,
+   "indice": 16.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 16.42,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -188,13 +206,13 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 15.95,
+   "indice": 15.99,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 15.76,
+   "indice": 15.8,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -212,7 +230,13 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 13.15,
+   "indice": 14.59,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 13.18,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -224,25 +248,25 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 12.63,
+   "indice": 12.66,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 12.29,
+   "indice": 12.32,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 11.99,
+   "indice": 12.02,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 11.52,
+   "indice": 11.55,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -272,13 +296,13 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 9.98,
+   "indice": 10.01,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 9.92,
+   "indice": 9.95,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -335,31 +359,7 @@
    "indice": 8.49,
    "etapa": "reels",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 8.4,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 8.07,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 7.81,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 7.73,
-   "etapa": "reels",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1787078203
+ "atualizado": 1787078900
 }
