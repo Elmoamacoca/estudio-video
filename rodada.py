@@ -250,6 +250,57 @@ def _motivo_da_parada(estado: dict, r: dict) -> dict:
     }
 
 
+RETRATOS = Path("dados/retratos")
+FICHA_RETRATOS = Path("dados/retratos.json")
+
+
+def guardar_retrato(conta: str, perfil: dict) -> None:
+    """Baixa a foto do perfil e anota o nome dele na ficha dos retratos.
+
+    POR QUE A ESTEIRA PRECISA FAZER ISSO: quem guardava a foto era so' a ponte, no
+    momento em que ela conseguia identificar o perfil. So' que a identificacao pela
+    ponte falha com frequencia, e nesses casos quem abre o perfil e' a esteira, pelo
+    arroba. O perfil entrava completo e sem foto: o @vinci.society ficou com a inicial
+    no lugar da marca enquanto os outros dois tinham a imagem.
+
+    O ENDERECO DA FOTO VENCE EM HORAS, entao o que se guarda e' o arquivo, e nao o
+    link. Depois disso a imagem e' servida do proprio acervo, para sempre.
+    """
+    url = perfil.get("avatar")
+    if not url:
+        return
+    RETRATOS.mkdir(parents=True, exist_ok=True)
+    arquivo = RETRATOS / f"{conta}.jpg"
+    ficha = {}
+    if FICHA_RETRATOS.exists():
+        try:
+            ficha = json.loads(FICHA_RETRATOS.read_text(encoding="utf-8"))
+        except Exception:
+            ficha = {}
+
+    tem_foto = arquivo.exists()
+    if not tem_foto:
+        try:
+            req = urllib.request.Request(url, headers={
+                **CABECALHO, "Referer": "https://www.instagram.com/"})
+            with urllib.request.urlopen(req, timeout=25) as r:
+                cru = r.read()
+            # meio mega de teto: foto de perfil nao passa disso, e o que passar disso
+            # nao e' foto de perfil
+            if cru and len(cru) < 500_000:
+                arquivo.write_bytes(cru)
+                tem_foto = True
+        except Exception as e:
+            print(f"  retrato de {conta} nao veio ({type(e).__name__})")
+
+    ficha[conta] = {"nome": perfil.get("nome"),
+                    "seguidores": perfil.get("seguidores") or 0,
+                    "publicacoes": perfil.get("publicacoes") or 0,
+                    "foto": tem_foto}
+    FICHA_RETRATOS.write_text(json.dumps(ficha, ensure_ascii=False, indent=1),
+                              encoding="utf-8")
+
+
 ANDAMENTO = Path("dados/andamento")
 
 
@@ -370,6 +421,7 @@ def main() -> int:
         estado["completo"] = bool(aberto["acabou"])
         estado["atualizado"] = int(time.time())
         grava(conta, estado)
+        guardar_retrato(conta, aberto["perfil"])
         bater_ponto(conta, estado, vaga)
         print(f"[{conta}] ABERTO pelo arroba: id {aberto['perfil']['id']}, "
               f"{len(aberto['posts'])} posts já na primeira página")
