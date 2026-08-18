@@ -537,9 +537,19 @@ function linhaDoAgora(b) {
     + (b.vaga ? `<span>vaga <b>${b.vaga}</b></span>` : "")
     + `</span></span>`
     + `<span class="data">${quando < 90 ? "agora" : "há " + Math.round(quando / 60) + " min"}</span>`;
+  // SILENCIO NAO E' PARADA, e a tela precisa dizer isso.
+  //
+  // As vagas se escalonam de 35 em 35 segundos e boa parte volta de mãos vazias, porque
+  // o endereço daquela máquina já tinha sido usado. Com dois perfis dividindo as vinte
+  // vagas, passam minutos entre uma página e outra. A linha dizia só "varrendo agora" e
+  // a hora congelada logo ao lado, e a leitura óbvia era que tinha travado.
+  const paradoHa = Math.round((Date.now() / 1000) - (b.quando || 0));
   ln.querySelector(".oque > b").textContent = b.completo
     ? "Leitura encerrada, aguardando o fechamento da rodada"
-    : `Varrendo agora: a esteira está buscando ${rotuloDosFormatos(b)} deste perfil`;
+    : paradoHa > 90
+      ? `Varredura em curso: última página há ${Math.round(paradoHa / 60)} min. `
+        + "As vagas se revezam, e a que volta sem página é endereço já usado."
+      : `Varrendo agora: a esteira está buscando ${rotuloDosFormatos(b)} deste perfil`;
   return ln;
 }
 
