@@ -1,6 +1,32 @@
 {
  "contas": [
   {
+   "conta": "blankpartners",
+   "nome": "Blank Partners",
+   "primeiro": 1787076365,
+   "ultimo": 1787076365,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "identificado",
+   "lidos": 0,
+   "publicacoes": 1678,
+   "completo": false
+  },
+  {
+   "conta": "brandsdecoded__",
+   "nome": "BrandsDecoded®️ | Conteúdo & Cultura",
+   "primeiro": 1787076371,
+   "ultimo": 1787076371,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "identificado",
+   "lidos": 0,
+   "publicacoes": 2256,
+   "completo": false
+  },
+  {
    "conta": "vinci.society",
    "nome": "Vinci",
    "rotulo": "reels",
@@ -15,5 +41,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787074588
+ "atualizado": 1787076374
 }
