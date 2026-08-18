@@ -367,7 +367,12 @@ def reconstruir_indice() -> dict:
         # compara, e nao contra o total de publicacoes do perfil, que nunca sera' lido
         rot = rotulo()
         if rot != "publicações" and estado_perfil:
-            estado_perfil["publicacoes"] = int(regua().get("alvo") or 200)
+            # META SO' EXISTE SE ALGUEM PEDIU UM ALVO. Aqui havia um "ou 200" herdado do
+            # tempo em que a varredura parava sozinha: sem alvo, o cartao continuava
+            # dizendo "132 de 200 reels (66%)" numa varredura que vai ate' o fim do
+            # perfil, e 66% de coisa nenhuma e' pior do que numero nenhum.
+            alvo = int(regua().get("alvo") or 0)
+            estado_perfil["publicacoes"] = alvo if alvo > 0 else 0
         contas.append({
             "conta": livro["conta"],
             "nome": livro.get("nome"),
