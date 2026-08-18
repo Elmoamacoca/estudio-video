@@ -244,11 +244,20 @@ def registrar_rodada(rodada: int | None = None) -> int:
             # PAROU PORQUE JA' TINHA O BASTANTE, e isso nao e' limite nem conclusao: e'
             # a escolha da tela sendo cumprida. Sem evento proprio, o perfil aparecia
             # como "fechado no limite do Instagram", que e' outra coisa e assusta.
-            if estado.get("parou_no_alvo"):
+            parada = estado.get("parou_no_alvo")
+            if parada:
+                # dois motivos possiveis, e a ficha diz qual foi: juntou o que se queria
+                # daquele formato, ou bateu o teto de leitura antes disso
+                p = parada if isinstance(parada, dict) else {}
+                fmt = ", ".join(p.get("formatos") or []) or "todos os formatos"
+                bateu_teto = p.get("lidos", lidos) >= (p.get("teto") or 0)
                 anotar(livro, "alvo", agora,
-                       f"Varredura encerrada no alvo: {mil(estado['parou_no_alvo'])} "
-                       f"publicações dos formatos escolhidos, em {mil(lidos)} lidas",
-                       total=lidos, alvo=estado["parou_no_alvo"])
+                       (f"Parou no teto de leitura: {mil(lidos)} publicações lidas, "
+                        f"{mil(p.get('do_formato') or 0)} de {fmt}")
+                       if bateu_teto else
+                       (f"Juntou o que foi pedido: {mil(p.get('do_formato') or 0)} de "
+                        f"{fmt}, em {mil(lidos)} publicações lidas"),
+                       total=lidos, **{k: v for k, v in p.items() if k != "formatos"})
                 entraram += 1
                 if livro["eventos"]:
                     gravar(livro)
