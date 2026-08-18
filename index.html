@@ -2174,9 +2174,10 @@ function medir(eventos) {
     const dentro = atras >= 0 && atras < DIAS_DO_TRACO;
     contas.evento += 1;
     if (dentro) series.evento[DIAS_DO_TRACO - 1 - atras] += 1;
-    if (e.gravidade === "falha" || e.gravidade === "aviso") {
-      contas[e.gravidade] += 1;
-      if (dentro) series[e.gravidade][DIAS_DO_TRACO - 1 - atras] += 1;
+    const peso = pesoDe(e);
+    if (peso === "falha" || peso === "aviso") {
+      contas[peso] += 1;
+      if (dentro) series[peso][DIAS_DO_TRACO - 1 - atras] += 1;
     }
   }
 
@@ -2218,6 +2219,17 @@ const HISTORICOS = new Map();
    redesenho apagava o elemento e o cartão fechava sozinho: quem clicava via ele abrir e
    fechar na cara. Agora quem manda é este conjunto, e o desenho obedece a ele. */
 const ABERTOS = new Set();
+
+/* A GRAVIDADE É DECIDIDA AQUI, e não lida do que ficou gravado.
+   O tipo do evento é o dado; a gravidade é opinião sobre ele, e opinião muda. "Rodada
+   sem avanço" já foi classificada como falha e não é: com menos perfis do que vagas,
+   várias vagas caem no mesmo perfil e as últimas voltam vazias, que é o rodízio de
+   endereços funcionando. Se a tela lesse a marca gravada, o histórico inteiro
+   continuaria vermelho depois da correção. */
+const PESO = {
+  sem_avanco: "aviso", limite: "aviso", aguardando: "aviso", vazio: "aviso",
+};
+const pesoDe = e => PESO[e.tipo] || (e.tipo ? "evento" : (e.gravidade || "evento"));
 
 const TIPOS = {
   aguardando: "aguardando identificação",
@@ -2600,7 +2612,7 @@ function pintarEventos(caixa, eventos) {
     if (d.origem) dados.push(`<em>${d.origem}</em>`);
 
     const ln = document.createElement("div");
-    ln.className = "liv-ev " + e.gravidade;
+    ln.className = "liv-ev " + pesoDe(e);
     // CADA DADO NUM ELEMENTO PRÓPRIO. Juntos numa string só, o respiro do arranjo não
     // tinha onde pegar e saía "3 páginastotal 281histórico", tudo grudado.
     ln.innerHTML = `<i></i><span class="oque"><b></b>`
@@ -2727,7 +2739,7 @@ $("exp_baixar").onclick = async () => {
       if (e.quando < de || e.quando > ate) continue;
       const d = e.detalhe || {};
       linhas.push([c.conta, c.nome || "", dataHora(e.quando), TIPOS[e.tipo] || e.tipo,
-                   e.gravidade, e.texto, d.maquinas || "", d.gravacoes || "",
+                   pesoDe(e), e.texto, d.maquinas || "", d.gravacoes || "",
                    d.novos || "", d.total || "", d.rodada || ""]);
     }
   }
