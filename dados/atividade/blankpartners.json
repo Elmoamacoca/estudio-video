@@ -23,6 +23,46 @@
     "gravacoes": 1,
     "total": 0
    }
+  },
+  {
+   "quando": 1787077147,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 132 reels novos, 132 de 1.678 lidos",
+   "detalhe": {
+    "rodada": 107,
+    "maquinas": 6,
+    "gravacoes": 6,
+    "passos": [
+     {
+      "quando": 1787076859,
+      "maquina": "vaga 3"
+     },
+     {
+      "quando": 1787076892,
+      "maquina": "vaga 5"
+     },
+     {
+      "quando": 1787076929,
+      "maquina": "vaga 7"
+     },
+     {
+      "quando": 1787076963,
+      "maquina": "vaga 9"
+     },
+     {
+      "quando": 1787077069,
+      "maquina": "vaga 15"
+     },
+     {
+      "quando": 1787077137,
+      "maquina": "vaga 19"
+     }
+    ],
+    "novos": 132,
+    "total": 132,
+    "publicacoes": 1678
+   }
   }
  ]
 }
