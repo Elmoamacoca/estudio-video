@@ -428,6 +428,13 @@ function medir(eventos) {
 const POR_LEVA = 10;
 let LIVRO = [], livroMostra = POR_LEVA, livroTipo = "", livroDesde = 0;
 const HISTORICOS = new Map();
+/* QUAIS CARTÕES ESTÃO ABERTOS, guardado fora do desenho.
+
+   A lista inteira é reescrita a cada volta dos relógios, e a mais rápida delas roda de
+   dez em dez segundos. Como o estado de aberto vivia só na classe do elemento, o
+   redesenho apagava o elemento e o cartão fechava sozinho: quem clicava via ele abrir e
+   fechar na cara. Agora quem manda é este conjunto, e o desenho obedece a ele. */
+const ABERTOS = new Set();
 
 const TIPOS = {
   aguardando: "aguardando identificação",
@@ -550,17 +557,37 @@ async function aoVivo() {
     let titulo = "Esteira parada", resumo = "Nenhuma rodada em andamento.";
     let selo = "parada", viva = false, desde = null;
 
-    if (batendo.length || lendo.length) {
+    // NINGUÉM ESTÁ LENDO ENQUANTO NÃO SE SABE QUEM É O PERFIL, e a tela precisa dizer
+    // isso com todas as letras. Aqui aparecia "19 máquinas lendo ao mesmo tempo" com
+    // zero posts entrando, porque as vinte máquinas realmente sobem: elas é que não
+    // conseguem descobrir o identificador do perfil, levam 429 e desligam. Anunciar
+    // leitura nesse momento é a tela contando uma coisa e o Instagram fazendo outra.
+    const esperando = LIVRO.filter(c => c.aguardando);
+    const nenhumPronto = esperando.length && esperando.length === LIVRO.length;
+
+    if (batendo.length) {
       viva = true; selo = "ao vivo";
-      // o bilhete manda no número: ele conta as máquinas que gravaram avanço de verdade
-      const quantas = Math.max(batendo.length, lendo.length);
-      titulo = quantas === 1 ? "Uma máquina lendo o Instagram"
-                             : `${quantas} máquinas lendo ao mesmo tempo`;
-      resumo = batendo.length
-        ? batendo.map(b => `@${b.conta}: ${num(b.lidos)} de ${num(b.publicacoes)} posts`)
-                 .join(" · ")
-        : "Cada uma lê uma página de doze posts e passa a vez"
-          + (rodada ? `, ${rodada}.` : ".");
+      titulo = batendo.length === 1 ? "Uma máquina lendo o Instagram"
+                                    : `${batendo.length} máquinas lendo ao mesmo tempo`;
+      resumo = batendo.map(b =>
+        `@${b.conta}: ${num(b.lidos)} de ${num(b.publicacoes)} posts`).join(" · ");
+      desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
+    } else if (nenhumPronto) {
+      viva = true; selo = "identificando";
+      const voltas = Math.max(...esperando.map(c => TENTATIVAS.get(c.conta) || 0));
+      const quando = Math.max(...esperando.map(c => ULTIMA_TENTATIVA.get(c.conta) || 0));
+      const ha = quando ? Math.round((Date.now() - quando) / 1000) : null;
+      titulo = "Descobrindo quem é o perfil no Instagram";
+      resumo = "O Instagram recusa essa consulta dos endereços do GitHub, então a esteira "
+        + "não passa daqui. Quem consegue é a ponte, e a tela está pedindo a ela: "
+        + (voltas ? `tentativa ${voltas} de ${TETO_TENTATIVAS}` : "primeira tentativa saindo")
+        + (ha !== null && voltas ? `, a última há ${ha}s.` : ".");
+    } else if (lendo.length) {
+      viva = true; selo = "ao vivo";
+      titulo = lendo.length === 1 ? "Uma máquina lendo o Instagram"
+                                  : `${lendo.length} máquinas lendo ao mesmo tempo`;
+      resumo = "Cada uma lê uma página de doze posts e passa a vez"
+             + (rodada ? `, ${rodada}.` : ".");
       desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
     } else if (conferindo) {
       viva = true; selo = "conferindo";
@@ -627,8 +654,14 @@ async function aoVivo() {
      2. uma de cada vez, sem empilhar chamada em cima de chamada;
      3. só enquanto existir perfil sem identificação, que é o único caso que precisa. */
 const TENTATIVAS = new Map();
+const ULTIMA_TENTATIVA = new Map();
 const TETO_TENTATIVAS = 25;
 let insistindo = false;
+// RÁPIDO NO COMEÇO, e não a cada quarenta e cinco segundos desde a primeira. Com uma
+// espera fixa, o perfil recém-adicionado ficava quase um minuto marcando "tentativa 0",
+// que é a tela dizendo que não está fazendo nada. As cinco primeiras saem de oito em
+// oito segundos, e só depois o intervalo abre.
+const ESPERA_CURTA = 8000, ESPERA_LONGA = 45000, TENTATIVAS_RAPIDAS = 5;
 
 async function insistirIdentificacao() {
   // SEM EXIGIR A ABA À VISTA. A trava de visibilidade parecia prudente e era um tiro no
@@ -642,7 +675,10 @@ async function insistirIdentificacao() {
 
   insistindo = true;
   try {
-    for (const c of alvos) TENTATIVAS.set(c, (TENTATIVAS.get(c) || 0) + 1);
+    for (const c of alvos) {
+      TENTATIVAS.set(c, (TENTATIVAS.get(c) || 0) + 1);
+      ULTIMA_TENTATIVA.set(c, Date.now());
+    }
     desenhaLivro();
     const d = await mandar("/contas", { contas: alvos });
     const passaram = (d.novos || []).filter(n => n.ok);
@@ -656,8 +692,20 @@ async function insistirIdentificacao() {
     }
   } catch (e) { /* a ponte não respondeu agora; o relógio seguinte tenta */ }
   insistindo = false;
+  marcarProximaTentativa();
 }
-setInterval(insistirIdentificacao, 45000);
+
+/** Marca a próxima tentativa, curta no começo e longa depois. */
+let relogioDaInsistencia = null;
+function marcarProximaTentativa() {
+  clearTimeout(relogioDaInsistencia);
+  const esperando = LIVRO.filter(c => c.aguardando);
+  if (!esperando.length) return;
+  const voltas = Math.max(...esperando.map(c => TENTATIVAS.get(c.conta) || 0));
+  if (voltas >= TETO_TENTATIVAS) return;
+  relogioDaInsistencia = setTimeout(insistirIdentificacao,
+    voltas < TENTATIVAS_RAPIDAS ? ESPERA_CURTA : ESPERA_LONGA);
+}
 
 function livroFiltrado() {
   const q = ($("liv_q").value || "").trim().toLowerCase();
@@ -701,7 +749,13 @@ function desenhaLivro() {
             c.vivo ? '<b class="liv-vivo">varrendo agora</b>'
             // sem marca de tempo nenhuma, "há" quanto tempo daria meio século
             : c.ultimo ? haQuanto(c.ultimo)
-            : `tentativa ${TENTATIVAS.get(c.conta) || 0} de ${TETO_TENTATIVAS}`}${
+            : (() => {
+                const v = TENTATIVAS.get(c.conta) || 0;
+                const q = ULTIMA_TENTATIVA.get(c.conta);
+                if (!v) return "primeira tentativa saindo";
+                return `tentativa ${v} de ${TETO_TENTATIVAS}`
+                  + (q ? ` · há ${Math.round((Date.now() - q) / 1000)}s` : "");
+              })()}${
             cob !== null ? ` · ${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)` : ""} · ${
             c.eventos} ${c.eventos === 1 ? "registro" : "registros"}</span>
         </span>
@@ -710,6 +764,10 @@ function desenhaLivro() {
       <div class="liv-corpo"><div class="liv-caixa">carregando</div></div>
     </div>`;
   }).join("");
+
+  // e o que estava aberto continua aberto, com o conteúdo repintado
+  for (const cartao of $("liv_lista").querySelectorAll(".liv-cartao"))
+    if (ABERTOS.has(cartao.dataset.conta)) abrirCartao(cartao);
 }
 
 /** Junta os eventos de todos os perfis e alimenta as três medidas do topo.
@@ -769,14 +827,23 @@ function pintarEventos(caixa, eventos) {
   }
 }
 
-document.addEventListener("click", async ev => {
+document.addEventListener("click", ev => {
   const cabeca = ev.target.closest(".liv-cabeca");
   if (!cabeca) return;
   const cartao = cabeca.closest(".liv-cartao");
-  const abrir = !cartao.classList.contains("aberto");
-  cartao.classList.toggle("aberto", abrir);
-  cabeca.setAttribute("aria-expanded", abrir ? "true" : "false");
-  if (!abrir) return;
+  const conta = cartao.dataset.conta;
+  if (ABERTOS.has(conta)) { ABERTOS.delete(conta); fecharCartao(cartao); }
+  else { ABERTOS.add(conta); abrirCartao(cartao); }
+});
+
+function fecharCartao(cartao) {
+  cartao.classList.remove("aberto");
+  cartao.querySelector(".liv-cabeca").setAttribute("aria-expanded", "false");
+}
+
+async function abrirCartao(cartao) {
+  cartao.classList.add("aberto");
+  cartao.querySelector(".liv-cabeca").setAttribute("aria-expanded", "true");
   const caixa = cartao.querySelector(".liv-caixa");
   caixa.textContent = "buscando o histórico";
   const conta = cartao.dataset.conta;
@@ -791,7 +858,7 @@ document.addEventListener("click", async ev => {
 
   const b = BATIMENTOS.get(conta);
   if (b && !b.completo) caixa.prepend(linhaDoAgora(b));
-});
+}
 
 /** O que está acontecendo com um perfil que entrou na lista e ainda não tem ficha. */
 function explicarEspera(caixa, conta) {
@@ -1072,6 +1139,9 @@ async function atualizar() {
                      falhas: 0, avisos: 0, ultimo_tipo: "aguardando",
                      lidos: 0, publicacoes: 0, completo: false, aguardando: true }));
   LIVRO = [...aguardando, ...doLivro];
+  // COMEÇA NA HORA: se há perfil sem identificação, a primeira tentativa sai agora, e
+  // não daqui a quarenta e cinco segundos.
+  if (aguardando.length) marcarProximaTentativa();
   desenhaLivro();
   medirLivro();
 
