@@ -1149,9 +1149,6 @@ async function atualizar() {
   // reels baixaveis: numa varredura de carrossel ele marcava zero para sempre, e zero
   // num painel quer dizer "nao achou nada", que era o contrario da verdade.
   $("n_reels").textContent = num(perfis.reduce((a, b) => a + (b.acima || 0), 0));
-  const rot = rotuloDosFormatos(null, (LIVRO && LIVRO[0]) || null);
-  $("rot_lidos").textContent = rot === "publicações" ? "publicações varridas" : rot + " varridos";
-  $("rot_acima").textContent = "acima da régua";
   $("n_baixados").textContent = num(lotes.reduce((a, b) => a + (b.arquivos || 0), 0));
 
   // a linha do rodapé conta o que ele tem de útil: quantos perfis e desde quando
@@ -1206,6 +1203,13 @@ async function atualizar() {
                      falhas: 0, avisos: 0, ultimo_tipo: "aguardando",
                      lidos: 0, publicacoes: 0, completo: false, aguardando: true }));
   LIVRO = [...aguardando, ...doLivro];
+  // O RÓTULO SÓ DEPOIS DA LISTA CHEGAR. Calculado antes, ele lia a lista da volta
+  // anterior: na primeira carga a lista está vazia, e o painel abria dizendo
+  // "publicações varridas" numa varredura de carrossel, corrigindo-se 25 segundos
+  // depois. Quem olha nesses 25 segundos vê a coisa errada.
+  const rot = rotuloDosFormatos(null, LIVRO[0] || null);
+  $("rot_lidos").textContent = rot === "publicações" ? "publicações varridas"
+                                                     : rot + " varridos";
   // COMEÇA NA HORA: se há perfil sem identificação, a primeira tentativa sai agora, e
   // não daqui a quarenta e cinco segundos.
   if (aguardando.length) marcarProximaTentativa();
