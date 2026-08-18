@@ -430,6 +430,7 @@ let LIVRO = [], livroMostra = POR_LEVA, livroTipo = "", livroDesde = 0;
 const HISTORICOS = new Map();
 
 const TIPOS = {
+  aguardando: "aguardando identificação",
   identificado: "identificação",
   varredura: "varredura",
   concluido: "conclusão",
@@ -638,10 +639,13 @@ function desenhaLivro() {
       <button class="liv-cabeca" type="button" aria-expanded="false">
         <span class="liv-ponto"></span>
         <span class="liv-id">
-          <span class="liv-nome"><b>${c.nome || "sem nome no perfil"}</b>
+          <span class="liv-nome"><b>${c.nome
+            || (c.aguardando ? "Perfil ainda não identificado" : "sem nome no perfil")}</b>
             <span class="liv-etq">${TIPOS[c.ultimo_tipo] || c.ultimo_tipo}</span></span>
           <span class="liv-sub">@${c.conta} · ${
-            c.vivo ? '<b class="liv-vivo">varrendo agora</b>' : haQuanto(c.ultimo)}${
+            c.vivo ? '<b class="liv-vivo">varrendo agora</b>'
+            // sem marca de tempo nenhuma, "há" quanto tempo daria meio século
+            : c.ultimo ? haQuanto(c.ultimo) : "na fila da esteira"}${
             cob !== null ? ` · ${num(c.lidos)} de ${num(c.publicacoes)} posts (${cob}%)` : ""} · ${
             c.eventos} ${c.eventos === 1 ? "registro" : "registros"}</span>
         </span>
@@ -719,10 +723,42 @@ document.addEventListener("click", async ev => {
   if (!abrir) return;
   const caixa = cartao.querySelector(".liv-caixa");
   caixa.textContent = "buscando o histórico";
-  pintarEventos(caixa, await historicoDe(cartao.dataset.conta));
-  const b = BATIMENTOS.get(cartao.dataset.conta);
+  const conta = cartao.dataset.conta;
+  const eventos = await historicoDe(conta);
+  const ficha = LIVRO.find(c => c.conta === conta);
+
+  // CARTÃO SEM HISTÓRICO EXPLICA A ESPERA, em vez de dizer "nada registrado". Perfil
+  // que a ponte não conseguiu identificar cai exatamente aqui, e o vazio dele não é
+  // ausência de trabalho: é trabalho em curso, do lado da esteira.
+  if (ficha && ficha.aguardando && !eventos.length) explicarEspera(caixa);
+  else pintarEventos(caixa, eventos);
+
+  const b = BATIMENTOS.get(conta);
   if (b && !b.completo) caixa.prepend(linhaDoAgora(b));
 });
+
+/** O que está acontecendo com um perfil que entrou na lista e ainda não tem ficha. */
+function explicarEspera(caixa) {
+  const linhas = [
+    ["Perfil na lista de origem",
+     "Ele já está gravado no acervo e não se perde ao fechar a tela."],
+    ["O Instagram recusou a identificação pela ponte",
+     "A recusa é por endereço de saída, e o da ponte é compartilhado com muita gente. "
+     + "Foram quatro tentativas seguidas ao adicionar."],
+    ["A esteira assumiu a tentativa",
+     "As vinte máquinas dela têm vinte endereços próprios. A primeira que passar grava "
+     + "quem é o perfil, e este cartão se enche sozinho."],
+  ];
+  caixa.innerHTML = "";
+  for (const [titulo, texto] of linhas) {
+    const ln = document.createElement("div");
+    ln.className = "liv-ev";
+    ln.innerHTML = '<i></i><span class="oque"><b></b><span class="dados"></span></span>';
+    ln.querySelector(".oque > b").textContent = titulo;
+    ln.querySelector(".dados").textContent = texto;
+    caixa.appendChild(ln);
+  }
+}
 
 $("liv_q").addEventListener("input", () => { livroMostra = POR_LEVA; desenhaLivro(); });
 $("liv_mais").onclick = () => { livroMostra += POR_LEVA; desenhaLivro(); };
@@ -959,7 +995,26 @@ async function atualizar() {
   desenhaMinerados();
 
   mostrarRegua((sel && sel.criterio) || null);
-  LIVRO = (livro && livro.contas) || [];
+
+  // O CARTÃO NASCE DA LISTA DE CONTAS, e não da identificação no Instagram.
+  //
+  // Aqui o registro só mostrava quem já tinha ficha aberta pela ponte, e a ficha só era
+  // aberta depois que o Instagram confirmasse quem é o perfil. Quando ele recusa, e ele
+  // recusa com frequência porque limita por endereço de saída, a conta entrava na lista
+  // e sumia da tela: o Gabriel adicionava um perfil, lia "o Instagram recusou", e não
+  // via cartão nenhum, como se o perfil não tivesse entrado em lugar algum.
+  //
+  // Entrou na lista de origem, tem cartão. O que falta é o conteúdo dele, e é isso que
+  // o cartão diz enquanto falta.
+  const doLivro = (livro && livro.contas) || [];
+  const comFicha = new Set(doLivro.map(c => c.conta));
+  const aguardando = ((fontes && fontes.contas) || [])
+    .map(c => String(c).trim().replace(/^@/, ""))
+    .filter(c => c && !comFicha.has(c))
+    .map(conta => ({ conta, nome: null, primeiro: 0, ultimo: 0, eventos: 0,
+                     falhas: 0, avisos: 0, ultimo_tipo: "aguardando",
+                     lidos: 0, publicacoes: 0, completo: false, aguardando: true }));
+  LIVRO = [...aguardando, ...doLivro];
   desenhaLivro();
   medirLivro();
 
