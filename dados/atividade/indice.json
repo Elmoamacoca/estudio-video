@@ -2,14 +2,17 @@
  "contas": [
   {
    "conta": "brandsdecoded__",
-   "nome": null,
-   "primeiro": 1787011966,
-   "ultimo": 1787011966,
+   "nome": "BrandsDecoded®️ | Conteúdo & Cultura",
+   "primeiro": 1787012053,
+   "ultimo": 1787012053,
    "eventos": 1,
    "falhas": 0,
-   "avisos": 1,
-   "ultimo_tipo": "aguardando"
+   "avisos": 0,
+   "ultimo_tipo": "identificado",
+   "lidos": 0,
+   "publicacoes": 2253,
+   "completo": false
   }
  ],
- "atualizado": 1787011966
+ "atualizado": 1787012056
 }
