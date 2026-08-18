@@ -18,7 +18,9 @@ import json
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
+from http.cookiejar import CookieJar
 from pathlib import Path
 
 CABECALHO = {
@@ -188,6 +190,77 @@ def abre_pelo_arroba(conta: str, prazo: float) -> dict | None:
         "posts": [limpa_post(x) for x in itens],
         "marcador": d.get("next_max_id"),
         "acabou": not d.get("more_available") or not d.get("next_max_id"),
+    }
+
+
+def _sessao():
+    """Uma visita a' porta de entrada, so' para receber os biscoitos da casa.
+
+    Nao ha' conta nenhuma envolvida: sao os mesmos biscoitos que qualquer visitante
+    anonimo recebe ao abrir o site. O caminho dos reels exige o token de formulario que
+    vem neles, e e' so' isso que falta.
+    """
+    pote = CookieJar()
+    abridor = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(pote))
+    try:
+        abridor.open(urllib.request.Request("https://www.instagram.com/",
+                                            headers=CABECALHO), timeout=20).read(1)
+    except Exception:
+        pass
+    return abridor, {c.name: c.value for c in pote}
+
+
+def pagina_de_reels(uid: str, marcador: str | None) -> dict | None:
+    """Uma pagina de REELS PUROS, sem post nem carrossel no meio.
+
+    POR QUE ISTO EXISTE, e o que foi medido em 18/08/2026:
+
+    O feed de um perfil vem misturado e nao aceita filtro. No @brandsdecoded__, das 24
+    publicacoes mais recentes, 23 eram carrossel e 1 era reels. Juntar 200 reels por ali
+    exigiria ler quase cinco mil publicacoes, uma atras da outra.
+
+    Existe um caminho so' de reels, e a primeira leitura dele passa sem conta nenhuma,
+    bastando os biscoitos de visitante. A segunda pagina, do mesmo endereco, e' recusada
+    com um recado que pede login, e foi por isso que ele parecia exigir sessao.
+
+    So' que nao exige. Uma maquina do GitHub, que nunca tinha pedido a primeira pagina,
+    recebeu o marcador vindo daqui e trouxe a segunda inteira: doze reels, com exibicoes
+    e curtidas. Das tres maquinas testadas, uma passou e duas levaram 401.
+
+    Ou seja: o limite e' do ENDERECO, e nao da falta de conta. E endereco e' o que a
+    esteira tem de sobra, vinte por rodada. E' o mesmo racha que ja' rege a leitura do
+    feed, so' que agora rendendo reels puros em vez de um reels a cada vinte e quatro
+    publicacoes.
+    """
+    abridor, fichas = _sessao()
+    corpo = {"target_user_id": str(uid), "page_size": "50"}
+    if marcador:
+        corpo["max_id"] = marcador
+    req = urllib.request.Request(
+        "https://www.instagram.com/api/v1/clips/user/",
+        data=urllib.parse.urlencode(corpo).encode(),
+        headers={**CABECALHO, "X-CSRFToken": fichas.get("csrftoken", ""),
+                 "X-Requested-With": "XMLHttpRequest",
+                 "Content-Type": "application/x-www-form-urlencoded"})
+    try:
+        with abridor.open(req, timeout=25) as r:
+            d = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        print(f"  reels: recusou ({e.code})")
+        return None
+    except Exception as e:
+        print(f"  reels: falhou ({type(e).__name__})")
+        return None
+
+    if not isinstance(d, dict) or d.get("status") == "fail":
+        print("  reels: endereco gasto (pediu login)")
+        return None
+    itens = [x.get("media") or {} for x in (d.get("items") or [])]
+    pag = d.get("paging_info") or {}
+    return {
+        "posts": [limpa_post(x) for x in itens if x.get("code")],
+        "marcador": pag.get("max_id"),
+        "acabou": not pag.get("more_available") or not pag.get("max_id"),
     }
 
 
