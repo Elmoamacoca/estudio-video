@@ -244,12 +244,19 @@ def registrar_rodada(rodada: int | None = None) -> int:
             # carrossel e' o mesmo defeito do cartao, so' que gravado para sempre no
             # historico: daqui a noventa dias a ficha continuaria mentindo.
             rot = rotulo()
+            # CADA PAGINA LIDA VIRA UMA LINHA, com hora e maquina.
+            #
+            # O resumo por rodada dizia "24 novos, 4 maquinas" e mais nada: quem abria a
+            # ficha via um numero, nao o trabalho. Estas marcas sao os commits reais do
+            # arquivo do perfil, uma por leitura, com a hora exata e a vaga que gravou.
+            # Nao e' estimativa: e' o registro do que aconteceu, e ele fica guardado.
+            passos = [{"quando": q, "maquina": a} for q, a in marcas][-40:]
             anotar(livro, "varredura", agora,
                    f"Varredura: {lidos - antes} {rot} novos, "
                    + (f"{mil(lidos)} de {mil(publicacoes)} lidos" if publicacoes
                       else f"{mil(lidos)} no total"),
                    rodada=rodada, maquinas=maquinas or None,
-                   gravacoes=len(marcas) or None,
+                   gravacoes=len(marcas) or None, passos=passos or None,
                    novos=lidos - antes, total=lidos, publicacoes=publicacoes)
             entraram += 1
         elif marcas and not estado.get("completo"):
