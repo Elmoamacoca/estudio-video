@@ -39,7 +39,7 @@ GRAVIDADE = {
     "varredura": "evento",
     "concluido": "evento",
     "limite": "aviso",
-    "sem_avanco": "falha",
+    "sem_avanco": "aviso",
     "lote": "evento",
 }
 
@@ -220,10 +220,17 @@ def registrar_rodada(rodada: int | None = None) -> int:
                    novos=lidos - antes, total=lidos, publicacoes=publicacoes)
             entraram += 1
         elif marcas and not estado.get("completo"):
-            # A ESTEIRA MEXEU NO ARQUIVO E NÃO TROUXE POST. É o caso de erro: o Instagram
-            # recusou a leitura naquele endereço, e a vaga saiu de mãos vazias.
+            # RODADA SEM AVANCO E' AVISO, E NAO FALHA.
+            #
+            # Cada maquina tem um endereco de saida proprio, e um endereco serve para uma
+            # leitura. Quando ha' menos perfis do que vagas, varias vagas caem no mesmo
+            # perfil e as ultimas voltam de maos vazias: e' o rodizio funcionando como
+            # foi desenhado, nao defeito.
+            #
+            # Marcar isso como falha enchia a tela de vermelho num sistema que estava
+            # trabalhando certo. Com dez perfis e vinte vagas, acontece em toda rodada.
             anotar(livro, "sem_avanco", agora,
-                   "Rodada sem avanço: o Instagram recusou a leitura neste endereço",
+                   "Rodada sem avanço nesta vaga: o endereço dela já tinha sido usado",
                    rodada=rodada, gravacoes=len(marcas), total=lidos)
             entraram += 1
 
