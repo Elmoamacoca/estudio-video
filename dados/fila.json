@@ -2,25 +2,43 @@
  "itens": [
   {
    "origem": "@blankpartners",
-   "indice": 140.13,
+   "indice": 112.03,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 101.68,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 77.02,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 89.75,
+   "indice": 71.75,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 85.45,
+   "indice": 68.31,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 49.69,
+   "indice": 59.41,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 50.98,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -31,8 +49,8 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@brandsdecoded__",
-   "indice": 41.77,
+   "origem": "@blankpartners",
+   "indice": 39.72,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -44,7 +62,31 @@
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 29.64,
+   "indice": 36.07,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 33.84,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 33.46,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 27.37,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 26.52,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -55,8 +97,8 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@blankpartners",
-   "indice": 25.69,
+   "origem": "@brandsdecoded__",
+   "indice": 25.6,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -67,8 +109,14 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@blankpartners",
+   "indice": 24.21,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@brandsdecoded__",
-   "indice": 24.75,
+   "indice": 23.34,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -79,20 +127,38 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@brandsdecoded__",
+   "indice": 21.37,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 20.53,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 19.2,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 19.13,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@vinci.society",
    "indice": 18.77,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
-   "origem": "@brandsdecoded__",
-   "indice": 17.59,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
    "origem": "@blankpartners",
-   "indice": 17.49,
+   "indice": 18.37,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -103,38 +169,110 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@brandsdecoded__",
+   "indice": 16.26,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 15.33,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 15.19,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 14.98,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 14.72,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 14.33,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 13.98,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 13.43,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@vinci.society",
    "indice": 13.03,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
-   "origem": "@brandsdecoded__",
-   "indice": 12.22,
+   "origem": "@blankpartners",
+   "indice": 11.63,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 11.57,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 12.17,
+   "indice": 11.32,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 11.46,
+   "indice": 10.67,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 11.0,
+   "indice": 10.56,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 10.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 9.9,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@vinci.society",
    "indice": 9.73,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 9.5,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -146,7 +284,31 @@
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 8.83,
+   "indice": 9.34,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 9.11,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 8.94,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 8.88,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 8.51,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -163,20 +325,14 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@blankpartners",
-   "indice": 8.21,
+   "origem": "@vinci.society",
+   "indice": 7.73,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 8.06,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 7.73,
+   "indice": 7.68,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -188,13 +344,13 @@
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 7.37,
+   "indice": 7.62,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@brandsdecoded__",
-   "indice": 7.26,
+   "indice": 7.48,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -203,163 +359,7 @@
    "indice": 7.08,
    "etapa": "reels",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 6.48,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 6.34,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 5.87,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 5.84,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 5.51,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 5.43,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 5.4,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 5.25,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 5.16,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 5.11,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 4.91,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 4.83,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 4.71,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 4.32,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 4.16,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 4.09,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 4.01,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 3.9,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 3.84,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 3.81,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 3.75,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 3.46,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 3.45,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 3.43,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 3.43,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 3.43,
-   "etapa": "reels",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1787077147
+ "atualizado": 1787077500
 }

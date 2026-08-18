@@ -67,6 +67,64 @@
     "total": 144,
     "publicacoes": 2256
    }
+  },
+  {
+   "quando": 1787077500,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 150 reels novos, 294 de 2.256 lidos",
+   "detalhe": {
+    "rodada": 108,
+    "maquinas": 8,
+    "gravacoes": 8,
+    "passos": [
+     {
+      "quando": 1787077169,
+      "maquina": "vaga 1"
+     },
+     {
+      "quando": 1787077203,
+      "maquina": "vaga 3"
+     },
+     {
+      "quando": 1787077274,
+      "maquina": "vaga 7"
+     },
+     {
+      "quando": 1787077314,
+      "maquina": "vaga 9"
+     },
+     {
+      "quando": 1787077350,
+      "maquina": "vaga 11"
+     },
+     {
+      "quando": 1787077427,
+      "maquina": "vaga 15"
+     },
+     {
+      "quando": 1787077452,
+      "maquina": "vaga 17"
+     },
+     {
+      "quando": 1787077488,
+      "maquina": "vaga 19"
+     }
+    ],
+    "novos": 150,
+    "total": 294,
+    "publicacoes": 2256
+   }
+  },
+  {
+   "quando": 1787077500,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os reels deste perfil: 294 no total",
+   "detalhe": {
+    "total": 294,
+    "publicacoes": 2256
+   }
   }
  ]
 }

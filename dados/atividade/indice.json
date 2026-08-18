@@ -5,13 +5,13 @@
    "nome": "Blank Partners",
    "rotulo": "reels",
    "primeiro": 1787076365,
-   "ultimo": 1787077147,
-   "eventos": 3,
+   "ultimo": 1787077500,
+   "eventos": 4,
    "falhas": 0,
    "avisos": 1,
    "ultimo_tipo": "varredura",
-   "lidos": 132,
-   "publicacoes": 200,
+   "lidos": 251,
+   "publicacoes": 0,
    "completo": false
   },
   {
@@ -19,14 +19,14 @@
    "nome": "BrandsDecoded®️ | Conteúdo & Cultura",
    "rotulo": "reels",
    "primeiro": 1787076371,
-   "ultimo": 1787077147,
-   "eventos": 3,
+   "ultimo": 1787077500,
+   "eventos": 5,
    "falhas": 0,
    "avisos": 1,
-   "ultimo_tipo": "varredura",
-   "lidos": 144,
-   "publicacoes": 200,
-   "completo": false
+   "ultimo_tipo": "concluido",
+   "lidos": 294,
+   "publicacoes": 0,
+   "completo": true
   },
   {
    "conta": "vinci.society",
@@ -39,9 +39,9 @@
    "avisos": 0,
    "ultimo_tipo": "concluido",
    "lidos": 106,
-   "publicacoes": 200,
+   "publicacoes": 0,
    "completo": true
   }
  ],
- "atualizado": 1787077147
+ "atualizado": 1787077500
 }
