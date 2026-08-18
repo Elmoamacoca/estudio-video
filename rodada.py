@@ -31,6 +31,56 @@ from pathlib import Path
 from minerar import CABECALHO, PASTA, abre_pelo_arroba, limpa_post, grava
 
 FONTES = Path("dados/fontes.json")
+REGUA = Path("dados/regua.json")
+
+# MEDIDO EM 18/08/2026, tres maquinas do GitHub lendo em sequencia: o corte vem na
+# TERCEIRA leitura, com 401. Duas passam. Antes daqui so' se fazia uma por maquina, o
+# que era a medida certa do caminho antigo e virou desperdicio de metade da vaga.
+PAGINAS_POR_VAGA = 2
+
+# Quantas publicacoes dos formatos escolhidos bastam para medir e escolher as melhores.
+# Com duzentas ja' ha' mediana firme e sobra fora-da-curva; o resto e' historico antigo,
+# que e' o que menos serve e o que mais custa.
+ALVO_PADRAO = 200
+
+
+def regua() -> dict:
+    """A regua escolhida na tela. A varredura le' dela quanto e' 'o bastante'."""
+    if not REGUA.exists():
+        return {}
+    try:
+        return json.loads(REGUA.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def ja_basta(estado: dict, r: dict) -> bool:
+    """O perfil ja' tem o que foi pedido?
+
+    O PROBLEMA QUE ISTO RESOLVE: quem escolhe varrer so' reels nao quer esperar o
+    historico inteiro do perfil ser lido. E ele e' lido de qualquer jeito, porque o
+    Instagram nao deixa pedir so' um formato sem sessao: a via de reels responde
+    "require_login". O feed vem misturado, e nao ha' escolha quanto a isso.
+
+    O que da' para escolher e' QUANDO PARAR. Medido no @brandsdecoded__: das 24
+    publicacoes mais recentes, 23 eram carrossel e 1 era reels. Varrer as 2.253 para
+    achar os reels custa umas tres horas de esteira; parar ao juntar o bastante deles
+    custa minutos, e o que fica de fora e' o mais antigo, que e' o que menos serve.
+    """
+    # DUZENTAS E' O PADRAO, e nao zero. A ponte que grava a regua ainda nao repassa este
+    # campo (ela monta o arquivo com uma lista fixa de campos), entao sem um padrao aqui
+    # a esteira varreria sempre o perfil inteiro, que e' justamente a demora reclamada.
+    # Quando o campo passar a chegar, ele manda; zero explicito continua querendo dizer
+    # "varre tudo".
+    alvo = r.get("alvo")
+    alvo = ALVO_PADRAO if alvo is None else int(alvo or 0)
+    if alvo <= 0:
+        return False
+    formatos = set(r.get("formatos") or [])
+    posts = estado.get("posts") or []
+    if not formatos:
+        return len(posts) >= alvo
+    return sum(1 for p in posts if p.get("formato") in formatos) >= alvo
 # O PEDIDO DE RELEITURA, num arquivo só e pequeno de propósito.
 # Perfil dado por encerrado saía da fila para sempre: pedir para minerar de novo não
 # fazia nada, a rodada abria, não achava trabalho e fechava. Agora a tela grava aqui o
@@ -234,41 +284,63 @@ def main() -> int:
               f"{len(aberto['posts'])} posts já na primeira página")
         return 0
 
-    marcador = estado.get("marcador_novo") if relendo else estado.get("marcador")
-    j = _uma_pagina(estado["perfil"]["id"], marcador)
-    if j is None:
-        print(f"[{conta}] endereço desta vaga já estava gasto")
-        return 0
-
+    r = regua()
     vistos = {p["codigo"] for p in estado["posts"]}
     novos = 0
-    for bruto in j.get("items", []):
-        p = limpa_post(bruto)
-        if p["codigo"] and p["codigo"] not in vistos:
-            vistos.add(p["codigo"])
-            estado["posts"].append(p)
-            novos += 1
+    paginas = 0
 
-    if relendo:
-        estado["marcador_novo"] = j.get("next_max_id")
-        # A RELEITURA PARA QUANDO A PÁGINA INTEIRA JÁ ERA CONHECIDA. Dali para trás é
-        # histórico que já está guardado, e continuar seria reler o acervo inteiro para
-        # não achar nada. É isso que a torna barata: quem posta uma vez por dia gasta
-        # uma leitura, e não duzentas.
-        if novos == 0 or not j.get("more_available") or not estado["marcador_novo"]:
-            estado["relendo"] = False
-            print(f"[{conta}] RELEITURA ENCERRADA, {novos} posts novos nesta página")
-    else:
-        estado["marcador"] = j.get("next_max_id")
-        if not j.get("more_available") or not estado["marcador"]:
-            estado["completo"] = True
-            print(f"[{conta}] VARREDURA COMPLETA")
+    # DUAS PÁGINAS POR VAGA, e não uma. Medido: o corte vem na terceira leitura.
+    while paginas < PAGINAS_POR_VAGA:
+        marcador = estado.get("marcador_novo") if relendo else estado.get("marcador")
+        j = _uma_pagina(estado["perfil"]["id"], marcador)
+        if j is None:
+            if paginas == 0:
+                print(f"[{conta}] endereço desta vaga já estava gasto")
+            break
+        paginas += 1
+
+        entraram = 0
+        for bruto in j.get("items", []):
+            p = limpa_post(bruto)
+            if p["codigo"] and p["codigo"] not in vistos:
+                vistos.add(p["codigo"])
+                estado["posts"].append(p)
+                entraram += 1
+        novos += entraram
+
+        if relendo:
+            estado["marcador_novo"] = j.get("next_max_id")
+            # A RELEITURA PARA QUANDO A PÁGINA INTEIRA JÁ ERA CONHECIDA. Dali para trás é
+            # histórico que já está guardado, e continuar seria reler o acervo inteiro
+            # para não achar nada. É isso que a torna barata: quem posta uma vez por dia
+            # gasta uma leitura, e não duzentas.
+            if entraram == 0 or not j.get("more_available") or not estado["marcador_novo"]:
+                estado["relendo"] = False
+                print(f"[{conta}] RELEITURA ENCERRADA, {entraram} posts novos")
+                break
+        else:
+            estado["marcador"] = j.get("next_max_id")
+            if not j.get("more_available") or not estado["marcador"]:
+                estado["completo"] = True
+                print(f"[{conta}] VARREDURA COMPLETA: acabou o histórico do perfil")
+                break
+            if ja_basta(estado, r):
+                estado["completo"] = True
+                estado["parou_no_alvo"] = int(r.get("alvo") or 0)
+                print(f"[{conta}] ALVO ATINGIDO: {r.get('alvo')} publicações dos "
+                      f"formatos escolhidos. Paro por aqui.")
+                break
+
+    if not paginas:
+        return 0
+
     estado["atualizado"] = int(time.time())
     grava(conta, estado)
     bater_ponto(conta, estado, vaga)
 
     meta = (estado.get("perfil") or {}).get("publicacoes") or 0
-    print(f"[{conta}] +{novos} posts (total {len(estado['posts'])} de {meta})")
+    print(f"[{conta}] +{novos} posts em {paginas} página(s) "
+          f"(total {len(estado['posts'])}{f' de {meta}' if meta else ''})")
     return 0
 
 
