@@ -91,11 +91,16 @@ def ja_basta(estado: dict, r: dict) -> bool:
     achar os reels custa umas tres horas de esteira; parar ao juntar o bastante deles
     custa minutos, e o que fica de fora e' o mais antigo, que e' o que menos serve.
     """
-    # DUZENTAS E' O PADRAO, e nao zero. A ponte que grava a regua ainda nao repassa este
-    # campo (ela monta o arquivo com uma lista fixa de campos), entao sem um padrao aqui
-    # a esteira varreria sempre o perfil inteiro, que e' justamente a demora reclamada.
-    # Quando o campo passar a chegar, ele manda; zero explicito continua querendo dizer
-    # "varre tudo".
+    # O LIMITE E' CONTADO AQUI, e nao vem digitado da tela.
+    #
+    # Houve um campo para o Gabriel digitar esse numero, e ele nao chegava: quem escreve
+    # a regua no acervo e' a ponte, que copia uma lista fixa de campos. O campo novo era
+    # descartado no caminho, e a tela prometia um controle que nao existia.
+    #
+    # Como os FORMATOS chegam, o limite sai deles, que e' o que de fato muda o custo:
+    # so' reels tem caminho proprio no Instagram e rende reels puros, entao duzentos
+    # saem em doze minutos; com imagem no meio, o historico vem misturado e o freio que
+    # importa e' o teto de publicacoes lidas.
     alvo = r.get("alvo")
     alvo = ALVO_PADRAO if alvo is None else int(alvo or 0)
     if alvo <= 0:
