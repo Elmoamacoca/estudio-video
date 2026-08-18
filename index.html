@@ -2402,7 +2402,7 @@ async function aoVivo() {
       const alvoDoTexto = rotuloDosFormatos(batendo[0]);
       titulo = (batendo.length === 1 ? "Uma máquina" : `${batendo.length} máquinas`)
         + (filtrando() || (batendo[0] && batendo[0].rotulo
-                           && batendo[0].rotulo !== "publicacoes")
+                           && batendo[0].rotulo !== "publicações")
             ? ` buscando ${alvoDoTexto}` : " lendo o Instagram");
       resumo = batendo.map(b => {
         const nome = rotuloDosFormatos(b, bruto);
