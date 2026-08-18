@@ -76,17 +76,78 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .elo.agora .luz{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
 .elo.falhou .luz{background:var(--vermelho)}
 
-/* ---- o registro corrido, linha a linha ---- */
-.registro{margin-top:16px;border:1px solid var(--rule-solid);border-radius:var(--r-md);
-          background:var(--paper);max-height:260px;overflow-y:auto;
-          font:12.5px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.registro:empty{display:none}
-.registro .ln{display:flex;gap:12px;padding:5px 13px;border-bottom:1px solid var(--rule)}
-.registro .ln:last-child{border-bottom:0}
-.registro .hora{color:var(--soft);flex:none;font-variant-numeric:tabular-nums}
-.registro .txt{color:var(--ink)}
-.registro .ln.bom .txt{color:var(--verde)}
-.registro .ln.ruim .txt{color:var(--vermelho)}
+/* ====================================================== O REGISTRO, EM FORMA DE CONSOLE
+
+   Molde escolhido pelo Gabriel em 17/08: cartão fechado, com cabeça de identidade, três
+   medidas por gravidade com traço de atividade, faixa de "ao vivo", o fluxo das linhas
+   em letra de máquina e um pé com o tamanho da memória.
+
+   AS TRÊS CORES SÃO AS DA CARTELA DE GRÁFICO, e não `--vermelho` e `--ambar`.
+   Essas duas não são redefinidas no tema escuro: ficam nos tons de fundo claro e somem
+   contra o preto. `--chart-5`, `--chart-3` e `--chart-2` têm par nos dois temas.
+
+   O TRAÇO DE ATIVIDADE É MEDIDO, e não enfeite: cada ponto é quantas linhas daquela
+   gravidade entraram numa janela de cinco segundos. Sem movimento ele sai reto e apagado,
+   que é a verdade, e não uma onda inventada para a tela parecer viva. */
+.konsole{border:1px solid var(--rule-solid);border-radius:var(--r-lg);
+         background:var(--branco);overflow:hidden;box-shadow:var(--sombra)}
+
+.kon-topo{display:flex;align-items:center;gap:14px;padding:18px 20px;flex-wrap:wrap}
+.kon-selo{flex:none;display:grid;place-items:center;width:34px;height:34px;
+          border-radius:9px;background:var(--paper-2);border:1px solid var(--rule-solid);
+          color:var(--muted)}
+.kon-selo svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;
+              stroke-linecap:round;stroke-linejoin:round}
+.kon-quem{min-width:0;flex:1}
+.kon-quem b{display:block;font-size:14.5px;font-weight:650;color:var(--ink);line-height:1.3}
+.kon-quem span{display:block;font-size:12.5px;color:var(--muted);line-height:1.45;
+               margin-top:2px}
+.kon-dir{flex:none;display:flex;align-items:center}
+/* O BOTÃO PRECISA DA MEDIDA AQUI. `.acao` sozinho nasce com a altura de campo de
+   filtro e o desenho dele não limita o ícone: o SVG assumia o tamanho natural e o
+   botão virava um quadrado gigante com a palavra embaixo. */
+.kon-topo .acao{flex:none;height:34px;padding:0 14px;font-size:12.5px;
+                display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.kon-topo .acao svg{width:14px;height:14px;flex:none}
+.kon-vivo{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;
+          letter-spacing:.09em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.kon-vivo i{width:6px;height:6px;border-radius:50%;background:var(--soft);flex:none}
+.kon-vivo.ativa{color:var(--verde)}
+.kon-vivo.ativa i{background:var(--verde)}
+
+/* as três medidas, divididas por fio, como no molde */
+.kon-medidas{display:grid;grid-template-columns:repeat(3,1fr);
+             border-top:1px solid var(--rule)}
+.kon-medida{padding:15px 20px 17px;min-width:0}
+.kon-medida + .kon-medida{border-left:1px solid var(--rule)}
+.kon-rot{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.kon-rot svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;
+             flex:none}
+.kon-rot span{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.09em;
+              text-transform:uppercase}
+.kon-medida b{display:block;margin:9px 0 10px;font-size:27px;font-weight:650;
+              letter-spacing:-.02em;line-height:1;color:var(--ink);
+              font-variant-numeric:tabular-nums}
+.kon-traco{display:block;width:100%;height:20px}
+.kon-traco path{fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.kon-medida.falha .kon-traco path{stroke:var(--chart-5)}
+.kon-medida.aviso .kon-traco path{stroke:var(--chart-3)}
+.kon-medida.evento .kon-traco path{stroke:var(--chart-2)}
+.kon-traco.parado path{opacity:.32}
+
+/* as máquinas só aparecem enquanto a rodada está no ar */
+.kon-maquinas{padding:0 20px 16px;border-top:1px solid var(--rule);padding-top:16px}
+.kon-maquinas[hidden]{display:none}
+
+/* Os filtros dentro do cartão, na linha logo abaixo das medidas. */
+.liv-filtros{display:flex;gap:10px;flex-wrap:wrap;padding:15px 20px;
+             border-top:1px solid var(--rule)}
+.liv-filtros .ct-busca{flex:1 1 240px}
+
+@media(max-width:720px){
+  .kon-medidas{grid-template-columns:1fr}
+  .kon-medida + .kon-medida{border-left:0;border-top:1px solid var(--rule)}
+}
 
 /* ---- perfil: barra de avanço ---- */
 .perfil-linha{background:var(--branco);border:1px solid var(--rule-solid);
@@ -143,81 +204,244 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .por-vir{padding:22px 18px}
 }
 
-/* ---- a tabela de minerados, no molde da tabela de contas ---- */
-.tab{width:100%;border-collapse:collapse;font-size:13.5px}
-.tab thead th{text-align:left;font-size:11.5px;text-transform:uppercase;
-  letter-spacing:.05em;color:var(--muted);font-weight:600;white-space:nowrap;
-  padding:0 14px 10px 0;border-bottom:1px solid var(--rule-solid)}
-.tab td{padding:12px 14px 12px 0;border-bottom:1px solid var(--rule);
-        vertical-align:middle;color:var(--ink)}
-.tab tbody tr:last-child td{border-bottom:0}
-.tab tbody tr:hover{background:var(--paper)}
-.tab .tab-num{text-align:right;font-variant-numeric:tabular-nums;padding-right:18px}
-.tab thead th.tab-num{text-align:right;padding-right:18px}
-.tab-nulo{color:var(--soft);font-size:12.5px}
-.tab-perfil-in{display:flex;align-items:center;gap:11px}
-.tab-quem{display:flex;flex-direction:column;line-height:1.3}
-.tab-quem b{font-weight:650;color:var(--ink)}
-.tab-quem span{font-size:12px;color:var(--muted)}
-.tab-acao{text-align:right;white-space:nowrap}
-.tab-acao .acao{height:34px;padding:0 14px;font-size:13px;display:inline-flex;
-                align-items:center;text-decoration:none}
+/* ================================================== A TABELA E OS FILTROS DE MINERADOS
 
-/* retrato: a inicial é o fundo, a foto entra por cima. Foto do Instagram vence em
-   horas, e sem a inicial embaixo a tabela ficaria cheia de quadrado quebrado. */
-.pcard-retrato{flex:none}
-.pcard-avatar{position:relative;display:grid;place-items:center;width:36px;height:36px;
-  border-radius:50%;background:var(--paper-2);border:1px solid var(--rule-solid);
-  color:var(--muted);font-weight:700;font-size:14px;overflow:hidden}
-.pcard-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+   AQUI NÃO SE REESCREVE NADA QUE JÁ VEIO COPIADO, e isso é o conserto de 17/08.
+   Este trecho era uma imitação da tabela de lá: `.tab`, `.tab-rolo`, `.cat-cab`,
+   `.pino`, `.ct-filtros`, `.pag` e o retrato estavam TODOS escritos de novo aqui, com
+   medidas parecidas e não iguais. Escrito depois, este arquivo ganhava de quem veio de
+   lá, então a tela não usava a tabela do sistema: usava uma cópia à mão dela. O retrato
+   saía com 36 pixels em vez de 84, o cabeçalho de categoria perdia a linha embaixo e a
+   barra de páginas perdia a caixa. Era isso que se lia como tabela quebrada.
 
-.pino{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;
-      border-radius:999px;border:1px solid var(--rule-solid);color:var(--muted);
-      white-space:nowrap}
-.pino.ok{color:var(--verde);border-color:color-mix(in srgb,var(--verde) 40%,transparent)}
-.pino.ruim{color:var(--vermelho);border-color:color-mix(in srgb,var(--vermelho) 40%,transparent)}
+   Fica aqui só o que não existe lá: as duas coisas que esta tabela tem e a de contas
+   não, e os ajustes de tamanho do botão próprio dentro da linha. */
 
-/* ---- cabeça de categoria, com o número na frente ---- */
-.cat-cab{display:flex;align-items:flex-start;gap:13px;margin-bottom:16px}
-.cat-num{flex:none;display:grid;place-items:center;width:26px;height:26px;
-  border-radius:50%;background:var(--accent-tint);color:var(--accent);
-  font-size:12.5px;font-weight:700}
-.cat-tit{font-size:16px;font-weight:650;margin:0 0 2px;color:var(--ink)}
+/* `hidden` não vence sozinho quem tem `display` escrito. As duas caixas abaixo têm:
+   `.pag` é `flex` e o painel precisa sumir quando a sub-aba troca. */
+.ct-painel[hidden],.pag[hidden]{display:none}
 
-/* ---- filtros e listas ---- */
-.ct-topo{display:flex;align-items:center;justify-content:space-between;gap:16px;
-         margin-bottom:20px;flex-wrap:wrap}
-.ct-menu{display:flex;gap:4px;padding:4px;border:1px solid var(--rule-solid);
-         border-radius:var(--r-lg);background:var(--paper-2)}
-.ct-item{display:flex;align-items:center;gap:8px;border:0;cursor:pointer;
-  padding:8px 15px;border-radius:12px;background:transparent;color:var(--muted);
-  font:600 13.5px/1 inherit;transition:.16s}
-.ct-item:hover{color:var(--ink)}
-.ct-item.ativo{background:var(--branco);color:var(--ink);box-shadow:var(--sombra)}
-.ct-item b{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:999px;
-           background:var(--paper-2);color:var(--muted)}
-.ct-item.ativo b{background:var(--accent-tint);color:var(--accent)}
+/* O botão de comando desta tela dentro da linha da tabela. Lá a ação da linha é o
+   botão de navegação do sistema, que tem seta e quatro filhos; aqui são comandos. */
+.tab-acao-in{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end}
+.tab-acao .acao{height:32px;padding:0 13px;font-size:12.5px;border-radius:9px;
+                display:inline-flex;align-items:center;text-decoration:none}
+.tab-acao .acao.redonda{width:32px;padding:0;justify-content:center}
+.tab-acao .acao.redonda svg{width:15px;height:15px}
 
-.ct-filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.ct-busca{flex:1;min-width:var(--l-filtro);height:var(--h-filtro);
+/* A COBERTURA CARREGA O TOTAL DA CONTA EMBAIXO. O total era coluna própria, e sozinho
+   ele empurrava a última coluna para fora da tela. Junto da porcentagem ele também lê
+   melhor: 62% de 4.976 é uma frase, e duas colunas separadas eram duas metades dela. */
+.tab-dupla{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1.25}
+.tab-dupla i{font-style:normal;font-size:11.5px;color:var(--muted)}
+
+/* ============================================================== SINAL DE CARREGAMENTO
+
+   Traduzido do componente que o Gabriel mandou, que é React com Tailwind. Aqui não há
+   nem um nem outro, então o que veio foi a MECÂNICA, e ela veio inteira: a grade de
+   três por três com 4 pixels de célula e 1,5 de respiro, a frente de onda em galo que
+   corre para a direita, o rótulo com o brilho passando por dentro da letra e o relógio
+   em dígito de largura fixa.
+
+   As duas animações não vinham no arquivo dele, só os nomes. Escritas aqui:
+   `pixel-on` acende a célula e a devolve ao apagado no mesmo ciclo, e `shimmer-text`
+   arrasta a faixa clara de um lado ao outro do texto. Nenhuma das duas termina
+   invisível, que é a armadilha que já apagou esta tela uma vez.
+
+   O ciclo de 650 ms é mais curto que a varredura da onda de propósito: com o atraso
+   máximo em 270 ms, sempre há duas frentes no ar ao mesmo tempo. */
+.pixota{display:inline-flex;align-items:center;gap:10px;vertical-align:middle}
+.pix-grade{display:grid;grid-template-columns:repeat(3,4px);gap:1.5px}
+.pix-grade i{width:4px;height:4px;background:var(--ink);border-radius:1px;opacity:.15;
+             animation:pixel-on 650ms ease-in-out var(--atraso,0ms) infinite}
+.pix-grade.redondo i{border-radius:999px}
+/* a órbita é uma volta pela borda, e por isso é mais lenta e tem o miolo apagado */
+.pix-grade.orbita i{animation-duration:950ms}
+.pix-grade i.apagado{opacity:.07;animation:none}
+@keyframes pixel-on{0%,100%{opacity:.15}35%{opacity:1}}
+
+.pix-rotulo{font-size:13px;font-weight:500;color:transparent;
+  background-image:linear-gradient(90deg,var(--muted) 35%,var(--ink) 50%,var(--muted) 65%);
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  animation:shimmer-text 1.4s linear infinite}
+@keyframes shimmer-text{from{background-position:200% 0}to{background-position:-200% 0}}
+/* onde o recorte no texto não existir, o rótulo continua legível em vez de sumir */
+@supports not ((background-clip:text) or (-webkit-background-clip:text)){
+  .pix-rotulo{color:var(--muted);background-image:none;animation:none}
+}
+
+.pix-tempo{font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+           color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* Movimento reduzido congela a grade no apagado, e o relógio continua andando: quem
+   pediu menos movimento quer menos movimento, não menos informação. */
+@media (prefers-reduced-motion: reduce){
+  .pix-grade i{animation:none}
+  .pix-rotulo{animation:none;background-image:none;color:var(--muted)}
+}
+
+/* ============================================ OS CARTÕES DE PERFIL, DENTRO DO CONSOLE
+
+   Um cartão por perfil, que abre e fecha. Molde escolhido pelo Gabriel em 17/08, no
+   desenho da lista de auditoria: ponto de gravidade na esquerda, nome com etiqueta de
+   tipo, arroba e tempo embaixo, seta à direita, e o detalhe num painel recuado.
+
+   A LISTA VEM DE DEZ EM DEZ. O histórico de um perfil pode ter centenas de eventos e a
+   conta de perfis só cresce; carregar tudo para mostrar os dez primeiros é gasto sem
+   ganho. O botão embaixo traz a próxima leva. */
+
+/* --------------------------------------------------------------- o cartão do perfil */
+.liv-cartao{border-top:1px solid var(--rule)}
+.liv-cabeca{display:flex;align-items:center;gap:12px;width:100%;padding:14px 20px;
+            border:0;background:none;cursor:pointer;text-align:left;
+            font:inherit;color:inherit;transition:background-color .16s ease}
+.liv-cabeca:hover{background:var(--paper-2)}
+.liv-ponto{width:7px;height:7px;border-radius:50%;flex:none;background:var(--chart-2)}
+.liv-cartao.falha .liv-ponto{background:var(--chart-5)}
+.liv-cartao.aviso .liv-ponto{background:var(--chart-3)}
+.liv-id{flex:1;min-width:0}
+.liv-nome{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.liv-nome b{font-size:13.5px;font-weight:650;color:var(--ink)}
+.liv-etq{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:6px;
+         background:var(--paper-2);border:1px solid var(--rule-solid);color:var(--muted)}
+.liv-sub{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+.liv-seta{flex:none;width:16px;height:16px;color:var(--soft);fill:none;
+          stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+          transition:transform .2s cubic-bezier(.22,1,.36,1)}
+.liv-cartao.aberto .liv-seta{transform:rotate(90deg)}
+
+/* o painel do detalhe, recuado como no molde */
+.liv-corpo{display:none;padding:0 20px 18px 39px}
+.liv-cartao.aberto .liv-corpo{display:block}
+.liv-caixa{border:1px solid var(--rule-solid);border-radius:var(--r-md);
+           background:var(--paper);overflow:hidden}
+.liv-ev{display:flex;gap:12px;padding:11px 15px;border-bottom:1px solid var(--rule)}
+.liv-ev:last-child{border-bottom:0}
+.liv-ev i{width:6px;height:6px;border-radius:50%;flex:none;margin-top:6px;
+          background:var(--chart-2)}
+.liv-ev.falha i{background:var(--chart-5)}
+.liv-ev.aviso i{background:var(--chart-3)}
+.liv-ev .oque{flex:1;min-width:0}
+.liv-ev .oque b{display:block;font-weight:400;color:var(--ink);
+                font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.liv-ev .dados{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:6px;
+               font-size:11.5px;color:var(--muted)}
+.liv-ev .dados > span{display:inline-flex;gap:5px;align-items:baseline;white-space:nowrap}
+.liv-ev .dados b{display:inline;font:inherit;font-weight:600;color:var(--ink)}
+/* a marca de que aquele registro foi reconstruído do histórico, e não anotado na hora */
+.liv-ev .dados em{font-style:normal;color:var(--soft);font-size:11px;
+                  border:1px solid var(--rule-solid);border-radius:5px;padding:1px 6px}
+.liv-ev .data{flex:none;font-size:11.5px;color:var(--soft);white-space:nowrap;
+              font-variant-numeric:tabular-nums}
+
+.liv-mais{padding:14px 20px;border-top:1px solid var(--rule);
+          display:flex;justify-content:center}
+/* a faixa some junto com o botão: vazia, ela ficava como um degrau no pé do cartão */
+.liv-mais:has(.acao[hidden]){display:none}
+.liv-mais .acao[hidden]{display:none}
+.liv-mais .acao{height:36px;padding:0 20px;font-size:13px}
+
+/* a folha de exportação, no molde de balão do sistema */
+.liv-export{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+            background:rgba(0,0,0,.45);padding:20px}
+.liv-export[hidden]{display:none}
+.liv-folha{width:min(440px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:var(--branco);border-radius:var(--r-lg);
+           border:1px solid var(--rule-solid);box-shadow:var(--sombra-balao);
+           padding:22px}
+.liv-folha h3{font-size:15.5px;font-weight:650;color:var(--ink);margin:0 0 4px}
+.liv-folha .nota{margin-bottom:16px}
+.liv-opcao{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;
+           border:1px solid var(--rule-solid);border-radius:var(--r-md);
+           margin-bottom:8px;cursor:pointer;transition:border-color .16s ease}
+.liv-opcao:hover{border-color:var(--accent)}
+.liv-opcao input{margin-top:3px;accent-color:var(--accent);flex:none;width:auto;height:auto}
+.liv-opcao span{font-size:13.5px;color:var(--ink)}
+.liv-opcao small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+/* AS DATAS, NO DESENHO DA CASA E NÃO NO DO WINDOWS.
+   O campo de data do navegador nasce com a moldura do sistema operacional, a fonte do
+   sistema e o calendário branco com faixa azul, que é a única coisa da tela que não
+   pertence a ela. Aqui ele recebe a mesma medida dos outros campos, e o `color-scheme`
+   é o que faz o calendário abrir escuro quando o tema é escuro: sem ele, o balão sai
+   branco no meio da tela preta.
+
+   E ELAS SÓ APARECEM QUANDO SÃO PEDIDAS: escolher datas é uma das três opções, e as
+   outras duas não precisam ver campo nenhum. */
+.liv-datas{display:none;gap:10px;margin:-2px 0 10px 34px}
+.liv-datas.aberto{display:flex}
+.liv-datas label{flex:1;font-size:11.5px;color:var(--muted)}
+.liv-datas input{width:100%;height:38px;margin-top:5px;padding:0 11px;
+  color-scheme:light dark;
   border:1px solid var(--rule-solid);border-radius:var(--r-filtro);
-  background:var(--branco);color:var(--ink);padding:0 15px;font:14px inherit}
-.ct-sel{height:var(--h-filtro);border:1px solid var(--rule-solid);
-  border-radius:var(--r-filtro);background:var(--branco);color:var(--ink);
-  padding:0 13px;font:14px inherit;cursor:pointer}
-.ct-busca:focus,.ct-sel:focus{outline:none;border-color:var(--accent)}
-.ct-painel[hidden]{display:none}
+  background:var(--paper);color:var(--ink);font:13px var(--fonte)}
+.liv-datas input:focus{outline:none;border-color:var(--accent)}
+.liv-datas input::-webkit-calendar-picker-indicator{opacity:.45;cursor:pointer}
+.liv-datas input:hover::-webkit-calendar-picker-indicator{opacity:.9}
 
-.tab-rolo{overflow-x:auto;background:var(--branco);border:1px solid var(--rule-solid);
-          border-radius:var(--r-lg);padding:16px 18px;box-shadow:var(--sombra)}
-.gal-vazia{color:var(--muted);font-size:14px;padding:30px 0;text-align:center;
-           background:var(--branco);border:1px solid var(--rule-solid);
-           border-radius:var(--r-lg)}
+/* A escolha, com a marca desenhada aqui: o botão redondo do sistema operacional tem
+   azul do Windows dentro dele e não obedece à paleta. */
+.liv-opcao input{appearance:none;-webkit-appearance:none;width:16px;height:16px;
+  border:1.5px solid var(--rule-solid);border-radius:50%;background:var(--paper);
+  cursor:pointer;position:relative;transition:border-color .16s ease}
+.liv-opcao input:checked{border-color:var(--accent)}
+.liv-opcao input:checked::after{content:"";position:absolute;inset:3px;border-radius:50%;
+  background:var(--accent)}
+.liv-opcao:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
+.liv-pe{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
 
-/* ---- paginação ---- */
-.pag{display:flex;align-items:center;justify-content:space-between;gap:16px;
-     margin-top:16px;flex-wrap:wrap}
-.pag[hidden]{display:none}
-.pag-quanto{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-.pag-nav{display:flex;align-items:center;gap:12px}
-.pag-nav .acao{height:38px;padding:0 15px;font-size:13.5px}
+/* ------------------------------------------------------- os campos da folha de iniciar */
+.campo-bloco{margin-bottom:16px}
+.campo-rot{display:block;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:7px}
+.nota.mini{font-size:12px;line-height:1.5;margin:-3px 0 9px}
+.campo-bloco input[type=number]{height:38px;font:13.5px var(--fonte);
+  background:var(--paper);border:1px solid var(--rule-solid);border-radius:var(--r-filtro);
+  color:var(--ink);padding:0 12px;width:100%}
+.campo-bloco input[type=number]:focus{outline:none;border-color:var(--accent)}
+.campo-bloco[hidden]{display:none}
+
+/* A ESCOLHA, E O NOME DELA NÃO É `marca`.
+   Esta classe se chamava assim, e `marca` já é a LOGOMARCA no sistema copiado, com
+   26 pixels de largura e altura fixos. O resultado foi das duas: a logomarca do
+   cabeçalho ganhou borda e respiro de caixa de opção, e as três opções de formato
+   ganharam 26 pixels de altura, com o texto vazando por cima do bloco de baixo.
+
+   A caixinha em si é desenhada aqui porque a do sistema operacional tem azul do
+   Windows dentro dela e ignora a paleta, como o botão redondo da folha de exportar. */
+.escolhas{display:grid;gap:8px}
+.escolha{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer;
+         width:100%;box-sizing:border-box;
+         border:1px solid var(--rule-solid);border-radius:var(--r-md);
+         transition:border-color .16s ease,background-color .16s ease}
+.escolha:hover{border-color:var(--accent)}
+.escolha:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
+.escolha input{appearance:none;-webkit-appearance:none;flex:none;width:16px;height:16px;
+  margin-top:1px;border:1.5px solid var(--rule-solid);border-radius:5px;
+  background:var(--paper);cursor:pointer;position:relative}
+.escolha input:checked{border-color:var(--accent);background:var(--accent)}
+.escolha input:checked::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;
+  height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.escolha > span{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.4}
+.escolha small{display:block;font-size:11.5px;color:var(--muted);margin-top:4px;
+               font-weight:400;line-height:1.5}
+
+
+/* as três réguas lado a lado; a do formato que saiu da escolha some junto */
+.cortes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.cortes label{font-size:11.5px;color:var(--muted)}
+.cortes label[hidden]{display:none}
+.cortes input{margin-top:5px}
+.liv-pe .nota{margin-right:auto;text-align:left}
+
+/* a linha do que está acontecendo neste segundo, no topo do histórico */
+.liv-ev.agora{background:var(--accent-tint)}
+.liv-ev.agora i{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
+.liv-ev.agora .oque > b{color:var(--accent)}
+.liv-vivo{color:var(--accent);font-weight:600}
+
+/* AS PÁGINAS DE UMA RODADA, recuadas sob o evento que as resume. Menores e mais
+   apagadas de propósito: são o detalhe de quem quer conferir, e não a leitura principal
+   de quem só quer saber como está o perfil. */
+.liv-ev.passo{padding-left:44px;opacity:.62}
+.liv-ev.passo .oque > b{font-weight:450;font-size:12px}
+.liv-ev.passo i{width:5px;height:5px;margin-top:6px}
+.liv-ev.passo .data{font-size:11px}
