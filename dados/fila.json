@@ -2,13 +2,25 @@
  "itens": [
   {
    "origem": "@blankpartners",
-   "indice": 112.03,
+   "indice": 176.68,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 142.06,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@brandsdecoded__",
    "indice": 101.68,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 96.1,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -20,37 +32,31 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 71.75,
+   "indice": 61.55,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 68.31,
+   "indice": 58.6,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 59.41,
+   "indice": 50.96,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 50.98,
+   "indice": 43.73,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@vinci.society",
    "indice": 43.53,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 39.72,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -67,6 +73,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@blankpartners",
+   "indice": 34.08,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@brandsdecoded__",
    "indice": 33.84,
    "etapa": "reels",
@@ -75,18 +87,6 @@
   {
    "origem": "@brandsdecoded__",
    "indice": 33.46,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 27.37,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 26.52,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -110,13 +110,19 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 24.21,
+   "indice": 23.48,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@brandsdecoded__",
    "indice": 23.34,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 22.75,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -134,13 +140,7 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 20.53,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 19.2,
+   "indice": 20.77,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -158,13 +158,25 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 18.37,
+   "indice": 17.61,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@vinci.society",
    "indice": 17.47,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 17.43,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 16.47,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -176,7 +188,13 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 15.33,
+   "indice": 15.95,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 15.76,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -194,25 +212,7 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 14.72,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 14.33,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 13.98,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 13.43,
+   "indice": 13.15,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -224,13 +224,25 @@
   },
   {
    "origem": "@blankpartners",
-   "indice": 11.63,
+   "indice": 12.63,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 11.57,
+   "indice": 12.29,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 11.99,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 11.52,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -255,6 +267,18 @@
   {
    "origem": "@brandsdecoded__",
    "indice": 10.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 9.98,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 9.92,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -289,12 +313,6 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@blankpartners",
-   "indice": 9.11,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
    "origem": "@brandsdecoded__",
    "indice": 8.94,
    "etapa": "reels",
@@ -325,41 +343,23 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@blankpartners",
+   "indice": 8.07,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@blankpartners",
+   "indice": 7.81,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@vinci.society",
    "indice": 7.73,
    "etapa": "reels",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 7.68,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 7.65,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 7.62,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 7.48,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 7.08,
-   "etapa": "reels",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1787077500
+ "atualizado": 1787078203
 }

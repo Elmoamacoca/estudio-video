@@ -99,6 +99,46 @@
     "total": 251,
     "publicacoes": 1678
    }
+  },
+  {
+   "quando": 1787078203,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 118 reels novos, 369 no total",
+   "detalhe": {
+    "rodada": 109,
+    "maquinas": 6,
+    "gravacoes": 6,
+    "passos": [
+     {
+      "quando": 1787077595,
+      "maquina": "vaga 3"
+     },
+     {
+      "quando": 1787077636,
+      "maquina": "vaga 4"
+     },
+     {
+      "quando": 1787077884,
+      "maquina": "vaga 11"
+     },
+     {
+      "quando": 1787077949,
+      "maquina": "vaga 13"
+     },
+     {
+      "quando": 1787078125,
+      "maquina": "vaga 18"
+     },
+     {
+      "quando": 1787078155,
+      "maquina": "vaga 19"
+     }
+    ],
+    "novos": 118,
+    "total": 369,
+    "publicacoes": 1678
+   }
   }
  ]
 }
