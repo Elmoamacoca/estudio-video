@@ -12,6 +12,17 @@
     "seguidores": 311666,
     "total": 0
    }
+  },
+  {
+   "quando": 1787076395,
+   "tipo": "sem_avanco",
+   "gravidade": "aviso",
+   "texto": "Rodada sem avanço nesta vaga: o endereço dela já tinha sido usado",
+   "detalhe": {
+    "rodada": 106,
+    "gravacoes": 1,
+    "total": 0
+   }
   }
  ]
 }
