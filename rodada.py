@@ -69,7 +69,7 @@ def regua() -> dict:
 
 
 TODOS_OS_FORMATOS = {"reels", "post", "carrossel"}
-NOMES = {"reels": "reels", "post": "posts isolados", "carrossel": "carrosseis"}
+NOMES = {"reels": "reels", "post": "posts isolados", "carrossel": "carrosséis"}
 
 
 def formatos_pedidos(r: dict) -> set:
@@ -96,7 +96,7 @@ def rotulo_dos_formatos(r: dict) -> str:
     """Como a tela chama o que esta' sendo buscado. Um so', ou dois, ou 'publicacoes'."""
     f = formatos_pedidos(r)
     if f == TODOS_OS_FORMATOS:
-        return "publicacoes"
+        return "publicações"
     nomes = [NOMES[x] for x in ("reels", "carrossel", "post") if x in f]
     return nomes[0] if len(nomes) == 1 else " e ".join([", ".join(nomes[:-1]), nomes[-1]])
 
