@@ -1,4 +1,281 @@
 {
- "itens": [],
- "atualizado": 1787013656
+ "itens": [
+  {
+   "origem": "@vinci.society",
+   "indice": 3782.67,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 2842.67,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 2648.0,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 1610.33,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 1006.0,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 800.0,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 214.07,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 38.78,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 24.34,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 15.33,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 13.66,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@nike",
+   "indice": 11.7,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@hormozi",
+   "indice": 10.07,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@nike",
+   "indice": 8.96,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 7.57,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 5.58,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 5.38,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@nike",
+   "indice": 4.87,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@natgeo",
+   "indice": 4.68,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 4.28,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 3.82,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@nike",
+   "indice": 3.41,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 3.37,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 3.17,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 3.13,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@natgeo",
+   "indice": 2.96,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@natgeo",
+   "indice": 2.78,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@hormozi",
+   "indice": 2.75,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@hormozi",
+   "indice": 2.7,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 2.43,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@natgeo",
+   "indice": 2.41,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 2.37,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@vinci.society",
+   "indice": 2.3,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@natgeo",
+   "indice": 2.29,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@nike",
+   "indice": 2.27,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 2.12,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@sabrinacarpenter",
+   "indice": 2.1,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@natgeo",
+   "indice": 2.05,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 2.03,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@hormozi",
+   "indice": 1.91,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@natgeo",
+   "indice": 1.89,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@boletimdamorte",
+   "indice": 1.84,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@hormozi",
+   "indice": 1.75,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@garyvee",
+   "indice": 1.57,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@brandsdecoded__",
+   "indice": 1.57,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@natgeo",
+   "indice": 1.53,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  }
+ ],
+ "atualizado": 1787014197
 }

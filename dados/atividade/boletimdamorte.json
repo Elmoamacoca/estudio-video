@@ -12,6 +12,20 @@
     "seguidores": 314958,
     "total": 0
    }
+  },
+  {
+   "quando": 1787014197,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 12 posts novos, 12 de 4.982 lidos",
+   "detalhe": {
+    "rodada": 72,
+    "maquinas": 1,
+    "gravacoes": 1,
+    "novos": 12,
+    "total": 12,
+    "publicacoes": 4982
+   }
   }
  ]
 }

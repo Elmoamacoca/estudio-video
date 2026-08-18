@@ -1,0 +1,15 @@
+{
+ "conta": "ftevidencias",
+ "nome": null,
+ "eventos": [
+  {
+   "quando": 1787014080,
+   "tipo": "vazio",
+   "gravidade": "aviso",
+   "texto": "Sem posts públicos: conta fechada ou sem publicação. Nada a varredura aqui.",
+   "detalhe": {
+    "total": 0
+   }
+  }
+ ]
+}
