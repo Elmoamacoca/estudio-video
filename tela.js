@@ -611,7 +611,7 @@ async function aoVivo() {
                            && batendo[0].rotulo !== "publicações")
             ? ` buscando ${alvoDoTexto}` : " lendo o Instagram");
       resumo = batendo.map(b => {
-        const nome = rotuloDosFormatos(b, bruto);
+        const nome = rotuloDosFormatos(b);
         return `@${b.conta}: ${num(b.lidos)}`
           + (b.publicacoes ? ` de ${num(b.publicacoes)} ${nome}` : ` ${nome}`);
       }).join(" · ");
@@ -806,7 +806,7 @@ function desenhaLivro() {
     // EM VARREDURA DE REELS, A CONTA E' DE REELS. Comparar contra o total de
     // publicacoes do perfil fazia a tela dizer "72 de 2.254", numeros de duas coisas
     // diferentes, e a leitura obvia era que estava varrendo o perfil inteiro de novo.
-    const nome = rotuloDosFormatos(b);
+    const nome = rotuloDosFormatos(b, bruto);
     // A esteira para ao ATINGIR o alvo, e a última página costuma passar dele: pedir
     // duzentos e trazer duzentos e quatro é o normal. Mostrar "102%" faz parecer conta
     // errada, quando é a coisa tendo dado certo.
