@@ -328,7 +328,25 @@ function desenhaMinerados() {
   $("sub-conta").textContent = MINERADOS.length;
 
   $("min-corpo").innerHTML = pedaco.map(p => {
+    // A COBERTURA DE UMA VARREDURA FILTRADA NÃO É SOBRE AS PUBLICAÇÕES DO PERFIL.
+    //
+    // Aqui saía "13%" para um perfil com 294 reels e 2.256 publicações, e "0%" para
+    // outro cujo total de publicações o Instagram não informou. Nenhum dos dois diz o
+    // que interessa: numa busca de reels, o que importa é se ela chegou ao último reel.
+    //
+    // Chegou: mostra "todos". Não chegou: mostra a contagem, sem inventar fração de um
+    // total que ninguém conhece, porque quantos reels um perfil tem só se sabe no fim.
+    const filtrado = rotuloDosFormatos(null, LIVRO.find(c => c.conta === p.conta))
+                       !== "publicações";
     const cob = p.publicacoes ? Math.round(100 * p.lidos / p.publicacoes) : 0;
+    const coluna = filtrado
+      ? (p.completo
+          ? `<span class="tab-dupla">todos<i>${num(p.lidos)} ${
+              rotuloDosFormatos(null, LIVRO.find(c => c.conta === p.conta))}</i></span>`
+          : `<span class="tab-dupla">em curso<i>${num(p.lidos)} até agora</i></span>`)
+      : p.publicacoes
+        ? `<span class="tab-dupla">${cob}%<i>de ${num(p.publicacoes)}</i></span>`
+        : `<span class="tab-dupla tab-nulo">sem total<i>o Instagram não informa</i></span>`;
     const [selo] = ESTADOS[situacaoDe(p)];
     const ate = p.mais_antigo
       ? new Date(p.mais_antigo * 1000).toLocaleDateString("pt-BR",
@@ -339,8 +357,7 @@ function desenhaMinerados() {
         <span class="tab-quem"><b>@${p.conta}</b>
           <span>${p.nome || "sem nome no perfil"}</span></span></div></td>
       <td class="tab-num">${num(p.lidos)}</td>
-      <td class="tab-num"><span class="tab-dupla">${cob}%
-        <i>de ${num(p.publicacoes)}</i></span></td>
+      <td class="tab-num">${coluna}</td>
       <td>${ate}</td>
       <td class="tab-num">${num(p.reels)}</td>
       <td class="tab-num">${num(p.imagens)}</td>
