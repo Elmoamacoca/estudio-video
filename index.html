@@ -1664,6 +1664,118 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
              vertical-align:-2px}
 @media(prefers-reduced-motion:reduce){.liv-girando{animation:none}}
 
+/* ====================================================== A ABA DE EDIÇÃO
+
+   PASSO A PASSO com trilho à esquerda, no molde de quem monta uma campanha no Google
+   Ads. O trilho é de ÍCONE e não de bolinha numerada: bolinha diz quantos faltam, ícone
+   diz o que é. Numa sequência que vai crescer, reconhecer o passo de relance vale mais
+   do que contar quantos são.
+
+   O trilho gruda no alto ao rolar, porque a galeria de uma leva grande tem quarenta e
+   uma peças e passa muito da altura da tela: sem grudar, a pessoa perde de vista em que
+   passo está justamente quando desce para olhar o material. */
+.ed-tela{display:grid;grid-template-columns:248px 1fr;gap:26px;align-items:start}
+.ed-trilho{position:sticky;top:88px;display:flex;flex-direction:column;gap:4px}
+
+.ed-passo{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:12px 13px;border-radius:var(--r-md);border:1px solid transparent;
+  background:transparent;cursor:pointer;font:inherit;color:var(--muted);
+  transition:background .14s,border-color .14s,color .14s}
+.ed-passo:hover{background:var(--paper-2);color:var(--ink)}
+.ed-passo.ativo{background:var(--branco);border-color:var(--rule-solid);color:var(--ink);
+  box-shadow:var(--sombra)}
+.ed-passo:disabled{opacity:.4;cursor:not-allowed}
+
+/* O ÍCONE NUM QUADRADO, e o quadrado é o que acende no passo em que se está: o desenho
+   sozinho, mudando só de cor, não separa o passo atual dos outros de relance. */
+.ed-ico{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;
+  border-radius:10px;background:var(--paper-2);border:1px solid var(--rule-solid);
+  color:var(--muted);transition:background .14s,color .14s,border-color .14s}
+.ed-ico svg{width:17px;height:17px}
+.ed-passo.ativo .ed-ico{background:var(--accent);border-color:var(--accent);color:#fff}
+.ed-quem{min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.ed-quem b{font-size:13.5px;font-weight:650}
+.ed-quem span{font-size:11.5px;color:var(--muted);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.ed-passo.ativo .ed-quem span{color:var(--accent)}
+
+/* O TRILHO NÃO INVENTA OS PASSOS QUE FALTAM. Desenhar caixa apagada para etapa que ainda
+   não foi definida é a tela prometendo o que ninguém combinou. */
+.ed-porvir{margin:10px 13px 0;padding-top:12px;border-top:1px dashed var(--rule-solid);
+  font-size:11.5px;line-height:1.5;color:var(--soft)}
+
+.ed-cab{margin-bottom:18px}
+.ed-cab h2{margin:0 0 5px;font-size:20px;font-weight:700;letter-spacing:-.02em}
+.ed-pe{display:flex;align-items:center;gap:14px;margin-top:22px;padding-top:18px;
+  border-top:1px solid var(--rule-solid)}
+.ed-pe .nota{margin-right:auto}
+.ed-etapa[hidden]{display:none}
+
+/* ------------------------------------------------------ as levas para escolher */
+.ed-levas{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.ed-leva{display:flex;flex-direction:column;gap:3px;text-align:left;padding:15px 16px;
+  border-radius:var(--r-lg);border:1px solid var(--rule-solid);background:var(--branco);
+  box-shadow:var(--sombra);cursor:pointer;font:inherit;color:var(--ink);
+  transition:border-color .16s,box-shadow .16s}
+.ed-leva:hover{border-color:var(--accent)}
+.ed-leva.marcada{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ed-leva-n{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.ed-leva-quem{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.ed-leva-num{margin-top:6px;font-size:12.5px;color:var(--muted)}
+.ed-leva-num b{font-size:16px;font-weight:650;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.ed-leva-pe{margin-top:8px;font-size:11px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--verde)}
+/* LEVA QUE AINDA NÃO DESCEU APARECE, apagada e dizendo por quê. Escondê-la faria o
+   Gabriel procurar uma leva que ele sabe que existe. */
+.ed-leva.longe{opacity:.5;cursor:not-allowed;box-shadow:none}
+.ed-leva.longe:hover{border-color:var(--rule-solid)}
+.ed-leva.longe .ed-leva-pe{color:var(--soft)}
+
+/* ------------------------------------------------------ a porta da pasta */
+.ed-porta{margin-top:20px}
+.ed-caminho{margin:12px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,
+  monospace;font-size:12.5px;color:var(--ink);background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
+  word-break:break-all}
+
+/* ------------------------------------------------------ a galeria de peças */
+.ed-galeria-cab{margin:26px 0 12px}
+.ed-galeria-cab h3{margin:0 0 3px;font-size:15px;font-weight:650}
+.ed-carregando{padding:26px 0;font-size:13.5px;color:var(--muted)}
+.ed-galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));
+  gap:14px}
+.ed-peca{border-radius:var(--r-md);overflow:hidden;background:var(--branco);
+  border:1px solid var(--rule-solid);box-shadow:var(--sombra);cursor:pointer;
+  transition:border-color .16s}
+.ed-peca:hover{border-color:var(--accent)}
+/* A PROPORÇÃO É FIXA NA MOLDURA, e não deixada ao vídeo: reel é 9 por 16, mas dois dos
+   arquivos da leva 28 vêm em 360 por 640 e outros formatos aparecem em levas antigas.
+   Sem a moldura fixa, a grade fica com cartão de altura diferente em cada coluna. */
+.ed-quadro{position:relative;aspect-ratio:9/16;background:#000;overflow:hidden}
+.ed-quadro video{width:100%;height:100%;object-fit:cover;display:block}
+.ed-play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;
+  background:rgba(0,0,0,.22);opacity:.9;transition:opacity .14s}
+.ed-play svg{width:34px;height:34px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.ed-peca:hover .ed-play{opacity:1}
+.ed-quadro.tocando .ed-play{opacity:0}
+.ed-dur{position:absolute;right:6px;bottom:6px;padding:2px 6px;border-radius:6px;
+  background:rgba(0,0,0,.62);color:#fff;font-size:10.5px;font-weight:600;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.ed-peca-pe{display:flex;align-items:baseline;gap:7px;padding:9px 11px}
+.ed-peca-pe b{font-size:14px;font-weight:700;color:var(--accent);
+  font-variant-numeric:tabular-nums}
+.ed-peca-pe span{font-size:11px;color:var(--muted);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+
+@media(max-width:900px){
+  .ed-tela{grid-template-columns:1fr}
+  .ed-trilho{position:static;flex-direction:row;flex-wrap:wrap}
+  .ed-passo{width:auto;flex:1 1 200px}
+  .ed-porvir{flex:1 1 100%;margin:0;border-top:0;padding-top:0}
+}
+
 </style>
 </head>
 <body>
@@ -2377,18 +2489,119 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 </section>
 
 
-<!-- =================================================================== ABA 4 · EDIÇÃO -->
+<!-- =================================================================== ABA 4 · EDIÇÃO
+
+     UM PASSO A PASSO, no molde de quem monta uma campanha no Google Ads: a ordem é
+     imposta, cada passo só abre com o anterior resolvido, e o trilho da esquerda mostra
+     onde se está e deixa voltar a qualquer momento. Decisão do Gabriel em 19/08/2026.
+
+     O TRILHO É DE ÍCONE, e não de bolinha numerada. Bolinha diz "quantos faltam"; ícone
+     diz "o que é". Numa sequência que vai crescer, saber o que é cada passo de relance
+     vale mais do que contar quantos são.
+
+     E AQUI ENTRA UM PROBLEMA QUE AS OUTRAS ABAS NÃO TÊM: os vídeos estão no computador
+     do Gabriel, e esta tela é servida pela internet. Nenhuma página pode abrir sozinha
+     um arquivo do disco de quem a visita, e ainda bem. O caminho é ele apontar a pasta
+     uma vez, num clique; a partir daí o navegador guarda essa permissão e a tela lê a
+     pasta direto, sem cópia, sem upload e sem nada saindo da máquina dele. -->
 <section class="aba" id="aba-editar" hidden>
-  <div class="secao">
-    <div class="por-vir">
-      <div class="por-vir-selo">a construir</div>
-      <h2>Edição</h2>
-      <p class="nota">Esta aba ainda não foi desenhada, e o desenho dela ainda não foi
-        definido com você.</p>
-      <ul class="por-vir-lista">
-        <li>Aplicação do template da página em lote.</li>
-        <li>Título e legenda por peça.</li>
-      </ul>
+
+  <div class="ed-tela">
+
+    <!-- ------------------------------------------------------- O TRILHO -->
+    <aside class="ed-trilho" id="ed_trilho">
+      <button class="ed-passo ativo" type="button" data-passo="1">
+        <span class="ed-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h16M4 12h16M4 17h10"/><circle cx="19" cy="17" r="2.2"/></svg>
+        </span>
+        <span class="ed-quem"><b>A leva</b><span id="ed_r1">nenhuma escolhida</span></span>
+      </button>
+      <button class="ed-passo" type="button" data-passo="2">
+        <span class="ed-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <path d="M3 9h18M9 21V9"/></svg>
+        </span>
+        <span class="ed-quem"><b>O template</b><span id="ed_r2">a definir</span></span>
+      </button>
+      <!-- OS PRÓXIMOS PASSOS NÃO SÃO INVENTADOS AQUI. Desenhar caixa para etapa que
+           ainda não foi definida é a tela prometendo o que ninguém combinou. -->
+      <div class="ed-porvir">os próximos passos entram conforme forem definidos</div>
+    </aside>
+
+    <!-- ------------------------------------------------------- O PALCO -->
+    <div class="ed-palco">
+
+      <!-- ========================================== PASSO 1 · A LEVA -->
+      <div class="ed-etapa" data-passo="1">
+        <div class="ed-cab">
+          <h2>Escolha a leva</h2>
+          <p class="nota">Cada leva é um pacote de reels já baixados e tratados. Ao
+            escolher uma, os vídeos dela aparecem aqui embaixo.</p>
+        </div>
+
+        <div class="ed-levas" id="ed_levas"></div>
+        <div class="gal-vazia" id="ed_sem_leva" hidden>Nenhuma leva guardada ainda.
+          Monte uma na aba de Baixar.</div>
+
+        <!-- A PORTA DA PASTA. Ela só aparece quando é preciso: pedir permissão antes de
+             haver o que abrir é pedir por pedir. -->
+        <div class="caixa ed-porta" id="ed_porta" hidden>
+          <h3>Apontar a pasta do Estúdio</h3>
+          <p class="nota">Os vídeos estão no seu computador, e esta tela vem da internet.
+            Por segurança, nenhuma página abre um arquivo do seu disco sem você mandar.
+            Aponte a pasta <b>uma vez</b> e o navegador guarda a permissão: nada é
+            enviado para lugar nenhum, a tela só lê o que já está aí.</p>
+          <p class="ed-caminho">C:\Users\Gabri\Estudio\levas</p>
+          <div class="linha">
+            <button class="acao forte" id="ed_abrir_pasta" type="button">
+              Escolher a pasta</button>
+            <span class="nota" id="ed_recado_pasta"></span>
+          </div>
+        </div>
+
+        <div class="ed-galeria-cab" id="ed_gal_cab" hidden>
+          <h3 id="ed_gal_titulo"></h3>
+          <span class="nota" id="ed_gal_sub"></span>
+        </div>
+        <div class="ed-galeria" id="ed_galeria"></div>
+
+        <div class="ed-pe" id="ed_pe1" hidden>
+          <span class="nota" id="ed_recado1"></span>
+          <button class="acao forte" id="ed_vai1" type="button" disabled>
+            Continuar para o template</button>
+        </div>
+      </div>
+
+      <!-- ========================================== PASSO 2 · O TEMPLATE -->
+      <div class="ed-etapa" data-passo="2" hidden>
+        <div class="ed-cab">
+          <h2>O template</h2>
+          <p class="nota">O que será aplicado sobre os vídeos da leva.</p>
+        </div>
+
+        <!-- ESTE PASSO ESTÁ ESPERANDO UMA DEFINIÇÃO, e a tela diz isso em vez de
+             desenhar um formulário chutado. "Template" pode ser meia dúzia de coisas
+             diferentes, e cada uma leva a uma construção diferente. -->
+        <div class="por-vir">
+          <div class="por-vir-selo">esperando a sua definição</div>
+          <h2>O que é um template aqui?</h2>
+          <p class="nota">O passo 1 está pronto e a leva já chega até aqui. Para desenhar
+            este, falta uma resposta sua: o que o template faz com o vídeo.</p>
+          <ul class="por-vir-lista">
+            <li>Uma moldura por cima do vídeo, com faixa, título e o vídeo encaixado
+              dentro de um campo.</li>
+            <li>Um recorte e reenquadre, mudando a proporção da peça.</li>
+            <li>Uma abertura e um fecho, colados antes e depois do vídeo.</li>
+            <li>Um estilo de legenda queimada na imagem.</li>
+          </ul>
+          <p class="nota" id="ed_leva_escolhida"></p>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -4458,6 +4671,9 @@ async function atualizar() {
   desenhaProntos(MINERADOS);
 
   desenhaRegistroDeLotes(lotes);
+  // A ABA DE EDIÇÃO LÊ A MESMA CAPA: leva que fica pronta aparece lá
+  // sozinha, sem precisar recarregar a página.
+  desenhaLevasDaEdicao(lotes);
   // O LOTE EM CURSO É REBUSCADO A CADA VOLTA, aberto ou não: é dele que a cabeça do
   // registro fala, e é ele que muda. Os fechados não mudam mais, então só são buscados
   // quando alguém abre.
@@ -5398,6 +5614,280 @@ $("faq_fecha").onclick = () => ajudaAbre(false);
 $("faq_fundo").onclick = () => ajudaAbre(false);
 document.addEventListener("keydown", ev => {
   if (ev.key === "Escape" && !$("faq_folha").hidden) ajudaAbre(false);
+});
+
+/* ============================================================ A ABA DE EDIÇÃO
+
+   PASSO A PASSO, no molde de quem monta uma campanha no Google Ads: a ordem é imposta,
+   cada passo só abre quando o anterior está resolvido, e o trilho da esquerda deixa
+   voltar a qualquer momento sem perder o que já foi escolhido.
+
+   O PROBLEMA QUE ESTA ABA TEM E AS OUTRAS NÃO:
+   os vídeos moram no computador do Gabriel e esta tela é servida pela internet. As
+   outras abas só precisam de números, e número cabe no acervo; aqui é preciso ver o
+   vídeo. Página nenhuma pode abrir sozinha um arquivo do disco de quem a visita, e ainda
+   bem: se pudesse, qualquer site conseguiria.
+
+   O caminho é ele apontar a pasta uma vez. O navegador entrega um crachá daquela pasta,
+   o crachá fica guardado aqui do lado de cá, e nas próximas visitas a tela pede a
+   permissão de volta em vez de pedir a pasta de novo. Nada sobe para lugar nenhum: o
+   vídeo toca a partir do arquivo que já está no disco.                                */
+
+let EDIT_PASSO = 1;
+let EDIT_LEVA = null;              // a leva escolhida, como está na capa do acervo
+let EDIT_PASTA = null;             // o crachá da pasta `levas`, se já tivermos
+let EDIT_PECAS = [];               // os arquivos da leva escolhida
+
+const TEM_PORTA = typeof window.showDirectoryPicker === "function";
+
+/* ------------------------------------------------------- o crachá da pasta
+
+   Ele é um objeto vivo do navegador, não um texto: não dá para guardar num lugar de
+   texto simples. Vai para o guarda-volumes do próprio navegador, que aceita objeto. */
+const CRACHA = { banco: "estudio", caixa: "portas", chave: "pasta-levas" };
+
+function guardaVolumes() {
+  return new Promise((ok, erro) => {
+    const p = indexedDB.open(CRACHA.banco, 1);
+    p.onupgradeneeded = () => p.result.createObjectStore(CRACHA.caixa);
+    p.onsuccess = () => ok(p.result);
+    p.onerror = () => erro(p.error);
+  });
+}
+
+async function guardarCracha(handle) {
+  try {
+    const db = await guardaVolumes();
+    const t = db.transaction(CRACHA.caixa, "readwrite");
+    t.objectStore(CRACHA.caixa).put(handle, CRACHA.chave);
+  } catch (e) { /* sem guarda-volumes, ele pede a pasta de novo. Não é perda. */ }
+}
+
+async function pegarCracha() {
+  try {
+    const db = await guardaVolumes();
+    return await new Promise(ok => {
+      const p = db.transaction(CRACHA.caixa).objectStore(CRACHA.caixa).get(CRACHA.chave);
+      p.onsuccess = () => ok(p.result || null);
+      p.onerror = () => ok(null);
+    });
+  } catch (e) { return null; }
+}
+
+/** A pasta ainda vale? Devolve o crachá só quando a permissão está de pé. */
+async function pastaValendo(handle, pedir) {
+  if (!handle) return null;
+  try {
+    if (await handle.queryPermission({ mode: "read" }) === "granted") return handle;
+    // PEDIR DE NOVO SÓ COM O DEDO DELE NO BOTÃO. O navegador recusa o pedido feito
+    // sozinho, ao abrir a página, e a recusa vem calada: parece que a pasta se perdeu.
+    if (pedir && await handle.requestPermission({ mode: "read" }) === "granted")
+      return handle;
+  } catch (e) { /* crachá velho de uma pasta que não existe mais */ }
+  return null;
+}
+
+/* ------------------------------------------------------------- o trilho */
+function irParaPasso(n) {
+  EDIT_PASSO = n;
+  document.querySelectorAll("#ed_trilho .ed-passo").forEach(b =>
+    b.classList.toggle("ativo", Number(b.dataset.passo) === n));
+  document.querySelectorAll(".ed-etapa").forEach(s =>
+    s.hidden = Number(s.dataset.passo) !== n);
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+document.querySelectorAll("#ed_trilho .ed-passo").forEach(b => {
+  b.addEventListener("click", () => {
+    const n = Number(b.dataset.passo);
+    // VOLTAR SEMPRE PODE; AVANÇAR, SÓ COM O PASSO ANTERIOR RESOLVIDO. É o que faz disto
+    // um passo a passo e não um menu com quatro páginas soltas.
+    if (n > 1 && !EDIT_LEVA) return;
+    irParaPasso(n);
+  });
+});
+
+/* ------------------------------------------------- passo 1 · escolher a leva
+
+   A LISTA VEM DO ACERVO, e não da pasta. É o acervo que sabe o que cada leva é: de quais
+   perfis, quantas peças, se já foi guardada. A pasta sabe só que há arquivos dentro dela.
+   Leva que ainda não desceu para o computador aparece na lista, apagada, dizendo por quê:
+   escondê-la faria o Gabriel procurar uma leva que ele sabe que existe. */
+function desenhaLevasDaEdicao(indice) {
+  const levas = ((indice && indice.lotes) || [])
+    .filter(l => l.estado === "pronto" && l.limpos);
+  $("ed_sem_leva").hidden = levas.length > 0;
+  $("ed_levas").innerHTML = levas.map(l => {
+    const quem = (l.contas || []).length ? "@" + l.contas.join(", @") : "todos os perfis";
+    const aqui = !!l.guardado;
+    return `<button type="button" class="ed-leva${!aqui ? " longe" : ""}${
+        EDIT_LEVA && EDIT_LEVA.numero === l.numero ? " marcada" : ""}"
+        data-leva="${l.numero}"${aqui ? "" : " disabled"}>
+      <span class="ed-leva-n">Leva ${l.numero}</span>
+      <span class="ed-leva-quem">${quem}</span>
+      <span class="ed-leva-num"><b>${num(l.limpos)}</b> peças · ${l.mb || 0} MB</span>
+      <span class="ed-leva-pe">${aqui ? "no seu computador"
+        : "ainda não desceu para o computador"}</span>
+    </button>`;
+  }).join("");
+}
+
+$("ed_levas").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-leva]");
+  if (!b) return;
+  const n = Number(b.dataset.leva);
+  EDIT_LEVA = (LOTES || []).find(l => l.numero === n) || { numero: n };
+  $("ed_r1").textContent = `leva ${n}`;
+  $("ed_leva_escolhida").textContent = `Leva escolhida: ${n}.`;
+  desenhaLevasDaEdicao(ULTIMO_INDICE);
+  await mostrarPecas();
+});
+
+/* --------------------------------------------------- passo 1 · ver os vídeos */
+async function mostrarPecas() {
+  if (!EDIT_LEVA) return;
+  const gal = $("ed_galeria");
+
+  if (!TEM_PORTA) {
+    $("ed_porta").hidden = false;
+    $("ed_abrir_pasta").disabled = true;
+    parado("ed_recado_pasta", "este navegador não sabe abrir pasta. No Chrome ou no "
+      + "Edge funciona; no Firefox, ainda não.");
+    return;
+  }
+
+  EDIT_PASTA = await pastaValendo(EDIT_PASTA || await pegarCracha(), false);
+  if (!EDIT_PASTA) {
+    $("ed_porta").hidden = false;
+    $("ed_gal_cab").hidden = true;
+    gal.innerHTML = "";
+    $("ed_pe1").hidden = true;
+    return;
+  }
+  $("ed_porta").hidden = true;
+
+  gal.innerHTML = '<div class="ed-carregando">abrindo a pasta da leva</div>';
+  $("ed_gal_cab").hidden = false;
+  try {
+    const pasta = await EDIT_PASTA.getDirectoryHandle(`leva-${EDIT_LEVA.numero}`);
+    const arquivos = [];
+    for await (const [nome, h] of pasta.entries())
+      if (h.kind === "file" && nome.toLowerCase().endsWith(".mp4"))
+        arquivos.push({ nome, h });
+    arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
+    EDIT_PECAS = arquivos;
+    desenhaPecas();
+  } catch (e) {
+    gal.innerHTML = "";
+    $("ed_gal_cab").hidden = true;
+    $("ed_porta").hidden = false;
+    parado("ed_recado_pasta", `não achei a pasta leva-${EDIT_LEVA.numero} dentro do que `
+      + "você apontou. Aponte a pasta `levas`, que é a que tem uma subpasta por leva.");
+  }
+}
+
+/* O NOME DO ARQUIVO CARREGA O DESEMPENHO, e ele é a razão de o reel estar aqui:
+   `0043.53x_vinci.society_DOtEWPVjcIM.mp4` é quarenta e três vezes a mediana do perfil.
+   Mostrar o nome cru seria esconder isso dentro de um monte de caractere. */
+function lerNome(nome) {
+  const p = nome.replace(/\.mp4$/i, "").split("_");
+  const x = parseFloat(p[0]);
+  return { indice: isNaN(x) ? null : x, conta: p[1] || "", codigo: p[2] || "" };
+}
+
+function desenhaPecas() {
+  $("ed_gal_titulo").textContent = `${EDIT_PECAS.length} `
+    + (EDIT_PECAS.length === 1 ? "peça na leva" : "peças na leva")
+    + ` ${EDIT_LEVA.numero}`;
+  $("ed_gal_sub").textContent = "o número em cada peça é quantas vezes ela passou da "
+    + "mediana do próprio perfil";
+
+  // O VÍDEO CARREGA SÓ O CABEÇALHO, e o quadro mostrado é o do segundo e meio. Pedir os
+  // quarenta e um arquivos inteiros de uma vez travaria a aba por vários segundos, e o
+  // primeiro quadro de um reel costuma ser preto.
+  $("ed_galeria").innerHTML = EDIT_PECAS.map((a, i) => {
+    const n = lerNome(a.nome);
+    return `<div class="ed-peca" data-i="${i}">
+      <div class="ed-quadro"><video preload="metadata" muted playsinline
+        data-arquivo="${i}"></video>
+        <span class="ed-play"><svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8 5v14l11-7z"/></svg></span>
+        <span class="ed-dur"></span></div>
+      <div class="ed-peca-pe">
+        <b>${n.indice != null ? n.indice.toFixed(2).replace(".", ",") + "x" : "—"}</b>
+        <span>${n.codigo || a.nome}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  // UM DE CADA VEZ, e só quando entra na tela. Quarenta e um pedidos de arquivo ao mesmo
+  // tempo fazem o navegador engasgar e o disco trabalhar para nada: a maioria está
+  // embaixo da dobra e nunca vai ser olhada.
+  const olho = new IntersectionObserver(async (entradas, obs) => {
+    for (const e of entradas) {
+      if (!e.isIntersecting) continue;
+      obs.unobserve(e.target);
+      const i = Number(e.target.dataset.arquivo);
+      try {
+        const f = await EDIT_PECAS[i].h.getFile();
+        e.target.src = URL.createObjectURL(f) + "#t=1.5";
+      } catch (err) { /* arquivo sumiu da pasta desde a leitura */ }
+    }
+  }, { rootMargin: "300px" });
+  document.querySelectorAll("#ed_galeria video[data-arquivo]").forEach(v => {
+    v.addEventListener("loadedmetadata", () => {
+      const s = Math.round(v.duration || 0);
+      const alvo = v.parentNode.querySelector(".ed-dur");
+      if (alvo) alvo.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
+        + ` · ${v.videoWidth}x${v.videoHeight}`;
+    });
+    olho.observe(v);
+  });
+
+  $("ed_pe1").hidden = false;
+  $("ed_vai1").disabled = EDIT_PECAS.length === 0;
+  parado("ed_recado1", EDIT_PECAS.length
+    ? `${EDIT_PECAS.length} peças prontas para receber o template.`
+    : "essa pasta está vazia.");
+}
+
+/* Clicar na peça toca ali mesmo. Abrir num tocador à parte seria mais uma janela para
+   fechar, e o que se quer aqui é bater o olho em quarenta e um vídeos depressa. */
+$("ed_galeria").addEventListener("click", ev => {
+  const peca = ev.target.closest(".ed-peca");
+  if (!peca) return;
+  const v = peca.querySelector("video");
+  if (!v || !v.src) return;
+  document.querySelectorAll("#ed_galeria video").forEach(o => {
+    if (o !== v) { o.pause(); o.parentNode.classList.remove("tocando"); }
+  });
+  if (v.paused) { v.play(); v.parentNode.classList.add("tocando"); }
+  else { v.pause(); v.parentNode.classList.remove("tocando"); }
+});
+
+$("ed_abrir_pasta").onclick = async () => {
+  try {
+    const h = await window.showDirectoryPicker({ id: "estudio-levas", mode: "read" });
+    EDIT_PASTA = h;
+    await guardarCracha(h);
+    parado("ed_recado_pasta", "pasta ligada.");
+    await mostrarPecas();
+  } catch (e) {
+    // desistir de escolher não é erro, e não merece recado vermelho
+    if (e && e.name !== "AbortError")
+      parado("ed_recado_pasta", "não deu para abrir: " + e.message);
+  }
+};
+
+$("ed_vai1").onclick = () => irParaPasso(2);
+
+/* AO ABRIR A ABA, a permissão da pasta é pedida de volta com o dedo dele na tela, que é
+   a única hora em que o navegador aceita o pedido. */
+document.addEventListener("click", async ev => {
+  if (!ev.target.closest('[data-aba="editar"]')) return;
+  if (EDIT_PASTA || !TEM_PORTA) return;
+  const h = await pastaValendo(await pegarCracha(), true);
+  if (h) { EDIT_PASTA = h; if (EDIT_LEVA) await mostrarPecas(); }
 });
 
 /* ------------------------------------------------------------------- a partida
