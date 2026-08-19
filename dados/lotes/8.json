@@ -28,6 +28,11 @@
    "quando": 1787098403,
    "tipo": "fim",
    "texto": "Lote fechado: 3 peças tratadas e entregues, 3 saíram da fileira."
+  },
+  {
+   "quando": 1787099658,
+   "tipo": "guardado",
+   "texto": "3 peças guardadas na pasta local, em C:\\Users\\Gabri\\Estudio\\levas\\leva-8."
   }
  ]
 }
