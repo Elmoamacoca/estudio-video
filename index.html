@@ -1786,7 +1786,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    Por isso cada passo tem `flex:1`: eles dividem a altura do vidro entre si, e a linha
    de um encosta na do outro, formando uma espinha contínua do topo ao pé da tela. */
 .ed-ponto{display:flex;flex-direction:column;cursor:pointer;opacity:.4;flex:1;
-  min-height:0;transition:opacity .35s}
+  min-height:0;transition:opacity .22s}
 .ed-ponto.ativo{opacity:1}
 .ed-ponto-n{margin:0 0 10px 24px;font-size:26px;font-weight:800;letter-spacing:-.03em;
   color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
@@ -1798,7 +1798,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-barra i{position:absolute;inset:0;background:var(--rule-solid);border-radius:2px;
   transform-origin:top}
 .ed-barra b{position:absolute;top:0;left:0;width:2px;border-radius:2px;
-  background:var(--accent);transition:height .9s cubic-bezier(.22,1,.36,1)}
+  background:var(--accent);transition:height .5s cubic-bezier(.16,1,.3,1)}
 .ed-ponto-txt{padding-bottom:20px}
 .ed-ponto-txt h3{margin:-4px 0 3px;font-size:16px;font-weight:700;letter-spacing:-.01em}
 .ed-ponto-txt p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
@@ -1810,14 +1810,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                    to{opacity:.4;transform:none}}
 @keyframes ed-sobe-ativo{from{opacity:0;transform:translateY(18px)}
                          to{opacity:1;transform:none}}
-.ed-trilho.entrou .ed-barra i{animation:ed-linha .75s cubic-bezier(.22,1,.36,1) both}
-.ed-trilho.entrou .ed-ponto{animation:ed-sobe .5s cubic-bezier(.22,1,.36,1) both}
+.ed-trilho.entrou .ed-barra i{animation:ed-linha .45s cubic-bezier(.16,1,.3,1) both}
+.ed-trilho.entrou .ed-ponto{animation:ed-sobe .34s cubic-bezier(.16,1,.3,1) both}
 .ed-trilho.entrou .ed-ponto.ativo{animation-name:ed-sobe-ativo}
-.ed-trilho.entrou .ed-ponto:nth-of-type(1) .ed-barra i{animation-delay:.10s}
-.ed-trilho.entrou .ed-ponto:nth-of-type(2){animation-delay:.10s}
-.ed-trilho.entrou .ed-ponto:nth-of-type(2) .ed-barra i{animation-delay:.55s}
-.ed-trilho.entrou .ed-ponto:nth-of-type(3){animation-delay:.20s}
-.ed-trilho.entrou .ed-ponto:nth-of-type(3) .ed-barra i{animation-delay:1s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(1) .ed-barra i{animation-delay:.05s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(2){animation-delay:.06s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(2) .ed-barra i{animation-delay:.30s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(3){animation-delay:.12s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(3) .ed-barra i{animation-delay:.55s}
 @media(prefers-reduced-motion:reduce){
   .ed-trilho.entrou .ed-ponto,.ed-trilho.entrou .ed-barra i{animation:none}
   .ed-barra b{transition:none}
@@ -1864,11 +1864,18 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-dur{position:absolute;right:6px;bottom:6px;padding:2px 6px;border-radius:6px;
   background:rgba(0,0,0,.62);color:#fff;font-size:10.5px;font-weight:600;
   font-variant-numeric:tabular-nums;letter-spacing:.01em}
-.ed-peca-pe{display:flex;align-items:baseline;gap:7px;padding:9px 11px}
-.ed-peca-pe b{font-size:14px;font-weight:700;color:var(--accent);
-  font-variant-numeric:tabular-nums}
-.ed-peca-pe span{font-size:11px;color:var(--muted);overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap}
+/* AQUI HAVIA UM RODAPÉ POR PEÇA, com o índice de desempenho e o código do post. Saiu
+   por decisão do Gabriel em 19/08/2026: os dois já cumpriram o papel deles na régua, e
+   aqui o que se faz é olhar imagem. O índice continua acessível ao pousar o mouse, sem
+   ocupar espaço permanente. A peça agora é o vídeo e mais nada. */
+
+/* A CONTAGEM DE PEÇAS EM DESTAQUE, ao lado do nome da leva. Ela estava dentro de uma
+   frase comprida que explicava o índice de cada peça, e explicação de coisa que não
+   existe mais é peso morto. */
+.ed-conta{display:flex;align-items:baseline;gap:7px;margin-top:4px}
+.ed-conta b{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
+  line-height:1;font-variant-numeric:tabular-nums}
+.ed-conta span{font-size:14px;color:var(--muted)}
 
 @media(max-width:900px){
   .ed-tela{grid-template-columns:1fr}
@@ -1887,7 +1894,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    O cabeçalho SOBE em vez de sumir, e o rodapé desce. Elemento que desaparece de um
    quadro para o outro deixa a página dando um pulo; deslizando para fora, o olho
    acompanha para onde ele foi e sabe que ele volta pelo mesmo caminho. */
-.nav-wrap{transition:transform .42s cubic-bezier(.22,1,.36,1),opacity .3s}
+.nav-wrap{transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s}
 .ed-focado .nav-wrap{transform:translateY(-110%);opacity:0;pointer-events:none}
 .ed-focado .rodape-pagina{display:none}
 /* O corpo perde a margem de leitura: aqui não se lê, se olha material. */
@@ -1901,9 +1908,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 /* A ENTRADA: tudo sobe junto, e é isto que diz "começou". Sem ela a troca de tela é um
    pisca, e a oficina parece que já estava aberta o tempo todo. */
-@keyframes ed-entra{from{opacity:0;transform:translateY(42px)}
+@keyframes ed-entra{from{opacity:0;transform:translateY(30px)}
                     to{opacity:1;transform:none}}
-.ed-focado .ed-tela{animation:ed-entra .62s cubic-bezier(.22,1,.36,1) both}
+.ed-focado .ed-tela{animation:ed-entra .38s cubic-bezier(.16,1,.3,1) both}
 
 /* A SAÍDA FICA NO ALTO E À DIREITA, onde o botão de fechar mora em qualquer tela cheia.
    Com o cabeçalho fora, ela é o único caminho de volta desenhado. */
@@ -1930,20 +1937,20 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* AS PEÇAS SOBEM UMA ATRÁS DA OUTRA. O atraso é calculado pela posição na grade, com um
    teto: numa leva de quarenta e uma, atraso crescente até o fim faria a última entrar
    dois segundos depois da primeira, e aí não é animação, é espera. */
-@keyframes ed-peca-sobe{from{opacity:0;transform:translateY(18px)}
+@keyframes ed-peca-sobe{from{opacity:0;transform:translateY(12px)}
                         to{opacity:1;transform:none}}
-.ed-galeria.subindo .ed-peca{animation:ed-peca-sobe .44s cubic-bezier(.22,1,.36,1) both}
+.ed-galeria.subindo .ed-peca{animation:ed-peca-sobe .3s cubic-bezier(.16,1,.3,1) both}
 .ed-galeria.subindo .ed-peca:nth-child(1){animation-delay:.02s}
-.ed-galeria.subindo .ed-peca:nth-child(2){animation-delay:.05s}
-.ed-galeria.subindo .ed-peca:nth-child(3){animation-delay:.08s}
-.ed-galeria.subindo .ed-peca:nth-child(4){animation-delay:.11s}
-.ed-galeria.subindo .ed-peca:nth-child(5){animation-delay:.14s}
-.ed-galeria.subindo .ed-peca:nth-child(6){animation-delay:.17s}
-.ed-galeria.subindo .ed-peca:nth-child(7){animation-delay:.20s}
-.ed-galeria.subindo .ed-peca:nth-child(8){animation-delay:.23s}
-.ed-galeria.subindo .ed-peca:nth-child(9){animation-delay:.26s}
-.ed-galeria.subindo .ed-peca:nth-child(10){animation-delay:.29s}
-.ed-galeria.subindo .ed-peca:nth-child(n+11){animation-delay:.32s}
+.ed-galeria.subindo .ed-peca:nth-child(2){animation-delay:.04s}
+.ed-galeria.subindo .ed-peca:nth-child(3){animation-delay:.06s}
+.ed-galeria.subindo .ed-peca:nth-child(4){animation-delay:.08s}
+.ed-galeria.subindo .ed-peca:nth-child(5){animation-delay:.10s}
+.ed-galeria.subindo .ed-peca:nth-child(6){animation-delay:.12s}
+.ed-galeria.subindo .ed-peca:nth-child(7){animation-delay:.14s}
+.ed-galeria.subindo .ed-peca:nth-child(8){animation-delay:.16s}
+.ed-galeria.subindo .ed-peca:nth-child(9){animation-delay:.18s}
+.ed-galeria.subindo .ed-peca:nth-child(10){animation-delay:.20s}
+.ed-galeria.subindo .ed-peca:nth-child(n+11){animation-delay:.20s}
 
 /* O TRILHO GRUDA NO ALTO DA TELA, e não embaixo do cabeçalho que já não existe.
    E ganha a altura toda: sem cabeçalho sobram mais cem pixels de vidro. */
@@ -1956,6 +1963,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @media(max-width:900px){
   .ed-focado .ed-tela{grid-template-columns:1fr;padding-top:64px}
   .ed-sair{top:14px}
+}
+
+/* A TELA QUE SAI. Sem ela a troca é um corte seco: uma some e a outra aparece no mesmo
+   quadro, e por mais bonita que seja a entrada da seguinte, o olho perde o fio. */
+.ed-porteira,.ed-escolha,.ed-tela{transition:opacity .13s ease,transform .13s ease}
+.ed-porteira.saindo,.ed-escolha.saindo,.ed-tela.saindo{opacity:0;transform:translateY(-10px)}
+@media(prefers-reduced-motion:reduce){
+  .ed-porteira,.ed-escolha,.ed-tela{transition:none}
 }
 
 </style>
@@ -2794,9 +2809,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
       <!-- ---------------------------------------- PASSO 1 · AS PEÇAS DA LEVA -->
       <div class="ed-etapa" data-passo="1">
+        <!-- O TÍTULO É O NOME DA LEVA E A CONTA DE PEÇAS, e mais nada. Havia uma
+             linha comprida explicando o que era o número de cada peça; ela some junto
+             com o número, que saiu do rodapé das peças. A contagem ganha corpo: é o
+             dado que importa nesta tela. -->
         <div class="ed-cab">
           <h2 id="ed_p1_titulo">A leva</h2>
-          <p class="nota" id="ed_p1_sub"></p>
+          <div class="ed-conta"><b id="ed_p1_n">0</b><span id="ed_p1_qual">peças</span></div>
         </div>
 
         <!-- A PORTA DA PASTA. Ela só aparece quando é preciso: pedir permissão antes de
@@ -2849,11 +2868,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
         <div class="ed-galeria" id="ed_galeria"></div>
 
-        <div class="ed-pe" id="ed_pe1" hidden>
-          <span class="nota" id="ed_recado1"></span>
-          <button class="acao forte" id="ed_vai1" type="button" disabled>
-            Continuar para o template</button>
-        </div>
+        <!-- AQUI HAVIA UMA BARRA DE RODAPÉ com "41 peças prontas" e um botão de
+             continuar. Saiu por decisão do Gabriel em 19/08/2026, e a razão é boa: quem
+             avança é o trilho da esquerda. Clicar no passo 2 abre o passo 2, clicar no 1
+             volta para o 1, e ponto. Um botão fazendo o que o trilho já faz é um segundo
+             caminho para a mesma coisa, e dois caminhos para uma coisa só sempre acabam
+             discordando. Passo que exigir um aceite terá o botão dele, no lugar dele. -->
       </div>
 
       <!-- ---------------------------------------- PASSO 2 · O TEMPLATE -->
@@ -6065,12 +6085,29 @@ function focar(sim) {
   document.body.classList.toggle("ed-focado", !!sim);
 }
 
-function mostrarTela(qual) {
-  $("ed_portaria").hidden = qual !== "portaria";
-  $("ed_escolha").hidden = qual !== "escolha";
-  $("ed_oficina").hidden = qual !== "oficina";
+/* A TELA QUE SAI TAMBÉM SE MEXE, e é isso que faz a troca parecer fluida em vez de um
+   corte. Antes uma sumia e a outra aparecia no mesmo quadro: o olho perde o fio e a
+   impressão é de tranco, por mais bonita que seja a entrada da seguinte.
+
+   São 130 milissegundos de saída, curtos de propósito: o suficiente para o olho
+   acompanhar, pouco o bastante para não virar espera. */
+const TELAS = { portaria: "ed_portaria", escolha: "ed_escolha", oficina: "ed_oficina" };
+
+function trocarAgora(qual) {
+  for (const [nome, id] of Object.entries(TELAS)) {
+    const el = $(id);
+    el.hidden = nome !== qual;
+    el.classList.remove("saindo");
+  }
   focar(qual === "oficina");
   window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function mostrarTela(qual) {
+  const saindo = Object.values(TELAS).map(id => $(id)).find(el => !el.hidden);
+  if (!saindo || saindo.id === TELAS[qual]) return trocarAgora(qual);
+  saindo.classList.add("saindo");
+  setTimeout(() => trocarAgora(qual), 130);
 }
 
 $("ed_nova").onclick = () => {
@@ -6138,9 +6175,8 @@ async function entrarNaOficina(passo) {
   mostrarTela("oficina");
   $("ed_r1").textContent = `leva ${EDIT_LEVA.numero}`;
   $("ed_p1_titulo").textContent = `Leva ${EDIT_LEVA.numero}`;
-  $("ed_p1_sub").textContent = (EDIT_LEVA.contas || []).length
-    ? `${num(EDIT_LEVA.limpos || 0)} peças de @${EDIT_LEVA.contas.join(", @")}`
-    : "";
+  $("ed_p1_n").textContent = num(EDIT_LEVA.limpos || 0);
+  $("ed_p1_qual").textContent = (EDIT_LEVA.limpos === 1) ? "peça" : "peças";
 
   // as barras voltam a zero antes de subir, senão não há o que animar na segunda entrada
   document.querySelectorAll("#ed_trilho .ed-barra b").forEach(b => b.style.height = "0%");
@@ -6207,7 +6243,6 @@ async function mostrarPecas() {
   if (!EDIT_PASTA) {
     desenhaPorta(cracha);
     gal.innerHTML = "";
-    $("ed_pe1").hidden = true;
     return;
   }
   $("ed_porta").hidden = true;
@@ -6241,26 +6276,24 @@ function lerNome(nome) {
 }
 
 function desenhaPecas() {
-  $("ed_p1_sub").textContent = `${EDIT_PECAS.length} `
-    + (EDIT_PECAS.length === 1 ? "peça" : "peças")
-    + ((EDIT_LEVA.contas || []).length ? ` de @${EDIT_LEVA.contas.join(", @")}` : "")
-    + " · o número em cada uma é quantas vezes ela passou da mediana do próprio perfil";
+  $("ed_p1_n").textContent = num(EDIT_PECAS.length);
+  $("ed_p1_qual").textContent = EDIT_PECAS.length === 1 ? "peça" : "peças";
 
   // O VÍDEO CARREGA SÓ O CABEÇALHO, e o quadro mostrado é o do segundo e meio. Pedir os
   // quarenta e um arquivos inteiros de uma vez travaria a aba por vários segundos, e o
   // primeiro quadro de um reel costuma ser preto.
   $("ed_galeria").innerHTML = EDIT_PECAS.map((a, i) => {
     const n = lerNome(a.nome);
-    return `<div class="ed-peca" data-i="${i}">
+    // A PEÇA É O VÍDEO, e nada em volta. O rodapé trazia o índice de desempenho e o
+    // código do post, e os dois já cumpriram o papel deles lá atrás, na régua: aqui o
+    // que se faz é olhar imagem. O tempo fica, porque duração muda o que se decide.
+    return `<div class="ed-peca" data-i="${i}" title="${n.indice != null
+        ? n.indice.toFixed(2).replace(".", ",") + "x acima da mediana" : a.nome}">
       <div class="ed-quadro"><video preload="metadata" muted playsinline
         data-arquivo="${i}"></video>
         <span class="ed-play"><svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M8 5v14l11-7z"/></svg></span>
         <span class="ed-dur"></span></div>
-      <div class="ed-peca-pe">
-        <b>${n.indice != null ? n.indice.toFixed(2).replace(".", ",") + "x" : "—"}</b>
-        <span>${n.codigo || a.nome}</span>
-      </div>
     </div>`;
   }).join("");
 
@@ -6292,8 +6325,9 @@ function desenhaPecas() {
     v.addEventListener("loadedmetadata", () => {
       const s = Math.round(v.duration || 0);
       const alvo = v.parentNode.querySelector(".ed-dur");
-      if (alvo) alvo.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
-        + ` · ${v.videoWidth}x${v.videoHeight}`;
+      // SÓ O TEMPO. A resolução saiu: ela não muda decisão nenhuma aqui, e enchia o
+      // selo de número a ponto de ele competir com a imagem.
+      if (alvo) alvo.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
     });
     olho.observe(v);
   });
@@ -6307,11 +6341,6 @@ function desenhaPecas() {
   void palco.offsetWidth;                 // forca o navegador a aceitar o recomeco
   palco.classList.add("subindo");
 
-  $("ed_pe1").hidden = false;
-  $("ed_vai1").disabled = EDIT_PECAS.length === 0;
-  parado("ed_recado1", EDIT_PECAS.length
-    ? `${EDIT_PECAS.length} peças prontas para receber o template.`
-    : "essa pasta está vazia.");
 }
 
 /* Clicar na peça toca ali mesmo. Abrir num tocador à parte seria mais uma janela para
@@ -6372,7 +6401,6 @@ $("ed_liberar").onclick = async () => {
   await mostrarPecas();
 };
 
-$("ed_vai1").onclick = () => { irParaPasso(2); salvarRascunho(); };
 
 /* O MELHOR CARTÃO DE PERMISSÃO É O QUE NUNCA APARECE.
 
