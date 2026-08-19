@@ -86,12 +86,54 @@ def empurrar(recado: str) -> None:
 
 # --------------------------------------------------------------------- as cinco fases
 
+def por_conta(numero: int, tipo: str, conta: str, texto: str, **extra) -> None:
+    """Um passo POR CONTA, e o mesmo passo se atualiza enquanto aquela conta anda.
+
+    Sem isto, o avanco de uma conta com duzentos arquivos viraria duzentas linhas no
+    registro. Aqui a linha daquela conta e' uma so' e o numero dentro dela sobe.
+    """
+    d = ler(diario(numero), {"numero": numero, "passos": []})
+    linha = next((x for x in d["passos"]
+                  if x.get("tipo") == tipo and x.get("conta") == conta), None)
+    if linha:
+        linha.update({"quando": int(time.time()), "texto": texto, **extra})
+    else:
+        d["passos"].append({"quando": int(time.time()), "tipo": tipo, "conta": conta,
+                            "texto": texto, **extra})
+    escrever(diario(numero), d)
+
+
+# O AVANCO DE UMA CONTA NAO E' GRAVADO A CADA ARQUIVO.
+# Gravar significa empurrar para o acervo, e empurrar duzentas e cinquenta vezes numa
+# leva grande custaria mais tempo do que a propria baixa. A cada quinze segundos o numero
+# sobe na tela, que ja' e' mais rapido do que qualquer um consegue ler.
+INTERVALO = 15
+_ultimo: dict[str, float] = {}
+
+
+def andamento(numero: int, conta: str, feitos: int, total: int, fim: bool = False) -> None:
+    agora = time.time()
+    if not fim and agora - _ultimo.get(conta, 0) < INTERVALO:
+        return
+    _ultimo[conta] = agora
+    por_conta(numero, "baixa", conta,
+              f"@{conta}: {feitos} de {total} baixados."
+              + (" Conta concluída." if fim else ""),
+              feitos=feitos, total=total, concluida=fim)
+    empurrar(f"leva {numero}: baixa de @{conta}")
+
+
 def abrir(numero: int, execucao: str, pedido: str) -> None:
     contas = [] if not pedido or pedido.isdigit() else \
         [c.strip().lstrip("@") for c in pedido.split(",") if c.strip()]
-    de = ("de @" + ", @".join(contas)) if contas else f"os {pedido or 300} melhores"
     capa(numero, execucao=execucao, contas=contas, estado="em curso")
-    passo(numero, "pedido", f"Lote pedido: {de}.")
+    # OS NOMES INTEIROS, e nao "3 perfis". Se foram cinquenta, saem os cinquenta: quem
+    # abre o registro quer saber de quais contas aquela leva e' feita, e contagem nao
+    # responde isso.
+    passo(numero, "escolha",
+          ("Escolhidos: @" + ", @".join(contas)) if contas
+          else f"Escolhidos: os {pedido or 300} melhores de todos os perfis.",
+          contas=contas)
 
 
 def separar(numero: int) -> None:
@@ -102,22 +144,40 @@ def separar(numero: int) -> None:
 
 
 def baixado(numero: int) -> None:
+    """Fecha a fase de baixa: so' atualiza a capa, porque as linhas ja' foram escritas
+    uma por conta enquanto o trabalho andava."""
     reg = ler(LOTE, {}).get("itens", [])
     mb = round(sum(i.get("bytes", 0) for i in reg) / 1048576)
     capa(numero, baixados=len(reg), mb=mb)
-    passo(numero, "baixa", f"{len(reg)} arquivos baixados, {mb} MB.", arquivos=len(reg))
 
 
 def limpo(numero: int) -> None:
-    d = ler(LIMPEZA, {})
-    ok = [x for x in d.get("laudos", []) if x.get("limpo")]
-    mau = [x for x in d.get("laudos", []) if not x.get("limpo")]
+    """Uma linha de tratamento POR CONTA, e nao uma linha para a leva inteira.
+
+    De quem e' cada arquivo sai do registro da baixa, que guarda conta e nome do arquivo.
+    Sem esse cruzamento so' restaria adivinhar pelo nome, e nome de arquivo e' convencao
+    que muda.
+    """
+    laudos = ler(LIMPEZA, {}).get("laudos", [])
+    dono = {i.get("arquivo_local"): i["conta"] for i in ler(LOTE, {}).get("itens", [])}
+    ok = [x for x in laudos if x.get("limpo")]
+    mau = [x for x in laudos if not x.get("limpo")]
     capa(numero, limpos=len(ok), reprovados=len(mau))
-    passo(numero, "limpeza" if not mau else "falha",
-          f"Limpeza: {len(ok)} aprovados, {len(mau)} reprovados."
-          + ("" if not mau else " Reprovado não entra no lote: "
-             + ", ".join(x["arquivo"] for x in mau[:4])),
-          aprovados=len(ok), reprovados=len(mau))
+
+    contas = {}
+    for x in laudos:
+        c = dono.get(x["arquivo"], "sem conta")
+        d = contas.setdefault(c, {"ok": 0, "mau": []})
+        if x.get("limpo"):
+            d["ok"] += 1
+        else:
+            d["mau"].append(x["arquivo"])
+
+    for conta, d in sorted(contas.items()):
+        por_conta(numero, "falha" if d["mau"] else "limpeza", conta,
+                  f"@{conta}: {d['ok']} tratados"
+                  + (f", {len(d['mau'])} reprovados e fora da leva." if d["mau"] else "."),
+                  aprovados=d["ok"], reprovados=len(d["mau"]))
 
 
 def fechar(numero: int, entregue: bool) -> None:
@@ -143,8 +203,8 @@ def fechar(numero: int, entregue: bool) -> None:
     ok = len([x for x in d.get("laudos", []) if x.get("limpo")])
     capa(numero, estado="pronto" if entregue and ok else "falhou", fim=int(time.time()))
     passo(numero, "fim" if entregue and ok else "falha",
-          f"Lote fechado: {ok} peças tratadas e entregues, {marcados} saíram da fileira."
-          if entregue and ok else "Lote fechado sem entrega.")
+          f"Leva entregue: {ok} peças tratadas, {marcados} saíram da fileira."
+          if entregue and ok else "Leva fechada sem entrega.")
 
 
 if __name__ == "__main__":
@@ -165,4 +225,4 @@ if __name__ == "__main__":
     # a selecao e' refeita depois da marca, senao a tela mostraria o saldo velho
     if fase == "fechar":
         subprocess.run([sys.executable, "selecionar.py"], capture_output=True)
-    empurrar(f"lote {numero}: {fase}")
+    empurrar(f"leva {numero}: {fase}")
