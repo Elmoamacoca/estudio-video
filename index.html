@@ -1631,6 +1631,24 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 @media(max-width:700px){.cfg-duas{grid-template-columns:1fr}}
 
+/* O CAMINHO DA PASTA, NA ÚLTIMA LINHA DO REGISTRO.
+
+   Ele é um link de verdade, mas não para `file://`: o navegador proíbe uma página `https`
+   de navegar para um arquivo local, e o clique não faria nada, sem nem erro aparecer.
+   O endereço é `estudio://leva/26`, próprio deste projeto e registrado no Windows pelo
+   `abrir.py`, que traduz o número em pasta e chama o Explorador.
+
+   O botão de copiar existe porque esse endereço só está registrado nesta máquina: aberta
+   de outro computador, a página continua entregando o caminho para levar na mão. */
+.liv-pasta{color:var(--accent);text-decoration:none;border-bottom:1px dashed
+           color-mix(in srgb,var(--accent) 45%,transparent);word-break:break-all}
+.liv-pasta:hover{border-bottom-style:solid}
+.liv-copiar{margin-left:8px;padding:2px 8px;font:inherit;font-size:11px;font-weight:600;
+            color:var(--muted);background:transparent;border:1px solid var(--rule-solid);
+            border-radius:99px;cursor:pointer;white-space:nowrap;vertical-align:1px;
+            transition:color .14s,border-color .14s}
+.liv-copiar:hover{color:var(--ink);border-color:var(--ink)}
+
 </style>
 </head>
 <body>
@@ -4762,7 +4780,7 @@ function desenhaRegistroDeLotes(indice) {
              stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
       </button>
       <div class="liv-corpo"><div class="liv-caixa">${
-        passosEmHtml(PASSOS.get(l.numero))}</div></div>
+        passosEmHtml(PASSOS.get(l.numero), l.numero)}</div></div>
     </div>`;
   }).join("");
 
@@ -4772,24 +4790,74 @@ function desenhaRegistroDeLotes(indice) {
   }
 }
 
-function passosEmHtml(passos) {
+/* O CAMINHO DA PASTA VIRA UM LINK QUE ABRE O EXPLORADOR, e ele não é `file://`.
+
+   O navegador PROÍBE que uma página servida por `https` navegue para um endereço
+   `file://`. A proibição é de segurança e não tem contorno: o link fica escrito com o
+   caminho certo, o clique não faz nada, e nem erro aparece. Quem testa só com o olho
+   jura que funcionou.
+
+   O que funciona é um endereço próprio, `estudio://leva/26`, registrado no Windows por
+   este projeto. O navegador não sabe o que é, entrega ao sistema, e o sistema chama o
+   `abrir.py`, que monta o caminho deste lado a partir do número. Nada de caminho
+   viajando dentro do endereço, porque qualquer página aberta pode disparar um desses.
+
+   E FICA O BOTÃO DE COPIAR AO LADO, porque o endereço só existe nesta máquina: aberta
+   de outro computador ou do celular, a página continua entregando o caminho. */
+function paraOndeFoi(p, numero) {
+  const caminho = (p.texto.match(/([A-Za-z]:\\[^\s.]*(?:\\[^\s.]*)*)/) || [])[1];
+  if (!caminho || !numero) return `<span>${p.texto}</span>`;
+  const antes = p.texto.slice(0, p.texto.indexOf(caminho));
+  return `<span>${antes}</span><a class="liv-pasta" href="estudio://leva/${numero}"
+      title="Abrir a pasta no Explorador">${caminho}</a>`
+    + `<button type="button" class="liv-copiar" data-copiar="${caminho}"
+        title="Copiar o caminho">copiar</button>`;
+}
+
+function passosEmHtml(passos, numero) {
   if (!passos) return '<div class="liv-ev"><div class="oque">carregando</div></div>';
   if (!passos.length) return '<div class="liv-ev"><div class="oque">sem passos gravados</div></div>';
+  // O MAIS RECENTE EM CIMA, a pedido do Gabriel em 19/08. A leva termina no passo que
+  // interessa, o que diz onde o material parou, e ele ficava no fim de uma lista de dez
+  // linhas: para ver o desfecho era preciso rolar até embaixo. Invertido, o cartão abre
+  // já mostrando em que pé a leva está.
+  //
+  // A CÓPIA É DE PROPÓSITO: `reverse` vira a lista no lugar, e a lista aqui é a mesma
+  // que fica guardada em `PASSOS`. Sem a cópia, cada redesenho viraria a ordem de novo,
+  // e o registro ficaria piscando entre as duas.
+  //
   // O PASSO DE UMA CONTA LEVA O NOME DELA NO RÓTULO. Numa leva de cinquenta perfis são
   // cinquenta linhas de baixa e cinquenta de tratamento, e sem o arroba no rótulo elas
   // seriam cem linhas iguais.
-  return passos.map(p => `<div class="liv-ev ${p.tipo === "falha" ? "falha" : ""}">
+  return [...passos].reverse().map(p =>
+    `<div class="liv-ev ${p.tipo === "falha" ? "falha" : ""}">
     <i></i><div class="oque"><b>${ETAPAS[p.tipo] || p.tipo}${
       p.conta ? ` · @${p.conta}` : ""}</b>
-      <div class="dados"><span>${p.texto}</span></div></div>
+      <div class="dados">${p.tipo === "guardado" ? paraOndeFoi(p, numero)
+                                                 : `<span>${p.texto}</span>`}</div></div>
     <span class="data">${quando(p.quando)}</span></div>`).join("");
 }
+
+/* Copiar o caminho, para quem estiver noutra máquina. O aviso vive dois segundos no
+   próprio botão: um recado que aparece longe de onde se clicou não é lido. */
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-copiar]");
+  if (!b) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  try {
+    await navigator.clipboard.writeText(b.dataset.copiar);
+    const antes = b.textContent;
+    b.textContent = "copiado";
+    setTimeout(() => { b.textContent = antes; }, 2000);
+  } catch (e) { b.textContent = "não deu"; }
+});
 
 async function buscarPassos(numero) {
   const d = await ler(`dados/lotes/${numero}.json`);
   PASSOS.set(numero, (d && d.passos) || []);
   const cartao = document.querySelector(`[data-lote="${numero}"] .liv-caixa`);
-  if (cartao) cartao.innerHTML = passosEmHtml(PASSOS.get(numero));
+  if (cartao) cartao.innerHTML = passosEmHtml(PASSOS.get(numero), numero);
 }
 
 document.addEventListener("click", ev => {
