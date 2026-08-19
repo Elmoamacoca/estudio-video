@@ -5,8 +5,8 @@
    "inicio": 1787177531,
    "estado": "em curso",
    "baixados": 112,
-   "limpos": 0,
-   "reprovados": 0,
+   "limpos": 107,
+   "reprovados": 5,
    "mb": 292,
    "execucao": "32307685934",
    "contas": [
@@ -29,5 +29,5 @@
    "guardado": true
   }
  ],
- "atualizado": 1787177704
+ "atualizado": 1787177741
 }

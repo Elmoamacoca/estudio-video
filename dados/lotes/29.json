@@ -42,6 +42,14 @@
    "quando": 1787177733,
    "tipo": "tratando",
    "texto": "81 de 112 tratados."
+  },
+  {
+   "quando": 1787177741,
+   "tipo": "falha",
+   "conta": "thenews.business",
+   "texto": "107 tratados, 5 reprovados e fora da leva.",
+   "aprovados": 107,
+   "reprovados": 5
   }
  ]
 }
