@@ -4,10 +4,10 @@
    "numero": 29,
    "inicio": 1787177531,
    "estado": "em curso",
-   "baixados": 0,
+   "baixados": 112,
    "limpos": 0,
    "reprovados": 0,
-   "mb": 0,
+   "mb": 292,
    "execucao": "32307685934",
    "contas": [
     "thenews.business"
@@ -29,5 +29,5 @@
    "guardado": true
   }
  ],
- "atualizado": 1787177531
+ "atualizado": 1787177704
 }
