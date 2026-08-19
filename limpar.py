@@ -27,6 +27,7 @@ perda de qualidade e nenhuma mudanca na imagem.
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -161,6 +162,11 @@ def sem_udta(arq: Path) -> str:
 def limpar(entrada: Path, saida: Path) -> dict:
     """Limpa um arquivo e devolve o laudo. O laudo diz se ele passa ou nao."""
     t0 = time.time()
+    # A FALTA DO FFMPEG E' RECADO, E NAO PILHA DE ERRO. Ela ja' derrubou um lote inteiro
+    # com um rastro de vinte linhas de Python que nao diz o que fazer.
+    if not shutil.which("ffmpeg"):
+        return {"arquivo": entrada.name, "limpo": False,
+                "erro": "o ffmpeg nao esta instalado nesta maquina"}
     saida.parent.mkdir(parents=True, exist_ok=True)
     r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(entrada)]
                        + LIMPEZA + [str(saida)], capture_output=True, text=True)
