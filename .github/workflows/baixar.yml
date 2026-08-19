@@ -3,6 +3,10 @@ name: baixar
 # Fase separada da mineracao de proposito: baixar nao tem limite de ritmo (medido:
 # 11 MB em 1 segundo, sem pausa, sem corte), entao ela nao precisa do paralelismo
 # por endereco que a leitura exige. Um trabalho so da conta.
+#
+# A ORDEM E' BAIXAR, TRATAR, ENTREGAR. O que sai daqui ja' saiu limpo: o material cru
+# fica na maquina e morre com ela. Antes o tratamento era uma aba separada, para ser
+# feito depois, e isso deixava passar a chance de o arquivo ser publicado sem tratamento.
 
 on:
   workflow_dispatch:
@@ -19,9 +23,9 @@ on:
         # campo, e so' o que esta' na lista dela atravessa: medido em 18/08/2026, com
         # uma sonda que imprimiu o pedido deste lado, oito nomes diferentes para "de
         # quais perfis" chegaram todos vazios, e so' este chegou inteiro. A ponte nao
-        # pode ser mexida da bancada, entao o canal e' este. Quem separa os dois
-        # sentidos e' a funcao `pedido` do baixar.py.
-        description: "de quais perfis (nomes separados por virgula) ou um teto de arquivos"
+        # pode ser mexida da bancada, entao o canal e' este. Quem separa os sentidos e'
+        # a funcao `pedido` do baixar.py, e o prefixo `etiquetar:` desvia para a marcacao.
+        description: "de quais perfis (nomes separados por virgula), um teto de arquivos, ou etiquetar:conta|mercado|a;b"
         default: "150"
 
 permissions:
@@ -30,36 +34,30 @@ permissions:
 jobs:
   baixar:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
+    env:
+      PEDIDO: ${{ inputs.quantos }}
+      LOTE: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v5
 
       # O QUE CHEGOU NO PEDIDO, escrito antes de qualquer trabalho.
       # A tela nao fala com o GitHub: ela fala com a ponte, e a ponte copia campo a
       # campo. Campo que ela nao conhece some no caminho sem avisar ninguem, e ja'
-      # houve um campo na tela que nunca chegou aqui por causa disso. Este passo existe
-      # para essa perda aparecer no registro em vez de virar misterio.
+      # houve um campo na tela que nunca chegou aqui por causa disso.
       #
       # E E' TAMBEM A SONDA: pedindo `quantos` = sonda, este passo e' o unico que roda.
-      # Serve para descobrir o que a ponte deixa passar sem gastar um lote inteiro, e
-      # foi assim que se descobriu que so' `quantos` atravessa.
       - name: O que chegou no pedido
-        env:
-          QUANTOS: ${{ inputs.quantos }}
-          FORMATOS: ${{ inputs.formatos }}
-          CORTE: ${{ inputs.corte }}
         run: |
-          echo "quantos  = [$QUANTOS]"
-          echo "formatos = [$FORMATOS]"
-          echo "corte    = [$CORTE]"
+          echo "quantos  = [$PEDIDO]"
+          echo "formatos = [${{ inputs.formatos }}]"
+          echo "corte    = [${{ inputs.corte }}]"
+          ffmpeg -version | head -1 || echo "SEM FFMPEG"
 
       # ETIQUETAR NAO E' BAIXAR, e mesmo assim entra por aqui: o caminho da tela ate' a
-      # esteira e' um so'. O comeco do texto do pedido diz qual dos dois e', e cada
-      # passo abaixo so' roda no seu.
+      # esteira e' um so'. O comeco do texto do pedido diz qual dos dois e'.
       - name: Marcar o perfil
         if: startsWith(inputs.quantos, 'etiquetar:')
-        env:
-          PEDIDO: ${{ inputs.quantos }}
         run: |
           python etiquetar.py "$PEDIDO"
           python selecionar.py
@@ -68,103 +66,55 @@ jobs:
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         run: python conferir.py
 
+      - name: Abrir o registro do lote
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+        run: python registro.py abrir "$LOTE" "${{ github.run_id }}" "$PEDIDO"
+
       - name: Aplicar a regua escolhida na tela
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         # SEM ARGUMENTOS, de proposito. Passar formato e corte por aqui refazia a
         # selecao com uma regua diferente da que foi escolhida ao iniciar: o lote saia
         # com outro criterio e ninguem via onde tinha mudado. A regua mora no acervo,
         # gravada pela tela, e e' de la' que este passo le'.
-        run: python selecionar.py
-
-      - name: Renovar os links vencidos
-        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
-        # o link do arquivo dura poucas horas. Se a mineracao foi ontem, ele venceu,
-        # e o unico jeito de ter link novo e' reler o perfil.
         run: |
-          python - <<'PY'
-          import json, pathlib, time
-          p = pathlib.Path("dados/selecao.json")
-          sel = json.loads(p.read_text(encoding="utf-8"))
-          agora = int(time.time())
-          antigos = [i for i in sel.get("itens", []) if i.get("arquivo")]
-          print(f"{len(antigos)} itens com link. Se o lote falhar em massa, o link venceu:")
-          print("nesse caso rode a esteira de novo antes de baixar.")
-          PY
+          python selecionar.py
+          python registro.py separar "$LOTE"
 
-      - name: Baixar
+      - name: Baixar o material cru
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
-        # PELO AMBIENTE, e nao coladinho na linha de comando: o pedido vem de fora, e
-        # texto de fora colado dentro de um shell e' texto que pode virar comando.
-        env:
-          PEDIDO: ${{ inputs.quantos }}
-        run: python baixar.py "$PEDIDO"
+        run: |
+          python baixar.py "$PEDIDO"
+          python registro.py baixado "$LOTE"
 
-      # A CONTA DO QUE FALTA E' REFEITA DEPOIS DE BAIXAR, e nao so' antes.
-      # O passo la' de cima roda com a lista de baixados do lote ANTERIOR: sem este
-      # aqui, o perfil de onde acabou de sair um lote continuava na fileira da tela com
-      # o mesmo numero, e o Gabriel so' veria a mudanca na proxima rodada da esteira.
-      - name: Refazer a conta do que falta
-        if: always() && inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
-        run: python selecionar.py
+      # A LIMPEZA E' PASSO OBRIGATORIO, E NAO ETAPA SEGUINTE.
+      # Validado em 18/08/2026 nos oito reels do lote 2: o comando conhecido nao limpa,
+      # assina, e sao tres camadas diferentes. O que reprova aqui e' apagado e nao entra
+      # no lote; o laudo de cada arquivo fica gravado e aparece no registro da tela.
+      - name: Tratar
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+        run: |
+          python limpar.py brutos tratados
+          python registro.py limpo "$LOTE"
 
-      - name: Entregar o lote
+      - name: Entregar o lote tratado
+        id: entrega
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         uses: actions/upload-artifact@v4
         with:
           name: lote-${{ github.run_number }}
-          path: brutos/
+          path: tratados/
           retention-days: 14
           if-no-files-found: error
           compression-level: 0
 
-      - name: Anotar o lote na tela
+      - name: Fechar o registro do lote
         if: always() && inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         run: |
-          python - <<'PY'
-          import json, pathlib, time
-          reg = pathlib.Path("brutos/_lote.json")
-          est = json.loads(pathlib.Path("dados/estado.json").read_text(encoding="utf-8"))
-          # o criterio do lote e' o que esta' gravado na regua, e nao um texto montado
-          # com os argumentos: os dois divergiam, e quem lia a tela via o errado.
-          sel = json.loads(pathlib.Path("dados/selecao.json").read_text(encoding="utf-8"))
-          c = sel.get("criterio") or {}
-          fmt = ", ".join(c.get("formatos") or []) or "todos os formatos"
-          if c.get("por_formato"):
-              cortes = c.get("cortes") or {}
-              # so' repete o nome do formato quando ha' mais de um: com um so',
-              # "reels acima de reels 1.5x" era o nome dito duas vezes
-              pedidos = [f for f in (c.get("formatos") or []) if f in cortes]
-              quanto = (f"{cortes[pedidos[0]]}x" if len(pedidos) == 1
-                        else ", ".join(f"{f} {cortes[f]}x" for f in pedidos))
-          else:
-              quanto = f"{c.get('corte')}x"
-          criterio = f"{fmt} acima de {quanto}"
-          # DE QUEM VEIO O LOTE, quando ele foi pedido por perfil. Sem isto, dois lotes
-          # de perfis diferentes ficavam com a mesma linha na tela.
-          pedido = """${{ inputs.quantos }}""".strip()
-          if pedido and not pedido.isdigit():
-              quem = [c.strip().lstrip("@") for c in pedido.split(",") if c.strip()]
-              criterio += " · de @" + ", @".join(quem)
-          itens = json.loads(reg.read_text(encoding="utf-8")).get("itens", []) if reg.exists() else []
-          lotes = est.get("lotes", [])
-          lotes.insert(0, {
-              "numero": ${{ github.run_number }},
-              "arquivos": len(itens),
-              "mb": round(sum(i.get("bytes", 0) for i in itens) / 1048576),
-              "criterio": criterio,
-              "quando": int(time.time()),
-              "execucao": "${{ github.run_id }}",
-          })
-          est["lotes"] = lotes[:12]
-          est["hoje"] = len(itens)
-          pathlib.Path("dados/estado.json").write_text(
-              json.dumps(est, ensure_ascii=False, indent=1), encoding="utf-8")
-          PY
+          python registro.py fechar "$LOTE" \
+            "${{ steps.entrega.outcome == 'success' && 'sim' || 'nao' }}"
 
-      # A GRAVACAO E' UM PASSO SO', PARA OS DOIS CAMINHOS.
-      # Ela morava dentro do passo que anota o lote, e esse passo nao roda quando o
-      # pedido e' de etiquetar: a marcacao era escrita no disco da maquina e morria com
-      # ela, sem nunca chegar ao acervo nem, portanto, a tela.
+      # A GRAVACAO FINAL E' REDE DE SEGURANCA. O `registro.py` ja' empurra a cada fase;
+      # este passo pega o que o caminho de etiquetar escreveu e qualquer sobra.
       - name: Gravar no acervo
         if: always() && inputs.quantos != 'sonda'
         run: |
