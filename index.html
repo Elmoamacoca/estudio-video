@@ -2313,22 +2313,37 @@ document.addEventListener("click", ev => {
 irPara((location.hash || "#minerar").slice(1), false);
 
 /* ---------------------------------------------------------------- conversa */
+/* A LEITURA CORRE OS DOIS CAMINHOS AO MESMO TEMPO, e a ponte tem preferência por dois
+   segundos e meio.
+
+   POR QUE ISSO MUDOU. A ponte era o caminho único, porque o endereço cru do GitHub tem
+   cache de borda e já fez a tela mostrar a rodada anterior. Só que a ponte é lenta com
+   arquivo grande: medido em 19/08/2026, `selecao.json`, que tem 638 KB, leva 15,8
+   segundos por ela e 1,0 segundo pelo cru. Como a tela lê os seis arquivos juntos e
+   espera todos, cada volta custava dezesseis segundos, e a primeira pintura da página
+   demorava vinte e seis. Era isso que fazia tudo parecer travado.
+
+   Agora os dois pedidos saem juntos. Se a ponte responder rápido, vale ela, e a leitura
+   continua sendo a do commit do momento. Se ela demorar, vale quem chegar primeiro. */
+const PACIENCIA = 2500;
+
 async function ler(caminho) {
-  // PELA PONTE, e não pelo endereço cru do GitHub. O cru tem cache de borda de alguns
-  // minutos: a tela lia a rodada anterior e mostrava zero em coluna que já tinha valor
-  // gravado. A ponte responde o commit do momento.
   // O CAMINHO DE DENTRO SOBREVIVE. Antes ficava só o nome do arquivo, e pedir
   // `dados/atividade/vinci.society.json` virava `dados/vinci.society.json`, que não
   // existe. O livro de atividade mora em pasta própria e precisa da pasta.
   const dentro = caminho.replace(/^dados\//, "");
-  try {
-    const r = await fetch(`${PONTE}/dados/${dentro}?t=${Date.now()}`, { cache: "no-store" });
-    if (r.ok) return await r.json();
-  } catch (e) { /* cai para o endereço cru */ }
-  try {
-    const r = await fetch(`${CRU}/${caminho}?t=${Date.now()}`, { cache: "no-store" });
-    return r.ok ? await r.json() : null;
-  } catch { return null; }
+  const agora = Date.now();
+  const pegar = end => fetch(end, { cache: "no-store" })
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("sem resposta")));
+
+  const daPonte = pegar(`${PONTE}/dados/${dentro}?t=${agora}`).catch(() => null);
+  const doCru = pegar(`${CRU}/${caminho}?t=${agora}`).catch(() => null);
+  const tarde = new Promise(r => setTimeout(() => r("tarde"), PACIENCIA));
+
+  const primeiro = await Promise.race([daPonte, tarde]);
+  if (primeiro && primeiro !== "tarde") return primeiro;
+  // a ponte demorou ou falhou: fica com o que houver, de qualquer um dos dois
+  return (await doCru) ?? (await daPonte) ?? null;
 }
 
 async function mandar(rota, corpo) {
@@ -3858,18 +3873,51 @@ let LOTES = [];
 const LOTES_ABERTOS = new Set();
 const PASSOS = new Map();
 
+/* O CARTÃO NASCE NO CLIQUE, e não quando a esteira responde.
+   Entre apertar o botão e a esteira gravar o primeiro passo passam de quarenta segundos
+   a um minuto e meio: máquina para criar, programas para conferir, e só então a primeira
+   escrita. Nesse buraco a tela não mostrava absolutamente nada, e a leitura óbvia é que
+   o clique não funcionou. É o mesmo defeito que a aba de Mineração já teve, e a solução
+   é a mesma de lá: pediu, tem cartão. O cartão local vive até o acervo trazer uma leva
+   aberta depois do clique, e aí some, porque a de verdade tomou o lugar dele. */
+let LEVA_PEDIDA = null;
+let ULTIMO_INDICE = null;
+
+/* E O RELÓGIO ACELERA ENQUANTO HÁ LEVA ANDANDO. De vinte e cinco em vinte e cinco
+   segundos é ritmo de tela parada; com trabalho em curso, seis segundos. */
+let relogioRapido = null;
+
+function acelerar(minutos = 6) {
+  if (relogioRapido) clearInterval(relogioRapido);
+  const ate = Date.now() + minutos * 60000;
+  relogioRapido = setInterval(() => {
+    if (Date.now() > ate) { clearInterval(relogioRapido); relogioRapido = null; return; }
+    atualizar();
+  }, 6000);
+}
+
 const ETAPAS = {
   escolha: "escolha", pedido: "pedido", selecao: "régua", baixa: "baixa",
   limpeza: "tratamento", fim: "entregue", falha: "falha", guardado: "guardado",
 };
 
 function desenhaRegistroDeLotes(indice) {
-  LOTES = (indice && indice.lotes) || [];
+  ULTIMO_INDICE = indice || ULTIMO_INDICE;
+  const doAcervo = (indice && indice.lotes) || [];
+  // a leva de verdade nasceu: o cartão local já não tem função
+  if (LEVA_PEDIDA && doAcervo.some(l => (l.inicio || 0) >= LEVA_PEDIDA.quando - 5))
+    LEVA_PEDIDA = null;
+  LOTES = LEVA_PEDIDA
+    ? [{ numero: null, estado: "pedida", contas: LEVA_PEDIDA.contas, baixados: 0,
+         limpos: 0, reprovados: 0, mb: 0, inicio: LEVA_PEDIDA.quando }, ...doAcervo]
+    : doAcervo;
   const alvo = $("lot_lista");
   $("lot_vazio").hidden = LOTES.length > 0;
 
   const atual = LOTES[0];
-  const emCurso = atual && atual.estado === "em curso";
+  const emCurso = atual && (atual.estado === "em curso" || atual.estado === "pedida");
+  // com trabalho andando, a tela relê de seis em seis segundos
+  if (emCurso && !relogioRapido) acelerar();
   $("lot_vivo").innerHTML = `<span class="kon-vivo${emCurso ? " ativa" : ""}"><i></i>${
     emCurso ? "trabalhando" : "parado"}</span>`;
 
@@ -3889,16 +3937,32 @@ function desenhaRegistroDeLotes(indice) {
   const de = (atual.contas || []).length
     ? "de @" + atual.contas.join(", @")
     : "dos melhores de todos os perfis";
-  $("lot_titulo").textContent = `Leva ${atual.numero} · ${
-    atual.estado === "em curso" ? "em curso" :
-    atual.estado === "pronto" ? "pronto" : "falhou"}`;
-  $("lot_resumo").textContent = atual.estado === "em curso"
-    ? `Trabalhando ${de}. ${num(atual.baixados || 0)} baixados, ${
-        num(atual.limpos || 0)} tratados até agora.`
-    : `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}.`
-      + (atual.reprovados ? ` ${num(atual.reprovados)} reprovados na limpeza.` : "");
+  $("lot_titulo").textContent = atual.estado === "pedida"
+    ? "Leva pedida · acordando a esteira"
+    : `Leva ${atual.numero} · ${
+        atual.estado === "em curso" ? "em curso" :
+        atual.estado === "pronto" ? "pronto" : "falhou"}`;
+  $("lot_resumo").textContent = atual.estado === "pedida"
+    ? `Pedida ${de}. A máquina leva perto de um minuto para acordar, e a partir daí `
+      + "cada passo aparece aqui."
+    : atual.estado === "em curso"
+      ? `Trabalhando ${de}. ${num(atual.baixados || 0)} baixados, ${
+          num(atual.limpos || 0)} tratados até agora.`
+      : `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}.`
+        + (atual.reprovados ? ` ${num(atual.reprovados)} reprovados na limpeza.` : "");
 
   const html = LOTES.map(l => {
+    // A LEVA PEDIDA AINDA NÃO TEM NÚMERO NEM PASSOS: ela é um cartão que não abre, e
+    // dizer isso é melhor do que abrir e mostrar vazio.
+    if (l.estado === "pedida") {
+      return `<div class="liv-cartao"><div class="liv-cabeca" style="cursor:default">
+        <span class="liv-ponto"></span>
+        <span class="liv-id"><span class="liv-nome"><b>Leva a caminho</b>
+          <span class="liv-etq">pedida</span></span>
+          <span class="liv-sub">${(l.contas || []).length
+            ? "@" + l.contas.join(", @") : "todos os perfis"} · ${quando(l.inicio)}</span>
+        </span></div></div>`;
+    }
     const aberto = LOTES_ABERTOS.has(l.numero);
     const grave = l.estado === "falhou" ? "falha" : l.reprovados ? "aviso" : "";
     const quem = (l.contas || []).length ? "@" + l.contas.join(", @") : "todos os perfis";
@@ -4041,9 +4105,13 @@ document.addEventListener("click", async ev => {
     // formato e corte não vão daqui: vêm da régua gravada no acervo, a mesma escolhida
     // ao iniciar. Mandar outra por aqui criaria duas verdades.
     await mandar("/baixar", { quantos: contas.join(",") });
-    parado("recado_lote", "leva em preparo. Ela leva alguns minutos e aparece "
-      + "aqui embaixo ao terminar. O que vier some da fileira.");
+    parado("recado_lote", "leva pedida. O registro aqui embaixo conta cada passo, "
+      + "e o que vier some da fileira.");
+    // O CARTÃO APARECE AGORA, com o que a própria tela já sabe.
+    LEVA_PEDIDA = { quando: Math.floor(Date.now() / 1000), contas };
     ESCOLHIDOS.clear();
+    desenhaRegistroDeLotes(ULTIMO_INDICE);
+    acelerar();
   } catch (e) { parado("recado_lote", e.message); }
   setTimeout(() => { b.disabled = false; atualizar(); }, 8000);
 });
