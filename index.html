@@ -1862,6 +1862,81 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .ed-ponto-txt{padding-bottom:16px}
 }
 
+/* ================================================ O MODO FOCADO DA OFICINA
+
+   ESCOLHIDA A LEVA, O SISTEMA SAI DE CENA. Pedido do Gabriel em 19/08/2026: editar
+   quarenta e uma peças é trabalho de tela cheia, e a barra com Mineração, Baixar e
+   Edição não serve para nada enquanto ele está dentro de uma leva. Sai a barra, sai o
+   rodapé, e a oficina ocupa o vidro inteiro.
+
+   O cabeçalho SOBE em vez de sumir, e o rodapé desce. Elemento que desaparece de um
+   quadro para o outro deixa a página dando um pulo; deslizando para fora, o olho
+   acompanha para onde ele foi e sabe que ele volta pelo mesmo caminho. */
+.nav-wrap{transition:transform .42s cubic-bezier(.22,1,.36,1),opacity .3s}
+.ed-focado .nav-wrap{transform:translateY(-110%);opacity:0;pointer-events:none}
+.ed-focado .rodape-pagina{display:none}
+/* O corpo perde a margem de leitura: aqui não se lê, se olha material. */
+.ed-focado .corpo{max-width:none;padding:0}
+.ed-focado{overflow-x:hidden}
+
+/* A oficina toma a altura toda e traz de volta o respiro pelas laterais, agora dela e
+   não da página. */
+.ed-focado .ed-tela{min-height:100vh;padding:26px clamp(20px,3vw,44px) 60px;
+  grid-template-columns:250px 1fr;gap:40px;position:relative}
+
+/* A ENTRADA: tudo sobe junto, e é isto que diz "começou". Sem ela a troca de tela é um
+   pisca, e a oficina parece que já estava aberta o tempo todo. */
+@keyframes ed-entra{from{opacity:0;transform:translateY(26px)}
+                    to{opacity:1;transform:none}}
+.ed-focado .ed-tela{animation:ed-entra .5s cubic-bezier(.22,1,.36,1) both}
+
+/* A SAÍDA FICA NO ALTO E À DIREITA, onde o botão de fechar mora em qualquer tela cheia.
+   Com o cabeçalho fora, ela é o único caminho de volta desenhado. */
+.ed-sair{position:absolute;top:22px;right:clamp(20px,3vw,44px);z-index:5;
+  display:inline-flex;align-items:center;gap:7px;padding:8px 14px 8px 11px;
+  border-radius:99px;border:1px solid var(--rule-solid);background:var(--branco);
+  color:var(--muted);cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;
+  transition:color .14s,border-color .14s}
+.ed-sair:hover{color:var(--ink);border-color:var(--ink)}
+.ed-sair svg{width:14px;height:14px}
+.ed-tela:not(.x) .ed-sair{opacity:.75}
+.ed-sair:hover{opacity:1}
+
+/* A GALERIA CENTRALIZADA, e não colada na esquerda. Com o cabeçalho fora sobra muita
+   largura, e quarenta e uma peças esparramadas de ponta a ponta viram parede. */
+.ed-focado .ed-palco{max-width:1180px;margin:0 auto;width:100%}
+.ed-focado .ed-cab{text-align:left}
+
+/* AS PEÇAS SOBEM UMA ATRÁS DA OUTRA. O atraso é calculado pela posição na grade, com um
+   teto: numa leva de quarenta e uma, atraso crescente até o fim faria a última entrar
+   dois segundos depois da primeira, e aí não é animação, é espera. */
+@keyframes ed-peca-sobe{from{opacity:0;transform:translateY(18px)}
+                        to{opacity:1;transform:none}}
+.ed-galeria.subindo .ed-peca{animation:ed-peca-sobe .44s cubic-bezier(.22,1,.36,1) both}
+.ed-galeria.subindo .ed-peca:nth-child(1){animation-delay:.02s}
+.ed-galeria.subindo .ed-peca:nth-child(2){animation-delay:.05s}
+.ed-galeria.subindo .ed-peca:nth-child(3){animation-delay:.08s}
+.ed-galeria.subindo .ed-peca:nth-child(4){animation-delay:.11s}
+.ed-galeria.subindo .ed-peca:nth-child(5){animation-delay:.14s}
+.ed-galeria.subindo .ed-peca:nth-child(6){animation-delay:.17s}
+.ed-galeria.subindo .ed-peca:nth-child(7){animation-delay:.20s}
+.ed-galeria.subindo .ed-peca:nth-child(8){animation-delay:.23s}
+.ed-galeria.subindo .ed-peca:nth-child(9){animation-delay:.26s}
+.ed-galeria.subindo .ed-peca:nth-child(10){animation-delay:.29s}
+.ed-galeria.subindo .ed-peca:nth-child(n+11){animation-delay:.32s}
+
+/* O TRILHO GRUDA NO ALTO DA TELA, e não embaixo do cabeçalho que já não existe. */
+.ed-focado .ed-trilho{top:26px}
+
+@media(prefers-reduced-motion:reduce){
+  .ed-focado .ed-tela,.ed-galeria.subindo .ed-peca{animation:none}
+  .nav-wrap{transition:none}
+}
+@media(max-width:900px){
+  .ed-focado .ed-tela{grid-template-columns:1fr;padding-top:64px}
+  .ed-sair{top:14px}
+}
+
 </style>
 </head>
 <body>
@@ -2649,6 +2724,15 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   <!-- ============================================================ 3 · A OFICINA -->
   <div class="ed-tela" id="ed_oficina" hidden>
 
+    <!-- A SAIDA PRECISA EXISTIR E SER OBVIA. Na oficina o cabecalho do sistema sai de
+         cena, e com ele saem os links das outras abas: sem um caminho de volta desenhado
+         aqui, a unica saida seria recarregar a pagina. -->
+    <button class="ed-sair" id="ed_sair" type="button" title="Sair da edição">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      <span>sair da edição</span>
+    </button>
+
     <aside class="ed-trilho" id="ed_trilho">
       <button class="ed-voltar mini" id="ed_volta_escolha" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -3356,6 +3440,9 @@ function irPara(chave, empurrar) {
   // dentro, a gaveta parava na altura da seção em vez de ir de topo a rodapé da tela.
   const bolha = document.getElementById("faq_abre");
   if (bolha) bolha.hidden = chave !== "baixar";
+  // SAIR DA ABA SAI DO MODO FOCADO. A classe vive no `body`, entao ela sobreviveria a
+  // troca de aba e deixaria o sistema inteiro sem cabecalho, sem nada explicando.
+  if (chave !== "editar") document.body.classList.remove("ed-focado");
   const folha = document.getElementById("faq_folha");
   if (folha && !folha.hidden) {
     folha.hidden = true;
@@ -5937,11 +6024,24 @@ $("ed_rasc_lista").addEventListener("click", async ev => {
   await entrarNaOficina(r.passo || 1);
 });
 
-/* ----------------------------------------------------- trocar de tela */
+/* ----------------------------------------------------- trocar de tela
+
+   A OFICINA TIRA O CABECALHO DE CENA. Pedido do Gabriel em 19/08/2026, e a razao e' boa:
+   editar quarenta e uma pecas e' trabalho de tela cheia, e a barra com Mineracao, Baixar
+   e Edicao ali em cima nao serve para nada enquanto ele esta' dentro de uma leva. Sai a
+   barra, sai o rodape, e a oficina ocupa o vidro inteiro.
+
+   Com o cabecalho fora, a saida passa a ser responsabilidade desta tela: e' o botao
+   `ed_sair`, no alto. Sem ele, o unico jeito de voltar seria recarregar a pagina. */
+function focar(sim) {
+  document.body.classList.toggle("ed-focado", !!sim);
+}
+
 function mostrarTela(qual) {
   $("ed_portaria").hidden = qual !== "portaria";
   $("ed_escolha").hidden = qual !== "escolha";
   $("ed_oficina").hidden = qual !== "oficina";
+  focar(qual === "oficina");
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -5952,6 +6052,7 @@ $("ed_nova").onclick = () => {
   mostrarTela("escolha");
 };
 $("ed_volta_portaria").onclick = () => mostrarTela("portaria");
+$("ed_sair").onclick = () => { salvarRascunho(); mostrarTela("portaria"); };
 $("ed_volta_escolha").onclick = () => {
   desenhaLevasDaEdicao(ULTIMO_INDICE);
   mostrarTela("escolha");
@@ -6168,6 +6269,15 @@ function desenhaPecas() {
     });
     olho.observe(v);
   });
+
+  // AS PECAS SOBEM, uma atras da outra. E' a animacao que o Gabriel pediu ao escolher a
+  // leva, e ela mora aqui e nao na troca de tela: entre uma coisa e outra pode entrar a
+  // caixa de permissao do navegador, que segura tudo por alguns segundos. Animando na
+  // troca de tela, ele nunca veria; animando quando as pecas aparecem, ele sempre ve'.
+  const palco = $("ed_galeria");
+  palco.classList.remove("subindo");
+  void palco.offsetWidth;                 // forca o navegador a aceitar o recomeco
+  palco.classList.add("subindo");
 
   $("ed_pe1").hidden = false;
   $("ed_vai1").disabled = EDIT_PECAS.length === 0;
