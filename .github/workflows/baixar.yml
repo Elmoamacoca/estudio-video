@@ -38,6 +38,7 @@ jobs:
     env:
       PEDIDO: ${{ inputs.quantos }}
       LOTE: ${{ github.run_number }}
+      LEVA: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v5
 
@@ -90,21 +91,33 @@ jobs:
       # Validado em 18/08/2026 nos oito reels do lote 2: o comando conhecido nao limpa,
       # assina, e sao tres camadas diferentes. O que reprova aqui e' apagado e nao entra
       # no lote; o laudo de cada arquivo fica gravado e aparece no registro da tela.
-      # A MAQUINA DA ESTEIRA NAO VEM COM FFMPEG. Medido no lote 6: o passo de tratar
-      # morreu com "No such file or directory: ffmpeg". Instalar custa menos de um
-      # minuto e so' acontece no trabalho de baixar, que ja' leva minutos.
-      - name: Instalar o ffmpeg
+      # A MAQUINA DA ESTEIRA NAO VEM COM FFMPEG, e instalar pelo gerenciador de pacotes
+      # nao serve: medido na leva 12, o `apt-get install ffmpeg` passou de OITO MINUTOS
+      # sem terminar, porque ele arrasta centenas de dependencias. A leva inteira ficou
+      # parada nesse passo, sem uma linha de registro, que e' o pior tipo de espera.
+      #
+      # Aqui desce um binario unico, ja' compilado, de uma release do proprio GitHub:
+      # sao dois arquivos, ffmpeg e ffprobe, e leva segundos.
+      - name: Preparar a limpeza
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg
+          python registro.py passo "$LEVA" preparo "Preparando a limpeza: buscando a ferramenta de vídeo."
+          curl -sL -o /tmp/ff.tar.xz             https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
+          mkdir -p /tmp/ff && tar -xJf /tmp/ff.tar.xz -C /tmp/ff --strip-components=1
+          sudo install -m 755 /tmp/ff/bin/ffmpeg /tmp/ff/bin/ffprobe /usr/local/bin/
           ffmpeg -version | head -1
+          python registro.py passo "$LEVA" preparo "Ferramenta de vídeo pronta. Começando o tratamento."
 
       - name: Tratar
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         run: |
           python limpar.py brutos tratados
           python registro.py limpo "$LOTE"
+
+      - name: Avisar que o pacote esta subindo
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+        run: |
+          python registro.py passo "$LEVA" entrega "Montando o pacote para entrega. Um lote grande leva alguns minutos aqui."
 
       - name: Entregar o lote tratado
         id: entrega
