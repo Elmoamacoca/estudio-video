@@ -19,6 +19,8 @@ import json
 import sys
 from pathlib import Path
 
+import catalogo
+
 PASTA = Path("dados/perfis")
 MARCA = "etiquetar:"
 
@@ -53,6 +55,21 @@ def aplicar(cru: str) -> int:
     # opcoes iguais no filtro.
     dados["perfil"]["etiquetas"] = sorted(dict.fromkeys(etiquetas))
     arq.write_text(json.dumps(dados, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    # O NOME MARCADO ENTRA NA LISTA SE AINDA NAO ESTIVER LA'. Desde 19/08 a tela so'
+    # oferece nome que ja' existe no catalogo, entao isto e' rede e nao caminho: basta um
+    # pedido antigo, um arquivo mexido na mao ou dois pedidos em ordem trocada para
+    # existir perfil apontando para um nome que a lista nao tem. Sem esta rede, a tela
+    # mostraria a marcacao e nao teria como reproduzi-la.
+    catalogo_mexido = False
+    if mercado:
+        catalogo_mexido |= catalogo.adotar(cat := catalogo.ler(), "nicho", mercado)
+    else:
+        cat = catalogo.ler()
+    for e in dados["perfil"]["etiquetas"]:
+        catalogo_mexido |= catalogo.adotar(cat, "etiqueta", e)
+    if catalogo_mexido:
+        catalogo.gravar(cat)
 
     print(f"[{conta}] mercado: {mercado or '(nenhum)'} | "
           f"etiquetas: {', '.join(dados['perfil']['etiquetas']) or '(nenhuma)'}")
