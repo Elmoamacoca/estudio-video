@@ -55,11 +55,6 @@
    "quando": 1787158696,
    "tipo": "fim",
    "texto": "Leva entregue: 41 peças tratadas, 41 saíram da fileira."
-  },
-  {
-   "quando": 1787158870,
-   "tipo": "buscando",
-   "texto": "Pacote inteiro aqui. Abrindo e conferindo os arquivos."
   }
  ]
 }
