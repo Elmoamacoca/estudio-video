@@ -6,6 +6,11 @@
    "tipo": "escolha",
    "texto": "Escolhidos: os 5 melhores de todos os perfis.",
    "contas": []
+  },
+  {
+   "quando": 1787099990,
+   "tipo": "selecao",
+   "texto": "Régua aplicada: 1137 avaliados, 390 acima da régua."
   }
  ]
 }
