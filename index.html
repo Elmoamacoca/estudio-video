@@ -1649,6 +1649,21 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             transition:color .14s,border-color .14s}
 .liv-copiar:hover{color:var(--ink);border-color:var(--ink)}
 
+/* A ETAPA 8 ENQUANTO ELA ACONTECE.
+
+   Ela é a única do caminho que roda no computador do Gabriel e não na esteira, então é a
+   única que a esteira não anuncia ao começar. O registro parava no 7 durante os dois ou
+   três minutos da busca, sem uma linha dizendo por quê, e a leitura era de log
+   incompleto. A linha nasce apagada e com uma roda girando, e é trocada pela definitiva,
+   com o link da pasta, assim que a busca termina. */
+.liv-ev.indo{opacity:.72}
+.liv-ev.indo .oque > b{color:var(--muted)}
+.liv-girando{display:inline-block;width:12px;height:12px;border-radius:50%;
+             border:2px solid color-mix(in srgb,var(--ink) 14%,transparent);
+             border-top-color:var(--accent);animation:cfg-gira .7s linear infinite;
+             vertical-align:-2px}
+@media(prefers-reduced-motion:reduce){.liv-girando{animation:none}}
+
 </style>
 </head>
 <body>
@@ -4692,8 +4707,13 @@ function desenhaRegistroDeLotes(indice) {
 
   const atual = LOTES[0];
   const emCurso = atual && (atual.estado === "em curso" || atual.estado === "pedida");
+  // A ESPERA PELA ETAPA 8 TAMBÉM É TRABALHO ANDANDO, e o relógio lento não servia para
+  // ela: a leva ficava pronta, a busca para o computador levava dois minutos, e a linha
+  // com o link só entrava na volta seguinte de vinte e cinco segundos. Com o relógio
+  // rápido, ela aparece em até seis.
+  const esperandoAPasta = atual && atual.estado === "pronto" && !atual.guardado;
   // com trabalho andando, a tela relê de seis em seis segundos
-  if (emCurso && !relogioRapido) acelerar();
+  if ((emCurso || esperandoAPasta) && !relogioRapido) acelerar();
   $("lot_vivo").innerHTML = `<span class="kon-vivo${emCurso ? " ativa" : ""}"><i></i>${
     emCurso ? "trabalhando" : "parado"}</span>`;
 
@@ -4780,7 +4800,7 @@ function desenhaRegistroDeLotes(indice) {
              stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
       </button>
       <div class="liv-corpo"><div class="liv-caixa">${
-        passosEmHtml(PASSOS.get(l.numero), l.numero)}</div></div>
+        passosEmHtml(PASSOS.get(l.numero), l)}</div></div>
     </div>`;
   }).join("");
 
@@ -4814,7 +4834,29 @@ function paraOndeFoi(p, numero) {
         title="Copiar o caminho">copiar</button>`;
 }
 
-function passosEmHtml(passos, numero) {
+/* A ETAPA 8 APARECE ENQUANTO ELA ACONTECE, e não só depois de pronta.
+
+   Ela é a única do caminho que roda no computador do Gabriel, e não na esteira: por isso
+   ela é a única que a esteira não consegue anunciar quando começa. O registro ficava
+   parado no 7 durante os dois a três minutos da busca, sem uma linha explicando, e a
+   leitura era de log incompleto. Ele reclamou três vezes disso, e as três estavam certas:
+   o que o sistema está fazendo tem de aparecer enquanto está fazendo.
+
+   Esta linha é montada pela tela, e não vem do acervo. Ela nasce no instante em que a
+   leva fica pronta sem estar guardada, e é substituída pela linha de verdade, com o
+   link, assim que a pasta local existir. */
+function etapaOitoEmCurso(leva) {
+  if (!leva || leva.estado !== "pronto" || leva.guardado) return "";
+  return `<div class="liv-ev indo"><i></i><div class="oque">
+      <b>${ETAPAS.guardado}</b>
+      <div class="dados"><span>Trazendo as ${num(leva.limpos || 0)} peças para o seu
+        computador. São ${leva.mb || 0} MB: leva um ou dois minutos, e o caminho da pasta
+        aparece aqui quando terminar.</span></div></div>
+    <span class="data"><span class="liv-girando"></span></span></div>`;
+}
+
+function passosEmHtml(passos, leva) {
+  const numero = leva && leva.numero;
   if (!passos) return '<div class="liv-ev"><div class="oque">carregando</div></div>';
   if (!passos.length) return '<div class="liv-ev"><div class="oque">sem passos gravados</div></div>';
   // O MAIS RECENTE EM CIMA, a pedido do Gabriel em 19/08. A leva termina no passo que
@@ -4829,7 +4871,7 @@ function passosEmHtml(passos, numero) {
   // O PASSO DE UMA CONTA LEVA O NOME DELA NO RÓTULO. Numa leva de cinquenta perfis são
   // cinquenta linhas de baixa e cinquenta de tratamento, e sem o arroba no rótulo elas
   // seriam cem linhas iguais.
-  return [...passos].reverse().map(p =>
+  return etapaOitoEmCurso(leva) + [...passos].reverse().map(p =>
     `<div class="liv-ev ${p.tipo === "falha" ? "falha" : ""}">
     <i></i><div class="oque"><b>${ETAPAS[p.tipo] || p.tipo}${
       p.conta ? ` · @${p.conta}` : ""}</b>
@@ -4857,7 +4899,10 @@ async function buscarPassos(numero) {
   const d = await ler(`dados/lotes/${numero}.json`);
   PASSOS.set(numero, (d && d.passos) || []);
   const cartao = document.querySelector(`[data-lote="${numero}"] .liv-caixa`);
-  if (cartao) cartao.innerHTML = passosEmHtml(PASSOS.get(numero), numero);
+  // A LEVA INTEIRA, e não só o número: é dela que sai a linha da etapa 8 em curso, que
+  // depende de saber se a leva está pronta e se já foi guardada.
+  if (cartao) cartao.innerHTML = passosEmHtml(PASSOS.get(numero),
+    LOTES.find(x => x.numero === numero));
 }
 
 document.addEventListener("click", ev => {
