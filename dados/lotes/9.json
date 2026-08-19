@@ -1,0 +1,11 @@
+{
+ "numero": 9,
+ "passos": [
+  {
+   "quando": 1787099988,
+   "tipo": "escolha",
+   "texto": "Escolhidos: os 5 melhores de todos os perfis.",
+   "contas": []
+  }
+ ]
+}

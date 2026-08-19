@@ -1,6 +1,17 @@
 {
  "lotes": [
   {
+   "numero": 9,
+   "inicio": 1787099988,
+   "estado": "em curso",
+   "baixados": 0,
+   "limpos": 0,
+   "reprovados": 0,
+   "mb": 0,
+   "execucao": "32202078997",
+   "contas": []
+  },
+  {
    "numero": 8,
    "inicio": 1787098375,
    "estado": "pronto",
@@ -37,5 +48,5 @@
    "fim": 1787098189
   }
  ],
- "atualizado": 1787098403
+ "atualizado": 1787099988
 }
