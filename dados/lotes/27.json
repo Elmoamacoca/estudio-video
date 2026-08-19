@@ -37,6 +37,14 @@
    "quando": 1787156685,
    "tipo": "tratando",
    "texto": "1 de 41 tratados."
+  },
+  {
+   "quando": 1787156689,
+   "tipo": "limpeza",
+   "conta": "vinci.society",
+   "texto": "41 tratados.",
+   "aprovados": 41,
+   "reprovados": 0
   }
  ]
 }
