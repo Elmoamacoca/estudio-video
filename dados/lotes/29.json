@@ -15,13 +15,13 @@
    "texto": "Régua aplicada: 1404 avaliados, 500 acima da régua."
   },
   {
-   "quando": 1787177687,
+   "quando": 1787177702,
    "tipo": "baixa",
    "conta": "thenews.business",
-   "texto": "102 de 112 baixados.",
-   "feitos": 102,
+   "texto": "112 de 112 baixados. Conta concluída.",
+   "feitos": 112,
    "total": 112,
-   "concluida": false
+   "concluida": true
   }
  ]
 }
