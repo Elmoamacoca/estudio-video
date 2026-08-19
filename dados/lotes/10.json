@@ -1,0 +1,13 @@
+{
+ "numero": 10,
+ "passos": [
+  {
+   "quando": 1787100631,
+   "tipo": "escolha",
+   "texto": "Escolhidos: @vinci.society",
+   "contas": [
+    "vinci.society"
+   ]
+  }
+ ]
+}
