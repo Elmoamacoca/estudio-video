@@ -22,6 +22,11 @@
    "feitos": 41,
    "total": 41,
    "concluida": true
+  },
+  {
+   "quando": 1787101876,
+   "tipo": "falha",
+   "texto": "Leva fechada sem entrega."
   }
  ]
 }
