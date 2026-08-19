@@ -1873,6 +1873,64 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
     <div class="fileira" id="prontos"><div class="vazio">Carregando.</div></div>
   </div>
 
+  <!-- ============================================ O REGISTRO DO LOTE, AO VIVO
+
+       Mesmo molde do registro da mineração, e pelo mesmo motivo: entre apertar o botão
+       e o arquivo ficar pronto passam minutos, e sem registro esse silêncio é igual ao
+       silêncio de uma falha. Cada fase do trabalho grava aqui na hora em que acontece.
+
+       AS TRÊS MEDIDAS SÃO DO LOTE DE QUE A CABEÇA FALA, e não somas do histórico. O que
+       interessa ao olhar é este lote: quantos desceram, quantos passaram na limpeza e
+       quantos foram barrados. -->
+  <div class="secao">
+    <div class="secao-cab"><h2>Registro ao vivo</h2></div>
+
+    <div class="konsole">
+      <div class="kon-topo">
+        <span class="kon-selo">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+        </span>
+        <div class="kon-quem">
+          <b id="lot_titulo">Nenhum lote ainda</b>
+          <span id="lot_resumo">Marque os perfis acima e aperte Montar lote.</span>
+        </div>
+        <div class="kon-dir" id="lot_vivo">
+          <span class="kon-vivo"><i></i>parado</span>
+        </div>
+      </div>
+
+      <div class="kon-medidas">
+        <div class="kon-medida evento">
+          <div class="kon-rot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5
+                 5 5-5M5 21h14"/></svg><span>baixados</span>
+          </div>
+          <b id="lot_baixados">0</b>
+        </div>
+        <div class="kon-medida">
+          <div class="kon-rot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/>
+            </svg><span>tratados</span>
+          </div>
+          <b id="lot_limpos">0</b>
+        </div>
+        <div class="kon-medida falha">
+          <div class="kon-rot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12"
+                 r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>reprovados</span>
+          </div>
+          <b id="lot_reprovados">0</b>
+        </div>
+      </div>
+
+      <div id="lot_lista"></div>
+      <div class="gal-vazia" id="lot_vazio">Nenhum lote pedido ainda.</div>
+    </div>
+  </div>
+
 </section>
 
 
@@ -3510,12 +3568,14 @@ async function atualizar() {
   // seria pisca-pisca: quem já viu o dado não precisa ver que ele está sendo conferido.
   if (primeiraCarga) carregando("carga", "Buscando o acervo", "onda");
 
-  const [estado, sel, fontes, retratos, livro] = await Promise.all([
+  const [estado, sel, fontes, retratos, livro, lotes] = await Promise.all([
     ler("dados/estado.json"), ler("dados/selecao.json"), ler("dados/fontes.json"),
     // arquivo à parte: o do perfil varrido passa de 1 MB e a via de leitura corta ali
     ler("dados/retratos.json"),
     // a capa do livro de atividade: só o resumo por perfil, o histórico vem ao abrir
-    ler("dados/atividade/indice.json")]);
+    ler("dados/atividade/indice.json"),
+    // a capa dos lotes: estado e contagem de cada um, sem os passos
+    ler("dados/lotes/indice.json")]);
 
   if (primeiraCarga) { parado("carga", ""); primeiraCarga = false; }
   selar(estado);
@@ -3527,14 +3587,17 @@ async function atualizar() {
   // pastilha de Minerados já mostra ao lado do nome, e o tamanho do lote montado, que
   // tem teto de 500 e por isso marcava 500 para sempre. Estes quatro mudam quando o
   // trabalho anda, que é a única razão para um número ficar grande na tela.
-  const lotes = (estado && estado.lotes) || [];
   $("n_lidos").textContent = num(perfis.reduce((a, b) => a + (b.lidos || 0), 0));
   $("n_completos").textContent = perfis.filter(p => p.completo).length;
   // O QUE ESTA' ACIMA DA REGUA, no formato que foi pedido. Este numero contava so'
   // reels baixaveis: numa varredura de carrossel ele marcava zero para sempre, e zero
   // num painel quer dizer "nao achou nada", que era o contrario da verdade.
   $("n_reels").textContent = num(perfis.reduce((a, b) => a + (b.acima || 0), 0));
-  $("n_baixados").textContent = num(lotes.reduce((a, b) => a + (b.arquivos || 0), 0));
+  // O NÚMERO É DO QUE FOI TRATADO E ENTREGUE, e não do que desceu. Arquivo que baixou e
+  // reprovou na limpeza não virou peça: contá-lo aqui inflaria o acervo com o que foi
+  // apagado antes de sair.
+  $("n_baixados").textContent = num(((lotes && lotes.lotes) || [])
+    .reduce((a, b) => a + (b.limpos || 0), 0));
 
   // a linha do rodapé conta o que ele tem de útil: quantos perfis e desde quando
   const quandoRodou = estado && estado.ultima_rodada
@@ -3601,6 +3664,15 @@ async function atualizar() {
   medirLivro();
 
   desenhaProntos(MINERADOS);
+
+  desenhaRegistroDeLotes(lotes);
+  // O LOTE EM CURSO É REBUSCADO A CADA VOLTA, aberto ou não: é dele que a cabeça do
+  // registro fala, e é ele que muda. Os fechados não mudam mais, então só são buscados
+  // quando alguém abre.
+  const andando = ((lotes && lotes.lotes) || []).find(l => l.estado === "em curso");
+  if (andando) await buscarPassos(andando.numero);
+  else for (const n of LOTES_ABERTOS) await buscarPassos(n);
+
 }
 
 /* ---------------------------------------------------------------- comandos */
@@ -3766,6 +3838,117 @@ $("ini_vai").onclick = async () => {
   $("ini_cancelar").disabled = false;
 };
 
+
+
+/* ================================================ O REGISTRO DO LOTE, AO VIVO
+
+   Mesmo molde do registro da mineração. A diferença é a fonte: lá cada vaga da esteira
+   grava; aqui cada fase do trabalho de baixar grava, e são cinco (pedido, régua, baixa,
+   limpeza, fim). Entre uma e outra passam minutos, e é isso que a tela conta.
+
+   OS PASSOS DE UM LOTE SÓ SÃO BUSCADOS QUANDO ELE ABRE, e o que está em curso é
+   rebuscado a cada volta. Buscar o histórico dos doze a cada vinte e cinco segundos
+   seriam doze leituras por volta para mostrar uma. */
+let LOTES = [];
+const LOTES_ABERTOS = new Set();
+const PASSOS = new Map();
+
+const ETAPAS = {
+  pedido: "pedido", selecao: "régua", baixa: "baixa", limpeza: "limpeza",
+  fim: "entregue", falha: "falha",
+};
+
+function desenhaRegistroDeLotes(indice) {
+  LOTES = (indice && indice.lotes) || [];
+  const alvo = $("lot_lista");
+  $("lot_vazio").hidden = LOTES.length > 0;
+
+  const atual = LOTES[0];
+  const emCurso = atual && atual.estado === "em curso";
+  $("lot_vivo").innerHTML = `<span class="kon-vivo${emCurso ? " ativa" : ""}"><i></i>${
+    emCurso ? "trabalhando" : "parado"}</span>`;
+
+  if (!atual) {
+    $("lot_titulo").textContent = "Nenhum lote ainda";
+    $("lot_resumo").textContent = "Marque os perfis acima e aperte Montar lote.";
+    for (const k of ["lot_baixados", "lot_limpos", "lot_reprovados"])
+      $(k).textContent = "0";
+    if (alvo.dataset.desenho !== "") { alvo.dataset.desenho = ""; alvo.innerHTML = ""; }
+    return;
+  }
+
+  $("lot_baixados").textContent = num(atual.baixados || 0);
+  $("lot_limpos").textContent = num(atual.limpos || 0);
+  $("lot_reprovados").textContent = num(atual.reprovados || 0);
+
+  const de = (atual.contas || []).length
+    ? "de @" + atual.contas.join(", @")
+    : "dos melhores de todos os perfis";
+  $("lot_titulo").textContent = `Lote ${atual.numero} · ${
+    atual.estado === "em curso" ? "em curso" :
+    atual.estado === "pronto" ? "pronto" : "falhou"}`;
+  $("lot_resumo").textContent = atual.estado === "em curso"
+    ? `Trabalhando ${de}. ${num(atual.baixados || 0)} baixados, ${
+        num(atual.limpos || 0)} tratados até agora.`
+    : `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}.`
+      + (atual.reprovados ? ` ${num(atual.reprovados)} reprovados na limpeza.` : "");
+
+  const html = LOTES.map(l => {
+    const aberto = LOTES_ABERTOS.has(l.numero);
+    const grave = l.estado === "falhou" ? "falha" : l.reprovados ? "aviso" : "";
+    const quem = (l.contas || []).length ? "@" + l.contas.join(", @") : "todos os perfis";
+    return `<div class="liv-cartao ${grave}${aberto ? " aberto" : ""}"
+        data-lote="${l.numero}">
+      <button class="liv-cabeca" type="button" aria-expanded="${aberto}">
+        <span class="liv-ponto"></span>
+        <span class="liv-id">
+          <span class="liv-nome"><b>Lote ${l.numero}</b>
+            <span class="liv-etq">${l.estado}</span></span>
+          <span class="liv-sub">${quem} · ${num(l.limpos || 0)} tratados de ${
+            num(l.baixados || 0)} baixados${l.mb ? ` · ${l.mb} MB` : ""} · ${
+            quando(l.fim || l.inicio)}</span>
+        </span>
+        <svg class="liv-seta" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <div class="liv-corpo"><div class="liv-caixa">${
+        passosEmHtml(PASSOS.get(l.numero))}</div></div>
+    </div>`;
+  }).join("");
+
+  if (alvo.dataset.desenho !== html) {
+    alvo.dataset.desenho = html;
+    alvo.innerHTML = html;
+  }
+}
+
+function passosEmHtml(passos) {
+  if (!passos) return '<div class="liv-ev"><div class="oque">carregando</div></div>';
+  if (!passos.length) return '<div class="liv-ev"><div class="oque">sem passos gravados</div></div>';
+  return passos.map(p => `<div class="liv-ev ${p.tipo === "falha" ? "falha" : ""}">
+    <i></i><div class="oque"><b>${ETAPAS[p.tipo] || p.tipo}</b>
+      <div class="dados"><span>${p.texto}</span></div></div>
+    <span class="data">${quando(p.quando)}</span></div>`).join("");
+}
+
+async function buscarPassos(numero) {
+  const d = await ler(`dados/lotes/${numero}.json`);
+  PASSOS.set(numero, (d && d.passos) || []);
+  const cartao = document.querySelector(`[data-lote="${numero}"] .liv-caixa`);
+  if (cartao) cartao.innerHTML = passosEmHtml(PASSOS.get(numero));
+}
+
+document.addEventListener("click", ev => {
+  const cabeca = ev.target.closest("#lot_lista .liv-cabeca");
+  if (!cabeca) return;
+  const cartao = cabeca.closest(".liv-cartao");
+  const numero = parseInt(cartao.dataset.lote, 10);
+  const abre = !cartao.classList.contains("aberto");
+  cartao.classList.toggle("aberto", abre);
+  cabeca.setAttribute("aria-expanded", abre);
+  if (abre) { LOTES_ABERTOS.add(numero); buscarPassos(numero); }
+  else LOTES_ABERTOS.delete(numero);
+});
 
 /* ============================================================ MARCAR UM PERFIL
 
