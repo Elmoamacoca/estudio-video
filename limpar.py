@@ -27,6 +27,7 @@ perda de qualidade e nenhuma mudanca na imagem.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -214,6 +215,26 @@ if __name__ == "__main__":
         raise SystemExit(1)
 
     passaram, reprovados, laudos = 0, 0, []
+    # O AVANCO DA LIMPEZA TAMBEM E' DITO EM VOZ ALTA, de quinze em quinze segundos.
+    # Com duzentos e cinquenta arquivos sao quase um minuto de trabalho, e minuto sem
+    # linha nenhuma na tela e' minuto que parece travamento.
+    leva = os.environ.get("LEVA") or os.environ.get("LOTE")
+    ultimo = [0.0]
+
+    def avisar(feitos: int, fim: bool = False) -> None:
+        if not leva:
+            return
+        if not fim and time.time() - ultimo[0] < 15:
+            return
+        ultimo[0] = time.time()
+        try:
+            import registro as diario
+            diario.passo(int(leva), "tratando",
+                         f"{feitos} de {len(arquivos)} tratados.")
+            diario.empurrar(f"leva {leva}: tratando")
+        except Exception:
+            pass
+
     for arq in arquivos:
         laudo = limpar(arq, destino / arq.name)
         laudo["arquivo"] = arq.name
@@ -230,6 +251,7 @@ if __name__ == "__main__":
             print(f"  REPROVA {arq.name}: {laudo.get('erro') or laudo.get('sobras')} "
                   f"{laudo.get('marcas')} {laudo.get('tags_formato')} "
                   f"{laudo.get('tags_trilha')}")
+        avisar(passaram + reprovados)
 
     # O LAUDO FICA JUNTO DOS ARQUIVOS, para o registro da tela ler depois. Sem ele, a
     # unica prova da limpeza seria o texto que rolou no terminal da esteira, que o
