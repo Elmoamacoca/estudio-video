@@ -1,0 +1,18 @@
+{
+ "lotes": [
+  {
+   "numero": 22,
+   "inicio": 1787146938,
+   "estado": "em curso",
+   "baixados": 0,
+   "limpos": 0,
+   "reprovados": 0,
+   "mb": 0,
+   "execucao": "32259599614",
+   "contas": [
+    "vinci.society"
+   ]
+  }
+ ],
+ "atualizado": 1787146938
+}
