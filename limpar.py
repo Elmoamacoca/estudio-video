@@ -111,6 +111,18 @@ def auditar(arq: Path) -> dict:
     for s in d.get("streams", []):
         t = dict(s.get("tags", {}))
         t.pop("language", None)          # "und" e' a ausencia de idioma, nao um dado
+        # VENDEDOR ZERADO E' AUSENCIA, E NAO SOBRA.
+        #
+        # O campo de vendedor mora dentro da descricao da amostra e faz parte do formato:
+        # ele existe sempre, e o que muda e' se tem alguma coisa escrita. Zerado, o
+        # ffprobe imprime "[0][0][0][0]", que e' exatamente o que se quer.
+        #
+        # Isto so' apareceu na maquina da esteira, no lote 7: a versao de ffprobe daqui
+        # nem mostra o campo, e a de la' mostra. Os tres arquivos foram reprovados por
+        # estarem limpos. Versao de ferramenta e' ambiente, e inspetor que muda de
+        # veredito com o ambiente nao serve para nada.
+        if t.get("vendor_id", "").strip("[]0 	") == "":
+            t.pop("vendor_id", None)
         if t:
             trilhas[f"trilha {s['index']}"] = t
 
