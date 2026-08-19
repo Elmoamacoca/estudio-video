@@ -55,6 +55,11 @@
    "quando": 1787158696,
    "tipo": "fim",
    "texto": "Leva entregue: 41 peças tratadas, 41 saíram da fileira."
+  },
+  {
+   "quando": 1787158742,
+   "tipo": "buscando",
+   "texto": "Trazendo o pacote da esteira para o seu computador: 0 MB de 441 MB."
   }
  ]
 }
