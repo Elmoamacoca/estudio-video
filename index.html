@@ -1235,7 +1235,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    duas linhas picadas. Uma tabela que rola e mostra tudo é melhor que uma tabela mais
    estreita que esconde. Duas coisas seguraram o número: a marcação desceu de baixo do
    nome do perfil, e o botão "Marcar" saiu da ponta da linha. */
-#tab_minerados{min-width:1520px}
+#tab_minerados{min-width:1560px}
 
 .tab td.tab-acao, .tab th.tab-acao{position:sticky;right:0;z-index:2;
   background:var(--branco);box-shadow:-10px 0 12px -10px rgba(0,0,0,.45)}
@@ -1282,7 +1282,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    "254 r / régu". Coluna espremida é coluna que mente. */
 .tab-marc{vertical-align:middle;min-width:112px}
 .tab-marc-etq{min-width:142px}
-.tab-baixa{min-width:152px;vertical-align:middle}
+.tab-baixa{min-width:196px;vertical-align:middle}
 .tab-toque{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;cursor:pointer;
            padding:4px 7px;margin:-4px -7px;border-radius:8px;
            border:1px solid transparent;transition:background .12s,border-color .12s}
@@ -1294,11 +1294,15 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tab-toque:hover .sem{color:var(--muted)}
 .tab-etqs{max-width:190px}
 
-/* A COLUNA DE BAIXAR usa o mesmo par de linhas da cobertura, só que encostado à
-   esquerda: em cima o estado, embaixo o número que o sustenta. Estado sem número é
-   opinião. */
-.tab-esq{align-items:flex-start}
-.tab-esq i{margin-top:3px;white-space:nowrap}
+/* A COLUNA DE BAIXAR: A PASTILHA E O NÚMERO NA MESMA LINHA.
+   Ela já usou o par de linhas da coluna de cobertura, com o número embaixo. O Gabriel
+   reprovou em 19/08 e a razão é de leitura: todas as outras células desta tabela têm uma
+   linha só e ficam no meio da altura; uma de duas linhas encostada no topo quebra o
+   alinhamento da fileira inteira, e o olho, que corre a linha na horizontal, tropeça.
+   Estado sem número continua sendo opinião, então o número não sai, só muda de lugar. */
+.tab-lado{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
+.tab-lado i{font-style:normal;font-size:12px;color:var(--muted);
+            font-variant-numeric:tabular-nums}
 .pino.meio{color:var(--ambar);
            border-color:color-mix(in srgb,var(--ambar) 35%,transparent)}
 .pino.meio::before{background:var(--ambar)}
@@ -1451,6 +1455,181 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
   word-break:break-all;line-height:1.5}
 .ajuda-caminho i{font-style:italic;color:var(--accent)!important}
+
+/* A LISTA SUSPENSA `psel`, TRAZIDA À MÃO DO SOCIAL TRACKER.
+
+   Ela é o seletor que o catálogo de lá usa nos dois lugares, e não estava aqui: o
+   `extrair.py` copia as peças pelo nome da classe, e `psel` nunca entrou na lista dele
+   porque nenhuma tela deste sistema a usava até hoje. Sem estas regras o seletor sai
+   como um botão sem moldura e um menu empilhado no meio do texto, que é como ele nasceu
+   na primeira montagem.
+
+   O bloco é o de lá, literal. Repetir a medida "parecida" é o jeito de as duas telas
+   divergirem sem ninguém ver. */
+.psel{position:relative}
+.psel-b{display:inline-flex;align-items:center;gap:5px;border:0;background:none;
+        font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:2px 0;
+        color:inherit;outline:0;white-space:nowrap}
+.psel-b svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.5;
+            transition:transform .18s}
+.psel-b[aria-expanded="true"] svg{transform:rotate(180deg)}
+.psel-menu{position:absolute;top:calc(100% + 7px);right:0;z-index:40;min-width:132px;
+           background:var(--branco);border:1px solid var(--rule-solid);
+           border-radius:10px;box-shadow:0 8px 26px rgba(14,14,14,.14);padding:4px;
+           display:flex;flex-direction:column;gap:1px;
+           opacity:0;transform:translateY(-4px);pointer-events:none;
+           transition:opacity .14s ease, transform .14s cubic-bezier(.22,1,.36,1)}
+.psel-menu.aberto{opacity:1;transform:translateY(0);pointer-events:auto}
+.psel-menu button{display:flex;align-items:center;justify-content:space-between;gap:10px;
+                  border:0;background:none;border-radius:7px;padding:7px 10px;
+                  font:inherit;font-size:13px;font-weight:600;color:var(--ink);
+                  cursor:pointer;text-align:left;white-space:nowrap}
+.psel-menu button:hover{background:var(--paper-2)}
+.psel-menu button.on{background:var(--accent-tint);color:var(--accent)}
+.psel-menu button i{display:none}
+.psel-menu button.on i{display:block;font-style:normal}
+
+/* ============================== O CATÁLOGO DE MERCADOS E ETIQUETAS
+
+   COPIADO DA ABA DE CONFIGURAÇÕES DO SOCIAL TRACKER, item "Nichos e etiquetas", a
+   pedido do Gabriel em 19/08/2026. Aqui ele mora dentro da folha de marcação do perfil,
+   e não numa aba própria, porque este sistema não tem aba de configurações: quem marca
+   um perfil é quem cria e apaga os nomes, e as duas coisas são o mesmo gesto.
+
+   AS MEDIDAS SÃO AS DE LÁ, e isso é o ponto: as duas telas usam as mesmas variáveis de
+   tema, então uma medida reescrita "parecida" é uma divergência que ninguém vê nascer.
+
+   O QUE NÃO VEIO: a paleta de vinte e quatro ícones por etiqueta. Lá ela é enfeite da
+   própria lista de configurações e não chega à pastilha, porque o desenho da etiqueta é
+   sempre o mesmo símbolo. Copiá-la seria trazer superfície sem função.
+
+   A FOLHA FICA MAIS LARGA quando carrega as duas listas. As outras folhas desta tela têm
+   440 pixels, que é a medida de um formulário curto; duas colunas de catálogo dentro
+   disso viram duas colunas de trinta pixels. */
+.etq-larga{width:min(760px,100%)}
+
+/* AS PASTILHAS DE ETIQUETA, marcando e desmarcando ao clique. A não escolhida fica
+   apagada e mantém o mesmo desenho: uma caixa de seleção ao lado de cada nome daria a
+   mesma função e roubaria do olho a etiqueta, que é o que ele já reconhece nas outras
+   telas do sistema. */
+.etq-escolha{display:flex;flex-wrap:wrap;gap:7px}
+.etq-op{border:0;background:none;padding:0;cursor:pointer;border-radius:99px;
+        opacity:.34;filter:grayscale(1);transition:opacity .14s,filter .14s}
+.etq-op:hover{opacity:.7;filter:grayscale(.3)}
+.etq-op.on{opacity:1;filter:none}
+.etq-op:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Criar e apagar são raros; marcar um perfil é o que se faz toda hora. Abertas por
+   padrão, as duas listas empurrariam para baixo o botão de salvar, que é o que trouxe a
+   pessoa até aqui. */
+.etq-gerir{margin-top:20px;padding-top:16px;border-top:1px solid var(--rule-solid)}
+.etq-gerir > summary{list-style:none;cursor:pointer;font-size:13px;font-weight:600;
+  color:var(--muted);display:flex;align-items:center;gap:8px;transition:color .14s}
+.etq-gerir > summary::-webkit-details-marker{display:none}
+.etq-gerir > summary::before{content:"";width:7px;height:7px;flex:none;
+  border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+  transform:rotate(-45deg);transition:transform .18s}
+.etq-gerir[open] > summary::before{transform:rotate(45deg)}
+.etq-gerir > summary:hover{color:var(--ink)}
+.etq-gerir[open] > summary{margin-bottom:14px;color:var(--ink)}
+
+/* AS DUAS CAIXAS TERMINAM JUNTAS, com a linha de criar encostada no pé. Uma lista de
+   dois mercados ao lado de uma de seis etiquetas deixaria as caixas com alturas
+   diferentes e os dois campos de escrever em alturas diferentes. */
+.cfg-duas{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+.cfg-duas > .caixa{display:flex;flex-direction:column;align-self:stretch;padding:16px}
+.cfg-duas > .caixa > .cfg-cat{flex:1}
+.cfg-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cfg-topo h3{margin:0;font-size:14px;font-weight:700}
+.cfg-topo .dir{margin-left:auto;display:flex;align-items:center;gap:8px}
+.cfg-cat-conta{font-size:11.5px;color:var(--muted);white-space:nowrap}
+
+.cfg-cat{display:flex;flex-direction:column;gap:0}
+.cfg-cat-lista{flex:1;min-height:0}
+.cfg-cat-l{display:flex;align-items:center;gap:11px;padding:9px 0;min-height:44px;
+           border-top:1px solid color-mix(in srgb,var(--rule-solid) 45%,transparent)}
+.cfg-cat-l:first-child{border-top:0}
+.cfg-cat-n{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;
+           white-space:nowrap}
+.cfg-cat-uso{margin-left:auto;font-size:12px;color:var(--soft);white-space:nowrap;
+             font-variant-numeric:tabular-nums}
+/* O XIS SÓ APARECE AO PASSAR O MOUSE, para a lista parada ser uma lista e não um painel
+   de controle cheio de xis. */
+.cfg-cat-x{display:flex;align-items:center;justify-content:center;width:26px;height:26px;
+           flex:0 0 26px;border:0;border-radius:7px;background:transparent;
+           color:var(--soft);cursor:pointer;padding:0;opacity:0;
+           transition:opacity .15s,background .15s,color .15s}
+.cfg-cat-l:hover .cfg-cat-x{opacity:1}
+.cfg-cat-x:hover{background:color-mix(in srgb,var(--vermelho) 12%,transparent);
+                 color:var(--vermelho)}
+.cfg-cat-x svg{width:15px;height:15px}
+.cfg-cat-l.esperando{opacity:.5}
+
+/* O painel de mover abre dentro da própria linha, numa segunda fileira, e não numa caixa
+   flutuante: quem está decidindo o destino precisa continuar vendo, logo acima, o nome
+   que vai sumir. */
+.cfg-cat-l.cfg-abrindo{flex-wrap:wrap;padding-bottom:12px}
+.cfg-mover{flex:0 0 100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+           padding-top:11px;font-size:12.5px;color:var(--muted)}
+.cfg-mover > span{flex:0 0 100%;margin-bottom:-2px}
+.cfg-mover .cfg-cat-btn{height:32px;padding:0 13px;font-size:12.5px}
+.cfg-cat-btn.cfg-fraco{background:transparent;color:var(--muted);
+                       border:1px solid var(--rule-solid)}
+/* APAGAR É VERMELHO: é a única ação desta folha que tira alguma coisa, e ela fica ao
+   lado de um Cancelar. Sem cor, os dois botões pedem a mesma atenção. */
+.cfg-cat-btn.cfg-vermelho{background:var(--vermelho);color:#FFFFFF}
+
+.cfg-sel{flex:1;min-width:140px}
+.cfg-sel .psel-b{width:100%;height:32px;padding:0 10px;justify-content:space-between;
+                 gap:8px;border:1px solid var(--rule-solid);border-radius:8px;
+                 background:var(--branco);color:var(--ink);font-size:13px;
+                 font-weight:500;transition:border-color .15s}
+.cfg-sel .psel-b:hover{border-color:var(--ink)}
+.cfg-sel .psel-b > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cfg-sel .psel-b svg{flex:0 0 12px}
+.cfg-sel .psel-menu{left:0;right:auto;min-width:100%;max-height:240px;overflow:auto}
+/* O seletor de mercado do perfil é o mesmo componente, e ocupa a linha inteira. */
+#etq_merc{width:100%}
+#etq_merc .psel-b{height:38px}
+
+/* A linha de criar: o campo cresce, o botão não. */
+.cfg-cat-novo{display:flex;align-items:center;gap:8px;margin-top:14px;
+              padding-top:14px;border-top:1px solid var(--rule-solid)}
+.cfg-cat-novo input{flex:1;min-width:0;height:34px;padding:0 11px;font:inherit;
+                    font-size:13.5px;color:var(--ink);background:var(--branco);
+                    border:1px solid var(--rule-solid);border-radius:9px;outline:none;
+                    transition:border-color .15s}
+.cfg-cat-novo input:focus{border-color:var(--ink)}
+.cfg-cat-novo input::placeholder{color:var(--soft)}
+.cfg-cat-btn{height:34px;padding:0 15px;font:inherit;font-size:13px;font-weight:600;
+             color:var(--branco);background:var(--ink);border:0;border-radius:9px;
+             cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.cfg-cat-btn:hover{opacity:.85}
+.cfg-cat-btn:disabled{opacity:.4;cursor:default}
+.cfg-cat-vazio{padding:18px 0;font-size:13px;color:var(--soft)}
+
+/* O CARREGANDO: roda, três pontinhos e cronômetro. Ele existe porque a espera é real: o
+   pedido vai até a esteira do GitHub, que roda numa máquina alugada e leva de trinta
+   segundos a um minuto. Uma tela parada nesse intervalo é indistinguível de uma travada. */
+.cfg-cat-diz{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;
+             line-height:1.5;color:var(--soft);min-height:19px}
+.cfg-cat-diz.cfg-indo{color:var(--muted)}
+.cfg-cat-diz.ruim{color:var(--vermelho)}
+.cfg-cat-diz.bom{color:var(--verde)}
+.cfg-girando{width:13px;height:13px;flex:0 0 13px;border-radius:50%;
+             border:2px solid color-mix(in srgb,var(--ink) 14%,transparent);
+             border-top-color:var(--ink);animation:cfg-gira .7s linear infinite}
+@keyframes cfg-gira{to{transform:rotate(360deg)}}
+.cfg-pontos{display:flex;align-items:flex-end;gap:2px;margin-left:-4px}
+.cfg-pontos i{width:3px;height:3px;border-radius:50%;background:currentColor;
+              animation:cfg-pisca 1.2s infinite}
+.cfg-pontos i:nth-child(2){animation-delay:.18s}
+.cfg-pontos i:nth-child(3){animation-delay:.36s}
+@keyframes cfg-pisca{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.cfg-cronometro{margin-left:2px;font-variant-numeric:tabular-nums;font-weight:600}
+@media(prefers-reduced-motion:reduce){.cfg-girando,.cfg-pontos i{animation:none}}
+
+@media(max-width:700px){.cfg-duas{grid-template-columns:1fr}}
 
 </style>
 </head>
@@ -1926,32 +2105,97 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
      eles teriam de ser lidos de novo só para ganhar um rótulo. A marcação mora na
      tabela de Minerados, que é o cadastro dos perfis, e vale para quem já está lá e
      para quem chegar depois. -->
+<!-- ============================================= MERCADO E ETIQUETA, A FOLHA INTEIRA
+
+     ESCOLHER DE UMA LISTA, E NÃO DIGITAR NO ESCURO.
+     Aqui havia dois campos de texto livre. O de mercado tinha um `datalist`, que é o
+     autocompletar do navegador e some no celular; o de etiquetas era uma linha de nomes
+     separados por vírgula. Os dois têm o mesmo defeito: para marcar o primeiro perfil de
+     um nicho, o nome era digitado no vazio, e "financas" e "finanças" viravam dois
+     nichos diferentes na primeira letra errada. Nada avisava, e o filtro passava a
+     separar o que devia estar junto.
+
+     E NÃO DAVA PARA APAGAR NADA. Um nome só sumia quando o último perfil que o carregava
+     fosse reescrito na mão, um por um.
+
+     O DESENHO É O DA ABA DE CONFIGURAÇÕES DO SOCIAL TRACKER, a pedido do Gabriel em
+     19/08/2026: lista editável com uma linha por item, quantos perfis o usam, o xis que
+     só aparece ao passar o mouse, e a linha de criar encostada no pé. Junto veio a regra
+     que lá nasceu em 14/08: apagar sempre pode, e a pergunta é para onde vão os perfis.
+     Trancar um nome em uso não protege ninguém, só empurra o trabalho para fora da tela.
+
+     O QUE NÃO VEIO: a paleta de vinte e quatro ícones por etiqueta. Lá ela é enfeite da
+     própria lista de configurações, e não chega à pastilha: o `etiqueta_html` de lá
+     desenha sempre o mesmo símbolo. Copiá-la seria trazer superfície sem função. -->
 <div class="liv-export" id="etq_folha" hidden>
-  <div class="liv-folha">
-    <h3>Marcar <span id="etq_quem"></span></h3>
+  <div class="liv-folha etq-larga">
+    <h3>Mercado e etiquetas <span id="etq_quem"></span></h3>
     <p class="nota">Mercado é um só por perfil, e serve para escolher. Etiqueta é
       livre e soma: um perfil pode ter várias, e o filtro traz todos os que tiverem
       qualquer uma das marcadas.</p>
 
     <div class="campo-bloco">
-      <label class="campo-rot" for="etq_mercado">Mercado</label>
-      <input type="text" id="etq_mercado" list="etq_mercados" autocomplete="off"
-             placeholder="finanças, moda, fitness...">
-      <datalist id="etq_mercados"></datalist>
+      <label class="campo-rot">Mercado deste perfil</label>
+      <div class="psel cfg-sel" id="etq_merc">
+        <button type="button" class="psel-b" aria-haspopup="listbox"
+                aria-expanded="false"><span>sem mercado</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="psel-menu" role="listbox"></div>
+      </div>
     </div>
 
     <div class="campo-bloco">
-      <label class="campo-rot" for="etq_etiquetas">Etiquetas</label>
-      <input type="text" id="etq_etiquetas" autocomplete="off"
-             placeholder="separadas por vírgula">
-      <p class="nota mini" id="etq_usadas"></p>
+      <label class="campo-rot">Etiquetas deste perfil</label>
+      <!-- CLICAR NA PASTILHA MARCA E DESMARCA. Uma caixa de seleção ao lado de cada nome
+           daria a mesma função e roubaria o desenho da etiqueta, que é o que o olho já
+           reconhece nas outras telas. -->
+      <div class="etq-escolha" id="etq_lista"></div>
+      <p class="nota mini" id="etq_sem_etq" hidden>Nenhuma etiqueta criada ainda.
+        Crie a primeira ali embaixo.</p>
     </div>
 
     <div class="liv-pe">
       <span class="nota" id="etq_recado"></span>
-      <button class="acao" id="etq_cancelar" type="button">Cancelar</button>
-      <button class="acao forte" id="etq_vai" type="button">Salvar</button>
+      <button class="acao" id="etq_cancelar" type="button">Fechar</button>
+      <button class="acao forte" id="etq_vai" type="button">Salvar a marcação</button>
     </div>
+
+    <!-- AS DUAS LISTAS, ATRÁS DE UM CLIQUE. Criar e apagar são raros; marcar um perfil é
+         o que se faz toda hora. Abertas por padrão, elas empurrariam para baixo o botão
+         de salvar, que é o que trouxe a pessoa até aqui. -->
+    <details class="etq-gerir">
+      <summary>Criar e apagar mercados e etiquetas</summary>
+      <div class="cfg-duas">
+        <div class="caixa">
+          <div class="cfg-topo"><h3>Mercados</h3>
+            <div class="dir"><span class="cfg-cat-conta" id="cat_n_nicho"></span></div>
+          </div>
+          <div class="cfg-cat" data-o="nicho">
+            <div class="cfg-cat-lista"></div>
+            <div class="cfg-cat-novo">
+              <input type="text" maxlength="28" placeholder="nome do novo mercado">
+              <button type="button" class="cfg-cat-btn">Criar</button>
+            </div>
+            <div class="cfg-cat-diz"></div>
+          </div>
+        </div>
+        <div class="caixa">
+          <div class="cfg-topo"><h3>Etiquetas</h3>
+            <div class="dir"><span class="cfg-cat-conta" id="cat_n_etq"></span></div>
+          </div>
+          <div class="cfg-cat" data-o="etiqueta">
+            <div class="cfg-cat-lista"></div>
+            <div class="cfg-cat-novo">
+              <input type="text" maxlength="28" placeholder="nome da nova etiqueta">
+              <button type="button" class="cfg-cat-btn">Criar</button>
+            </div>
+            <div class="cfg-cat-diz"></div>
+          </div>
+        </div>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -2926,6 +3170,12 @@ document.getElementById("sub-menu").addEventListener("click", ev => {
    artefato preto na passagem do mouse. Tabela não é galeria. */
 let MINERADOS = [], minPagina = 1;
 
+/* AS DUAS LISTAS DO SISTEMA: os mercados e as etiquetas que existem.
+   Elas nascem vazias e são preenchidas pelo acervo a cada volta. Enquanto não chegam, a
+   folha de marcação abre dizendo que não há nada criado, que é a verdade daquele
+   instante, e não um campo em branco pedindo para ser inventado. */
+let CATALOGO = { nichos: [], etiquetas: [] };
+
 const ESTADOS = {
   completo: ['<span class="pino ok">concluído</span>', "completo"],
   limite: ['<span class="pino ok">até o limite</span>', "limite"],
@@ -3094,9 +3344,14 @@ function anotarLevas(indice) {
   LEVAS_POR_CONTA = mapa;
 }
 
-function pinoBaixar(cor, oque, embaixo) {
-  return `<span class="tab-dupla tab-esq"><span class="pino ${cor}">${oque}</span>`
-       + `<i>${embaixo}</i></span>`;
+/* A PASTILHA E O NÚMERO ANDAM LADO A LADO, NUMA LINHA SÓ.
+   Na primeira versão o número ficava embaixo, no molde de duas linhas que a coluna de
+   cobertura usa. O Gabriel reprovou em 19/08 e estava certo: as outras células desta
+   tabela são de uma linha e ficam no meio da altura, e uma célula de duas linhas
+   encostada no topo desalinha a fileira inteira. O olho corre a linha e tropeça nela. */
+function pinoBaixar(cor, oque, aoLado) {
+  return `<span class="tab-lado"><span class="pino ${cor}">${oque}</span>`
+       + (aoLado ? `<i>${aoLado}</i>` : "") + "</span>";
 }
 
 function celulaBaixar(p) {
@@ -3105,12 +3360,11 @@ function celulaBaixar(p) {
   const veio = podem - restam;
   const leva = LEVAS_POR_CONTA[p.conta];
   if (leva && (leva.estado === "em curso" || leva.estado === "pedida"))
-    return pinoBaixar("indo", "em curso",
-      leva.numero ? `leva ${leva.numero}` : "leva pedida agora");
-  if (!podem) return pinoBaixar("off", "sem material", "nada passou da régua");
+    return pinoBaixar("indo", "em curso", leva.numero ? `leva ${leva.numero}` : "");
+  if (!podem) return pinoBaixar("off", "sem material", "");
   if (restam === 0)
     return pinoBaixar("ok", leva && leva.guardado ? "guardado" : "concluído",
-      `${num(veio)} tratados` + (leva ? ` · leva ${leva.numero}` : ""));
+      num(veio) + (leva ? ` · leva ${leva.numero}` : ""));
   if (veio) return pinoBaixar("meio", "pela metade", `${num(veio)} de ${num(podem)}`);
   return pinoBaixar("", "a baixar", `${num(restam)} reels`);
 }
@@ -4065,16 +4319,20 @@ async function atualizar() {
   // seria pisca-pisca: quem já viu o dado não precisa ver que ele está sendo conferido.
   if (primeiraCarga) carregando("carga", "Buscando o acervo", "onda");
 
-  const [estado, sel, fontes, retratos, livro, lotes] = await Promise.all([
+  const [estado, sel, fontes, retratos, livro, lotes, cat] = await Promise.all([
     ler("dados/estado.json"), ler("dados/selecao.json"), ler("dados/fontes.json"),
     // arquivo à parte: o do perfil varrido passa de 1 MB e a via de leitura corta ali
     ler("dados/retratos.json"),
     // a capa do livro de atividade: só o resumo por perfil, o histórico vem ao abrir
     ler("dados/atividade/indice.json"),
     // a capa dos lotes: estado e contagem de cada um, sem os passos
-    ler("dados/lotes/indice.json")]);
+    ler("dados/lotes/indice.json"),
+    // as duas listas do sistema. Vêm só com os nomes: quantos perfis usam cada um é
+    // conta que a própria tela faz, porque ela já tem todos os perfis na mão.
+    ler("dados/catalogo.json")]);
 
   if (primeiraCarga) { parado("carga", ""); primeiraCarga = false; }
+  if (cat) CATALOGO = cat;
   selar(estado);
 
   // a seleção é quem calcula os números da tabela; o estado é a cópia dela
@@ -4505,17 +4763,60 @@ document.addEventListener("click", ev => {
   else LOTES_ABERTOS.delete(numero);
 });
 
-/* ============================================================ MARCAR UM PERFIL
+/* ================================================= MERCADO, ETIQUETA E AS DUAS LISTAS
 
-   MERCADO E ETIQUETA SAO A UNICA COISA DESTA TELA QUE NAO E' MEDIDA: elas sao a leitura
-   do Gabriel sobre o perfil, e ninguem tem como deduzi-las do que o Instagram devolve.
-   Por isso ha' um lugar para escrevê-las, e ele fica na tabela de Minerados, que e' o
-   cadastro dos perfis. Os dois filtros da aba de Baixar leem daqui.
+   ELAS SAO A UNICA COISA DESTA TELA QUE NAO E' MEDIDA: sao a leitura do Gabriel sobre o
+   perfil, e ninguem tem como deduzi-las do que o Instagram devolve. Por isso ha' um
+   lugar para escrevê-las, e ele fica na tabela de Minerados, que e' o cadastro dos
+   perfis. Os dois filtros da aba de Baixar leem daqui.
 
-   O PEDIDO VIAJA COMO TEXTO SIMPLES, e nao como JSON: `etiquetar:conta|mercado|a;b`.
-   O caminho ate' a esteira e' o mesmo do lote, e quanto menos aspa e chave o texto
-   tiver, menos chance de alguma camada no meio mexer nele. */
+   ATE' 19/08/2026 ISTO ERAM DOIS CAMPOS DE TEXTO LIVRE, e a lista de nomes era o que
+   estivesse escrito nos perfis. Dois furos nisso, e os dois doem: nao dava para criar um
+   nome antes de usar (o primeiro perfil de um nicho era digitado no vazio, e "financas"
+   e "finanças" viravam dois nichos na primeira letra errada), nem apagar um nome (ele so'
+   sumia quando o ultimo perfil que o carregava fosse reescrito na mao).
+
+   AGORA HA' UM CATALOGO, e o desenho e' o da aba de Configuracoes do Social Tracker,
+   como o Gabriel pediu. Com ele veio a regra que la' nasceu em 14/08: APAGAR SEMPRE PODE,
+   E A PERGUNTA E' PARA ONDE VAO OS PERFIS. Trancar nome em uso nao protege ninguem, so'
+   empurra o trabalho para fora da tela.
+
+   O PEDIDO VIAJA COMO TEXTO SIMPLES, pelo mesmo canal do lote:
+     etiquetar:<conta>|<mercado>|<etq>;<etq>
+     catalogo:criar|nicho|luxo
+     catalogo:remover|etiqueta|hot|<destino ou vazio>                                  */
+
 let etqConta = null;
+let etqMercado = "";                 // o que esta' escolhido na folha, ainda nao salvo
+let etqEtiquetas = new Set();
+
+/* A LEITURA DE ESPERA NAO PASSA PELO ENDERECO CRU.
+   O `ler` corre os dois caminhos e aceita quem responder primeiro, o que e' certo para
+   pintar a tela e errado para esperar uma mudanca: o endereco cru tem cache de borda e
+   serve por minutos o arquivo de antes. Quem espera precisa da resposta do momento, ou
+   fica esperando para sempre uma coisa que ja' aconteceu. */
+async function lerFresco(caminho) {
+  const dentro = caminho.replace(/^dados\//, "");
+  try {
+    const r = await fetch(`${PONTE}/dados/${dentro}?t=${Date.now()}`,
+                          { cache: "no-store" });
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; }
+}
+
+/** Quantos perfis carregam cada nome hoje. Sai da tabela, que ja' tem todos. */
+function usoDoCatalogo() {
+  const nichos = {}, etiquetas = {};
+  const k = s => (s || "").trim().toLowerCase();
+  for (const p of MINERADOS) {
+    if (p.mercado) nichos[k(p.mercado)] = (nichos[k(p.mercado)] || 0) + 1;
+    for (const e of (p.etiquetas || [])) etiquetas[k(e)] = (etiquetas[k(e)] || 0) + 1;
+  }
+  return { nichos, etiquetas };
+}
+
+function listaDo(o) { return (CATALOGO[o === "nicho" ? "nichos" : "etiquetas"] || []); }
+function nomesDo(o) { return listaDo(o).map(x => x.nome); }
 
 document.addEventListener("click", ev => {
   const b = ev.target.closest("[data-etiquetar]");
@@ -4526,42 +4827,302 @@ function abrirMarcacao(conta) {
   const p = MINERADOS.find(x => x.conta === conta);
   if (!p) return;
   etqConta = conta;
+  etqMercado = p.mercado || "";
+  etqEtiquetas = new Set(p.etiquetas || []);
   $("etq_quem").textContent = "@" + conta;
-  $("etq_mercado").value = p.mercado || "";
-  $("etq_etiquetas").value = (p.etiquetas || []).join(", ");
-
-  // O QUE JA' EXISTE FICA A' VISTA, e isso nao e' enfeite: sem a lista, "financas" e
-  // "finanças" viram dois mercados diferentes, e o filtro passa a separar o que devia
-  // estar junto.
-  const mercados = [...new Set(MINERADOS.map(x => x.mercado).filter(Boolean))].sort();
-  $("etq_mercados").innerHTML = mercados.map(m => `<option value="${m}">`).join("");
-  const usadas = [...new Set(MINERADOS.flatMap(x => x.etiquetas || []))].sort();
-  $("etq_usadas").textContent = usadas.length
-    ? "já em uso: " + usadas.join(", ")
-    : "nenhuma etiqueta em uso ainda: a primeira que você escrever abre a lista";
   $("etq_recado").textContent = "";
   $("etq_folha").hidden = false;
+  desenhaFolha();
 }
+
+/** Redesenha a folha inteira a partir do catálogo: os dois escolhedores e as duas listas. */
+function desenhaFolha() {
+  desenhaMercadoDaFolha();
+  desenhaEtiquetasDaFolha();
+  document.querySelectorAll("#etq_folha .cfg-cat").forEach(desenhaCatalogo);
+}
+
+/* O MERCADO É UM SELETOR, E NÃO UM CAMPO. Ele é um só por perfil: isso é uma escolha
+   entre nomes que existem, não uma frase para escrever. */
+function desenhaMercadoDaFolha() {
+  const caixa = $("etq_merc");
+  const menu = caixa.querySelector(".psel-menu");
+  const opcoes = [{ v: "", r: "sem mercado" },
+                  ...nomesDo("nicho").map(n => ({ v: n, r: n }))];
+  if (!opcoes.some(o => o.v === etqMercado)) etqMercado = "";
+  caixa.querySelector(".psel-b span").textContent =
+    opcoes.find(o => o.v === etqMercado).r;
+  menu.innerHTML = opcoes.map(o =>
+    `<button type="button" role="option" data-v="${escapa(o.v)}"${
+      o.v === etqMercado ? ' class="on"' : ""}>${escapa(o.r)}<i>✓</i></button>`).join("");
+}
+
+function desenhaEtiquetasDaFolha() {
+  const todas = nomesDo("etiqueta");
+  $("etq_sem_etq").hidden = todas.length > 0;
+  // CLICAR NA PASTILHA MARCA E DESMARCA. A não escolhida fica apagada, e é o mesmo
+  // desenho: uma caixa de seleção ao lado roubaria a etiqueta do olho.
+  $("etq_lista").innerHTML = todas.map(n =>
+    `<button type="button" class="etq-op${etqEtiquetas.has(n) ? " on" : ""}"
+        data-etq="${escapa(n)}">${window.etiquetaHTML(n)}</button>`).join("");
+}
+
+const escapa = s => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+$("etq_merc").querySelector(".psel-b").addEventListener("click", ev => {
+  ev.stopPropagation();
+  const m = $("etq_merc").querySelector(".psel-menu");
+  const abre = !m.classList.contains("aberto");
+  m.classList.toggle("aberto", abre);
+  ev.currentTarget.setAttribute("aria-expanded", abre ? "true" : "false");
+});
+$("etq_merc").querySelector(".psel-menu").addEventListener("click", ev => {
+  ev.stopPropagation();
+  const b = ev.target.closest("button[data-v]");
+  if (!b) return;
+  etqMercado = b.dataset.v;
+  $("etq_merc").querySelector(".psel-menu").classList.remove("aberto");
+  $("etq_merc").querySelector(".psel-b").setAttribute("aria-expanded", "false");
+  desenhaMercadoDaFolha();
+});
+$("etq_lista").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-etq]");
+  if (!b) return;
+  const n = b.dataset.etq;
+  if (etqEtiquetas.has(n)) etqEtiquetas.delete(n); else etqEtiquetas.add(n);
+  desenhaEtiquetasDaFolha();
+});
+// clicar em qualquer outro lugar fecha as listas suspensas que estiverem abertas
+document.addEventListener("click", () => {
+  document.querySelectorAll("#etq_folha .psel-menu.aberto").forEach(m => {
+    m.classList.remove("aberto");
+    m.parentNode.querySelector(".psel-b").setAttribute("aria-expanded", "false");
+  });
+});
 
 $("etq_cancelar").onclick = () => { $("etq_folha").hidden = true; };
 
 $("etq_vai").onclick = async () => {
   if (!etqConta) return;
-  // os dois separadores saem do valor, senao um nome com barra parte o pedido em dois
-  const limpo = t => t.replace(/[|;]/g, " ").trim();
-  const mercado = limpo($("etq_mercado").value);
-  const etiquetas = $("etq_etiquetas").value.split(",").map(limpo).filter(Boolean);
-
   $("etq_vai").disabled = true;
   carregando("etq_recado", "Gravando a marcação", "bolas");
   try {
-    await mandar("/baixar", { quantos:
-      `etiquetar:${etqConta}|${mercado}|${etiquetas.join(";")}` });
+    await mandar("/baixar", { quantos: `etiquetar:${etqConta}|${etqMercado}|`
+      + [...etqEtiquetas].join(";") });
     parado("etq_recado", "gravado. A tela mostra em menos de um minuto.");
     setTimeout(() => { $("etq_folha").hidden = true; atualizar(); }, 2600);
   } catch (e) { parado("etq_recado", e.message); }
   $("etq_vai").disabled = false;
 };
+
+/* ------------------------------------------------------------ AS DUAS LISTAS
+
+   O DESENHO É O DA ABA DE CONFIGURAÇÕES DO SOCIAL TRACKER, item "Nichos e etiquetas":
+   uma linha por nome, quantos perfis o usam à direita, o xis aparecendo só ao passar o
+   mouse, e a linha de criar encostada no pé, separada por um fio.
+
+   A ESPERA É DIFERENTE DA DE LÁ, e tinha de ser. Lá o pedido entra numa fila na
+   Cloudflare e o computador de casa passa nela de minuto em minuto, então a tela
+   pergunta pelo número do pedido até ele ficar pronto. Aqui quem executa é a esteira do
+   GitHub, que não devolve número nenhum: a tela dispara e passa a reler o próprio
+   catálogo até ele mudar. O sinal para quem olha é o mesmo, roda e cronômetro, porque a
+   espera é real e uma tela parada nesse intervalo é indistinguível de uma travada. */
+const CAT_ESPERA_MAX = 240;                       // segundos antes de desistir de esperar
+
+function desenhaCatalogo(caixa) {
+  const o = caixa.dataset.o;
+  const uso = usoDoCatalogo()[o === "nicho" ? "nichos" : "etiquetas"];
+  const itens = listaDo(o);
+  const lista = caixa.querySelector(".cfg-cat-lista");
+  const conta = $(o === "nicho" ? "cat_n_nicho" : "cat_n_etq");
+
+  if (conta) conta.textContent = itens.length
+    + (o === "nicho" ? (itens.length === 1 ? " mercado" : " mercados")
+                     : (itens.length === 1 ? " etiqueta" : " etiquetas"));
+
+  if (!itens.length) {
+    lista.innerHTML = '<div class="cfg-cat-vazio">Nenhum'
+      + (o === "nicho" ? " mercado criado" : "a etiqueta criada") + " ainda.</div>";
+    return;
+  }
+  lista.innerHTML = itens.map(x => {
+    const n = uso[(x.nome || "").toLowerCase()] || 0;
+    return `<div class="cfg-cat-l" data-n="${escapa(x.nome)}">
+      <span class="cfg-cat-n">${escapa(x.nome)}</span>
+      <span class="cfg-cat-uso">${n ? n + (n === 1 ? " perfil" : " perfis")
+                                    : "sem uso"}</span>
+      <button type="button" class="cfg-cat-x" title="apagar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button></div>`;
+  }).join("");
+}
+
+/** O que a caixa está dizendo: uma frase parada, verde ou vermelha. */
+function catDiz(caixa, txt, tom) {
+  const diz = caixa.querySelector(".cfg-cat-diz");
+  if (diz._relogio) { clearInterval(diz._relogio); diz._relogio = null; }
+  diz.textContent = txt || "";
+  diz.className = "cfg-cat-diz" + (tom ? " " + tom : "");
+}
+
+/** A espera, com roda, três pontos e cronômetro andando de segundo em segundo. */
+function catEsperando(caixa, rotulo, desde) {
+  const diz = caixa.querySelector(".cfg-cat-diz");
+  const tique = () => {
+    const alvo = diz.querySelector(".cfg-cronometro");
+    if (alvo) alvo.textContent = Math.round((Date.now() - desde) / 1000) + "s";
+  };
+  if (!diz._relogio) {
+    diz.className = "cfg-cat-diz cfg-indo";
+    diz.innerHTML = '<span class="cfg-girando"></span><span class="cfg-rotulo"></span>'
+      + '<span class="cfg-pontos"><i></i><i></i><i></i></span>'
+      + '<span class="cfg-cronometro"></span>';
+    diz._relogio = setInterval(tique, 1000);
+  }
+  diz.querySelector(".cfg-rotulo").textContent = rotulo;
+  tique();
+}
+
+function catTravar(caixa, v) {
+  caixa.dataset.ocupado = v ? "1" : "";
+  caixa.querySelector(".cfg-cat-btn").disabled = v;
+  caixa.querySelector(".cfg-cat-novo input").disabled = v;
+}
+
+/** Dispara o pedido e espera o catálogo do acervo refletir o que foi pedido. */
+async function catPedir(caixa, texto, pronto, aoFim) {
+  catTravar(caixa, true);
+  const desde = Date.now();
+  catEsperando(caixa, "enviando", desde);
+  try {
+    await mandar("/baixar", { quantos: texto });
+  } catch (e) {
+    catTravar(caixa, false);
+    return catDiz(caixa, "não deu para deixar o pedido: " + e.message, "ruim");
+  }
+  catEsperando(caixa, "a esteira está aplicando", desde);
+  while ((Date.now() - desde) / 1000 < CAT_ESPERA_MAX) {
+    await new Promise(r => setTimeout(r, 3000));
+    const d = await lerFresco("dados/catalogo.json");
+    if (d && pronto(d)) {
+      CATALOGO = d;
+      catTravar(caixa, false);
+      desenhaFolha();
+      // a tabela e os filtros de Baixar leem daqui, então mudam junto
+      desenhaMinerados();
+      return aoFim();
+    }
+    catEsperando(caixa, "a esteira está aplicando", desde);
+  }
+  catTravar(caixa, false);
+  catDiz(caixa, "passaram quatro minutos e a esteira não confirmou. O pedido não se "
+    + "perdeu: se ela terminar, a mudança aparece sozinha na próxima volta da tela.",
+    "ruim");
+}
+
+const temNome = (d, o, nome) => (d[o === "nicho" ? "nichos" : "etiquetas"] || [])
+  .some(x => x.nome.toLowerCase() === nome.toLowerCase());
+
+document.querySelectorAll("#etq_folha .cfg-cat").forEach(caixa => {
+  const o = caixa.dataset.o;
+  const campo = caixa.querySelector(".cfg-cat-novo input");
+  const botao = caixa.querySelector(".cfg-cat-btn");
+  const oA = o === "nicho" ? "o" : "a";
+
+  function criar() {
+    if (caixa.dataset.ocupado) return;
+    const nome = (campo.value || "").replace(/[|;]/g, " ").trim().slice(0, 28);
+    if (!nome) { campo.focus(); return catDiz(caixa, "escreva um nome primeiro.", "ruim"); }
+    const igual = listaDo(o).find(x => x.nome.toLowerCase() === nome.toLowerCase());
+    if (igual) return catDiz(caixa, `“${igual.nome}” já está na lista.`, "ruim");
+    catPedir(caixa, `catalogo:criar|${o}|${nome}`,
+      d => temNome(d, o, nome),
+      () => { campo.value = ""; catDiz(caixa, `“${nome}” criad${oA}.`, "bom"); });
+  }
+  botao.addEventListener("click", criar);
+  campo.addEventListener("keydown", ev => {
+    if (ev.key === "Enter") { ev.preventDefault(); criar(); }
+  });
+
+  caixa.querySelector(".cfg-cat-lista").addEventListener("click", ev => {
+    const linha = ev.target.closest(".cfg-cat-l");
+    if (!linha || !ev.target.closest(".cfg-cat-x") || caixa.dataset.ocupado) return;
+    const nome = linha.dataset.n;
+    const usados = usoDoCatalogo()[o === "nicho" ? "nichos" : "etiquetas"];
+    const quantos = usados[nome.toLowerCase()] || 0;
+    // VAZIO SAI DIRETO; COM PERFIL, PERGUNTA PARA ONDE ELES VÃO.
+    if (quantos > 0) abrirMover(caixa, linha, nome, quantos);
+    else apagarDoCatalogo(caixa, linha, nome, "");
+  });
+});
+
+/* O PAINEL DE MOVER, que abre dentro da própria linha e não numa caixa flutuante: quem
+   está decidindo o destino precisa continuar vendo, logo acima, o nome que vai sumir. */
+function abrirMover(caixa, linha, nome, quantos) {
+  if (linha.querySelector(".cfg-mover")) return;
+  const o = caixa.dataset.o;
+  const semNada = o === "nicho" ? "deixar sem mercado" : "só tirar a etiqueta";
+  const opcoes = [{ v: "", r: semNada },
+                  ...nomesDo(o).filter(n => n !== nome).map(n => ({ v: n, r: n }))];
+  let destino = "";
+
+  const painel = document.createElement("div");
+  painel.className = "cfg-mover";
+  painel.innerHTML =
+    `<span>${quantos} ${quantos === 1 ? "perfil vai" : "perfis vão"} para</span>`
+    + '<div class="psel cfg-sel"><button type="button" class="psel-b" '
+    + `aria-haspopup="listbox" aria-expanded="false"><span>${escapa(semNada)}</span>`
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" '
+    + 'stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'
+    + '</button><div class="psel-menu" role="listbox">'
+    + opcoes.map((x, i) => `<button type="button" role="option" data-v="${escapa(x.v)}"${
+        i === 0 ? ' class="on"' : ""}>${escapa(x.r)}<i>✓</i></button>`).join("")
+    + '</div></div>'
+    + '<button type="button" class="cfg-cat-btn cfg-vermelho cfg-ok">Apagar</button>'
+    + '<button type="button" class="cfg-cat-btn cfg-fraco cfg-nao">Cancelar</button>';
+  linha.classList.add("cfg-abrindo");
+  linha.appendChild(painel);
+
+  const bsel = painel.querySelector(".psel-b");
+  const msel = painel.querySelector(".psel-menu");
+  painel.addEventListener("click", e => e.stopPropagation());
+  bsel.addEventListener("click", () => {
+    const abre = !msel.classList.contains("aberto");
+    msel.classList.toggle("aberto", abre);
+    bsel.setAttribute("aria-expanded", abre ? "true" : "false");
+  });
+  msel.addEventListener("click", e => {
+    const b = e.target.closest("button[data-v]");
+    if (!b) return;
+    destino = b.dataset.v;
+    bsel.querySelector("span").textContent = b.textContent.replace("✓", "");
+    msel.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    msel.classList.remove("aberto");
+    bsel.setAttribute("aria-expanded", "false");
+  });
+  painel.querySelector(".cfg-nao").addEventListener("click", () => {
+    desenhaCatalogo(caixa); catDiz(caixa, "");
+  });
+  painel.querySelector(".cfg-ok").addEventListener("click", () => {
+    apagarDoCatalogo(caixa, linha, nome, destino);
+  });
+}
+
+function apagarDoCatalogo(caixa, linha, nome, destino) {
+  const o = caixa.dataset.o;
+  const oA = o === "nicho" ? "o" : "a";
+  linha.classList.add("esperando");
+  catPedir(caixa, `catalogo:remover|${o}|${nome}|${destino}`,
+    d => !temNome(d, o, nome),
+    () => {
+      let fim = `“${nome}” apagad${oA}.`;
+      if (destino) fim += ` Os perfis passaram para “${destino}”.`;
+      catDiz(caixa, fim, "bom");
+    });
+}
 
 /* ============================================================ PEDIR O LOTE
 
