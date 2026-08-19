@@ -13,6 +13,15 @@
    "quando": 1787100633,
    "tipo": "selecao",
    "texto": "Régua aplicada: 1137 avaliados, 390 acima da régua."
+  },
+  {
+   "quando": 1787100634,
+   "tipo": "baixa",
+   "conta": "vinci.society",
+   "texto": "0 de 41 baixados.",
+   "feitos": 0,
+   "total": 41,
+   "concluida": false
   }
  ]
 }
