@@ -1,6 +1,19 @@
 {
  "lotes": [
   {
+   "numero": 29,
+   "inicio": 1787177531,
+   "estado": "em curso",
+   "baixados": 0,
+   "limpos": 0,
+   "reprovados": 0,
+   "mb": 0,
+   "execucao": "32307685934",
+   "contas": [
+    "thenews.business"
+   ]
+  },
+  {
    "numero": 28,
    "inicio": 1787158584,
    "estado": "pronto",
@@ -16,5 +29,5 @@
    "guardado": true
   }
  ],
- "atualizado": 1787158696
+ "atualizado": 1787177531
 }

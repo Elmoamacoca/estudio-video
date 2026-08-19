@@ -1,0 +1,13 @@
+{
+ "numero": 29,
+ "passos": [
+  {
+   "quando": 1787177531,
+   "tipo": "escolha",
+   "texto": "Escolhidos: @thenews.business",
+   "contas": [
+    "thenews.business"
+   ]
+  }
+ ]
+}
