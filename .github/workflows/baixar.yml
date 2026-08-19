@@ -24,8 +24,9 @@ on:
         # uma sonda que imprimiu o pedido deste lado, oito nomes diferentes para "de
         # quais perfis" chegaram todos vazios, e so' este chegou inteiro. A ponte nao
         # pode ser mexida da bancada, entao o canal e' este. Quem separa os sentidos e'
-        # a funcao `pedido` do baixar.py, e o prefixo `etiquetar:` desvia para a marcacao.
-        description: "de quais perfis (nomes separados por virgula), um teto de arquivos, ou etiquetar:conta|mercado|a;b"
+        # a funcao `pedido` do baixar.py. Dois prefixos desviam do caminho de baixar:
+        # `etiquetar:` marca um perfil, e `catalogo:` mexe nas duas listas do sistema.
+        description: "de quais perfis (virgula), um teto, etiquetar:conta|mercado|a;b ou catalogo:acao|o_que|nome|destino"
         default: "150"
 
 permissions:
@@ -63,16 +64,29 @@ jobs:
           python etiquetar.py "$PEDIDO"
           python selecionar.py
 
+      # MEXER NAS DUAS LISTAS TAMBEM NAO E' BAIXAR, e entra pela mesma porta.
+      # Apagar um nicho reescreve todo perfil que estava nele, entao a selecao e' refeita
+      # logo em seguida: sem isso a tela continuaria mostrando o mercado antigo ate' a
+      # proxima rodada de mineracao, que pode nao vir hoje.
+      - name: Mexer no catalogo
+        if: startsWith(inputs.quantos, 'catalogo:')
+        run: |
+          python catalogo.py "$PEDIDO"
+          python selecionar.py
+
       - name: Conferir os programas
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         run: python conferir.py
 
       - name: Abrir o registro do lote
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         run: python registro.py abrir "$LOTE" "${{ github.run_id }}" "$PEDIDO"
 
       - name: Aplicar a regua escolhida na tela
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         # SEM ARGUMENTOS, de proposito. Passar formato e corte por aqui refazia a
         # selecao com uma regua diferente da que foi escolhida ao iniciar: o lote saia
         # com outro criterio e ninguem via onde tinha mudado. A regua mora no acervo,
@@ -83,6 +97,7 @@ jobs:
 
       - name: Baixar o material cru
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         run: |
           python baixar.py "$PEDIDO"
           python registro.py baixado "$LOTE"
@@ -100,6 +115,7 @@ jobs:
       # sao dois arquivos, ffmpeg e ffprobe, e leva segundos.
       - name: Preparar a limpeza
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         run: |
           python registro.py passo "$LEVA" preparo "Preparando a limpeza: buscando a ferramenta de vídeo."
           curl -sL -o /tmp/ff.tar.xz             https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
@@ -110,18 +126,21 @@ jobs:
 
       - name: Tratar
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         run: |
           python limpar.py brutos tratados
           python registro.py limpo "$LOTE"
 
       - name: Avisar que o pacote esta subindo
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         run: |
           python registro.py passo "$LEVA" entrega "Montando o pacote para entrega. Um lote grande leva alguns minutos aqui."
 
       - name: Entregar o lote tratado
         id: entrega
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         uses: actions/upload-artifact@v4
         with:
           name: leva-${{ github.run_number }}
@@ -131,7 +150,9 @@ jobs:
           compression-level: 0
 
       - name: Fechar o registro do lote
-        if: always() && inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+        if: always() && inputs.quantos != 'sonda'
+          && !startsWith(inputs.quantos, 'etiquetar:')
+          && !startsWith(inputs.quantos, 'catalogo:')
         run: |
           python registro.py fechar "$LOTE" \
             "${{ steps.entrega.outcome == 'success' && 'sim' || 'nao' }}"
