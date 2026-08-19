@@ -5,14 +5,14 @@
    "nome": "the news business",
    "rotulo": "reels",
    "primeiro": 1787176012,
-   "ultimo": 1787176719,
-   "eventos": 2,
+   "ultimo": 1787177420,
+   "eventos": 4,
    "falhas": 0,
    "avisos": 0,
-   "ultimo_tipo": "varredura",
-   "lidos": 261,
+   "ultimo_tipo": "concluido",
+   "lidos": 267,
    "publicacoes": 0,
-   "completo": false
+   "completo": true
   },
   {
    "conta": "blankpartners",
@@ -57,5 +57,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787176720
+ "atualizado": 1787177420
 }

@@ -55,9 +55,9 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 95,
-   "baixaveis": 95,
+   "baixaveis": 93,
    "baixados": 0,
-   "restam": 95
+   "restam": 93
   },
   {
    "conta": "thenews.business",
@@ -66,20 +66,20 @@
    "seguidores": 139802,
    "mercado": null,
    "etiquetas": [],
-   "atualizado": 1787176709,
+   "atualizado": 1787176744,
    "publicacoes": 2542,
-   "lidos": 261,
-   "completo": false,
+   "lidos": 267,
+   "completo": true,
    "relendo": false,
-   "mais_antigo": 1723038764,
+   "mais_antigo": 1698161780,
    "mais_novo": 1787001048,
-   "reels": 261,
+   "reels": 267,
    "imagens": 0,
    "carrosseis": 0,
-   "acima": 110,
-   "baixaveis": 110,
+   "acima": 112,
+   "baixaveis": 112,
    "baixados": 0,
-   "restam": 110
+   "restam": 112
   },
   {
    "conta": "vinci.society",
@@ -106,7 +106,7 @@
    "restam": 0
   }
  ],
- "avaliados": 1398,
+ "avaliados": 1404,
  "itens": [
   {
    "codigo": "C67PQt6rNs6",
@@ -2368,6 +2368,25 @@
    "indice": 8.93,
    "engajamento": 6.33,
    "endereco": "https://www.instagram.com/p/C1A-WvVRb8o/"
+  },
+  {
+   "codigo": "C8pqm4xRirW",
+   "formato": "reels",
+   "data": 1719345056,
+   "views": 273996,
+   "curtidas": 6637,
+   "comentarios": 131,
+   "duracao": 66.1,
+   "legenda": "a ferramenta utilizada foi a SORA, da OpenAI. o uso de AI generativa para conteúdos publicitários está oficialmente inaugurado.\n\nde acordo com a marca, a tecnologia SORA consegue criar vídeos de até um minuto com cenas realistas e vários personagens, todos gerados a partir de instruções de texto.\n\nno vídeo, é possível assistir ao fundador da empresa (Charles Lazarus) ainda jovem, sonhando em ter a",
+   "arquivo": "https://scontent-lhr6-2.cdninstagram.com/o1/v/t2/f2/m86/AQMZl6O0NOf7SQvuf-Wmog1Qs1eEehfLZPOl_l3HwcjtRhTn4G5FUDEwriT-z5wHzeVPabNhEbECXajVuX_srzAWY5fBHA2HVMJ8Ojc.mp4?_nc_cat=105&_nc_sid=5e9851&_nc_ht=scontent-lhr6-2.cdninstagram.com&_nc_ohc=iIBXFEj2jM4Q7kNvwHzjTFX&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6OTk2MTUxMzA1MDMxODEwLCJhc3NldF9hZ2VfZGF5cyI6Nzg1LCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6NjYsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=59afac97a74b9b31&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC9DMDQ0NUVBRDQyMTNBNzVBNDVGMDZBNjMwQzJDQjVBMF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYR2lnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8xMTc2NDM2NzMwMzQwNDgxXzUxNjg1OTU0MDY3NDA5MjkxNzgubXA0FQICyAESACgAGAAbAogHdXNlX29pbAExEnByb2dyZXNzaXZlX3JlY2lwZQExFQAAJoTC7srR_8QDFQIoAkMzLBdAUIZmZmZmZhgSZGFzaF9iYXNlbGluZV8xX3YxEQB1_gdl5p0BAA&_nc_gid=dSCmQMRQh7RSFEkv5oD8eg&_nc_ss=7a22e&_nc_zt=28&oh=00_AQEoi484OT2Cj95Sc8unUscfa-4HTeGzD_0JTZXJf2FRFw&oe=6A87F066",
+   "largura": 720,
+   "conta": "thenews.business",
+   "escala": "exibicoes",
+   "mediana_do_formato": 30815,
+   "corte_usado": 1.5,
+   "indice": 8.89,
+   "engajamento": 2.47,
+   "endereco": "https://www.instagram.com/p/C8pqm4xRirW/"
   },
   {
    "codigo": "DPj8hshAqWV",
@@ -4857,6 +4876,25 @@
    "indice": 3.88,
    "engajamento": 3.63,
    "endereco": "https://www.instagram.com/p/DFfxkh1ikNV/"
+  },
+  {
+   "codigo": "C9f-JQKRfsI",
+   "formato": "reels",
+   "data": 1721167295,
+   "views": 118120,
+   "curtidas": 6272,
+   "comentarios": 55,
+   "duracao": 90.0,
+   "legenda": "Foi assim que a Monster fez suas ações subirem quase 300.000%.\n\nSe você já viu por aí uma lata preta com garras verdes em seu rótulo, você conhece a Monster Energy, uma das principais marcas de energéticos do mundo.\n\nGostou desse vídeo? Não esqueça de seguir meu perfil e a the bizness (@thebizness.cc).\n\n#monster #monsterenergy #energetico #ações #investimentos #negocios #mercadofinanceiro #curiosi",
+   "arquivo": "https://scontent-lhr11-1.cdninstagram.com/o1/v/t2/f2/m86/AQPqKeXDWOV3JRb7tpF9LXSH4J0XEzxB_B9SgWTIeslQZcoL_FdtUtVH5EGZZaELVchq5_qVL54elBqo-SVTmjRWrrOOFngpkW0gVNs.mp4?_nc_cat=110&_nc_sid=5e9851&_nc_ht=scontent-lhr11-1.cdninstagram.com&_nc_ohc=phsT4dIXeBsQ7kNvwFFDx2d&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6ODE3NDI3ODMwMTE5MzMzLCJhc3NldF9hZ2VfZGF5cyI6NzYzLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6OTAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=de44b8e367fc0592&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8xMTRFNTU0NkExNjNGRDQ1MTVDOUM2OTM0RDE4Qjg5Rl92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYRmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC85NDA1NTg0ODQ0OTAzMDVfNTk2MzIzMzg5MDIwNTU1NzQ5Ni5tcDQVAgLIARIAKAAYABsCiAd1c2Vfb2lsATEScHJvZ3Jlc3NpdmVfcmVjaXBlATEVAAAmyu6M98fc8wIVAigCQzMsF0BWfcKPXCj2GBJkYXNoX2Jhc2VsaW5lXzFfdjERAHX-B2XmnQEA&_nc_gid=dSCmQMRQh7RSFEkv5oD8eg&_nc_ss=7a22e&_nc_zt=28&oh=00_AQFl7ZvXQ--a3cq9zueg3iXBa4YT74Z_FcNBY5WzHUoQ1w&oe=6A8816EB",
+   "largura": 720,
+   "conta": "thenews.business",
+   "escala": "exibicoes",
+   "mediana_do_formato": 30815,
+   "corte_usado": 1.5,
+   "indice": 3.83,
+   "engajamento": 5.36,
+   "endereco": "https://www.instagram.com/p/C9f-JQKRfsI/"
   },
   {
    "codigo": "C57Ir_ZtswN",
@@ -9569,44 +9607,6 @@
    "indice": 1.5,
    "engajamento": 0.07,
    "endereco": "https://www.instagram.com/p/DT_sA72DTYt/"
-  },
-  {
-   "codigo": "DX2sKEuCp6L",
-   "formato": "reels",
-   "data": 1777764201,
-   "views": 15588,
-   "curtidas": 272,
-   "comentarios": 11,
-   "duracao": 60.8,
-   "legenda": "Fomos convidados para viver o Silva Day e mais do que um evento, foi uma aula sobre construção de marca.\n\nMais de 2 mil alunos reunidos gratuitamente, com show e o anúncio da sociedade com @filiperet .\n\nVárias marcas parceiras, ativações bem pensadas e uma entrega que vai muito além do produto, a Silva reforçando mais uma vez o seu principal ativo, sua comunidade.\n\nMuito foda poder acompanhar e ve",
-   "arquivo": "https://scontent-iad6-1.cdninstagram.com/o1/v/t2/f2/m86/AQNg7or4m9Ca8yJU4FGddcwOL6ME8I1Ce8vBQSqmO_2xRy_0uEHHE12dAFCQzc32kllbig70_eFnh5hbT4thX5p5QLcBZE8tm8VSVLU.mp4?_nc_cat=100&_nc_sid=5e9851&_nc_ht=scontent-iad6-1.cdninstagram.com&_nc_ohc=rnblMtBtwugQ7kNvwHy-5M9&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTQxMDY0NTM5Nzc2MDM4OCwiYXNzZXRfYWdlX2RheXMiOjEwNywidmlfdXNlY2FzZV9pZCI6MTAwOTksImR1cmF0aW9uX3MiOjYwLCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=6548ee5c5e6c4a73&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC9CNjRFQUM0NzIyQTA1NjdBREY4RkEyMTNDQzM0QkI4Rl92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzAwNDlCQkU3OUJEQTFBQTEyMkM3RTVBNjNCRjcxRUE2X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaIprOdr76BBRUCKAJDMywXQE5iDEm6XjUYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=d8fZGhhPbyhWBbOk4l5gnQ&_nc_ss=7a22e&_nc_zt=28&oh=00_AQFJGvC1qdJran9Q9QRJxrkmGJ3OmGvBTzXOh8depaYMHg&oe=6A86726D",
-   "largura": 720,
-   "conta": "brandsdecoded__",
-   "escala": "exibicoes",
-   "mediana_do_formato": 10391,
-   "corte_usado": 1.5,
-   "indice": 1.5,
-   "engajamento": 1.82,
-   "endereco": "https://www.instagram.com/p/DX2sKEuCp6L/"
-  },
-  {
-   "codigo": "DT-pWYegqKn",
-   "formato": "reels",
-   "data": 1769441279,
-   "views": 15545,
-   "curtidas": 267,
-   "comentarios": 10,
-   "duracao": 108.2,
-   "legenda": "Marcos Leta lançou o @paz_energy num momento em que consumidor brasileiro já está exausto de marca fazendo barulho. Red Bull e Monster investem milhões em esportes radicais, eventos massivos, patrocínios de atletas — a mensagem sempre foi adrenalina, intensidade, ultrapassar limites. Esse roteiro funcionou por anos porque energético era novidade e mercado ainda estava sendo construído.\n\nSó que hoj",
-   "arquivo": "https://scontent-fra5-2.cdninstagram.com/o1/v/t2/f2/m86/AQMI9NY78yPfLnGaaAKN4cBwEqWpB3P3p6XwEA_bDWyo_8DDot9yv-WoNKi4qtyNOPuwA2C7fO26POfNOvuKKlBZcYdYIDOOsfouTPg.mp4?_nc_cat=107&_nc_sid=5e9851&_nc_ht=scontent-fra5-2.cdninstagram.com&_nc_ohc=cRoXziQ_6EkQ7kNvwF3dR0p&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTc4OTcyMTE2ODEzODk1MzgsImFzc2V0X2FnZV9kYXlzIjoyMDQsInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjoxMDgsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=2c9b903b6e90b0aa&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC82RjQ2NjA1OUFEN0QwMjJDQjcxMTU2NDE5QzYxMjlBM192aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzUxNDkxMzRDREY3MDU4MkFBNzVDM0Y3RTUyQzcyOEJEX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbE7-mL6trKPxUCKAJDMywXQFsKn752yLQYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=172Ibbgsw2GUa1EvceN3nw&_nc_ss=7a22e&_nc_zt=28&oh=00_AQFv2_CBUzZmO6X4QUE-t9Vl-mBtjQgiGBMhxWaj6E8pzg&oe=6A868620",
-   "largura": 720,
-   "conta": "brandsdecoded__",
-   "escala": "exibicoes",
-   "mediana_do_formato": 10391,
-   "corte_usado": 1.5,
-   "indice": 1.5,
-   "engajamento": 1.78,
-   "endereco": "https://www.instagram.com/p/DT-pWYegqKn/"
   }
  ]
 }

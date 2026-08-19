@@ -76,6 +76,36 @@
     "total": 261,
     "publicacoes": 2542
    }
+  },
+  {
+   "quando": 1787177420,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 6 reels novos, 267 no total",
+   "detalhe": {
+    "rodada": 143,
+    "maquinas": 1,
+    "gravacoes": 1,
+    "passos": [
+     {
+      "quando": 1787176744,
+      "maquina": "vaga 1"
+     }
+    ],
+    "novos": 6,
+    "total": 267,
+    "publicacoes": 2542
+   }
+  },
+  {
+   "quando": 1787177420,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os reels deste perfil: 267 no total",
+   "detalhe": {
+    "total": 267,
+    "publicacoes": 2542
+   }
   }
  ]
 }

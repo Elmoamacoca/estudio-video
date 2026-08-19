@@ -1,7 +1,7 @@
 {
  "prontas": 500,
- "avaliados": 1398,
- "ultima_rodada": 1787176720,
+ "avaliados": 1404,
+ "ultima_rodada": 1787177420,
  "perfis": [
   {
    "conta": "blankpartners",
@@ -45,9 +45,9 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 95,
-   "baixaveis": 95,
+   "baixaveis": 93,
    "baixados": 0,
-   "restam": 95
+   "restam": 93
   },
   {
    "conta": "thenews.business",
@@ -56,20 +56,20 @@
    "seguidores": 139802,
    "mercado": null,
    "etiquetas": [],
-   "atualizado": 1787176709,
+   "atualizado": 1787176744,
    "publicacoes": 2542,
-   "lidos": 261,
-   "completo": false,
+   "lidos": 267,
+   "completo": true,
    "relendo": false,
-   "mais_antigo": 1723038764,
+   "mais_antigo": 1698161780,
    "mais_novo": 1787001048,
-   "reels": 261,
+   "reels": 267,
    "imagens": 0,
    "carrosseis": 0,
-   "acima": 110,
-   "baixaveis": 110,
+   "acima": 112,
+   "baixaveis": 112,
    "baixados": 0,
-   "restam": 110
+   "restam": 112
   },
   {
    "conta": "vinci.society",
