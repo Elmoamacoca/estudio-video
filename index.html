@@ -1766,45 +1766,60 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 /* ---------------------------------------------------------- 3 · a oficina */
 .ed-tela{display:grid;grid-template-columns:266px 1fr;gap:34px;align-items:start}
-.ed-trilho{position:sticky;top:88px}
+/* O TRILHO É TÃO ALTO QUANTO O VIDRO, e gruda enquanto a galeria rola por baixo.
+   Sem a altura fixa, `flex:1` nos passos não tem o que dividir e a espinha volta
+   a ser a caixinha de canto que o Gabriel reprovou duas vezes. */
+.ed-trilho{position:sticky;top:88px;display:flex;flex-direction:column;
+  height:calc(100vh - 150px);min-height:420px}
 
-/* O TRILHO DO EXEMPLO QUE O GABRIEL MANDOU (21st.dev, ScrollRevealContentA):
-   número em cima, uma linha vertical fina que PREENCHE, e ao lado o título e a descrição.
-   Passo por vir a meia opacidade.
+/* O TRILHO É UMA ESPINHA QUE DESCE A TELA INTEIRA.
 
-   A PRIMEIRA VERSÃO ERA BOTÃO COM ÍCONE dentro de um quadrado, e ele reprovou. Estava
-   certo: quadrado com ícone é menu, um item ao lado do outro, todos do mesmo tamanho.
-   Isto é percurso: a linha liga um passo ao seguinte e mostra o quanto já andou. */
-.ed-ponto{display:flex;flex-direction:column;cursor:pointer;opacity:.45;
-  transition:opacity .3s}
+   Terceira tentativa, e é a do rabisco que o Gabriel mandou em 19/08/2026: uma linha
+   vertical longa correndo pela lateral esquerda, com os números espalhados por ela, um
+   perto do topo, o seguinte mais abaixo, e assim por diante.
+
+   AS DUAS ANTERIORES ERRARAM O TAMANHO, não o desenho. A primeira era botão com ícone
+   num quadrado, que é menu. A segunda já tinha a linha que preenche, mas comprimida no
+   alto: dois passos dentro de duzentos e cinquenta pixels leem como uma caixinha de
+   canto, não como percurso. O que faz a coisa virar percurso é ela ocupar o caminho.
+
+   Por isso cada passo tem `flex:1`: eles dividem a altura do vidro entre si, e a linha
+   de um encosta na do outro, formando uma espinha contínua do topo ao pé da tela. */
+.ed-ponto{display:flex;flex-direction:column;cursor:pointer;opacity:.4;flex:1;
+  min-height:0;transition:opacity .35s}
 .ed-ponto.ativo{opacity:1}
-.ed-ponto-n{margin:0 0 8px 22px;font-size:22px;font-weight:800;letter-spacing:-.02em;
-  color:var(--ink);font-variant-numeric:tabular-nums}
-.ed-ponto-corpo{display:flex;gap:16px}
+.ed-ponto-n{margin:0 0 10px 24px;font-size:26px;font-weight:800;letter-spacing:-.03em;
+  color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.ed-ponto-corpo{display:flex;gap:18px;flex:1;min-height:0}
 
 /* A BARRA: um trilho apagado e, por cima, o preenchido, cuja altura é a medida do
-   avanço. Os dois no mesmo lugar, com o de cima crescendo de zero. */
-.ed-barra{position:relative;flex:0 0 2px;width:2px;min-height:64px}
-.ed-barra i{position:absolute;inset:0;background:var(--rule-solid);border-radius:2px}
+   avanço. Ela cresce com o passo, então numa tela alta ela fica longa mesmo. */
+.ed-barra{position:relative;flex:0 0 2px;width:2px;align-self:stretch;min-height:70px}
+.ed-barra i{position:absolute;inset:0;background:var(--rule-solid);border-radius:2px;
+  transform-origin:top}
 .ed-barra b{position:absolute;top:0;left:0;width:2px;border-radius:2px;
-  background:var(--accent);transition:height .7s cubic-bezier(.22,1,.36,1)}
-.ed-ponto-txt{padding-bottom:26px}
-.ed-ponto-txt h3{margin:-3px 0 3px;font-size:15px;font-weight:700;letter-spacing:-.01em}
+  background:var(--accent);transition:height .9s cubic-bezier(.22,1,.36,1)}
+.ed-ponto-txt{padding-bottom:20px}
+.ed-ponto-txt h3{margin:-4px 0 3px;font-size:16px;font-weight:700;letter-spacing:-.01em}
 .ed-ponto-txt p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
 
-/* A ENTRADA NA OFICINA: os passos sobem um atrás do outro, e as barras desenham. Não é
-   enfeite, é o que separa "escolhi a leva" de "comecei a editar". */
-@keyframes ed-sobe{from{opacity:0;transform:translateY(14px)}
-                   to{opacity:.45;transform:none}}
-@keyframes ed-sobe-ativo{from{opacity:0;transform:translateY(14px)}
+/* A ENTRADA NA OFICINA: a linha DESENHA de cima para baixo, e os passos aparecem atrás
+   dela. Não é enfeite, é o que separa "escolhi a leva" de "comecei a editar". */
+@keyframes ed-linha{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes ed-sobe{from{opacity:0;transform:translateY(18px)}
+                   to{opacity:.4;transform:none}}
+@keyframes ed-sobe-ativo{from{opacity:0;transform:translateY(18px)}
                          to{opacity:1;transform:none}}
+.ed-trilho.entrou .ed-barra i{animation:ed-linha .75s cubic-bezier(.22,1,.36,1) both}
 .ed-trilho.entrou .ed-ponto{animation:ed-sobe .5s cubic-bezier(.22,1,.36,1) both}
 .ed-trilho.entrou .ed-ponto.ativo{animation-name:ed-sobe-ativo}
-.ed-trilho.entrou .ed-ponto:nth-child(2){animation-delay:.06s}
-.ed-trilho.entrou .ed-ponto:nth-child(3){animation-delay:.14s}
-.ed-trilho.entrou .ed-ponto:nth-child(4){animation-delay:.22s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(1) .ed-barra i{animation-delay:.10s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(2){animation-delay:.10s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(2) .ed-barra i{animation-delay:.55s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(3){animation-delay:.20s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(3) .ed-barra i{animation-delay:1s}
 @media(prefers-reduced-motion:reduce){
-  .ed-trilho.entrou .ed-ponto{animation:none}
+  .ed-trilho.entrou .ed-ponto,.ed-trilho.entrou .ed-barra i{animation:none}
   .ed-barra b{transition:none}
 }
 
@@ -1886,9 +1901,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 /* A ENTRADA: tudo sobe junto, e é isto que diz "começou". Sem ela a troca de tela é um
    pisca, e a oficina parece que já estava aberta o tempo todo. */
-@keyframes ed-entra{from{opacity:0;transform:translateY(26px)}
+@keyframes ed-entra{from{opacity:0;transform:translateY(42px)}
                     to{opacity:1;transform:none}}
-.ed-focado .ed-tela{animation:ed-entra .5s cubic-bezier(.22,1,.36,1) both}
+.ed-focado .ed-tela{animation:ed-entra .62s cubic-bezier(.22,1,.36,1) both}
 
 /* A SAÍDA FICA NO ALTO E À DIREITA, onde o botão de fechar mora em qualquer tela cheia.
    Com o cabeçalho fora, ela é o único caminho de volta desenhado. */
@@ -1902,9 +1917,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-tela:not(.x) .ed-sair{opacity:.75}
 .ed-sair:hover{opacity:1}
 
-/* A GALERIA CENTRALIZADA, e não colada na esquerda. Com o cabeçalho fora sobra muita
-   largura, e quarenta e uma peças esparramadas de ponta a ponta viram parede. */
-.ed-focado .ed-palco{max-width:1180px;margin:0 auto;width:100%}
+/* A GALERIA OCUPA A LARGURA QUE SOBRA, e é isso que o rabisco do Gabriel mostra: fileira
+   cheia de peças, uma atrás da outra, descendo até acabarem. A versão anterior prendia
+   tudo em 1.180 pixels e sobrava tela preta dos dois lados, que é o oposto de tela cheia.
+
+   As colunas nascem da largura disponível: peça de 172 pixels no mínimo, e o navegador
+   encaixa quantas couberem. Num monitor largo dá sete ou oito por fileira. */
+.ed-focado .ed-palco{width:100%;min-width:0}
+.ed-focado .ed-galeria{grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}
 .ed-focado .ed-cab{text-align:left}
 
 /* AS PEÇAS SOBEM UMA ATRÁS DA OUTRA. O atraso é calculado pela posição na grade, com um
@@ -1925,8 +1945,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-galeria.subindo .ed-peca:nth-child(10){animation-delay:.29s}
 .ed-galeria.subindo .ed-peca:nth-child(n+11){animation-delay:.32s}
 
-/* O TRILHO GRUDA NO ALTO DA TELA, e não embaixo do cabeçalho que já não existe. */
-.ed-focado .ed-trilho{top:26px}
+/* O TRILHO GRUDA NO ALTO DA TELA, e não embaixo do cabeçalho que já não existe.
+   E ganha a altura toda: sem cabeçalho sobram mais cem pixels de vidro. */
+.ed-focado .ed-trilho{top:26px;height:calc(100vh - 78px)}
 
 @media(prefers-reduced-motion:reduce){
   .ed-focado .ed-tela,.ed-galeria.subindo .ed-peca{animation:none}
@@ -5970,6 +5991,13 @@ const listarRascunhos = () => noCofre(COFRE.rascunhos, false, s => s.getAll());
 
 async function salvarRascunho() {
   if (!EDIT_LEVA) return;
+  // UM RASCUNHO POR LEVA, e não um por vez que ele abre a leva. Sem esta busca, entrar
+  // duas vezes na leva 28 criava dois rascunhos idênticos, e a portaria virava uma
+  // lista de repetições que ele tinha de apagar na mão.
+  if (!EDIT_RASCUNHO) {
+    const todos = (await listarRascunhos()) || [];
+    EDIT_RASCUNHO = todos.find(x => x.leva === EDIT_LEVA.numero) || null;
+  }
   const r = {
     id: EDIT_RASCUNHO ? EDIT_RASCUNHO.id : `e${Date.now()}`,
     leva: EDIT_LEVA.numero,
