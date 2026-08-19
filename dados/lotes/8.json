@@ -16,6 +16,13 @@
    "tipo": "baixa",
    "texto": "3 arquivos baixados, 16 MB.",
    "arquivos": 3
+  },
+  {
+   "quando": 1787098401,
+   "tipo": "limpeza",
+   "texto": "Limpeza: 3 aprovados, 0 reprovados.",
+   "aprovados": 3,
+   "reprovados": 0
   }
  ]
 }
