@@ -117,8 +117,7 @@ def andamento(numero: int, conta: str, feitos: int, total: int, fim: bool = Fals
         return
     _ultimo[conta] = agora
     por_conta(numero, "baixa", conta,
-              f"@{conta}: {feitos} de {total} baixados."
-              + (" Conta concluída." if fim else ""),
+              f"{feitos} de {total} baixados." + (" Conta concluída." if fim else ""),
               feitos=feitos, total=total, concluida=fim)
     empurrar(f"leva {numero}: baixa de @{conta}")
 
@@ -175,8 +174,9 @@ def limpo(numero: int) -> None:
 
     for conta, d in sorted(contas.items()):
         por_conta(numero, "falha" if d["mau"] else "limpeza", conta,
-                  f"@{conta}: {d['ok']} tratados"
-                  + (f", {len(d['mau'])} reprovados e fora da leva." if d["mau"] else "."),
+                  f"{d['ok']} tratado{'' if d['ok'] == 1 else 's'}"
+                  + (f", {len(d['mau'])} reprovado{'' if len(d['mau']) == 1 else 's'}"
+                     " e fora da leva." if d["mau"] else "."),
                   aprovados=d["ok"], reprovados=len(d["mau"]))
 
 
