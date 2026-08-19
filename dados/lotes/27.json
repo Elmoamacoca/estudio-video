@@ -55,6 +55,11 @@
    "quando": 1787156700,
    "tipo": "fim",
    "texto": "Leva entregue: 41 peças tratadas, 41 saíram da fileira."
+  },
+  {
+   "quando": 1787157417,
+   "tipo": "guardado",
+   "texto": "41 peças guardadas na pasta local, em C:\\Users\\Gabri\\Estudio\\levas\\leva-27."
   }
  ]
 }
