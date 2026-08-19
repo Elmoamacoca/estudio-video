@@ -1794,7 +1794,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
   <!-- ================================================ O QUE HÁ PARA BAIXAR
 
-       O TAMANHO DO LOTE NÃO SE DIGITA MAIS: ELE É CONTADO.
+       O TAMANHO DA LEVA NÃO SE DIGITA MAIS: ELE É CONTADO.
        Havia um campo de quantidade, e ele obrigava a decidir duas coisas para pedir
        uma: quais perfis e quantos arquivos. Agora a escolha é uma só. Os perfis são
        marcados na fileira de baixo e a conta aparece sozinha aqui em cima.
@@ -1810,7 +1810,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
     </div>
 
     <div class="caixa lote-montar">
-      <h3>Montar um lote</h3>
+      <h3>Montar uma leva</h3>
       <p class="nota">Marque os perfis na fileira abaixo. Sai tudo o que passou da
         régua naqueles perfis, em ordem de desempenho, e some daqui o que já veio.</p>
 
@@ -1860,7 +1860,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           </div>
         </div>
 
-        <button class="acao forte" id="lote_vai" type="button" disabled>Montar lote</button>
+        <button class="acao forte" id="lote_vai" type="button" disabled>Montar leva</button>
       </div>
 
       <p class="nota" id="recado_lote">Carregando o acervo.</p>
@@ -1873,13 +1873,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
     <div class="fileira" id="prontos"><div class="vazio">Carregando.</div></div>
   </div>
 
-  <!-- ============================================ O REGISTRO DO LOTE, AO VIVO
+  <!-- ============================================ O REGISTRO DA LEVA, AO VIVO
 
        Mesmo molde do registro da mineração, e pelo mesmo motivo: entre apertar o botão
        e o arquivo ficar pronto passam minutos, e sem registro esse silêncio é igual ao
        silêncio de uma falha. Cada fase do trabalho grava aqui na hora em que acontece.
 
-       AS TRÊS MEDIDAS SÃO DO LOTE DE QUE A CABEÇA FALA, e não somas do histórico. O que
+       AS TRÊS MEDIDAS SÃO DA LEVA DE QUE A CABEÇA FALA, e não somas do histórico. O que
        interessa ao olhar é este lote: quantos desceram, quantos passaram na limpeza e
        quantos foram barrados. -->
   <div class="secao">
@@ -1891,8 +1891,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
         </span>
         <div class="kon-quem">
-          <b id="lot_titulo">Nenhum lote ainda</b>
-          <span id="lot_resumo">Marque os perfis acima e aperte Montar lote.</span>
+          <b id="lot_titulo">Nenhuma leva ainda</b>
+          <span id="lot_resumo">Marque os perfis acima e aperte Montar leva.</span>
         </div>
         <div class="kon-dir" id="lot_vivo">
           <span class="kon-vivo"><i></i>parado</span>
@@ -1927,7 +1927,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       </div>
 
       <div id="lot_lista"></div>
-      <div class="gal-vazia" id="lot_vazio">Nenhum lote pedido ainda.</div>
+      <div class="gal-vazia" id="lot_vazio">Nenhuma leva pedida ainda.</div>
     </div>
   </div>
 
@@ -3537,7 +3537,7 @@ function contarLote(filtrados, nome) {
 
   const b = $("lote_vai");
   b.disabled = !total;
-  b.textContent = total ? `Montar lote de ${num(total)}` : "Montar lote";
+  b.textContent = total ? `Montar leva de ${num(total)}` : "Montar leva";
 
   $("recado_baixar").textContent = espera
     ? `${num(espera)} ${nome} esperando, em ${filtrados.length} `
@@ -3545,11 +3545,11 @@ function contarLote(filtrados, nome) {
     : "";
   if (Date.now() < travaDoRecado) return;
   $("recado_lote").textContent = !espera
-    ? "Nada esperando. Cada lote que sai apaga daqui o que ele levou."
+    ? "Nada esperando. Cada leva que sai apaga daqui o que ela levou."
     : total
       ? `${num(total)} ${nome} de ${marcados.length} `
         + (marcados.length === 1 ? "perfil marcado" : "perfis marcados")
-      : "Marque um perfil na fileira abaixo para montar o lote.";
+      : "Marque um perfil na fileira abaixo para montar a leva.";
 }
 
 /* A marcação da fileira. O ouvinte é da página, e não de cada cartão: a fileira é
@@ -3859,8 +3859,8 @@ const LOTES_ABERTOS = new Set();
 const PASSOS = new Map();
 
 const ETAPAS = {
-  pedido: "pedido", selecao: "régua", baixa: "baixa", limpeza: "limpeza",
-  fim: "entregue", falha: "falha",
+  escolha: "escolha", pedido: "pedido", selecao: "régua", baixa: "baixa",
+  limpeza: "tratamento", fim: "entregue", falha: "falha", guardado: "guardado",
 };
 
 function desenhaRegistroDeLotes(indice) {
@@ -3874,8 +3874,8 @@ function desenhaRegistroDeLotes(indice) {
     emCurso ? "trabalhando" : "parado"}</span>`;
 
   if (!atual) {
-    $("lot_titulo").textContent = "Nenhum lote ainda";
-    $("lot_resumo").textContent = "Marque os perfis acima e aperte Montar lote.";
+    $("lot_titulo").textContent = "Nenhuma leva ainda";
+    $("lot_resumo").textContent = "Marque os perfis acima e aperte Montar leva.";
     for (const k of ["lot_baixados", "lot_limpos", "lot_reprovados"])
       $(k).textContent = "0";
     if (alvo.dataset.desenho !== "") { alvo.dataset.desenho = ""; alvo.innerHTML = ""; }
@@ -3889,7 +3889,7 @@ function desenhaRegistroDeLotes(indice) {
   const de = (atual.contas || []).length
     ? "de @" + atual.contas.join(", @")
     : "dos melhores de todos os perfis";
-  $("lot_titulo").textContent = `Lote ${atual.numero} · ${
+  $("lot_titulo").textContent = `Leva ${atual.numero} · ${
     atual.estado === "em curso" ? "em curso" :
     atual.estado === "pronto" ? "pronto" : "falhou"}`;
   $("lot_resumo").textContent = atual.estado === "em curso"
@@ -3907,7 +3907,7 @@ function desenhaRegistroDeLotes(indice) {
       <button class="liv-cabeca" type="button" aria-expanded="${aberto}">
         <span class="liv-ponto"></span>
         <span class="liv-id">
-          <span class="liv-nome"><b>Lote ${l.numero}</b>
+          <span class="liv-nome"><b>Leva ${l.numero}</b>
             <span class="liv-etq">${l.estado}</span></span>
           <span class="liv-sub">${quem} · ${num(l.limpos || 0)} tratados de ${
             num(l.baixados || 0)} baixados${l.mb ? ` · ${l.mb} MB` : ""} · ${
@@ -3930,8 +3930,12 @@ function desenhaRegistroDeLotes(indice) {
 function passosEmHtml(passos) {
   if (!passos) return '<div class="liv-ev"><div class="oque">carregando</div></div>';
   if (!passos.length) return '<div class="liv-ev"><div class="oque">sem passos gravados</div></div>';
+  // O PASSO DE UMA CONTA LEVA O NOME DELA NO RÓTULO. Numa leva de cinquenta perfis são
+  // cinquenta linhas de baixa e cinquenta de tratamento, e sem o arroba no rótulo elas
+  // seriam cem linhas iguais.
   return passos.map(p => `<div class="liv-ev ${p.tipo === "falha" ? "falha" : ""}">
-    <i></i><div class="oque"><b>${ETAPAS[p.tipo] || p.tipo}</b>
+    <i></i><div class="oque"><b>${ETAPAS[p.tipo] || p.tipo}${
+      p.conta ? ` · @${p.conta}` : ""}</b>
       <div class="dados"><span>${p.texto}</span></div></div>
     <span class="data">${quando(p.quando)}</span></div>`).join("");
 }
@@ -4031,13 +4035,13 @@ document.addEventListener("click", async ev => {
   if (!contas.length) return;
   b.disabled = true;
   travaDoRecado = Date.now() + 30000;
-  carregando("recado_lote", `Montando o lote de ${contas.length} `
+  carregando("recado_lote", `Montando a leva de ${contas.length} `
     + (contas.length === 1 ? "perfil" : "perfis"), "bolas");
   try {
     // formato e corte não vão daqui: vêm da régua gravada no acervo, a mesma escolhida
     // ao iniciar. Mandar outra por aqui criaria duas verdades.
     await mandar("/baixar", { quantos: contas.join(",") });
-    parado("recado_lote", "lote em preparo. Ele leva alguns minutos e aparece "
+    parado("recado_lote", "leva em preparo. Ela leva alguns minutos e aparece "
       + "aqui embaixo ao terminar. O que vier some da fileira.");
     ESCOLHIDOS.clear();
   } catch (e) { parado("recado_lote", e.message); }
