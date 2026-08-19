@@ -1710,6 +1710,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   border-top:1px solid var(--rule-solid)}
 .ed-pe .nota{margin-right:auto}
 .ed-etapa[hidden]{display:none}
+/* `hidden` NÃO VENCE QUEM TEM `display` ESCRITO, e o pé do passo 1 tem: sem esta linha
+   o botão de continuar aparecia antes de haver leva escolhida. Terceiro lugar desta tela
+   onde o mesmo detalhe morde. */
+.ed-pe[hidden]{display:none}
 
 /* ------------------------------------------------------ as levas para escolher */
 .ed-levas{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
@@ -5823,17 +5827,32 @@ function desenhaPecas() {
   // UM DE CADA VEZ, e só quando entra na tela. Quarenta e um pedidos de arquivo ao mesmo
   // tempo fazem o navegador engasgar e o disco trabalhar para nada: a maioria está
   // embaixo da dobra e nunca vai ser olhada.
-  const olho = new IntersectionObserver(async (entradas, obs) => {
+  async function abrirPeca(v) {
+    if (v.src) return;
+    try {
+      const f = await EDIT_PECAS[Number(v.dataset.arquivo)].h.getFile();
+      v.src = URL.createObjectURL(f) + "#t=1.5";
+    } catch (err) { /* arquivo sumiu da pasta desde a leitura */ }
+  }
+
+  const olho = new IntersectionObserver((entradas, obs) => {
     for (const e of entradas) {
       if (!e.isIntersecting) continue;
       obs.unobserve(e.target);
-      const i = Number(e.target.dataset.arquivo);
-      try {
-        const f = await EDIT_PECAS[i].h.getFile();
-        e.target.src = URL.createObjectURL(f) + "#t=1.5";
-      } catch (err) { /* arquivo sumiu da pasta desde a leitura */ }
+      abrirPeca(e.target);
     }
   }, { rootMargin: "300px" });
+
+  // A PRIMEIRA FILEIRA ABRE SEM ESPERAR O OBSERVADOR, e isso é rede e não pressa.
+  // O observador só dispara quando o navegador está de fato pintando a página: numa aba
+  // de fundo, numa janela minimizada ou logo depois de trocar de aba, ele pode não
+  // disparar nenhuma vez, e a galeria fica com doze retângulos pretos sem nada explicando.
+  // Doze arquivos abertos de saída custam pouco e garantem que sempre há o que ver.
+  const PRIMEIRAS = 12;
+  document.querySelectorAll("#ed_galeria video[data-arquivo]").forEach(v => {
+    if (Number(v.dataset.arquivo) < PRIMEIRAS) abrirPeca(v);
+  });
+
   document.querySelectorAll("#ed_galeria video[data-arquivo]").forEach(v => {
     v.addEventListener("loadedmetadata", () => {
       const s = Math.round(v.duration || 0);
