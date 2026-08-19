@@ -2348,7 +2348,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="kon-rot">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                  stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5
-                 5 5-5M5 21h14"/></svg><span>baixados</span>
+                 5 5-5M5 21h14"/></svg><span>baixados do Instagram</span>
           </div>
           <b id="lot_baixados">0</b>
         </div>
@@ -4688,6 +4688,11 @@ const ETAPAS = {
   limpeza:  "5 · tratado",
   entrega:  "6 · montando o pacote",
   fim:      "7 · pacote entregue",
+  // SÃO DUAS BAIXAS COM O MESMO NOME, e foi isso que fez o registro parecer mentiroso:
+  // o passo 3 é a máquina da esteira puxando os reels do Instagram, o passo 8 é este
+  // computador puxando o pacote pronto da esteira. Por isso nenhum dos dois diz só
+  // "baixando": cada um diz de onde para onde.
+  buscando: "8 · trazendo para o seu computador",
   guardado: "8 · guardado no seu computador",
   falha:    "falhou",
 };
@@ -4845,13 +4850,16 @@ function paraOndeFoi(p, numero) {
    Esta linha é montada pela tela, e não vem do acervo. Ela nasce no instante em que a
    leva fica pronta sem estar guardada, e é substituída pela linha de verdade, com o
    link, assim que a pasta local existir. */
-function etapaOitoEmCurso(leva) {
+function etapaOitoEmCurso(leva, passos) {
   if (!leva || leva.estado !== "pronto" || leva.guardado) return "";
+  // Assim que o computador começa, ele mesmo escreve a linha, com os megabytes andando.
+  // Esta aqui é só para o intervalo entre a esteira terminar e ele acordar.
+  if ((passos || []).some(p => p.tipo === "buscando")) return "";
   return `<div class="liv-ev indo"><i></i><div class="oque">
-      <b>${ETAPAS.guardado}</b>
-      <div class="dados"><span>Trazendo as ${num(leva.limpos || 0)} peças para o seu
-        computador. São ${leva.mb || 0} MB: leva um ou dois minutos, e o caminho da pasta
-        aparece aqui quando terminar.</span></div></div>
+      <b>${ETAPAS.buscando}</b>
+      <div class="dados"><span>A leva está pronta na esteira. O seu computador olha de
+        minuto em minuto e vai trazer os ${leva.mb || 0} MB: quando começar, os megabytes
+        aparecem aqui andando.</span></div></div>
     <span class="data"><span class="liv-girando"></span></span></div>`;
 }
 
@@ -4871,13 +4879,15 @@ function passosEmHtml(passos, leva) {
   // O PASSO DE UMA CONTA LEVA O NOME DELA NO RÓTULO. Numa leva de cinquenta perfis são
   // cinquenta linhas de baixa e cinquenta de tratamento, e sem o arroba no rótulo elas
   // seriam cem linhas iguais.
-  return etapaOitoEmCurso(leva) + [...passos].reverse().map(p =>
-    `<div class="liv-ev ${p.tipo === "falha" ? "falha" : ""}">
+  return etapaOitoEmCurso(leva, passos) + [...passos].reverse().map(p =>
+    `<div class="liv-ev ${p.tipo === "falha" ? "falha"
+                        : p.tipo === "buscando" ? "indo" : ""}">
     <i></i><div class="oque"><b>${ETAPAS[p.tipo] || p.tipo}${
       p.conta ? ` · @${p.conta}` : ""}</b>
       <div class="dados">${p.tipo === "guardado" ? paraOndeFoi(p, numero)
                                                  : `<span>${p.texto}</span>`}</div></div>
-    <span class="data">${quando(p.quando)}</span></div>`).join("");
+    <span class="data">${p.tipo === "buscando"
+      ? '<span class="liv-girando"></span>' : quando(p.quando)}</span></div>`).join("");
 }
 
 /* Copiar o caminho, para quem estiver noutra máquina. O aviso vive dois segundos no
