@@ -1,10 +1,6 @@
 {
  "nichos": [
   {
-   "nome": "luxo",
-   "criado": 1787146514
-  },
-  {
    "nome": "teste",
    "criado": 1787146657
   }
@@ -15,5 +11,5 @@
    "criado": 1787146233
   }
  ],
- "atualizado": 1787146657
+ "atualizado": 1787146670
 }
