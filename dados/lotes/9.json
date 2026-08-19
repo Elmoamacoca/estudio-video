@@ -13,13 +13,13 @@
    "texto": "Régua aplicada: 1137 avaliados, 390 acima da régua."
   },
   {
-   "quando": 1787099991,
+   "quando": 1787099995,
    "tipo": "baixa",
    "conta": "blankpartners",
-   "texto": "@blankpartners: 0 de 4 baixados.",
-   "feitos": 0,
+   "texto": "@blankpartners: 4 de 4 baixados. Conta concluída.",
+   "feitos": 4,
    "total": 4,
-   "concluida": false
+   "concluida": true
   }
  ]
 }
