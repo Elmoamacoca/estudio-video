@@ -23,6 +23,11 @@
    "texto": "Limpeza: 3 aprovados, 0 reprovados.",
    "aprovados": 3,
    "reprovados": 0
+  },
+  {
+   "quando": 1787098403,
+   "tipo": "fim",
+   "texto": "Lote fechado: 3 peças tratadas e entregues, 3 saíram da fileira."
   }
  ]
 }
