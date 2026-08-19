@@ -3,7 +3,7 @@
   {
    "numero": 29,
    "inicio": 1787177531,
-   "estado": "em curso",
+   "estado": "pronto",
    "baixados": 112,
    "limpos": 107,
    "reprovados": 5,
@@ -11,7 +11,8 @@
    "execucao": "32307685934",
    "contas": [
     "thenews.business"
-   ]
+   ],
+   "fim": 1787177748
   },
   {
    "numero": 28,
@@ -29,5 +30,5 @@
    "guardado": true
   }
  ],
- "atualizado": 1787177741
+ "atualizado": 1787177748
 }
