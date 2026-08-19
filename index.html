@@ -2333,17 +2333,27 @@ async function ler(caminho) {
   // existe. O livro de atividade mora em pasta própria e precisa da pasta.
   const dentro = caminho.replace(/^dados\//, "");
   const agora = Date.now();
+  // A RESPOSTA VEM ROTULADA, e não crua. Sem o rótulo não dá para separar duas coisas
+  // que parecem a mesma: "a ponte disse que esse arquivo não existe" e "a ponte não
+  // respondeu". No primeiro caso o endereço cru não deve ser consultado, porque ele tem
+  // cache de borda e serve por minutos um arquivo que já foi apagado: foi o que fez a
+  // tela mostrar levas que tinham acabado de ser limpas.
   const pegar = end => fetch(end, { cache: "no-store" })
-    .then(r => r.ok ? r.json() : Promise.reject(new Error("sem resposta")));
+    .then(r => r.ok ? r.json().then(d => ({ tem: true, d }))
+                    : { tem: false, sumiu: r.status === 404 })
+    .catch(() => ({ tem: false }));
 
-  const daPonte = pegar(`${PONTE}/dados/${dentro}?t=${agora}`).catch(() => null);
-  const doCru = pegar(`${CRU}/${caminho}?t=${agora}`).catch(() => null);
-  const tarde = new Promise(r => setTimeout(() => r("tarde"), PACIENCIA));
+  const daPonte = pegar(`${PONTE}/dados/${dentro}?t=${agora}`);
+  const doCru = pegar(`${CRU}/${caminho}?t=${agora}`);
+  const tarde = new Promise(r => setTimeout(() => r({ tarde: true }), PACIENCIA));
 
   const primeiro = await Promise.race([daPonte, tarde]);
-  if (primeiro && primeiro !== "tarde") return primeiro;
-  // a ponte demorou ou falhou: fica com o que houver, de qualquer um dos dois
-  return (await doCru) ?? (await daPonte) ?? null;
+  if (primeiro.tem) return primeiro.d;
+  if (primeiro.sumiu) return null;                     // a ponte falou: não existe
+  const cru = await doCru;
+  if (cru.tem) return cru.d;
+  const ponte = await daPonte;
+  return ponte.tem ? ponte.d : null;
 }
 
 async function mandar(rota, corpo) {
