@@ -29,6 +29,22 @@
    "feitos": 1,
    "total": 1,
    "concluida": true
+  },
+  {
+   "quando": 1787100028,
+   "tipo": "limpeza",
+   "conta": "blankpartners",
+   "texto": "@blankpartners: 4 tratados.",
+   "aprovados": 4,
+   "reprovados": 0
+  },
+  {
+   "quando": 1787100028,
+   "tipo": "limpeza",
+   "conta": "brandsdecoded__",
+   "texto": "@brandsdecoded__: 1 tratados.",
+   "aprovados": 1,
+   "reprovados": 0
   }
  ]
 }
