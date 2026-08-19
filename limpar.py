@@ -195,16 +195,34 @@ if __name__ == "__main__":
         print(f"nenhum .mp4 em {origem}")
         raise SystemExit(1)
 
-    passaram = reprovados = 0
+    passaram, reprovados, laudos = 0, 0, []
     for arq in arquivos:
         laudo = limpar(arq, destino / arq.name)
+        laudo["arquivo"] = arq.name
+        laudos.append(laudo)
         if laudo.get("limpo"):
             passaram += 1
             print(f"  limpo   {arq.name}  ({laudo['segundos']}s, {laudo['casca']})")
         else:
             reprovados += 1
+            # O REPROVADO NAO SEGUE VIAGEM. Entregar um arquivo que nao passou seria pior
+            # do que nao entregar: ele iria para o Instagram com a sobra dentro, e
+            # ninguem saberia qual dos arquivos do lote era o furado.
+            (destino / arq.name).unlink(missing_ok=True)
             print(f"  REPROVA {arq.name}: {laudo.get('erro') or laudo.get('sobras')} "
                   f"{laudo.get('marcas')} {laudo.get('tags_formato')} "
                   f"{laudo.get('tags_trilha')}")
+
+    # O LAUDO FICA JUNTO DOS ARQUIVOS, para o registro da tela ler depois. Sem ele, a
+    # unica prova da limpeza seria o texto que rolou no terminal da esteira, que o
+    # Gabriel nao le'.
+    destino.mkdir(parents=True, exist_ok=True)
+    (destino / "_limpeza.json").write_text(
+        json.dumps({"quando": int(time.time()), "laudos": laudos},
+                   ensure_ascii=False, indent=1), encoding="utf-8")
+
     print(f"\n{passaram} limpos, {reprovados} reprovados")
-    raise SystemExit(0 if not reprovados else 2)
+    # SAI BEM MESMO COM REPROVADO, de proposito: o lote continua e entrega o que passou.
+    # Quem conta a reprovacao para o Gabriel e' o registro da tela, e derrubar o trabalho
+    # aqui faria um arquivo ruim custar os outros trinta que estavam certos.
+    raise SystemExit(0 if passaram else 2)
