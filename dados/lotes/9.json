@@ -20,6 +20,15 @@
    "feitos": 4,
    "total": 4,
    "concluida": true
+  },
+  {
+   "quando": 1787099996,
+   "tipo": "baixa",
+   "conta": "brandsdecoded__",
+   "texto": "@brandsdecoded__: 0 de 1 baixados.",
+   "feitos": 0,
+   "total": 1,
+   "concluida": false
   }
  ]
 }
