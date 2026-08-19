@@ -1,6 +1,17 @@
 {
  "lotes": [
   {
+   "numero": 7,
+   "inicio": 1787098250,
+   "estado": "em curso",
+   "baixados": 0,
+   "limpos": 0,
+   "reprovados": 0,
+   "mb": 0,
+   "execucao": "32200226482",
+   "contas": []
+  },
+  {
    "numero": 6,
    "inicio": 1787098183,
    "estado": "falhou",
@@ -13,5 +24,5 @@
    "fim": 1787098189
   }
  ],
- "atualizado": 1787098189
+ "atualizado": 1787098250
 }
