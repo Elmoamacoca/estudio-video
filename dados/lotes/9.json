@@ -22,13 +22,13 @@
    "concluida": true
   },
   {
-   "quando": 1787099996,
+   "quando": 1787099999,
    "tipo": "baixa",
    "conta": "brandsdecoded__",
-   "texto": "@brandsdecoded__: 0 de 1 baixados.",
-   "feitos": 0,
+   "texto": "@brandsdecoded__: 1 de 1 baixados. Conta concluída.",
+   "feitos": 1,
    "total": 1,
-   "concluida": false
+   "concluida": true
   }
  ]
 }
