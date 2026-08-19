@@ -3,13 +3,14 @@
   {
    "numero": 9,
    "inicio": 1787099988,
-   "estado": "em curso",
+   "estado": "pronto",
    "baixados": 5,
    "limpos": 5,
    "reprovados": 0,
    "mb": 68,
    "execucao": "32202078997",
-   "contas": []
+   "contas": [],
+   "fim": 1787100031
   },
   {
    "numero": 8,
@@ -48,5 +49,5 @@
    "fim": 1787098189
   }
  ],
- "atualizado": 1787100028
+ "atualizado": 1787100031
 }
