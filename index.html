@@ -5162,6 +5162,12 @@ function mexerNosPerfisDaTela(o, nome, destino) {
       p.etiquetas = resto.sort((a, b) => a.localeCompare(b, "pt"));
     }
   }
+  // E A FOLHA ABERTA SEGUE O PERFIL DELA. O nome que estava escolhido ali em cima pode
+  // ser justamente o que acabou de sumir: sem esta linha, apagar "luxo" mandando para
+  // "moda" deixava o seletor do perfil em "sem mercado", e salvar em seguida apagaria a
+  // marcação que a própria remoção tinha acabado de fazer.
+  const eu = MINERADOS.find(x => x.conta === etqConta);
+  if (eu) { etqMercado = eu.mercado || ""; etqEtiquetas = new Set(eu.etiquetas || []); }
 }
 
 /* ============================================================ PEDIR O LOTE
