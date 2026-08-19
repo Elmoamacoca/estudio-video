@@ -4911,8 +4911,14 @@ $("etq_vai").onclick = async () => {
   try {
     await mandar("/baixar", { quantos: `etiquetar:${etqConta}|${etqMercado}|`
       + [...etqEtiquetas].join(";") });
-    parado("etq_recado", "gravado. A tela mostra em menos de um minuto.");
-    setTimeout(() => { $("etq_folha").hidden = true; atualizar(); }, 2600);
+    // A TABELA MUDA AGORA, pelo mesmo motivo do apagar: reler o acervo traria de volta o
+    // arquivo do cache de borda, que é o de antes. A esteira leva perto de um minuto e a
+    // volta de vinte e cinco segundos confirma sozinha.
+    const p = MINERADOS.find(x => x.conta === etqConta);
+    if (p) { p.mercado = etqMercado || null; p.etiquetas = [...etqEtiquetas].sort(); }
+    desenhaMinerados();
+    parado("etq_recado", "gravado.");
+    setTimeout(() => { $("etq_folha").hidden = true; }, 1400);
   } catch (e) { parado("etq_recado", e.message); }
   $("etq_vai").disabled = false;
 };
@@ -5118,10 +5124,39 @@ function apagarDoCatalogo(caixa, linha, nome, destino) {
   catPedir(caixa, `catalogo:remover|${o}|${nome}|${destino}`,
     d => !temNome(d, o, nome),
     () => {
+      mexerNosPerfisDaTela(o, nome, destino);
       let fim = `“${nome}” apagad${oA}.`;
       if (destino) fim += ` Os perfis passaram para “${destino}”.`;
       catDiz(caixa, fim, "bom");
     });
+}
+
+/* A MESMA TROCA QUE A ESTEIRA FEZ, REFEITA AQUI NA MEMÓRIA DA TELA.
+
+   Sem isto a tela ficava uma volta atrasada, e de um jeito que se lê como erro: apagar
+   "luxo" mandando o perfil para "moda" respondia "os perfis passaram para moda" e logo
+   ao lado a lista dizia "moda, sem uso". As duas frases na mesma tela, uma negando a
+   outra.
+
+   NÃO DÁ PARA SÓ RELER O ACERVO, e é aí que está o detalhe. A leitura corre dois
+   caminhos, a ponte e o endereço cru, e vale quem responder primeiro; o `selecao.json`
+   tem 638 KB e leva quinze segundos pela ponte contra um pelo cru, então quem responde é
+   sempre o cru, que tem cache de borda e serve por minutos o arquivo de antes. Reler
+   traria de volta o estado anterior com cara de estado atual.
+
+   A troca é simples e conhecida: é exatamente a que o `catalogo.py` acabou de aplicar
+   nos perfis do acervo, e as duas estão escritas lado a lado de propósito. */
+function mexerNosPerfisDaTela(o, nome, destino) {
+  const k = s => (s || "").trim().toLowerCase();
+  for (const p of MINERADOS) {
+    if (o === "nicho") {
+      if (k(p.mercado) === k(nome)) p.mercado = destino || null;
+    } else if ((p.etiquetas || []).some(e => k(e) === k(nome))) {
+      const resto = p.etiquetas.filter(e => k(e) !== k(nome));
+      if (destino && !resto.some(e => k(e) === k(destino))) resto.push(destino);
+      p.etiquetas = resto.sort((a, b) => a.localeCompare(b, "pt"));
+    }
+  }
 }
 
 /* ============================================================ PEDIR O LOTE
