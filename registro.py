@@ -220,6 +220,11 @@ if __name__ == "__main__":
         limpo(numero)
     elif fase == "fechar":
         fechar(numero, (sys.argv[3] if len(sys.argv) > 3 else "sim") == "sim")
+    elif fase == "passo":
+        # UM PASSO SOLTO, escrito pela propria esteira. Serve para as esperas que nao
+        # sao fase de trabalho e mesmo assim demoram: preparar a ferramenta, subir o
+        # pacote. Sem isto, esses minutos passam sem uma linha na tela.
+        passo(numero, sys.argv[3], " ".join(sys.argv[4:]))
     else:
         raise SystemExit(f"fase desconhecida: {fase}")
     # a selecao e' refeita depois da marca, senao a tela mostraria o saldo velho
