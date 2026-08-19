@@ -1218,7 +1218,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 /* ------------------------------------------------ A TABELA LARGA DE MINERADOS
 
-   Onze colunas não cabem em tela nenhuma sem rolagem, e a rolagem existe: `.tab-rolo`
+   Treze colunas não cabem em tela nenhuma sem rolagem, e a rolagem existe: `.tab-rolo`
    já tem `overflow-x`. O que não existia era o AVISO de que ela existe. A barra vem
    escondida do sistema de origem, onde a tabela é estreita e cabe inteira; aqui o botão
    da última coluna ficava metade fora e a leitura era de tabela quebrada.
@@ -1228,8 +1228,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
      1. a coluna de ação gruda na direita, então o botão nunca sai de vista, role-se
         quanto for. O fundo dela é opaco para o texto das outras colunas passar por baixo;
      2. as colunas param de se espremer: com largura mínima, a rolagem entra em vez de
-        o conteúdo virar sopa. */
-#tab_minerados{min-width:1080px}
+        o conteúdo virar sopa.
+
+   O NÚMERO SUBIU DE 1.080 PARA 1.520 em 19/08/2026, e o primeiro palpite, 1.360, estava
+   curto: com ele a tabela cabia, mas cabia espremendo a coluna de Baixar até ela virar
+   duas linhas picadas. Uma tabela que rola e mostra tudo é melhor que uma tabela mais
+   estreita que esconde. Duas coisas seguraram o número: a marcação desceu de baixo do
+   nome do perfil, e o botão "Marcar" saiu da ponta da linha. */
+#tab_minerados{min-width:1520px}
 
 .tab td.tab-acao, .tab th.tab-acao{position:sticky;right:0;z-index:2;
   background:var(--branco);box-shadow:-10px 0 12px -10px rgba(0,0,0,.45)}
@@ -1261,12 +1267,48 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 #recado_lote{margin-top:18px}
 #recado_filtros{margin-top:10px}
 
-/* A MARCAÇÃO NA TABELA, embaixo do nome do perfil. Coluna nova alargaria a tabela, que
-   já rola de lado; aqui a marcação anda junto de quem ela descreve. */
-.tab-marca{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
-.tab-marca .mercado{font-size:11.5px;font-weight:600;color:var(--muted);
-                    text-transform:uppercase;letter-spacing:.05em}
-.tab-marca .sem{font-size:11.5px;color:var(--soft)}
+/* ------------------------------ MERCADO, ETIQUETA E BAIXAR: AS TRÊS COLUNAS NOVAS
+
+   A marcação já morou embaixo do nome do perfil, espremida em duas pastilhas, para não
+   alargar uma tabela que já rolava de lado. Perdia o principal: dali não se comparava
+   dois perfis nem se ordenava por elas. Em 19/08/2026 viraram coluna, e a rolagem, que
+   o Gabriel aceitou, é o preço.
+
+   E A CÉLULA É O BOTÃO. O botão "Marcar" saiu da linha; clicar no mercado ou na
+   etiqueta abre a mesma folha. Célula vazia diz "definir", que é convite e não erro. */
+/* LARGURA MÍNIMA NAS TRÊS, e isto não é capricho de layout. A tabela distribui o espaço
+   pelo conteúdo, e as colunas de número, que são oito, ganhavam a disputa: a coluna de
+   Baixar nasceu com cinquenta pixels e o estado do perfil saía picado em duas linhas,
+   "254 r / régu". Coluna espremida é coluna que mente. */
+.tab-marc{vertical-align:middle;min-width:112px}
+.tab-marc-etq{min-width:142px}
+.tab-baixa{min-width:152px;vertical-align:middle}
+.tab-toque{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;cursor:pointer;
+           padding:4px 7px;margin:-4px -7px;border-radius:8px;
+           border:1px solid transparent;transition:background .12s,border-color .12s}
+.tab-toque:hover{background:var(--paper-2);border-color:var(--rule-solid)}
+.tab-toque:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tab-toque .mercado{font-size:11.5px;font-weight:600;color:var(--ink);
+                    text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.tab-toque .sem{font-size:12px;color:var(--soft)}
+.tab-toque:hover .sem{color:var(--muted)}
+.tab-etqs{max-width:190px}
+
+/* A COLUNA DE BAIXAR usa o mesmo par de linhas da cobertura, só que encostado à
+   esquerda: em cima o estado, embaixo o número que o sustenta. Estado sem número é
+   opinião. */
+.tab-esq{align-items:flex-start}
+.tab-esq i{margin-top:3px;white-space:nowrap}
+.pino.meio{color:var(--ambar);
+           border-color:color-mix(in srgb,var(--ambar) 35%,transparent)}
+.pino.meio::before{background:var(--ambar)}
+.pino.indo::before{background:var(--chart-2);animation:bxpulso 1.4s ease-in-out infinite}
+@keyframes bxpulso{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* AS COLUNAS DE NÚMERO APERTAM, e as de texto não. Com três colunas a mais a tabela
+   passou de 1.080 para perto de 1.400 pixels: tirar quatro pixels de cada lado das oito
+   colunas de número devolve sessenta e quatro sem espremer nada que se leia. */
+.tab td.tab-num,.tab th.tab-num{padding-left:10px;padding-right:10px}
 .tab-acao .acao + .acao{margin-left:6px}
 
 /* ------------------------------------------------- A FILEIRA DE PERFIS
@@ -1300,6 +1342,111 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                 stroke-linecap:round;stroke-linejoin:round}
 .fperfil{position:relative}
 .fperfil.marcado .fperfil-certo{display:flex}
+
+/* ==================================================== O TIRA-DÚVIDAS DA ABA DE BAIXAR
+
+   UMA BOLHA NO CANTO E UMA FOLHA QUE ENTRA PELA DIREITA.
+
+   OS DOIS MORAM FORA DAS ABAS, e quem os esconde nas outras é a troca de aba. Dentro da
+   seção seria mais simples e não precisaria de programa nenhum, mas não funciona: `.aba`
+   tem animação de entrada com `transform`, e elemento com animação de transform vira
+   âncora para quem é `position:fixed`. A gaveta parava na altura da seção, com o fundo
+   escuro cortado no meio da tela, em vez de ir de topo a rodapé.
+
+   A FOLHA É LARGA E ROLA POR DENTRO. O conteúdo é documentação, não um balão de dica:
+   cabe leitura de dois minutos ali, e ela não pode empurrar a página. */
+.ajuda-bolha{position:fixed;right:24px;bottom:24px;z-index:60;
+  height:48px;padding:0 18px 0 15px;display:inline-flex;align-items:center;gap:9px;
+  border-radius:99px;border:1px solid var(--rule-solid);background:var(--branco);
+  color:var(--ink);cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.20);
+  font-family:var(--fonte);font-size:13.5px;font-weight:600;
+  transition:transform .16s, box-shadow .16s, border-color .16s}
+.ajuda-bolha:hover{transform:translateY(-2px);border-color:var(--accent);
+  box-shadow:0 14px 34px rgba(0,0,0,.26)}
+.ajuda-bolha svg{width:20px;height:20px;flex-shrink:0;color:var(--accent)}
+.ajuda-bolha-rot{letter-spacing:-.01em}
+
+/* O celular perde o rótulo e vira só o círculo: ali a bolha disputa espaço com o
+   polegar, e "Dúvidas" escrito não vale a largura. */
+@media (max-width:640px){
+  .ajuda-bolha{right:16px;bottom:16px;width:48px;padding:0;justify-content:center}
+  .ajuda-bolha-rot{display:none}
+}
+
+.ajuda-fundo{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.42);
+  backdrop-filter:blur(2px);animation:ajudaEntra .18s ease both}
+.ajuda-fundo[hidden],.ajuda-folha[hidden]{display:none}
+
+.ajuda-folha{position:fixed;top:0;right:0;bottom:0;z-index:71;width:min(560px,100vw);
+  display:flex;flex-direction:column;background:var(--branco);
+  border-left:1px solid var(--rule-solid);box-shadow:-24px 0 60px rgba(0,0,0,.30);
+  animation:ajudaDesliza .22s cubic-bezier(.22,1,.36,1) both}
+@keyframes ajudaEntra{from{opacity:0}to{opacity:1}}
+@keyframes ajudaDesliza{from{transform:translateX(26px);opacity:0}
+                        to{transform:none;opacity:1}}
+
+.ajuda-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  padding:22px 24px 18px;border-bottom:1px solid var(--rule-solid);flex-shrink:0}
+.ajuda-cab h2{margin:0;font-size:19px;font-weight:700;letter-spacing:-.02em}
+.ajuda-cab .nota{margin:5px 0 0}
+.ajuda-fecha{width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;
+  justify-content:center;border-radius:10px;border:1px solid var(--rule-solid);
+  background:transparent;color:var(--muted);cursor:pointer;transition:background .14s}
+.ajuda-fecha:hover{background:var(--paper-2);color:var(--ink)}
+.ajuda-fecha svg{width:16px;height:16px}
+
+.ajuda-corpo{flex:1;overflow-y:auto;padding:20px 24px 40px;
+  scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
+.ajuda-corpo::-webkit-scrollbar{width:9px}
+.ajuda-corpo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
+
+/* O CAMINHO INTEIRO, ANTES DAS PERGUNTAS. Quem abre um tira-dúvidas sem saber a forma
+   da coisa fica lendo resposta solta. Os quatro passos ficam em coluna, numerados, com
+   uma linha ligando um ao outro: é uma esteira, e ela é lida de cima para baixo. */
+.ajuda-trilho{display:flex;flex-direction:column;gap:2px;margin:0 0 26px;
+  padding-left:15px;border-left:2px solid var(--rule-solid)}
+.ajuda-passo{position:relative;padding:8px 0 8px 14px}
+.ajuda-passo::before{content:"";position:absolute;left:-21px;top:14px;width:9px;height:9px;
+  border-radius:99px;background:var(--accent);border:2px solid var(--branco)}
+.ajuda-passo b{display:block;font-size:13px;font-weight:700;letter-spacing:-.01em}
+.ajuda-passo span{display:block;font-size:12.5px;color:var(--muted);line-height:1.5;
+  margin-top:2px}
+
+.ajuda-grupo{margin:26px 0 10px;font-size:11.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em}
+.ajuda-grupo:first-child{margin-top:0}
+
+/* CADA PERGUNTA É UM `details`, e não um acordeão escrito à mão: o navegador já sabe
+   abrir, fechar, responder ao teclado e ser lido por leitor de tela. */
+.ajuda-item{border:1px solid var(--rule-solid);border-radius:var(--r-md);
+  background:var(--paper);margin-bottom:8px;overflow:hidden}
+.ajuda-item[open]{background:var(--branco);border-color:var(--accent)}
+.ajuda-item > summary{list-style:none;cursor:pointer;padding:13px 40px 13px 15px;
+  font-size:13.5px;font-weight:600;color:var(--ink);position:relative;
+  transition:background .14s}
+.ajuda-item > summary::-webkit-details-marker{display:none}
+.ajuda-item > summary:hover{background:var(--paper-2)}
+.ajuda-item > summary::after{content:"";position:absolute;right:16px;top:calc(50% - 4px);
+  width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(45deg);transition:transform .18s}
+.ajuda-item[open] > summary::after{transform:rotate(-135deg);top:calc(50% - 2px)}
+.ajuda-item > div{padding:0 15px 14px;border-top:1px solid var(--rule)}
+.ajuda-item p{margin:11px 0 0;font-size:13px;line-height:1.62;color:var(--muted)}
+.ajuda-item p b{color:var(--ink);font-weight:650}
+.ajuda-item p i{font-style:normal;color:var(--ink);font-weight:500}
+.ajuda-lista{margin:11px 0 0;padding-left:19px;font-size:13px;line-height:1.62;
+  color:var(--muted)}
+.ajuda-lista li{margin-bottom:6px}
+.ajuda-lista li b{color:var(--ink);font-weight:650}
+.ajuda-lista li i{font-style:normal;color:var(--ink);font-weight:500}
+
+/* O caminho da pasta em fonte de largura fixa e caixa própria: é para ser copiado com
+   o olho, e barra invertida no meio de prosa some. */
+.ajuda-caminho{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px;color:var(--ink)!important;background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
+  word-break:break-all;line-height:1.5}
+.ajuda-caminho i{font-style:italic;color:var(--accent)!important}
 
 </style>
 </head>
@@ -1600,14 +1747,29 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
       </div>
 
-      <!-- ONZE COLUNAS, E NÃO DOZE. O total de publicações da conta era coluna própria
-           e sozinha ela empurrava a tabela para fora da tela: a última coluna aparecia
-           cortada na metade da palavra. Ele agora é a segunda linha da cobertura, que é
-           onde a conta faz sentido de qualquer forma: 62% de 4.976. -->
+      <!-- TREZE COLUNAS, E ESTA TABELA É O PAINEL DE CONTROLE DO SISTEMA INTEIRO.
+           Eram onze. Entraram três em 19/08/2026, a pedido do Gabriel, e saiu o botão
+           de marcar, que ele não tinha pedido.
+
+           MERCADO E ETIQUETA viravam duas pastilhas espremidas embaixo do nome do
+           perfil, e de lá não dava para comparar dois perfis nem ordenar por elas. São
+           dado do cadastro, e dado de cadastro é coluna. Clicar na célula abre a folha
+           de marcação, que é o que o botão fazia.
+
+           BAIXAR é a coluna que faltava para o sistema fechar. Um perfil some da
+           fileira da aba de Baixar no instante em que vem inteiro, e some sem deixar
+           rastro: quem quisesse saber se a Vinci já tinha descido não tinha onde olhar.
+           Agora tem, e é aqui.
+
+           O TOTAL DE PUBLICAÇÕES continua sem coluna própria, pelo mesmo motivo de
+           sempre: ele é a segunda linha da cobertura, que é onde a conta faz sentido de
+           qualquer forma, 62% de 4.976. -->
       <div class="tab-rolo">
         <table class="tab" id="tab_minerados">
           <thead><tr>
             <th>Perfil</th>
+            <th class="tab-marc">Mercado</th>
+            <th class="tab-marc tab-marc-etq">Etiqueta</th>
             <th class="tab-num">Varridos</th>
             <th class="tab-num">Cobertura</th>
             <th>Alcançou até</th>
@@ -1615,6 +1777,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <th class="tab-num">Posts</th>
             <th class="tab-num">Carrosséis</th>
             <th class="tab-num">Acima da régua</th>
+            <th class="tab-baixa">Baixar</th>
             <th>Estado</th>
             <th>Última rodada</th>
             <th class="tab-acao"></th>
@@ -1930,7 +2093,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="gal-vazia" id="lot_vazio">Nenhuma leva pedida ainda.</div>
     </div>
   </div>
-
 </section>
 
 
@@ -1949,6 +2111,229 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
     </div>
   </div>
 </section>
+
+
+<!-- ============================================================ O TIRA-DÚVIDAS
+
+     ELE MORA FORA DAS ABAS, e quem o esconde nas outras é a troca de aba, no
+     `irPara`. A primeira versão o pôs dentro da seção de Baixar, que é mais simples e
+     não precisaria de programa nenhum. Não funcionou, e o motivo é fino: `.aba` tem
+     animação de entrada com `transform`, e elemento com animação de transform vira
+     âncora para quem é `position:fixed`. A gaveta, que devia ir de topo a rodapé do
+     vidro da tela, parava na altura da seção, com o fundo escuro cortado no meio.
+
+     E O TEXTO É A DOCUMENTAÇÃO DESTA ABA, não um enfeite de ajuda. Tudo o que foi
+     construído aqui, o caminho, a régua, o tratamento, onde o arquivo final para e
+     como a pasta é organizada, estava só na conversa e no comentário dos programas.
+     Nenhum dos dois está aberto quando o Gabriel olha a tela. -->
+<button class="ajuda-bolha" id="faq_abre" type="button" hidden
+        aria-controls="faq_folha" aria-expanded="false"
+        title="Como funciona esta aba">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.1 9a3 3 0 1 1 4.2 2.8c-.8.4-1.3 1.1-1.3 2v.4"/>
+    <path d="M12 17.5h.01"/></svg>
+  <span class="ajuda-bolha-rot">Dúvidas</span>
+</button>
+
+<div class="ajuda-fundo" id="faq_fundo" hidden></div>
+
+<aside class="ajuda-folha" id="faq_folha" hidden aria-label="Como funciona a aba de baixar">
+  <div class="ajuda-cab">
+    <div>
+      <h2>Como funciona esta aba</h2>
+      <p class="nota">Do clique no perfil até o arquivo tratado no seu computador.</p>
+    </div>
+    <button class="ajuda-fecha" id="faq_fecha" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <div class="ajuda-corpo">
+
+    <!-- O CAMINHO INTEIRO EM QUATRO PASSOS, antes de qualquer pergunta. Quem abre um
+         tira-dúvidas sem saber a forma da coisa fica lendo resposta solta. -->
+    <div class="ajuda-trilho">
+      <div class="ajuda-passo"><b>1 · Baixar</b>
+        <span>A esteira puxa do Instagram os reels que passaram da régua.</span></div>
+      <div class="ajuda-passo"><b>2 · Tratar</b>
+        <span>Cada arquivo perde todo o metadado e passa por conferência.</span></div>
+      <div class="ajuda-passo"><b>3 · Entregar</b>
+        <span>O que passou vira um pacote só, e o que reprovou é apagado.</span></div>
+      <div class="ajuda-passo"><b>4 · Guardar</b>
+        <span>O pacote desce para uma pasta no seu computador, de dez em dez minutos.</span></div>
+    </div>
+
+    <h3 class="ajuda-grupo">Montar a leva</h3>
+
+    <details class="ajuda-item">
+      <summary>Como eu peço uma leva?</summary>
+      <div><p>Marque os perfis na fileira de cartões. Cada cartão traz a logo do
+      perfil e, no rodapé, quantos reels dele estão prontos para descer. A conta se
+      soma sozinha, e o botão <b>Montar leva</b> dispara.</p>
+      <p>Não há campo de quantidade. Ele existia e obrigava duas decisões para um
+      pedido só: quais perfis e quantos arquivos. Agora a decisão é uma.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>O que é a régua, e quem escolhe?</summary>
+      <div><p>É o corte de desempenho. Um post entra na leva quando o alcance dele é
+      pelo menos <b>1,5 vez a mediana do próprio perfil, no próprio formato</b>.</p>
+      <p>Desempenho nunca é número absoluto: um perfil que faz 40 mil de média e
+      entrega 300 mil estourou; um que faz 2 milhões e entrega 800 mil foi mal. E a
+      mediana tem que ser por formato, porque vídeo vem com contagem de exibição e
+      imagem vem só com curtida, que são duas escalas diferentes.</p>
+      <p>Quem escolhe é você, na aba de Mineração, ao iniciar a varredura. A escolha
+      fica gravada e é dela que a leva lê.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Baixa só reels?</summary>
+      <div><p>Sim. Imagem e carrossel são varridos, contados e entram na conta da
+      régua, mas não descem. O tratamento de metadado é de vídeo, e a página dark
+      publica vídeo.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Para que servem os filtros de mercado e etiqueta?</summary>
+      <div><p>Para recortar a fileira quando ela tiver dezenas de perfis: mostrar só o
+      que é de um nicho, ou só o que carrega certa etiqueta.</p>
+      <p>Quem preenche os dois é você, na <b>tabela da aba de Mineração</b>: as colunas
+      <i>Mercado</i> e <i>Etiqueta</i> são clicáveis, e o clique abre a folha de
+      marcação. Perfil sem marcação nenhuma aparece na fileira do mesmo jeito.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Um perfil sumiu da fileira. Perdi alguma coisa?</summary>
+      <div><p>Não: ele sumiu porque veio inteiro. A fileira mostra o que <b>falta</b>
+      baixar, e por isso encolhe a cada leva em vez de repetir sempre os mesmos
+      cartões.</p>
+      <p>O controle de quem já desceu é a coluna <b>Baixar</b> da tabela de Mineração.
+      Ela diz, por perfil: <i>a baixar</i>, <i>em curso</i>, <i>pela metade</i>,
+      <i>concluído</i> ou <i>guardado</i>, com o número embaixo.</p></div>
+    </details>
+
+    <h3 class="ajuda-grupo">O tratamento</h3>
+
+    <details class="ajuda-item">
+      <summary>O que exatamente é apagado do arquivo?</summary>
+      <div><p>Metadado de vídeo não é uma coisa só, são três camadas, e limpar uma
+      deixa as outras duas de pé:</p>
+      <ol class="ajuda-lista">
+        <li><b>As etiquetas de formato e de faixa</b>: data de criação, programa que
+        gerou, codificador, título, idioma.</li>
+        <li><b>O nome do manipulador de cada faixa</b>, que sobrevive à limpeza comum e
+        fica gravado como <i>VideoHandler</i> e <i>SoundHandler</i>.</li>
+        <li><b>A casca vazia de dados</b> que a própria ferramenta escreve de volta ao
+        gravar, com a assinatura <i>mdirappl</i> dentro. Ela é retirada depois,
+        byte a byte.</li>
+      </ol>
+      <p>Isto foi medido em 18/08/2026 nos oito reels da leva 2. O comando conhecido
+      para limpar metadado não limpa: ele <b>assina</b>, deixando o nome e a versão do
+      programa no arquivo.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>O vídeo perde qualidade no tratamento?</summary>
+      <div><p>Não perde nada. A imagem e o som são copiados sem serem recodificados, e
+      a conferência tira a impressão digital das duas faixas antes e depois: se um
+      único byte de imagem ou de som mudasse, o arquivo seria reprovado.</p>
+      <p>Custo medido: <b>0,17 segundo por arquivo</b>.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>E se um arquivo não ficar limpo?</summary>
+      <div><p>Ele é <b>apagado ali mesmo</b> e não entra no pacote. Cada arquivo sai
+      com um laudo próprio, e a contagem de reprovados aparece no registro ao vivo,
+      junto de baixados e tratados.</p>
+      <p>A conferência é feita duas vezes: uma na esteira, outra quando o pacote chega
+      ao seu computador. Não é desconfiança do passo anterior, é que conferir de novo
+      custa dois centésimos de segundo por arquivo.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>A limpeza garante alcance no Instagram?</summary>
+      <div><p>Não, e é melhor saber disso do que acreditar no contrário. O Instagram
+      <b>recodifica todo vídeo enviado</b>: o metadado do seu arquivo não chega do
+      outro lado, e o que ele lê é o que está gravado na imagem e no som, marca-d'água,
+      arroba na tela, voz.</p>
+      <p>A limpeza vale pelo que ela é: o arquivo que você guarda, edita e reenvia não
+      carrega a origem colada nele. É higiene de material, não alavanca de alcance.</p></div>
+    </details>
+
+    <h3 class="ajuda-grupo">Onde o material fica</h3>
+
+    <details class="ajuda-item">
+      <summary>Onde para a versão final?</summary>
+      <div><p>Numa pasta fixa no seu computador:</p>
+      <p class="ajuda-caminho">C:\Users\Gabri\Estudio\levas\leva-<i>N</i></p>
+      <p>Uma subpasta por leva, e <i>N</i> é o número dela. Dentro ficam só os reels já
+      tratados e conferidos, prontos para editar.</p>
+      <p>A pasta fica <b>fora do OneDrive</b> de propósito: Área de Trabalho,
+      Documentos e Imagens sobem para a nuvem sozinhos, e uma leva de um perfil inteiro
+      pesa de 440 MB a 2,7 GB. Em duas levas sua cota estouraria.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Como o pacote chega até lá?</summary>
+      <div><p>Sozinho. Uma tarefa agendada roda de <b>dez em dez minutos</b>, olha se
+      alguma leva ficou pronta, e traz. Você não precisa clicar em nada.</p>
+      <p>Quando ela chega, o registro da leva ganha o último passo, <i>guardado</i>, e
+      a tabela de Mineração passa a mostrar essa palavra na coluna Baixar. Enquanto ele
+      não aparece, o material só existe na esteira.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>O material fica guardado para sempre na esteira?</summary>
+      <div><p>Não. O pacote da esteira vence em <b>catorze dias</b> e some. A máquina
+      que monta a leva é criada para o trabalho e destruída no fim.</p>
+      <p>A pasta do seu computador é o único lugar permanente. Ela tem um
+      <i>LEIA.txt</i> dentro dizendo isso, para o caso de alguém achar que é lixo.</p></div>
+    </details>
+
+    <h3 class="ajuda-grupo">Tempo, tamanho e custo</h3>
+
+    <details class="ajuda-item">
+      <summary>Quanto tempo demora uma leva?</summary>
+      <div><p>Medido em 19/08/2026, com os 41 reels da Vinci Society, 441 MB:</p>
+      <ul class="ajuda-lista">
+        <li>baixar os 41 arquivos: <b>78 s</b></li>
+        <li>preparar a ferramenta de vídeo: <b>12 s</b></li>
+        <li>tratar os 41: <b>6 s</b></li>
+        <li>montar o pacote: <b>7 s</b></li>
+      </ul>
+      <p>Perto de <b>dois minutos</b> no total. Um reel pesa em média 13,6 MB, então
+      dá para estimar qualquer leva por aí.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Quanto isso custa?</summary>
+      <div><p>Zero, em todas as camadas. O acervo é público, e para repositório público
+      o GitHub não cobra nem o tempo de máquina nem o espaço dos pacotes.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>E se uma leva falhar no meio?</summary>
+      <div><p>O registro fecha marcando a falha, e nada é dado como baixado: os reels
+      daquele perfil continuam na fileira, com o mesmo número, prontos para serem
+      pedidos de novo.</p>
+      <p>O que já tinha descido antes daquela falha não é baixado outra vez. A conta do
+      que veio é por reel, não por leva.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Por que o registro parece parado às vezes?</summary>
+      <div><p>A tela lê o acervo de vinte e cinco em vinte e cinco segundos, e passa a
+      ler de seis em seis enquanto uma leva está correndo. Entre uma linha e outra do
+      registro pode haver um passo comprido de verdade: montar um pacote grande é o
+      mais demorado deles.</p>
+      <p>Todo passo que espera escreve uma linha antes de começar a esperar. Se você
+      vir mais de dois minutos de silêncio absoluto, alguma coisa travou.</p></div>
+    </details>
+
+  </div>
+</aside>
 
 </main>
 
@@ -2301,6 +2686,19 @@ function irPara(chave, empurrar) {
     a.classList.toggle("ativo", a.dataset.aba === chave);
   });
   if (empurrar !== false) history.replaceState(null, "", "#" + chave);
+  // O TIRA-DÚVIDAS É SÓ DA ABA DE BAIXAR, e quem o esconde nas outras é esta linha.
+  // Ele mora fora das seções de aba de propósito: `.aba` tem animação de entrada com
+  // `transform`, e elemento assim vira âncora para quem é `position:fixed`. Posta lá
+  // dentro, a gaveta parava na altura da seção em vez de ir de topo a rodapé da tela.
+  const bolha = document.getElementById("faq_abre");
+  if (bolha) bolha.hidden = chave !== "baixar";
+  const folha = document.getElementById("faq_folha");
+  if (folha && !folha.hidden) {
+    folha.hidden = true;
+    document.getElementById("faq_fundo").hidden = true;
+    bolha.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+  }
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 document.addEventListener("click", ev => {
@@ -2640,13 +3038,77 @@ window.montarMulti("bx-etq", ETIQUETAS_BX, "Todas as etiquetas", vs => {
   desenhaProntos(MINERADOS);
 });
 
-/** A marcação do perfil, embaixo do nome: o mercado em versalete e as etiquetas em
- *  pastilha. A pastilha é a do sistema de origem, com a cor saindo do próprio nome. */
-function marcaDe(p) {
+/* --------------------------------------------- AS TRÊS COLUNAS DE CONTROLE
+
+   MERCADO E ETIQUETA SÃO COLUNAS, e não mais duas pastilhas espremidas embaixo do nome
+   do perfil. Dali não se comparava dois perfis nem se ordenava por elas, que é para o
+   que servem.
+
+   E A MARCAÇÃO SE FAZ NA PRÓPRIA CÉLULA. Havia um botão "Marcar" na ponta da linha, que
+   o Gabriel não pediu e mandou tirar em 19/08/2026. A função dele não morre junto:
+   clicar no mercado ou na etiqueta abre a mesma folha, que é onde ela já devia estar.
+   Sem isso os dois filtros da aba de Baixar ficariam sem ninguém para alimentá-los. */
+
+/** O mercado do perfil. Célula clicável: vazia ela convida, cheia ela edita. */
+function celulaMercado(p) {
+  return `<span class="tab-toque" role="button" tabindex="0"
+      data-etiquetar="${p.conta}" title="Definir o mercado de @${p.conta}">${
+    p.mercado ? `<span class="mercado">${p.mercado}</span>`
+              : '<span class="sem">definir</span>'}</span>`;
+}
+
+/** As etiquetas, na pastilha do sistema de origem, com a cor saindo do próprio nome. */
+function celulaEtiqueta(p) {
   const etq = (p.etiquetas || []).map(e => window.etiquetaHTML(e)).join("");
-  const merc = p.mercado ? `<span class="mercado">${p.mercado}</span>` : "";
-  return `<span class="tab-marca">${merc || etq ? merc + etq
-    : '<span class="sem">sem marcação</span>'}</span>`;
+  return `<span class="tab-toque tab-etqs" role="button" tabindex="0"
+      data-etiquetar="${p.conta}" title="Etiquetar @${p.conta}">${
+    etq || '<span class="sem">definir</span>'}</span>`;
+}
+
+/* ONDE CADA PERFIL ESTÁ NA ABA DE BAIXAR.
+   As contas de baixáveis e restantes vêm do seletor, que já desconta o que desceu. A
+   leva vem do registro, que é quem sabe se alguma está correndo agora e se o pacote já
+   foi guardado no computador, que é o fim de verdade do caminho. */
+let LEVAS_POR_CONTA = {};
+
+function anotarLevas(indice) {
+  const mapa = {};
+  // A LEVA PEDIDA HÁ SEGUNDOS ENTRA PRIMEIRO, e ela ainda não existe no acervo: a
+  // esteira leva perto de um minuto para gravar a primeira linha. Sem ela aqui, a tabela
+  // diria "a baixar" para um perfil que já está descendo.
+  const pedida = LEVA_PEDIDA
+    ? [{ numero: null, estado: "pedida", contas: LEVA_PEDIDA.contas }] : [];
+  for (const l of [...((indice && indice.lotes) || []), ...pedida]) {
+    for (const c of (l.contas || [])) {
+      const antes = mapa[c];
+      // a que está correndo manda sobre todas; fora isso, manda a mais recente
+      const andando = l.estado === "em curso" || l.estado === "pedida";
+      if (!antes || andando || (l.numero || 0) > (antes.numero || 0))
+        mapa[c] = { numero: l.numero, estado: l.estado, guardado: !!l.guardado };
+    }
+  }
+  LEVAS_POR_CONTA = mapa;
+}
+
+function pinoBaixar(cor, oque, embaixo) {
+  return `<span class="tab-dupla tab-esq"><span class="pino ${cor}">${oque}</span>`
+       + `<i>${embaixo}</i></span>`;
+}
+
+function celulaBaixar(p) {
+  const podem = p.baixaveis || 0;
+  const restam = p.restam != null ? p.restam : podem;
+  const veio = podem - restam;
+  const leva = LEVAS_POR_CONTA[p.conta];
+  if (leva && (leva.estado === "em curso" || leva.estado === "pedida"))
+    return pinoBaixar("indo", "em curso",
+      leva.numero ? `leva ${leva.numero}` : "leva pedida agora");
+  if (!podem) return pinoBaixar("off", "sem material", "nada passou da régua");
+  if (restam === 0)
+    return pinoBaixar("ok", leva && leva.guardado ? "guardado" : "concluído",
+      `${num(veio)} tratados` + (leva ? ` · leva ${leva.numero}` : ""));
+  if (veio) return pinoBaixar("meio", "pela metade", `${num(veio)} de ${num(podem)}`);
+  return pinoBaixar("", "a baixar", `${num(restam)} reels`);
 }
 
 function desenhaMinerados() {
@@ -2712,8 +3174,9 @@ function desenhaMinerados() {
     return `<tr class="tab-linha">
       <td class="tab-perfil"><div class="tab-perfil-in">${retrato(p)}
         <span class="tab-quem"><b>@${p.conta}</b>
-          <span>${p.nome || "sem nome no perfil"}</span>
-          ${marcaDe(p)}</span></div></td>
+          <span>${p.nome || "sem nome no perfil"}</span></span></div></td>
+      <td class="tab-marc">${celulaMercado(p)}</td>
+      <td class="tab-marc tab-marc-etq">${celulaEtiqueta(p)}</td>
       <td class="tab-num">${num(p.lidos)}</td>
       <td class="tab-num">${coluna}</td>
       <td>${ate}</td>
@@ -2721,10 +3184,10 @@ function desenhaMinerados() {
       <td class="tab-num">${num(p.imagens)}</td>
       <td class="tab-num">${num(p.carrosseis)}</td>
       <td class="tab-num">${num(p.acima)}</td>
+      <td class="tab-baixa">${celulaBaixar(p)}</td>
       <td>${selo}</td>
       <td>${quando(p.atualizado)}</td>
-      <td class="tab-acao"><button class="acao" type="button"
-          data-etiquetar="${p.conta}">Marcar</button><a class="acao" target="_blank"
+      <td class="tab-acao"><a class="acao" target="_blank"
           rel="noopener" href="https://www.instagram.com/${p.conta}/">Instagram</a></td>
     </tr>`;
   }).join("");
@@ -3657,6 +4120,10 @@ async function atualizar() {
     return { ...p, nome: p.nome || r.nome, foto: !!r.foto,
              acima: p.acima != null ? p.acima : meus.length };
   });
+  // A COLUNA "BAIXAR" LÊ DAQUI, e por isso o mapa é montado antes de a tabela desenhar.
+  // Montado depois, ele chegaria uma volta atrasado: a leva começaria a correr e a
+  // tabela continuaria dizendo "a baixar" por vinte e cinco segundos.
+  anotarLevas(lotes);
   desenhaMinerados();
 
   REGUA_VALENDO = (sel && sel.criterio) || REGUA_VALENDO;
@@ -4122,11 +4589,41 @@ document.addEventListener("click", async ev => {
     LEVA_PEDIDA = { quando: Math.floor(Date.now() / 1000), contas };
     ESCOLHIDOS.clear();
     desenhaRegistroDeLotes(ULTIMO_INDICE);
+    // A COLUNA "BAIXAR" DA OUTRA ABA VIRA NO MESMO INSTANTE. Sem estas duas linhas ela
+    // continuaria dizendo "a baixar" até a esteira gravar a primeira linha do registro,
+    // que leva perto de um minuto: quem trocasse de aba veria a tabela negar o que
+    // acabou de acontecer na tela ao lado.
+    anotarLevas(ULTIMO_INDICE);
+    desenhaMinerados();
     acelerar();
   } catch (e) { parado("recado_lote", e.message); }
   setTimeout(() => { b.disabled = false; atualizar(); }, 8000);
 });
 
+
+/* ============================================================ O TIRA-DÚVIDAS
+
+   A BOLHA NÃO PRECISA DE PROGRAMA PARA APARECER SÓ AQUI: ela mora dentro da seção da
+   aba de Baixar, e trocar de aba esconde a seção inteira. O que precisa de programa é
+   abrir, fechar e não deixar a página rolar por baixo da folha aberta.
+
+   O FUNDO E A TECLA DE ESCAPE FECHAM, as duas. Painel que só fecha por um botãozinho no
+   canto é painel que fica aberto. */
+function ajudaAbre(abrir) {
+  $("faq_folha").hidden = !abrir;
+  $("faq_fundo").hidden = !abrir;
+  $("faq_abre").setAttribute("aria-expanded", abrir ? "true" : "false");
+  // a página parada por trás: rolar o fundo com a folha aberta faz a leitura se perder
+  document.body.style.overflow = abrir ? "hidden" : "";
+  if (abrir) $("faq_fecha").focus();
+}
+
+$("faq_abre").onclick = () => ajudaAbre(true);
+$("faq_fecha").onclick = () => ajudaAbre(false);
+$("faq_fundo").onclick = () => ajudaAbre(false);
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && !$("faq_folha").hidden) ajudaAbre(false);
+});
 
 /* ------------------------------------------------------------------- a partida
 
