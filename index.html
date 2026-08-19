@@ -1666,87 +1666,169 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 /* ====================================================== A ABA DE EDIÇÃO
 
-   PASSO A PASSO com trilho à esquerda, no molde de quem monta uma campanha no Google
-   Ads. O trilho é de ÍCONE e não de bolinha numerada: bolinha diz quantos faltam, ícone
-   diz o que é. Numa sequência que vai crescer, reconhecer o passo de relance vale mais
-   do que contar quantos são.
+   TRÊS TELAS, uma de cada vez: a portaria, a escolha da leva e a oficina. A primeira
+   versão punha tudo na mesma página e o Gabriel reprovou em 19/08: a escolha da leva
+   ficava solta no meio do passo 1, junto do trilho e da galeria, e nada dizia por onde
+   começar. Tela de começo tem de ser tela de começo. */
+#ed_portaria[hidden],#ed_escolha[hidden],#ed_oficina[hidden]{display:none}
 
-   O trilho gruda no alto ao rolar, porque a galeria de uma leva grande tem quarenta e
-   uma peças e passa muito da altura da tela: sem grudar, a pessoa perde de vista em que
-   passo está justamente quando desce para olhar o material. */
-.ed-tela{display:grid;grid-template-columns:248px 1fr;gap:26px;align-items:start}
-.ed-trilho{position:sticky;top:88px;display:flex;flex-direction:column;gap:4px}
+/* ---------------------------------------------------------- 1 · a portaria */
+.ed-porteira{min-height:calc(100vh - 210px);display:grid;place-items:center;
+  padding:40px 0}
+.ed-porteira-in{width:min(560px,100%)}
+.ed-porteira h1,.ed-escolha h1{margin:0 0 8px;font-size:30px;font-weight:800;
+  letter-spacing:-.03em;line-height:1.15}
+.ed-porteira .nota,.ed-escolha .nota{margin-bottom:28px;font-size:14.5px;line-height:1.55}
 
-.ed-passo{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
-  padding:12px 13px;border-radius:var(--r-md);border:1px solid transparent;
-  background:transparent;cursor:pointer;font:inherit;color:var(--muted);
-  transition:background .14s,border-color .14s,color .14s}
-.ed-passo:hover{background:var(--paper-2);color:var(--ink)}
-.ed-passo.ativo{background:var(--branco);border-color:var(--rule-solid);color:var(--ink);
-  box-shadow:var(--sombra)}
-.ed-passo:disabled{opacity:.4;cursor:not-allowed}
+/* O COMEÇO É UM SÓ E APARECE COMO UM SÓ: caixa larga, ícone à esquerda, seta à direita.
+   Botão do tamanho dos outros da tela ficaria à mesma altura da lista de rascunhos, e
+   as duas coisas não têm o mesmo peso. */
+.ed-comeco{display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  padding:20px 22px;border-radius:var(--r-lg);border:1px solid var(--accent);
+  background:var(--accent-tint);color:var(--ink);cursor:pointer;font:inherit;
+  transition:transform .16s,box-shadow .16s}
+.ed-comeco:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.20)}
+.ed-comeco-ico{flex:0 0 44px;width:44px;height:44px;display:grid;place-items:center;
+  border-radius:13px;background:var(--accent);color:#fff}
+.ed-comeco-ico svg{width:21px;height:21px}
+.ed-comeco-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ed-comeco-txt b{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.ed-comeco-txt span{font-size:13px;color:var(--muted)}
+.ed-comeco-seta{width:18px;height:18px;flex:none;color:var(--accent)}
 
-/* O ÍCONE NUM QUADRADO, e o quadrado é o que acende no passo em que se está: o desenho
-   sozinho, mudando só de cor, não separa o passo atual dos outros de relance. */
-.ed-ico{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;
-  border-radius:10px;background:var(--paper-2);border:1px solid var(--rule-solid);
-  color:var(--muted);transition:background .14s,color .14s,border-color .14s}
-.ed-ico svg{width:17px;height:17px}
-.ed-passo.ativo .ed-ico{background:var(--accent);border-color:var(--accent);color:#fff}
-.ed-quem{min-width:0;display:flex;flex-direction:column;line-height:1.3}
-.ed-quem b{font-size:13.5px;font-weight:650}
-.ed-quem span{font-size:11.5px;color:var(--muted);overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap}
-.ed-passo.ativo .ed-quem span{color:var(--accent)}
+.ed-rascunhos{margin-top:34px}
+.ed-rascunhos-cab{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.ed-rascunhos-cab h3{margin:0;font-size:12.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em}
+.ed-rascunhos-cab .nota{margin:0 0 0 auto;font-size:12px}
+.ed-vazio{padding:20px 0;font-size:13.5px;line-height:1.55;color:var(--soft)}
 
-/* O TRILHO NÃO INVENTA OS PASSOS QUE FALTAM. Desenhar caixa apagada para etapa que ainda
-   não foi definida é a tela prometendo o que ninguém combinou. */
-.ed-porvir{margin:10px 13px 0;padding-top:12px;border-top:1px dashed var(--rule-solid);
-  font-size:11.5px;line-height:1.5;color:var(--soft)}
+.ed-rasc{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;
+  border:1px solid var(--rule-solid);border-radius:var(--r-md);background:var(--branco);
+  margin-bottom:7px;transition:border-color .14s}
+.ed-rasc:hover{border-color:var(--accent)}
+.ed-rasc-n{font-size:14px;font-weight:700}
+.ed-rasc-quem{font-size:12.5px;color:var(--muted);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ed-rasc-onde{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.ed-rasc-quando{font-size:11.5px;color:var(--soft);white-space:nowrap}
+/* O XIS SÓ APARECE AO PASSAR O MOUSE, para a lista parada ser uma lista e não um painel
+   cheio de xis. Mesmo desenho do catálogo de mercados. */
+.ed-rasc-x{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border:0;
+  border-radius:7px;background:transparent;color:var(--soft);cursor:pointer;padding:0;
+  opacity:0;transition:opacity .14s,background .14s,color .14s}
+.ed-rasc:hover .ed-rasc-x{opacity:1}
+.ed-rasc-x:hover{background:color-mix(in srgb,var(--vermelho) 12%,transparent);
+  color:var(--vermelho)}
+.ed-rasc-x svg{width:14px;height:14px}
 
-.ed-cab{margin-bottom:18px}
-.ed-cab h2{margin:0 0 5px;font-size:20px;font-weight:700;letter-spacing:-.02em}
-.ed-pe{display:flex;align-items:center;gap:14px;margin-top:22px;padding-top:18px;
-  border-top:1px solid var(--rule-solid)}
-.ed-pe .nota{margin-right:auto}
-.ed-etapa[hidden]{display:none}
-/* `hidden` NÃO VENCE QUEM TEM `display` ESCRITO, e o pé do passo 1 tem: sem esta linha
-   o botão de continuar aparecia antes de haver leva escolhida. Terceiro lugar desta tela
-   onde o mesmo detalhe morde. */
-.ed-pe[hidden]{display:none}
+/* ---------------------------------------------------------- 2 · a escolha */
+.ed-escolha{min-height:calc(100vh - 210px);padding:40px 0}
+.ed-escolha-in{width:min(760px,100%);margin:0 auto}
+.ed-voltar{display:inline-flex;align-items:center;gap:5px;margin-bottom:22px;padding:0;
+  border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--muted);
+  cursor:pointer;transition:color .14s}
+.ed-voltar:hover{color:var(--ink)}
+.ed-voltar svg{width:15px;height:15px}
+.ed-voltar.mini{margin-bottom:18px;font-size:12px}
 
-/* ------------------------------------------------------ as levas para escolher */
-.ed-levas{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
-.ed-leva{display:flex;flex-direction:column;gap:3px;text-align:left;padding:15px 16px;
-  border-radius:var(--r-lg);border:1px solid var(--rule-solid);background:var(--branco);
-  box-shadow:var(--sombra);cursor:pointer;font:inherit;color:var(--ink);
-  transition:border-color .16s,box-shadow .16s}
-.ed-leva:hover{border-color:var(--accent)}
-.ed-leva.marcada{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.ed-leva-n{font-size:15px;font-weight:700;letter-spacing:-.01em}
-.ed-leva-quem{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;
+.ed-levas{display:flex;flex-direction:column;gap:10px}
+/* A LEVA COMO LINHA LARGA, e não como cartãozinho quadrado: o Gabriel achou a primeira
+   versão feia, e ela era mesmo. Um cartão de duzentos pixels com quatro linhas de texto
+   empilhadas não tem hierarquia nenhuma. Aqui a cara do perfil abre a linha, o número da
+   leva domina, e o resto corre em uma linha só. */
+.ed-leva{display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  padding:16px 20px;border-radius:var(--r-lg);border:1px solid var(--rule-solid);
+  background:var(--branco);box-shadow:var(--sombra);cursor:pointer;font:inherit;
+  color:var(--ink);transition:border-color .16s,transform .16s,box-shadow .16s}
+.ed-leva:hover{border-color:var(--accent);transform:translateY(-2px);
+  box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.ed-leva.indo{border-color:var(--accent);transform:scale(.985)}
+.ed-leva-caras{display:flex;flex:none}
+.ed-leva-caras .pcard-retrato{flex:0 0 46px;width:46px;height:46px}
+.ed-leva-caras .pcard-retrato + .pcard-retrato{margin-left:-14px}
+.ed-leva-caras .pcard-avatar{border:2px solid var(--branco);font-size:16px}
+.ed-leva-corpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ed-leva-n{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.ed-leva-quem{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
-.ed-leva-num{margin-top:6px;font-size:12.5px;color:var(--muted)}
-.ed-leva-num b{font-size:16px;font-weight:650;color:var(--ink);
+.ed-leva-num{margin-top:4px;font-size:12.5px;color:var(--muted)}
+.ed-leva-num b{font-size:14px;font-weight:700;color:var(--ink);
   font-variant-numeric:tabular-nums}
-.ed-leva-pe{margin-top:8px;font-size:11px;font-weight:600;letter-spacing:.04em;
-  text-transform:uppercase;color:var(--verde)}
+.ed-leva-num i{font-style:normal;color:var(--soft);margin:0 3px}
+.ed-leva-pe{flex:none;font-size:11px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--verde);white-space:nowrap}
 /* LEVA QUE AINDA NÃO DESCEU APARECE, apagada e dizendo por quê. Escondê-la faria o
    Gabriel procurar uma leva que ele sabe que existe. */
 .ed-leva.longe{opacity:.5;cursor:not-allowed;box-shadow:none}
-.ed-leva.longe:hover{border-color:var(--rule-solid)}
+.ed-leva.longe:hover{border-color:var(--rule-solid);transform:none;box-shadow:none}
 .ed-leva.longe .ed-leva-pe{color:var(--soft)}
 
+/* ---------------------------------------------------------- 3 · a oficina */
+.ed-tela{display:grid;grid-template-columns:266px 1fr;gap:34px;align-items:start}
+.ed-trilho{position:sticky;top:88px}
+
+/* O TRILHO DO EXEMPLO QUE O GABRIEL MANDOU (21st.dev, ScrollRevealContentA):
+   número em cima, uma linha vertical fina que PREENCHE, e ao lado o título e a descrição.
+   Passo por vir a meia opacidade.
+
+   A PRIMEIRA VERSÃO ERA BOTÃO COM ÍCONE dentro de um quadrado, e ele reprovou. Estava
+   certo: quadrado com ícone é menu, um item ao lado do outro, todos do mesmo tamanho.
+   Isto é percurso: a linha liga um passo ao seguinte e mostra o quanto já andou. */
+.ed-ponto{display:flex;flex-direction:column;cursor:pointer;opacity:.45;
+  transition:opacity .3s}
+.ed-ponto.ativo{opacity:1}
+.ed-ponto-n{margin:0 0 8px 22px;font-size:22px;font-weight:800;letter-spacing:-.02em;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+.ed-ponto-corpo{display:flex;gap:16px}
+
+/* A BARRA: um trilho apagado e, por cima, o preenchido, cuja altura é a medida do
+   avanço. Os dois no mesmo lugar, com o de cima crescendo de zero. */
+.ed-barra{position:relative;flex:0 0 2px;width:2px;min-height:64px}
+.ed-barra i{position:absolute;inset:0;background:var(--rule-solid);border-radius:2px}
+.ed-barra b{position:absolute;top:0;left:0;width:2px;border-radius:2px;
+  background:var(--accent);transition:height .7s cubic-bezier(.22,1,.36,1)}
+.ed-ponto-txt{padding-bottom:26px}
+.ed-ponto-txt h3{margin:-3px 0 3px;font-size:15px;font-weight:700;letter-spacing:-.01em}
+.ed-ponto-txt p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+
+/* A ENTRADA NA OFICINA: os passos sobem um atrás do outro, e as barras desenham. Não é
+   enfeite, é o que separa "escolhi a leva" de "comecei a editar". */
+@keyframes ed-sobe{from{opacity:0;transform:translateY(14px)}
+                   to{opacity:.45;transform:none}}
+@keyframes ed-sobe-ativo{from{opacity:0;transform:translateY(14px)}
+                         to{opacity:1;transform:none}}
+.ed-trilho.entrou .ed-ponto{animation:ed-sobe .5s cubic-bezier(.22,1,.36,1) both}
+.ed-trilho.entrou .ed-ponto.ativo{animation-name:ed-sobe-ativo}
+.ed-trilho.entrou .ed-ponto:nth-child(2){animation-delay:.06s}
+.ed-trilho.entrou .ed-ponto:nth-child(3){animation-delay:.14s}
+.ed-trilho.entrou .ed-ponto:nth-child(4){animation-delay:.22s}
+@media(prefers-reduced-motion:reduce){
+  .ed-trilho.entrou .ed-ponto{animation:none}
+  .ed-barra b{transition:none}
+}
+
+.ed-porvir{margin:6px 0 0 20px;padding-top:14px;border-top:1px dashed var(--rule-solid);
+  font-size:11.5px;line-height:1.5;color:var(--soft)}
+
+.ed-cab{margin-bottom:20px}
+.ed-cab h2{margin:0 0 5px;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.ed-pe{display:flex;align-items:center;gap:14px;margin-top:24px;padding-top:18px;
+  border-top:1px solid var(--rule-solid)}
+.ed-pe .nota{margin-right:auto}
+.ed-etapa[hidden]{display:none}
+/* `hidden` NÃO VENCE QUEM TEM `display` ESCRITO, e o pé do passo 1 tem: sem esta linha o
+   botão de continuar aparecia antes de haver leva escolhida. */
+.ed-pe[hidden]{display:none}
+
 /* ------------------------------------------------------ a porta da pasta */
-.ed-porta{margin-top:20px}
+.ed-porta{margin-bottom:20px}
 .ed-caminho{margin:12px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,
   monospace;font-size:12.5px;color:var(--ink);background:var(--paper-2);
   border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
   word-break:break-all}
 
 /* ------------------------------------------------------ a galeria de peças */
-.ed-galeria-cab{margin:26px 0 12px}
-.ed-galeria-cab h3{margin:0 0 3px;font-size:15px;font-weight:650}
 .ed-carregando{padding:26px 0;font-size:13.5px;color:var(--muted)}
 .ed-galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));
   gap:14px}
@@ -1755,8 +1837,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   transition:border-color .16s}
 .ed-peca:hover{border-color:var(--accent)}
 /* A PROPORÇÃO É FIXA NA MOLDURA, e não deixada ao vídeo: reel é 9 por 16, mas dois dos
-   arquivos da leva 28 vêm em 360 por 640 e outros formatos aparecem em levas antigas.
-   Sem a moldura fixa, a grade fica com cartão de altura diferente em cada coluna. */
+   arquivos da leva 28 vêm em 360 por 640. Sem a moldura fixa, a grade fica com cartão de
+   altura diferente em cada coluna. */
 .ed-quadro{position:relative;aspect-ratio:9/16;background:#000;overflow:hidden}
 .ed-quadro video{width:100%;height:100%;object-fit:cover;display:block}
 .ed-play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;
@@ -1775,9 +1857,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 @media(max-width:900px){
   .ed-tela{grid-template-columns:1fr}
-  .ed-trilho{position:static;flex-direction:row;flex-wrap:wrap}
-  .ed-passo{width:auto;flex:1 1 200px}
-  .ed-porvir{flex:1 1 100%;margin:0;border-top:0;padding-top:0}
+  .ed-trilho{position:static;margin-bottom:24px}
+  .ed-barra{min-height:44px}
+  .ed-ponto-txt{padding-bottom:16px}
 }
 
 </style>
@@ -2495,61 +2577,122 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 <!-- =================================================================== ABA 4 · EDIÇÃO
 
-     UM PASSO A PASSO, no molde de quem monta uma campanha no Google Ads: a ordem é
-     imposta, cada passo só abre com o anterior resolvido, e o trilho da esquerda mostra
-     onde se está e deixa voltar a qualquer momento. Decisão do Gabriel em 19/08/2026.
+     TRÊS TELAS, E NÃO UMA. Decisão do Gabriel em 19/08/2026, depois de ver a primeira
+     versão: a escolha da leva estava solta no meio da página do passo 1, misturada com o
+     trilho e com a galeria, e nada dizia por onde começar.
 
-     O TRILHO É DE ÍCONE, e não de bolinha numerada. Bolinha diz "quantos faltam"; ícone
-     diz "o que é". Numa sequência que vai crescer, saber o que é cada passo de relance
-     vale mais do que contar quantos são.
+       1. a portaria   nova edição, ou voltar a um rascunho
+       2. a escolha    qual leva vai ser editada, em tela cheia
+       3. a oficina    o passo a passo, com o trilho à esquerda
 
-     E AQUI ENTRA UM PROBLEMA QUE AS OUTRAS ABAS NÃO TÊM: os vídeos estão no computador
-     do Gabriel, e esta tela é servida pela internet. Nenhuma página pode abrir sozinha
-     um arquivo do disco de quem a visita, e ainda bem. O caminho é ele apontar a pasta
-     uma vez, num clique; a partir daí o navegador guarda essa permissão e a tela lê a
-     pasta direto, sem cópia, sem upload e sem nada saindo da máquina dele. -->
+     Cada uma ocupa a tela sozinha. Escolhida a leva, a oficina entra com o trilho
+     desenhando as barras a partir do zero, e é essa animação que diz "começou".
+
+     O TRILHO É O DO EXEMPLO QUE ELE MANDOU (21st.dev, ScrollRevealContentA): número em
+     cima, uma linha vertical fina que PREENCHE, e ao lado o título e a descrição do
+     passo. Passo por vir fica a meia opacidade. A primeira versão era botão com ícone
+     dentro de um quadrado, que é outra coisa: aquilo é menu, isto é percurso. -->
 <section class="aba" id="aba-editar" hidden>
 
-  <div class="ed-tela">
+  <!-- ============================================================ 1 · A PORTARIA -->
+  <div class="ed-porteira" id="ed_portaria">
+    <div class="ed-porteira-in">
+      <h1>Edição</h1>
+      <p class="nota">Cada edição pega uma leva de reels tratados e aplica sobre ela o
+        que você definir. Comece uma nova ou volte para onde parou.</p>
 
-    <!-- ------------------------------------------------------- O TRILHO -->
+      <button class="ed-comeco" id="ed_nova" type="button">
+        <span class="ed-comeco-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/></svg>
+        </span>
+        <span class="ed-comeco-txt">
+          <b>Iniciar uma nova edição</b>
+          <span>escolher a leva e passar pelas etapas</span>
+        </span>
+        <svg class="ed-comeco-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/></svg>
+      </button>
+
+      <div class="ed-rascunhos">
+        <div class="ed-rascunhos-cab">
+          <h3>Rascunhos</h3>
+          <span class="nota" id="ed_rasc_conta"></span>
+        </div>
+        <div id="ed_rasc_lista"></div>
+        <div class="ed-vazio" id="ed_rasc_vazio">Nenhum rascunho guardado. O que você
+          começar fica aqui sozinho, e some só quando você mandar.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ 2 · A ESCOLHA -->
+  <div class="ed-escolha" id="ed_escolha" hidden>
+    <div class="ed-escolha-in">
+      <button class="ed-voltar" id="ed_volta_portaria" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/></svg>voltar</button>
+
+      <h1>Qual leva você vai trabalhar?</h1>
+      <p class="nota">Cada leva é um pacote de reels já baixados e tratados, guardado no
+        seu computador.</p>
+
+      <div class="ed-levas" id="ed_levas"></div>
+      <div class="ed-vazio" id="ed_sem_leva" hidden>Nenhuma leva guardada ainda. Monte
+        uma na aba de Baixar.</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ 3 · A OFICINA -->
+  <div class="ed-tela" id="ed_oficina" hidden>
+
     <aside class="ed-trilho" id="ed_trilho">
-      <button class="ed-passo ativo" type="button" data-passo="1">
-        <span class="ed-ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 7h16M4 12h16M4 17h10"/><circle cx="19" cy="17" r="2.2"/></svg>
-        </span>
-        <span class="ed-quem"><b>A leva</b><span id="ed_r1">nenhuma escolhida</span></span>
-      </button>
-      <button class="ed-passo" type="button" data-passo="2">
-        <span class="ed-ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-               stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="3"/>
-            <path d="M3 9h18M9 21V9"/></svg>
-        </span>
-        <span class="ed-quem"><b>O template</b><span id="ed_r2">a definir</span></span>
-      </button>
+      <button class="ed-voltar mini" id="ed_volta_escolha" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/></svg>trocar de leva</button>
+
+      <!-- A ESTRUTURA DE CADA PASSO É A DO EXEMPLO: número, depois uma coluna estreita
+           com a linha que preenche, e ao lado o texto. A altura da barra vem de uma
+           medida escrita no próprio elemento, para a transição do CSS animá-la. -->
+      <div class="ed-ponto ativo" data-passo="1">
+        <div class="ed-ponto-n">01</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt">
+            <h3>A leva</h3>
+            <p id="ed_r1">nenhuma escolhida</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ed-ponto" data-passo="2">
+        <div class="ed-ponto-n">02</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt">
+            <h3>O template</h3>
+            <p id="ed_r2">a definir com você</p>
+          </div>
+        </div>
+      </div>
+
       <!-- OS PRÓXIMOS PASSOS NÃO SÃO INVENTADOS AQUI. Desenhar caixa para etapa que
            ainda não foi definida é a tela prometendo o que ninguém combinou. -->
       <div class="ed-porvir">os próximos passos entram conforme forem definidos</div>
     </aside>
 
-    <!-- ------------------------------------------------------- O PALCO -->
     <div class="ed-palco">
 
-      <!-- ========================================== PASSO 1 · A LEVA -->
+      <!-- ---------------------------------------- PASSO 1 · AS PEÇAS DA LEVA -->
       <div class="ed-etapa" data-passo="1">
         <div class="ed-cab">
-          <h2>Escolha a leva</h2>
-          <p class="nota">Cada leva é um pacote de reels já baixados e tratados. Ao
-            escolher uma, os vídeos dela aparecem aqui embaixo.</p>
+          <h2 id="ed_p1_titulo">A leva</h2>
+          <p class="nota" id="ed_p1_sub"></p>
         </div>
-
-        <div class="ed-levas" id="ed_levas"></div>
-        <div class="gal-vazia" id="ed_sem_leva" hidden>Nenhuma leva guardada ainda.
-          Monte uma na aba de Baixar.</div>
 
         <!-- A PORTA DA PASTA. Ela só aparece quando é preciso: pedir permissão antes de
              haver o que abrir é pedir por pedir. -->
@@ -2557,8 +2700,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <h3>Apontar a pasta do Estúdio</h3>
           <p class="nota">Os vídeos estão no seu computador, e esta tela vem da internet.
             Por segurança, nenhuma página abre um arquivo do seu disco sem você mandar.
-            Aponte a pasta <b>uma vez</b> e o navegador guarda a permissão: nada é
-            enviado para lugar nenhum, a tela só lê o que já está aí.</p>
+            Aponte a pasta <b>uma vez</b>: o navegador guarda a permissão e nas próximas
+            levas ela já vale. Nada é enviado para lugar nenhum.</p>
           <p class="ed-caminho">C:\Users\Gabri\Estudio\levas</p>
           <div class="linha">
             <button class="acao forte" id="ed_abrir_pasta" type="button">
@@ -2567,10 +2710,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           </div>
         </div>
 
-        <div class="ed-galeria-cab" id="ed_gal_cab" hidden>
-          <h3 id="ed_gal_titulo"></h3>
-          <span class="nota" id="ed_gal_sub"></span>
-        </div>
         <div class="ed-galeria" id="ed_galeria"></div>
 
         <div class="ed-pe" id="ed_pe1" hidden>
@@ -2580,16 +2719,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
       </div>
 
-      <!-- ========================================== PASSO 2 · O TEMPLATE -->
+      <!-- ---------------------------------------- PASSO 2 · O TEMPLATE -->
       <div class="ed-etapa" data-passo="2" hidden>
         <div class="ed-cab">
           <h2>O template</h2>
           <p class="nota">O que será aplicado sobre os vídeos da leva.</p>
         </div>
-
-        <!-- ESTE PASSO ESTÁ ESPERANDO UMA DEFINIÇÃO, e a tela diz isso em vez de
-             desenhar um formulário chutado. "Template" pode ser meia dúzia de coisas
-             diferentes, e cada uma leva a uma construção diferente. -->
         <div class="por-vir">
           <div class="por-vir-selo">esperando a sua definição</div>
           <h2>O que é um template aqui?</h2>
@@ -2602,7 +2737,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <li>Uma abertura e um fecho, colados antes e depois do vídeo.</li>
             <li>Um estilo de legenda queimada na imagem.</li>
           </ul>
-          <p class="nota" id="ed_leva_escolhida"></p>
         </div>
       </div>
 
@@ -5622,61 +5756,73 @@ document.addEventListener("keydown", ev => {
 
 /* ============================================================ A ABA DE EDIÇÃO
 
-   PASSO A PASSO, no molde de quem monta uma campanha no Google Ads: a ordem é imposta,
-   cada passo só abre quando o anterior está resolvido, e o trilho da esquerda deixa
-   voltar a qualquer momento sem perder o que já foi escolhido.
+   TRÊS TELAS: a portaria, a escolha da leva e a oficina. Uma de cada vez, cada uma
+   ocupando a tela sozinha. Foi o Gabriel quem pediu assim, em 19/08/2026, olhando a
+   primeira versão: lá a escolha da leva estava solta no meio do passo 1, junto do trilho
+   e da galeria, e nada dizia por onde começar.
+
+   O TRILHO É O DO EXEMPLO QUE ELE MANDOU: número, uma linha vertical fina que preenche, e
+   ao lado o título e a descrição. Passo por vir fica a meia opacidade. Ao entrar na
+   oficina as barras desenham do zero, e é essa animação que diz "começou".
 
    O PROBLEMA QUE ESTA ABA TEM E AS OUTRAS NÃO:
-   os vídeos moram no computador do Gabriel e esta tela é servida pela internet. As
-   outras abas só precisam de números, e número cabe no acervo; aqui é preciso ver o
-   vídeo. Página nenhuma pode abrir sozinha um arquivo do disco de quem a visita, e ainda
-   bem: se pudesse, qualquer site conseguiria.
+   os vídeos moram no computador do Gabriel e esta tela é servida pela internet. As outras
+   abas só precisam de números, e número cabe no acervo; aqui é preciso ver o vídeo.
+   Página nenhuma pode abrir sozinha um arquivo do disco de quem a visita, e ainda bem: se
+   pudesse, qualquer site conseguiria.
 
-   O caminho é ele apontar a pasta uma vez. O navegador entrega um crachá daquela pasta,
-   o crachá fica guardado aqui do lado de cá, e nas próximas visitas a tela pede a
-   permissão de volta em vez de pedir a pasta de novo. Nada sobe para lugar nenhum: o
-   vídeo toca a partir do arquivo que já está no disco.                                */
+   Ele aponta a pasta uma vez. O navegador entrega um crachá daquela pasta, o crachá fica
+   guardado aqui do lado de cá, e nas próximas visitas a tela pede a permissão de volta em
+   vez de pedir a pasta de novo. Nada sobe para lugar nenhum.                            */
 
 let EDIT_PASSO = 1;
 let EDIT_LEVA = null;              // a leva escolhida, como está na capa do acervo
 let EDIT_PASTA = null;             // o crachá da pasta `levas`, se já tivermos
 let EDIT_PECAS = [];               // os arquivos da leva escolhida
+let EDIT_RASCUNHO = null;          // o rascunho aberto, se veio de um
 
 const TEM_PORTA = typeof window.showDirectoryPicker === "function";
 
-/* ------------------------------------------------------- o crachá da pasta
+/* -------------------------------------------- o guarda-volumes do navegador
 
-   Ele é um objeto vivo do navegador, não um texto: não dá para guardar num lugar de
-   texto simples. Vai para o guarda-volumes do próprio navegador, que aceita objeto. */
-const CRACHA = { banco: "estudio", caixa: "portas", chave: "pasta-levas" };
+   Guarda duas coisas: o crachá da pasta, que é um objeto vivo e não cabe num lugar de
+   texto simples, e os rascunhos.
 
-function guardaVolumes() {
+   OS RASCUNHOS FICAM AQUI, E NÃO NO ACERVO, e isso é escolha com motivo. Escrever no
+   acervo passa pela esteira, que leva de trinta a sessenta segundos por gravação: um
+   rascunho que se salva sozinho a cada mexida não pode custar isso. O preço é que eles
+   vivem neste navegador, nesta máquina. Se um dia precisarem seguir o Gabriel para outro
+   computador, aí vale o custo de mandá-los para o acervo. */
+const COFRE = { banco: "estudio", portas: "portas", rascunhos: "rascunhos", chave: "pasta-levas" };
+
+function abrirCofre() {
   return new Promise((ok, erro) => {
-    const p = indexedDB.open(CRACHA.banco, 1);
-    p.onupgradeneeded = () => p.result.createObjectStore(CRACHA.caixa);
+    const p = indexedDB.open(COFRE.banco, 2);
+    p.onupgradeneeded = () => {
+      const db = p.result;
+      if (!db.objectStoreNames.contains(COFRE.portas)) db.createObjectStore(COFRE.portas);
+      if (!db.objectStoreNames.contains(COFRE.rascunhos))
+        db.createObjectStore(COFRE.rascunhos, { keyPath: "id" });
+    };
     p.onsuccess = () => ok(p.result);
     p.onerror = () => erro(p.error);
   });
 }
 
-async function guardarCracha(handle) {
+async function noCofre(caixa, escrever, oQue) {
   try {
-    const db = await guardaVolumes();
-    const t = db.transaction(CRACHA.caixa, "readwrite");
-    t.objectStore(CRACHA.caixa).put(handle, CRACHA.chave);
-  } catch (e) { /* sem guarda-volumes, ele pede a pasta de novo. Não é perda. */ }
-}
-
-async function pegarCracha() {
-  try {
-    const db = await guardaVolumes();
+    const db = await abrirCofre();
+    const t = db.transaction(caixa, escrever ? "readwrite" : "readonly");
     return await new Promise(ok => {
-      const p = db.transaction(CRACHA.caixa).objectStore(CRACHA.caixa).get(CRACHA.chave);
-      p.onsuccess = () => ok(p.result || null);
+      const p = oQue(t.objectStore(caixa));
+      p.onsuccess = () => ok(p.result);
       p.onerror = () => ok(null);
     });
   } catch (e) { return null; }
 }
+
+const guardarCracha = h => noCofre(COFRE.portas, true, s => s.put(h, COFRE.chave));
+const pegarCracha = () => noCofre(COFRE.portas, false, s => s.get(COFRE.chave));
 
 /** A pasta ainda vale? Devolve o crachá só quando a permissão está de pé. */
 async function pastaValendo(handle, pedir) {
@@ -5691,27 +5837,86 @@ async function pastaValendo(handle, pedir) {
   return null;
 }
 
-/* ------------------------------------------------------------- o trilho */
-function irParaPasso(n) {
-  EDIT_PASSO = n;
-  document.querySelectorAll("#ed_trilho .ed-passo").forEach(b =>
-    b.classList.toggle("ativo", Number(b.dataset.passo) === n));
-  document.querySelectorAll(".ed-etapa").forEach(s =>
-    s.hidden = Number(s.dataset.passo) !== n);
+/* -------------------------------------------------------------- os rascunhos */
+const listarRascunhos = () => noCofre(COFRE.rascunhos, false, s => s.getAll());
+
+async function salvarRascunho() {
+  if (!EDIT_LEVA) return;
+  const r = {
+    id: EDIT_RASCUNHO ? EDIT_RASCUNHO.id : `e${Date.now()}`,
+    leva: EDIT_LEVA.numero,
+    contas: EDIT_LEVA.contas || [],
+    pecas: EDIT_PECAS.length,
+    passo: EDIT_PASSO,
+    mexido: Math.floor(Date.now() / 1000),
+  };
+  if (!EDIT_RASCUNHO) r.aberto = r.mexido;
+  else r.aberto = EDIT_RASCUNHO.aberto || r.mexido;
+  EDIT_RASCUNHO = r;
+  await noCofre(COFRE.rascunhos, true, s => s.put(r));
+  desenhaRascunhos();
+}
+
+async function desenhaRascunhos() {
+  const lista = (await listarRascunhos()) || [];
+  lista.sort((a, b) => (b.mexido || 0) - (a.mexido || 0));
+  $("ed_rasc_vazio").hidden = lista.length > 0;
+  $("ed_rasc_conta").textContent = lista.length
+    ? `${lista.length} ${lista.length === 1 ? "guardado" : "guardados"}` : "";
+  $("ed_rasc_lista").innerHTML = lista.map(r => `
+    <div class="ed-rasc" data-rasc="${r.id}">
+      <span class="ed-rasc-n">Leva ${r.leva}</span>
+      <span class="ed-rasc-quem">${(r.contas || []).length
+        ? "@" + r.contas.join(", @") : "todos os perfis"}</span>
+      <span class="ed-rasc-onde">no passo ${r.passo}${
+        r.pecas ? ` · ${r.pecas} peças` : ""}</span>
+      <span class="ed-rasc-quando">${quando(r.mexido)}</span>
+      <button class="ed-rasc-x" type="button" data-apagar="${r.id}"
+              title="Apagar o rascunho">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>`).join("");
+}
+
+$("ed_rasc_lista").addEventListener("click", async ev => {
+  const x = ev.target.closest("[data-apagar]");
+  if (x) {
+    ev.stopPropagation();
+    await noCofre(COFRE.rascunhos, true, s => s.delete(x.dataset.apagar));
+    return desenhaRascunhos();
+  }
+  const linha = ev.target.closest("[data-rasc]");
+  if (!linha) return;
+  const todos = (await listarRascunhos()) || [];
+  const r = todos.find(x => x.id === linha.dataset.rasc);
+  if (!r) return;
+  EDIT_RASCUNHO = r;
+  EDIT_LEVA = (LOTES || []).find(l => l.numero === r.leva) || { numero: r.leva };
+  await entrarNaOficina(r.passo || 1);
+});
+
+/* ----------------------------------------------------- trocar de tela */
+function mostrarTela(qual) {
+  $("ed_portaria").hidden = qual !== "portaria";
+  $("ed_escolha").hidden = qual !== "escolha";
+  $("ed_oficina").hidden = qual !== "oficina";
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
-document.querySelectorAll("#ed_trilho .ed-passo").forEach(b => {
-  b.addEventListener("click", () => {
-    const n = Number(b.dataset.passo);
-    // VOLTAR SEMPRE PODE; AVANÇAR, SÓ COM O PASSO ANTERIOR RESOLVIDO. É o que faz disto
-    // um passo a passo e não um menu com quatro páginas soltas.
-    if (n > 1 && !EDIT_LEVA) return;
-    irParaPasso(n);
-  });
-});
+$("ed_nova").onclick = () => {
+  EDIT_RASCUNHO = null;
+  EDIT_LEVA = null;
+  desenhaLevasDaEdicao(ULTIMO_INDICE);
+  mostrarTela("escolha");
+};
+$("ed_volta_portaria").onclick = () => mostrarTela("portaria");
+$("ed_volta_escolha").onclick = () => {
+  desenhaLevasDaEdicao(ULTIMO_INDICE);
+  mostrarTela("escolha");
+};
 
-/* ------------------------------------------------- passo 1 · escolher a leva
+/* ------------------------------------------------- a escolha da leva
 
    A LISTA VEM DO ACERVO, e não da pasta. É o acervo que sabe o que cada leva é: de quais
    perfis, quantas peças, se já foi guardada. A pasta sabe só que há arquivos dentro dela.
@@ -5720,16 +5925,25 @@ document.querySelectorAll("#ed_trilho .ed-passo").forEach(b => {
 function desenhaLevasDaEdicao(indice) {
   const levas = ((indice && indice.lotes) || [])
     .filter(l => l.estado === "pronto" && l.limpos);
+  if (!$("ed_sem_leva")) return;
   $("ed_sem_leva").hidden = levas.length > 0;
   $("ed_levas").innerHTML = levas.map(l => {
-    const quem = (l.contas || []).length ? "@" + l.contas.join(", @") : "todos os perfis";
+    const contas = l.contas || [];
     const aqui = !!l.guardado;
-    return `<button type="button" class="ed-leva${!aqui ? " longe" : ""}${
-        EDIT_LEVA && EDIT_LEVA.numero === l.numero ? " marcada" : ""}"
+    // O RETRATO DO PERFIL, o mesmo que a tabela e a fileira usam. Uma leva é sempre de
+    // alguém, e reconhecer de quem pela cara é mais rápido do que ler o arroba.
+    const caras = contas.slice(0, 3).map(c =>
+      retrato(MINERADOS.find(p => p.conta === c) || { conta: c, foto: false })).join("");
+    return `<button type="button" class="ed-leva${!aqui ? " longe" : ""}"
         data-leva="${l.numero}"${aqui ? "" : " disabled"}>
-      <span class="ed-leva-n">Leva ${l.numero}</span>
-      <span class="ed-leva-quem">${quem}</span>
-      <span class="ed-leva-num"><b>${num(l.limpos)}</b> peças · ${l.mb || 0} MB</span>
+      <span class="ed-leva-caras">${caras}</span>
+      <span class="ed-leva-corpo">
+        <span class="ed-leva-n">Leva ${l.numero}</span>
+        <span class="ed-leva-quem">${contas.length
+          ? "@" + contas.join(", @") : "todos os perfis"}</span>
+        <span class="ed-leva-num"><b>${num(l.limpos)}</b> peças
+          <i>·</i> ${l.mb || 0} MB <i>·</i> ${quando(l.fim || l.inicio)}</span>
+      </span>
       <span class="ed-leva-pe">${aqui ? "no seu computador"
         : "ainda não desceu para o computador"}</span>
     </button>`;
@@ -5741,10 +5955,59 @@ $("ed_levas").addEventListener("click", async ev => {
   if (!b) return;
   const n = Number(b.dataset.leva);
   EDIT_LEVA = (LOTES || []).find(l => l.numero === n) || { numero: n };
-  $("ed_r1").textContent = `leva ${n}`;
-  $("ed_leva_escolhida").textContent = `Leva escolhida: ${n}.`;
-  desenhaLevasDaEdicao(ULTIMO_INDICE);
+  b.classList.add("indo");
+  await entrarNaOficina(1);
+});
+
+/* ------------------------------------------------- entrar na oficina
+
+   A ANIMAÇÃO NÃO É ENFEITE: ela é o que separa "escolhi" de "comecei". As barras do
+   trilho nascem em zero e sobem, e os passos entram um atrás do outro. Sem isso a troca
+   de tela é um pisca, e a oficina parece que já estava aberta. */
+async function entrarNaOficina(passo) {
+  mostrarTela("oficina");
+  $("ed_r1").textContent = `leva ${EDIT_LEVA.numero}`;
+  $("ed_p1_titulo").textContent = `Leva ${EDIT_LEVA.numero}`;
+  $("ed_p1_sub").textContent = (EDIT_LEVA.contas || []).length
+    ? `${num(EDIT_LEVA.limpos || 0)} peças de @${EDIT_LEVA.contas.join(", @")}`
+    : "";
+
+  // as barras voltam a zero antes de subir, senão não há o que animar na segunda entrada
+  document.querySelectorAll("#ed_trilho .ed-barra b").forEach(b => b.style.height = "0%");
+  $("ed_trilho").classList.remove("entrou");
+  void $("ed_trilho").offsetWidth;          // força o navegador a aceitar o recomeço
+  $("ed_trilho").classList.add("entrou");
+
+  irParaPasso(passo || 1);
+  await salvarRascunho();
   await mostrarPecas();
+}
+
+/* -------------------------------------------------------------- o trilho */
+function irParaPasso(n) {
+  EDIT_PASSO = n;
+  document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
+    const q = Number(p.dataset.passo);
+    p.classList.toggle("ativo", q <= n);
+    // A BARRA CHEIA É PASSO RESOLVIDO; a do passo atual mostra o quanto dele já foi
+    // feito. No passo 1, resolvido quer dizer leva escolhida, e ela já está.
+    const barra = p.querySelector(".ed-barra b");
+    if (barra) barra.style.height = q < n ? "100%" : q === n ? (EDIT_LEVA ? "100%" : "0%") : "0%";
+  });
+  document.querySelectorAll(".ed-etapa").forEach(s =>
+    s.hidden = Number(s.dataset.passo) !== n);
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
+  p.addEventListener("click", () => {
+    const n = Number(p.dataset.passo);
+    // VOLTAR SEMPRE PODE; AVANÇAR, SÓ COM O PASSO ANTERIOR RESOLVIDO. É o que faz disto
+    // um passo a passo e não um menu com quatro páginas soltas.
+    if (n > 1 && !EDIT_LEVA) return;
+    irParaPasso(n);
+    salvarRascunho();
+  });
 });
 
 /* --------------------------------------------------- passo 1 · ver os vídeos */
@@ -5763,7 +6026,6 @@ async function mostrarPecas() {
   EDIT_PASTA = await pastaValendo(EDIT_PASTA || await pegarCracha(), false);
   if (!EDIT_PASTA) {
     $("ed_porta").hidden = false;
-    $("ed_gal_cab").hidden = true;
     gal.innerHTML = "";
     $("ed_pe1").hidden = true;
     return;
@@ -5771,7 +6033,6 @@ async function mostrarPecas() {
   $("ed_porta").hidden = true;
 
   gal.innerHTML = '<div class="ed-carregando">abrindo a pasta da leva</div>';
-  $("ed_gal_cab").hidden = false;
   try {
     const pasta = await EDIT_PASTA.getDirectoryHandle(`leva-${EDIT_LEVA.numero}`);
     const arquivos = [];
@@ -5781,9 +6042,9 @@ async function mostrarPecas() {
     arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
     EDIT_PECAS = arquivos;
     desenhaPecas();
+    salvarRascunho();
   } catch (e) {
     gal.innerHTML = "";
-    $("ed_gal_cab").hidden = true;
     $("ed_porta").hidden = false;
     parado("ed_recado_pasta", `não achei a pasta leva-${EDIT_LEVA.numero} dentro do que `
       + "você apontou. Aponte a pasta `levas`, que é a que tem uma subpasta por leva.");
@@ -5800,11 +6061,10 @@ function lerNome(nome) {
 }
 
 function desenhaPecas() {
-  $("ed_gal_titulo").textContent = `${EDIT_PECAS.length} `
-    + (EDIT_PECAS.length === 1 ? "peça na leva" : "peças na leva")
-    + ` ${EDIT_LEVA.numero}`;
-  $("ed_gal_sub").textContent = "o número em cada peça é quantas vezes ela passou da "
-    + "mediana do próprio perfil";
+  $("ed_p1_sub").textContent = `${EDIT_PECAS.length} `
+    + (EDIT_PECAS.length === 1 ? "peça" : "peças")
+    + ((EDIT_LEVA.contas || []).length ? ` de @${EDIT_LEVA.contas.join(", @")}` : "")
+    + " · o número em cada uma é quantas vezes ela passou da mediana do próprio perfil";
 
   // O VÍDEO CARREGA SÓ O CABEÇALHO, e o quadro mostrado é o do segundo e meio. Pedir os
   // quarenta e um arquivos inteiros de uma vez travaria a aba por vários segundos, e o
@@ -5824,9 +6084,6 @@ function desenhaPecas() {
     </div>`;
   }).join("");
 
-  // UM DE CADA VEZ, e só quando entra na tela. Quarenta e um pedidos de arquivo ao mesmo
-  // tempo fazem o navegador engasgar e o disco trabalhar para nada: a maioria está
-  // embaixo da dobra e nunca vai ser olhada.
   async function abrirPeca(v) {
     if (v.src) return;
     try {
@@ -5835,6 +6092,8 @@ function desenhaPecas() {
     } catch (err) { /* arquivo sumiu da pasta desde a leitura */ }
   }
 
+  // UM DE CADA VEZ, e só quando entra na tela. Quarenta e um pedidos de arquivo ao mesmo
+  // tempo fazem o navegador engasgar e o disco trabalhar para nada.
   const olho = new IntersectionObserver((entradas, obs) => {
     for (const e of entradas) {
       if (!e.isIntersecting) continue;
@@ -5843,17 +6102,13 @@ function desenhaPecas() {
     }
   }, { rootMargin: "300px" });
 
-  // A PRIMEIRA FILEIRA ABRE SEM ESPERAR O OBSERVADOR, e isso é rede e não pressa.
-  // O observador só dispara quando o navegador está de fato pintando a página: numa aba
-  // de fundo, numa janela minimizada ou logo depois de trocar de aba, ele pode não
-  // disparar nenhuma vez, e a galeria fica com doze retângulos pretos sem nada explicando.
-  // Doze arquivos abertos de saída custam pouco e garantem que sempre há o que ver.
+  // A PRIMEIRA FILEIRA ABRE SEM ESPERAR O OBSERVADOR, e isso é rede e não pressa. Ele só
+  // dispara quando o navegador está de fato pintando a página: numa aba de fundo ou logo
+  // depois de trocar de aba, pode não disparar nenhuma vez, e a galeria fica com doze
+  // retângulos pretos sem nada explicando.
   const PRIMEIRAS = 12;
   document.querySelectorAll("#ed_galeria video[data-arquivo]").forEach(v => {
     if (Number(v.dataset.arquivo) < PRIMEIRAS) abrirPeca(v);
-  });
-
-  document.querySelectorAll("#ed_galeria video[data-arquivo]").forEach(v => {
     v.addEventListener("loadedmetadata", () => {
       const s = Math.round(v.duration || 0);
       const alvo = v.parentNode.querySelector(".ed-dur");
@@ -5898,16 +6153,19 @@ $("ed_abrir_pasta").onclick = async () => {
   }
 };
 
-$("ed_vai1").onclick = () => irParaPasso(2);
+$("ed_vai1").onclick = () => { irParaPasso(2); salvarRascunho(); };
 
 /* AO ABRIR A ABA, a permissão da pasta é pedida de volta com o dedo dele na tela, que é
    a única hora em que o navegador aceita o pedido. */
 document.addEventListener("click", async ev => {
   if (!ev.target.closest('[data-aba="editar"]')) return;
+  desenhaRascunhos();
   if (EDIT_PASTA || !TEM_PORTA) return;
   const h = await pastaValendo(await pegarCracha(), true);
   if (h) { EDIT_PASTA = h; if (EDIT_LEVA) await mostrarPecas(); }
 });
+
+desenhaRascunhos();
 
 /* ------------------------------------------------------------------- a partida
 
