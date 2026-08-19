@@ -10,6 +10,12 @@
    "quando": 1787098184,
    "tipo": "selecao",
    "texto": "Régua aplicada: 1137 avaliados, 390 acima da régua."
+  },
+  {
+   "quando": 1787098187,
+   "tipo": "baixa",
+   "texto": "3 arquivos baixados, 16 MB.",
+   "arquivos": 3
   }
  ]
 }
