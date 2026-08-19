@@ -4,10 +4,10 @@
    "numero": 10,
    "inicio": 1787100631,
    "estado": "em curso",
-   "baixados": 0,
+   "baixados": 41,
    "limpos": 0,
    "reprovados": 0,
-   "mb": 0,
+   "mb": 441,
    "execucao": "32202749714",
    "contas": [
     "vinci.society"
@@ -62,5 +62,5 @@
    "fim": 1787098189
   }
  ],
- "atualizado": 1787100631
+ "atualizado": 1787100728
 }
