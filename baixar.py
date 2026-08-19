@@ -136,19 +136,11 @@ def main(cru: str) -> int:
         json.dumps({"itens": registro, "baixado_em": int(time.time())},
                    ensure_ascii=False, indent=1), encoding="utf-8")
 
-    # A MARCA DO QUE DESCEU, gravada aqui e nao no fim do fluxo: se o trabalho cair no
-    # meio, o que ja' veio continua marcado, e o pedido seguinte pega do ponto em que
-    # parou em vez de baixar tudo outra vez.
-    for i in registro:
-        feitos.setdefault(i["conta"], [])
-        if i["codigo"] not in feitos[i["conta"]]:
-            feitos[i["conta"]].append(i["codigo"])
-    BAIXADOS.parent.mkdir(parents=True, exist_ok=True)
-    BAIXADOS.write_text(json.dumps(feitos, ensure_ascii=False, indent=1), encoding="utf-8")
-
+    # QUEM MARCA O QUE FOI ENTREGUE E' O FIM DO FLUXO, e nao este arquivo.
+    # Baixar nao e' entregar: o arquivo ainda passa pela limpeza, e o que reprovar la'
+    # nao pode contar como feito. Marcado aqui, ele sumiria da fileira da tela sem nunca
+    # ter chegado tratado a mao do Gabriel, e ninguem tentaria de novo.
     print(f"\n{ok} baixados, {falhas} falharam, {total_bytes / 1048576:.0f} MB em {gasto:.0f}s")
-    print(f"acervo baixado ate agora: "
-          f"{sum(len(v) for v in feitos.values())} arquivos, {len(feitos)} perfis")
     if repetidos:
         print(f"{repetidos} ficaram de fora por ja terem vindo em lote anterior")
     if sem_arquivo:
