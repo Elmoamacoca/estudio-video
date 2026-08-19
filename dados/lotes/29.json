@@ -13,6 +13,15 @@
    "quando": 1787177533,
    "tipo": "selecao",
    "texto": "Régua aplicada: 1404 avaliados, 500 acima da régua."
+  },
+  {
+   "quando": 1787177535,
+   "tipo": "baixa",
+   "conta": "thenews.business",
+   "texto": "0 de 112 baixados.",
+   "feitos": 0,
+   "total": 112,
+   "concluida": false
   }
  ]
 }
