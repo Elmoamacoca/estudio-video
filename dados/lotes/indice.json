@@ -5,7 +5,7 @@
    "inicio": 1787151071,
    "estado": "em curso",
    "baixados": 41,
-   "limpos": 0,
+   "limpos": 41,
    "reprovados": 0,
    "mb": 441,
    "execucao": "32266477152",
@@ -14,5 +14,5 @@
    ]
   }
  ],
- "atualizado": 1787151158
+ "atualizado": 1787151181
 }
