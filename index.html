@@ -5016,10 +5016,15 @@ async function catPedir(caixa, texto, pronto, aoFim) {
     if (d && pronto(d)) {
       CATALOGO = d;
       catTravar(caixa, false);
+      // O QUE ACONTECEU VEM ANTES DO REDESENHO, e a ordem contrária já enganou uma vez:
+      // é `aoFim` quem refaz na memória da tela a mesma troca que a esteira acabou de
+      // fazer nos perfis. Chamado depois de desenhar, ele mexia num dado que ninguém ia
+      // mais ler, e a tabela ficava dizendo o contrário do recado logo ao lado: "os
+      // perfis passaram para luxo" e, na linha de baixo, "luxo, sem uso".
+      aoFim();
       desenhaFolha();
       // a tabela e os filtros de Baixar leem daqui, então mudam junto
-      desenhaMinerados();
-      return aoFim();
+      return desenhaMinerados();
     }
     catEsperando(caixa, "a esteira está aplicando", desde);
   }
