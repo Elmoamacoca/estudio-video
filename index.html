@@ -2696,18 +2696,50 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
         <!-- A PORTA DA PASTA. Ela só aparece quando é preciso: pedir permissão antes de
              haver o que abrir é pedir por pedir. -->
-        <div class="caixa ed-porta" id="ed_porta" hidden>
-          <h3>Apontar a pasta do Estúdio</h3>
-          <p class="nota">Os vídeos estão no seu computador, e esta tela vem da internet.
-            Por segurança, nenhuma página abre um arquivo do seu disco sem você mandar.
-            Aponte a pasta <b>uma vez</b>: o navegador guarda a permissão e nas próximas
-            levas ela já vale. Nada é enviado para lugar nenhum.</p>
-          <p class="ed-caminho">C:\Users\Gabri\Estudio\levas</p>
-          <div class="linha">
-            <button class="acao forte" id="ed_abrir_pasta" type="button">
-              Escolher a pasta</button>
-            <span class="nota" id="ed_recado_pasta"></span>
+        <!-- DOIS ESTADOS, E NÃO UM. A primeira versão tinha só o de escolher, e por
+             isso o Gabriel viu duas vezes seguidas a mesma tela pedindo a pasta, depois
+             de já ter escolhido. São situações diferentes:
+
+               nunca     ele ainda não apontou pasta nenhuma
+               liberar   ele já apontou, e o navegador quer uma confirmação desta sessão
+
+             O navegador guarda QUAL é a pasta, e isso dura. O que ele não guarda de uma
+             visita para a outra é a permissão de ler: a cada vez que a página abre, ela
+             volta para "perguntar". É proteção dele e não dá para desligar por programa.
+             O que dá é não fazer o Gabriel procurar a pasta de novo: no segundo estado é
+             um clique, sem janela de arquivos. -->
+        <div class="caixa ed-porta" id="ed_porta" hidden data-estado="nunca">
+
+          <div class="ed-porta-nunca">
+            <h3>Apontar a pasta do Estúdio</h3>
+            <p class="nota">Os vídeos estão no seu computador, e esta tela vem da
+              internet. Por segurança, nenhuma página abre um arquivo do seu disco sem
+              você mandar. Aponte a pasta uma vez: o navegador guarda <b>qual pasta é</b>
+              e não pergunta mais qual. Nada é enviado para lugar nenhum.</p>
+            <p class="ed-caminho">C:\Users\Gabri\Estudio\levas</p>
+            <div class="linha">
+              <button class="acao forte" id="ed_abrir_pasta" type="button">
+                Escolher a pasta</button>
+            </div>
           </div>
+
+          <div class="ed-porta-liberar" hidden>
+            <h3>Liberar o acesso à pasta</h3>
+            <p class="nota">A pasta já está escolhida e o navegador lembra dela. O que ele
+              não guarda de uma visita para a outra é a <b>permissão de ler</b>: toda vez
+              que a página abre, ela volta para perguntar. É proteção do navegador e não
+              dá para desligar daqui.</p>
+            <p class="nota">Um clique e pronto, sem procurar pasta de novo.</p>
+            <p class="ed-caminho" id="ed_porta_nome"></p>
+            <div class="linha">
+              <button class="acao forte" id="ed_liberar" type="button">
+                Liberar o acesso</button>
+              <button class="acao" id="ed_trocar_pasta" type="button">
+                Apontar outra pasta</button>
+            </div>
+          </div>
+
+          <p class="nota" id="ed_recado_pasta"></p>
         </div>
 
         <div class="ed-galeria" id="ed_galeria"></div>
@@ -5821,7 +5853,16 @@ async function noCofre(caixa, escrever, oQue) {
   } catch (e) { return null; }
 }
 
-const guardarCracha = h => noCofre(COFRE.portas, true, s => s.put(h, COFRE.chave));
+/* GUARDAR E CONFERIR QUE GUARDOU. A primeira versão só mandava gravar e seguia em
+   frente, e o `noCofre` engole erro: se o guarda-volumes estivesse bloqueado, o crachá
+   não ficava e ninguém sabia. Na visita seguinte a tela pedia a pasta de novo, como se a
+   escolha nunca tivesse acontecido, e não havia como distinguir isso de "o navegador
+   esqueceu". Agora ele lê de volta e diz na hora se não colou. */
+async function guardarCracha(h) {
+  await noCofre(COFRE.portas, true, s => s.put(h, COFRE.chave));
+  const volta = await pegarCracha();
+  return !!volta;
+}
 const pegarCracha = () => noCofre(COFRE.portas, false, s => s.get(COFRE.chave));
 
 /** A pasta ainda vale? Devolve o crachá só quando a permissão está de pé. */
@@ -6023,9 +6064,19 @@ async function mostrarPecas() {
     return;
   }
 
-  EDIT_PASTA = await pastaValendo(EDIT_PASTA || await pegarCracha(), false);
+  // O CRACHÁ E A PERMISSÃO SÃO DUAS COISAS, e confundir as duas foi o que fez a tela
+  // pedir a pasta de novo depois de ele já ter escolhido.
+  //
+  //   o crachá     diz QUAL é a pasta. Fica guardado e dura.
+  //   a permissão  diz se PODE LER agora. Volta para "perguntar" a cada vez que a
+  //                página abre, por decisão do navegador, e não dá para desligar daqui.
+  //
+  // Com crachá na mão, o que falta é um clique de confirmação, sem janela de arquivos.
+  // Sem crachá, aí sim é escolher a pasta. O cartão mostra um ou outro.
+  const cracha = EDIT_PASTA || await pegarCracha();
+  EDIT_PASTA = await pastaValendo(cracha, false);
   if (!EDIT_PASTA) {
-    $("ed_porta").hidden = false;
+    desenhaPorta(cracha);
     gal.innerHTML = "";
     $("ed_pe1").hidden = true;
     return;
@@ -6139,29 +6190,76 @@ $("ed_galeria").addEventListener("click", ev => {
   else { v.pause(); v.parentNode.classList.remove("tocando"); }
 });
 
-$("ed_abrir_pasta").onclick = async () => {
+/** Qual das duas caras o cartão mostra: escolher a pasta, ou só liberar a leitura. */
+function desenhaPorta(cracha) {
+  const caixa = $("ed_porta");
+  caixa.hidden = false;
+  const jaTem = !!cracha;
+  caixa.dataset.estado = jaTem ? "liberar" : "nunca";
+  caixa.querySelector(".ed-porta-nunca").hidden = jaTem;
+  caixa.querySelector(".ed-porta-liberar").hidden = !jaTem;
+  if (jaTem) $("ed_porta_nome").textContent = cracha.name;
+}
+
+/** Escolher a pasta pela janela de arquivos. Só quando ainda não há crachá nenhum. */
+async function escolherPasta() {
   try {
     const h = await window.showDirectoryPicker({ id: "estudio-levas", mode: "read" });
     EDIT_PASTA = h;
-    await guardarCracha(h);
-    parado("ed_recado_pasta", "pasta ligada.");
+    const colou = await guardarCracha(h);
+    parado("ed_recado_pasta", colou ? "pasta ligada."
+      : "pasta ligada, mas o navegador não deixou guardar a escolha: na próxima visita "
+        + "ele vai pedir a pasta de novo. Isso costuma ser navegação anônima.");
     await mostrarPecas();
   } catch (e) {
     // desistir de escolher não é erro, e não merece recado vermelho
     if (e && e.name !== "AbortError")
       parado("ed_recado_pasta", "não deu para abrir: " + e.message);
   }
+}
+
+$("ed_abrir_pasta").onclick = escolherPasta;
+$("ed_trocar_pasta").onclick = escolherPasta;
+
+/* LIBERAR É UM CLIQUE, e não uma escolha de novo. O crachá já diz qual pasta é; o que o
+   navegador quer é o dedo dele autorizando a leitura nesta sessão. */
+$("ed_liberar").onclick = async () => {
+  const cracha = EDIT_PASTA || await pegarCracha();
+  if (!cracha) return desenhaPorta(null);
+  const h = await pastaValendo(cracha, true);
+  if (!h) return parado("ed_recado_pasta", "o navegador não liberou. Tente de novo, ou "
+    + "aponte a pasta outra vez.");
+  EDIT_PASTA = h;
+  parado("ed_recado_pasta", "");
+  await mostrarPecas();
 };
 
 $("ed_vai1").onclick = () => { irParaPasso(2); salvarRascunho(); };
 
-/* AO ABRIR A ABA, a permissão da pasta é pedida de volta com o dedo dele na tela, que é
-   a única hora em que o navegador aceita o pedido. */
+/* O MELHOR CARTÃO DE PERMISSÃO É O QUE NUNCA APARECE.
+
+   O navegador só aceita o pedido de liberar a pasta com o dedo da pessoa na tela. Então o
+   primeiro clique dela dentro da aba de Edição, qualquer um, serve de gancho: clicou em
+   "iniciar uma nova edição", já pedimos junto. Quando dá certo, o cartão nem chega a ser
+   desenhado, e a experiência é a que o Gabriel esperava: apontou a pasta uma vez, e daí
+   em diante é só usar.
+
+   UMA VEZ POR CARREGAMENTO, e não a cada clique. O pedido abre uma caixinha do navegador;
+   insistir a cada clique seria transformar proteção em praga. Recusou, o cartão explica e
+   ele libera quando quiser. */
+let JA_PEDIU_A_PASTA = false;
+let CRACHA_NA_MAO = null;                 // lido na abertura, sem depender de clique
+
+(async () => { CRACHA_NA_MAO = await pegarCracha(); })();
+
 document.addEventListener("click", async ev => {
-  if (!ev.target.closest('[data-aba="editar"]')) return;
+  if (!ev.target.closest("#aba-editar") && !ev.target.closest('[data-aba="editar"]')) return;
   desenhaRascunhos();
-  if (EDIT_PASTA || !TEM_PORTA) return;
-  const h = await pastaValendo(await pegarCracha(), true);
+  if (EDIT_PASTA || !TEM_PORTA || JA_PEDIU_A_PASTA) return;
+  const cracha = CRACHA_NA_MAO || await pegarCracha();
+  if (!cracha) return;                    // nunca apontou: o cartão pede, não o clique
+  JA_PEDIU_A_PASTA = true;
+  const h = await pastaValendo(cracha, true);
   if (h) { EDIT_PASTA = h; if (EDIT_LEVA) await mostrarPecas(); }
 });
 
