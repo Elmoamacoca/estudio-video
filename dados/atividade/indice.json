@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "thenews.business",
+   "nome": "the news business",
+   "primeiro": 1787176012,
+   "ultimo": 1787176012,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "identificado",
+   "lidos": 0,
+   "publicacoes": 2542,
+   "completo": false
+  },
+  {
    "conta": "blankpartners",
    "nome": "Blank Partners",
    "rotulo": "reels",
@@ -43,5 +56,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787175090
+ "atualizado": 1787176015
 }
