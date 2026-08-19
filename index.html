@@ -3303,8 +3303,13 @@ function pintarEventos(caixa, eventos) {
   }
 }
 
+/* O OUVINTE E' DA LISTA DE PERFIS, E NAO DA PAGINA INTEIRA.
+   O registro do lote, na aba de Baixar, usa o mesmo molde de cartao: sem o endereco da
+   lista aqui, clicar num lote caia neste ouvinte, que ia buscar o historico de um perfil
+   chamado `undefined` e escrevia "nada registrado para este perfil" dentro do cartao do
+   lote. Dois donos para o mesmo clique. */
 document.addEventListener("click", ev => {
-  const cabeca = ev.target.closest(".liv-cabeca");
+  const cabeca = ev.target.closest("#liv_lista .liv-cabeca");
   if (!cabeca) return;
   const cartao = cabeca.closest(".liv-cartao");
   const conta = cartao.dataset.conta;
