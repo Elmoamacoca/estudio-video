@@ -1,7 +1,7 @@
 {
  "prontas": 500,
  "avaliados": 1404,
- "ultima_rodada": 1787177420,
+ "ultima_rodada": 1787178657,
  "perfis": [
   {
    "conta": "blankpartners",
@@ -68,8 +68,8 @@
    "carrosseis": 0,
    "acima": 112,
    "baixaveis": 112,
-   "baixados": 0,
-   "restam": 112
+   "baixados": 107,
+   "restam": 5
   },
   {
    "conta": "vinci.society",
