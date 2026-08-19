@@ -1973,6 +1973,198 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .ed-porteira,.ed-escolha,.ed-tela{transition:none}
 }
 
+/* ==================================================================== O PASSO 2
+
+   O TEMPLATE É O FUNDO, O VÍDEO VAI POR CIMA. Vale repetir aqui porque o estilo do
+   enquadramento só faz sentido sabendo disso: o `enq-palco` desenha o template no
+   tamanho real da peça e o vídeo é um retângulo solto dentro dele, que se arrasta. */
+
+.acao.mini{height:30px;padding:0 12px;font-size:12.5px}
+.acao.mini.ativa{border-color:var(--accent);background:var(--accent-tint);
+  color:var(--accent);font-weight:600}
+
+/* ---------------------------------------------------- os sub-passos no trilho
+
+   ELES SÓ EXISTEM DENTRO DO PASSO 2. Fora dele o trilho volta a ser uma linha por
+   passo: quatro sub-itens abertos o tempo todo transformariam a espinha num índice. */
+.ed-sub{list-style:none;margin:10px 0 0;padding:0;display:none;flex-direction:column;
+  gap:7px}
+.ed-ponto[data-passo="2"].ativo .ed-sub{display:flex}
+.ed-sub li{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);
+  cursor:pointer;opacity:.55;transition:opacity .18s,color .18s}
+.ed-sub li i{flex:0 0 7px;width:7px;height:7px;border-radius:50%;
+  border:1.5px solid currentColor;transition:background .18s,transform .18s}
+.ed-sub li:hover{opacity:.85}
+.ed-sub li.feito{opacity:1;color:var(--ink)}
+.ed-sub li.feito i{background:var(--rule-solid);border-color:var(--rule-solid)}
+.ed-sub li.agora{opacity:1;color:var(--accent);font-weight:600}
+.ed-sub li.agora i{background:var(--accent);border-color:var(--accent);
+  transform:scale(1.25)}
+
+.ed-sub-tela[hidden]{display:none}
+@keyframes sub-entra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.ed-sub-tela{animation:sub-entra .24s cubic-bezier(.16,1,.3,1) both}
+@media(prefers-reduced-motion:reduce){.ed-sub-tela{animation:none}}
+
+/* ---------------------------------------------------- 2.1 · o acervo de templates */
+.tpl-abas{display:flex;gap:4px;padding:4px;background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:var(--r-md);width:max-content;
+  margin-bottom:16px}
+.tpl-aba{height:32px;padding:0 15px;border:0;background:none;border-radius:7px;
+  font:inherit;font-size:13px;color:var(--muted);cursor:pointer;transition:.16s}
+.tpl-aba:hover{color:var(--ink)}
+.tpl-aba.ativa{background:var(--branco);color:var(--ink);font-weight:600;
+  box-shadow:var(--sombra)}
+.tpl-painel[hidden]{display:none}
+
+.tpl-filtros{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.tpl-filtros .cfg-sel{flex:0 0 200px;min-width:0}
+
+.tpl-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:14px}
+.tpl-cartao{border:1px solid var(--rule-solid);border-radius:var(--r-md);overflow:hidden;
+  background:var(--branco);cursor:pointer;transition:border-color .16s,transform .16s,
+  box-shadow .16s;position:relative}
+.tpl-cartao:hover{transform:translateY(-2px);box-shadow:var(--sombra);
+  border-color:var(--ink)}
+.tpl-cartao.ativo{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-tint)}
+.tpl-cartao-img{aspect-ratio:9/16;background:var(--paper-2);display:block;width:100%;
+  object-fit:contain}
+.tpl-cartao-pe{padding:9px 11px 11px}
+.tpl-cartao-pe b{display:block;font-size:13px;font-weight:650;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tpl-cartao-rot{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.tpl-cartao-rot span{font-size:10.5px;padding:2px 7px;border-radius:999px;
+  background:var(--paper-2);border:1px solid var(--rule-solid);color:var(--muted)}
+.tpl-cartao-x{position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;
+  border:0;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;display:none;
+  align-items:center;justify-content:center;padding:0}
+.tpl-cartao:hover .tpl-cartao-x{display:flex}
+.tpl-cartao-x svg{width:13px;height:13px}
+.tpl-vazio{grid-column:1/-1;padding:34px;text-align:center;color:var(--muted);
+  font-size:13.5px;border:1px dashed var(--rule-solid);border-radius:var(--r-lg)}
+
+/* ---------------------------------------------------- 2.1 · subir um novo */
+.tpl-subir{display:grid;grid-template-columns:260px 1fr;gap:22px;align-items:start}
+.tpl-solta{display:block;border:1.5px dashed var(--rule-solid);border-radius:var(--r-lg);
+  background:var(--paper-2);cursor:pointer;aspect-ratio:9/16;overflow:hidden;
+  position:relative;transition:border-color .16s}
+.tpl-solta:hover{border-color:var(--accent)}
+.tpl-solta-vazio{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;padding:22px;text-align:center}
+.tpl-solta-vazio svg{width:26px;height:26px;color:var(--muted)}
+.tpl-solta-vazio b{font-size:13.5px;color:var(--ink)}
+.tpl-solta-prev{width:100%;height:100%;object-fit:contain;display:block;
+  background:var(--paper-2)}
+.tpl-solta-prev[hidden]{display:none}
+.tpl-solta.cheia .tpl-solta-vazio{display:none}
+
+.tpl-ficha{display:flex;flex-direction:column;gap:14px;max-width:420px}
+.tpl-campo{display:flex;flex-direction:column;gap:6px}
+.tpl-campo > span{font-size:12.5px;color:var(--muted);display:flex;align-items:baseline;
+  gap:7px}
+.tpl-campo > span i{font-size:10.5px;font-style:normal;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.05em}
+.tpl-campo .cfg-sel{flex:none;width:100%}
+
+/* ---------------------------------------------------- 2.2 · o vídeo de exemplo */
+.ex-linha{display:grid;grid-template-columns:260px 1fr;gap:26px;align-items:start}
+.ex-quadro{aspect-ratio:9/16;border-radius:var(--r-md);overflow:hidden;background:#000;
+  border:1px solid var(--rule-solid)}
+.ex-quadro video{width:100%;height:100%;object-fit:cover;display:block}
+.ex-lado{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.ex-nome{font-size:15px;font-weight:650;color:var(--ink);word-break:break-all}
+.ex-dados{font-size:13px;color:var(--muted);line-height:1.7}
+.ex-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:11px;
+  margin-top:20px}
+.ex-grade[hidden]{display:none}
+.ex-mini{aspect-ratio:9/16;border-radius:9px;overflow:hidden;background:#000;
+  border:2px solid transparent;cursor:pointer;transition:border-color .16s}
+.ex-mini:hover{border-color:var(--ink)}
+.ex-mini.ativo{border-color:var(--accent)}
+.ex-mini video{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---------------------------------------------------- 2.3 · o enquadramento
+
+   O PALCO É A PEÇA EM TAMANHO REAL, ENCOLHIDA. A proporção vem do template pelo
+   `aspect-ratio` escrito no próprio elemento, e tudo dentro dele é medido em por cento:
+   assim o retângulo que o Gabriel arrasta na tela vale igual quando o ffmpeg monta a
+   peça em 1080 por 1920, sem nenhuma conta de conversão no meio. */
+.enq-linha{display:grid;grid-template-columns:1fr 210px;gap:26px;align-items:start}
+/* O PALCO É MEDIDO PELA ALTURA, e não pela largura, e isso não é gosto: é a única
+   forma de ele existir. Tudo dentro dele é `position:absolute`, então a largura natural
+   dele é zero. Ele era um item de grade com `margin:0 auto`, e margem automática no eixo
+   horizontal DESLIGA o esticar da grade: sem esticar e sem conteúdo em fluxo, o palco
+   virava uma tira de dois pixels com a peça inteira escondida dentro. Medido.
+
+   Com a altura fixa e `width:auto`, a proporção escrita pelo programa é quem calcula a
+   largura, e `justify-self` centraliza sem precisar de margem nenhuma. */
+.enq-palco{position:relative;height:min(66vh,660px);width:auto;justify-self:center;
+  border-radius:var(--r-md);overflow:hidden;background:var(--paper-2);
+  border:1px solid var(--rule-solid);touch-action:none;user-select:none;
+  aspect-ratio:9/16}
+.enq-fundo{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;
+  pointer-events:none}
+.enq-video{position:absolute;cursor:grab;overflow:hidden;
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.5),0 0 0 3px rgba(0,0,0,.35)}
+.enq-video:active{cursor:grabbing}
+.enq-video video{width:100%;height:100%;object-fit:fill;display:block}
+
+.enq-lado{display:flex;flex-direction:column;gap:18px}
+.enq-bloco h4{margin:0 0 8px;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);font-weight:600}
+.enq-botoes{display:flex;gap:6px;flex-wrap:wrap}
+.enq-medida{font:12.5px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
+  margin-top:7px}
+#enq_zoom{width:100%;accent-color:var(--accent)}
+.enq-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px;font-size:13px;
+  color:var(--muted)}
+.enq-nav[hidden]{display:none}
+
+/* ---------------------------------------------------- 2.4 · a quem se aplica */
+.apl-escolhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px}
+.apl-op{text-align:left;padding:16px 17px;border-radius:var(--r-md);cursor:pointer;
+  background:var(--branco);border:1px solid var(--rule-solid);font:inherit;
+  transition:border-color .16s,background .16s}
+.apl-op:hover{border-color:var(--ink)}
+.apl-op.ativa{border-color:var(--accent);background:var(--accent-tint)}
+.apl-op b{display:block;font-size:14.5px;font-weight:650;color:var(--ink)}
+.apl-op span{display:block;font-size:12.5px;color:var(--muted);margin-top:4px}
+.apl-op span i{font-style:normal;font-weight:600;color:var(--ink)}
+
+.apl-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:11px;
+  margin-top:18px}
+.apl-grade[hidden]{display:none}
+.apl-mini{position:relative;aspect-ratio:9/16;border-radius:9px;overflow:hidden;
+  background:#000;border:2px solid transparent;cursor:pointer;transition:border-color .16s}
+.apl-mini video{width:100%;height:100%;object-fit:cover;display:block;opacity:.42;
+  transition:opacity .16s}
+.apl-mini.marcado{border-color:var(--accent)}
+.apl-mini.marcado video{opacity:1}
+.apl-tique{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;
+  background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.apl-mini.marcado .apl-tique{background:var(--accent)}
+.apl-tique svg{width:12px;height:12px;color:#fff;opacity:0}
+.apl-mini.marcado .apl-tique svg{opacity:1}
+
+.apl-pe{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  margin-top:24px;padding-top:18px;border-top:1px solid var(--rule-solid);flex-wrap:wrap}
+.apl-resumo{font-size:13.5px;color:var(--muted)}
+.apl-resumo b{color:var(--ink);font-weight:650}
+
+.apl-obra{margin-top:20px}
+.apl-obra[hidden]{display:none}
+.apl-obra-topo{display:flex;align-items:center;gap:10px;font-size:14px;margin-bottom:11px}
+.apl-obra-topo .dir{margin-left:auto;font-variant-numeric:tabular-nums;
+  color:var(--muted);font-size:13px}
+.apl-barra{height:5px;border-radius:999px;background:var(--rule-solid);overflow:hidden}
+.apl-barra i{display:block;height:100%;width:0;background:var(--accent);
+  border-radius:999px;transition:width .4s ease}
+
+@media(max-width:960px){
+  .tpl-subir,.ex-linha,.enq-linha{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -2789,13 +2981,23 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
       </div>
 
+      <!-- O PASSO 2 TEM PASSOS DENTRO DELE, e foi assim que o Gabriel descreveu: "tem
+           várias etapas dentro da etapa de template". Eles só aparecem quando ele está
+           no 2. Fora dele, o trilho volta a ser uma linha por passo, senão a espinha
+           vira um índice de livro. -->
       <div class="ed-ponto" data-passo="2">
         <div class="ed-ponto-n">02</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
           <div class="ed-ponto-txt">
             <h3>O template</h3>
-            <p id="ed_r2">a definir com você</p>
+            <p id="ed_r2">nenhum escolhido</p>
+            <ol class="ed-sub" id="ed_sub2">
+              <li data-sub="1"><i></i>o template</li>
+              <li data-sub="2"><i></i>o vídeo de exemplo</li>
+              <li data-sub="3"><i></i>o enquadramento</li>
+              <li data-sub="4"><i></i>a quem se aplica</li>
+            </ol>
           </div>
         </div>
       </div>
@@ -2876,24 +3078,282 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
              discordando. Passo que exigir um aceite terá o botão dele, no lugar dele. -->
       </div>
 
-      <!-- ---------------------------------------- PASSO 2 · O TEMPLATE -->
+      <!-- ---------------------------------------- PASSO 2 · O TEMPLATE
+
+           O TEMPLATE É O FUNDO E O VÍDEO VAI POR CIMA DELE. Minha primeira proposta era
+           o contrário, uma moldura vazada por cima do vídeo, e o Gabriel corrigiu em
+           19/08/2026: os templates dele são imagens fechadas, com borda, sem fundo
+           transparente. Vídeo atrás de imagem opaca não aparece.
+
+           O TAMANHO DA PEÇA É O TAMANHO DO TEMPLATE. Não há escolha de proporção aqui: a
+           tela do template manda, e o que se ajusta é onde o vídeo se encaixa dentro
+           dela. Ele já disse que vai subir templates na proporção de reels, então na
+           prática o vídeo preenche quase tudo e o ajuste é exceção. -->
       <div class="ed-etapa" data-passo="2" hidden>
-        <div class="ed-cab">
-          <h2>O template</h2>
-          <p class="nota">O que será aplicado sobre os vídeos da leva.</p>
+
+        <!-- ................................................ 2.1 · ESCOLHER O TEMPLATE -->
+        <div class="ed-sub-tela" data-sub="1">
+          <div class="ed-cab">
+            <h2>O template</h2>
+            <p class="nota">Pegue um do acervo ou suba um novo.</p>
+          </div>
+
+          <div class="tpl-abas">
+            <button type="button" class="tpl-aba ativa" data-tab="acervo">Do acervo</button>
+            <button type="button" class="tpl-aba" data-tab="novo">Subir um novo</button>
+          </div>
+
+          <!-- ....................... o acervo -->
+          <div class="tpl-painel" data-tab="acervo">
+            <div class="tpl-filtros">
+              <div class="psel cfg-sel" id="tpl_f_merc" data-o="nicho" data-todos="1">
+                <button type="button" class="psel-b" aria-haspopup="listbox"
+                        aria-expanded="false">
+                  <span class="psel-v">Todos os mercados</span>
+                  <svg class="psel-seta" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                       stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                <div class="psel-menu" role="listbox"></div>
+              </div>
+              <div class="psel cfg-sel" id="tpl_f_etq" data-o="etiqueta" data-todos="1">
+                <button type="button" class="psel-b" aria-haspopup="listbox"
+                        aria-expanded="false">
+                  <span class="psel-v">Todas as etiquetas</span>
+                  <svg class="psel-seta" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                       stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                <div class="psel-menu" role="listbox"></div>
+              </div>
+              <span class="nota" id="tpl_conta"></span>
+            </div>
+            <div class="tpl-grade" id="tpl_grade"></div>
+          </div>
+
+          <!-- ....................... subir um novo -->
+          <div class="tpl-painel" data-tab="novo" hidden>
+            <div class="tpl-subir">
+              <label class="tpl-solta" id="tpl_solta">
+                <input type="file" id="tpl_arquivo" accept="image/png,image/jpeg,image/webp" hidden>
+                <div class="tpl-solta-vazio">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14"/><path d="m5 12 7-7 7 7"/></svg>
+                  <b>Escolher a imagem do template</b>
+                  <span class="nota">PNG, JPG ou WebP. O tamanho dela vira o tamanho
+                    da peça.</span>
+                </div>
+                <img class="tpl-solta-prev" id="tpl_prev" hidden alt="">
+              </label>
+
+              <div class="tpl-ficha">
+                <label class="tpl-campo">
+                  <span>Nome</span>
+                  <input type="text" id="tpl_nome" maxlength="40"
+                         placeholder="como você vai reconhecer este template">
+                </label>
+
+                <!-- MERCADO E ETIQUETA SÃO OBRIGATÓRIOS AO SUBIR, e foi pedido assim:
+                     acervo sem rótulo vira pasta de arquivo solto em três semanas. -->
+                <label class="tpl-campo">
+                  <span>Mercado <i>obrigatório</i></span>
+                  <div class="psel cfg-sel" id="tpl_n_merc" data-o="nicho">
+                    <button type="button" class="psel-b" aria-haspopup="listbox"
+                            aria-expanded="false">
+                      <span class="psel-v">escolher</span>
+                      <svg class="psel-seta" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                           stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                    <div class="psel-menu" role="listbox"></div>
+                  </div>
+                </label>
+                <label class="tpl-campo">
+                  <span>Etiqueta <i>obrigatória</i></span>
+                  <div class="psel cfg-sel" id="tpl_n_etq" data-o="etiqueta">
+                    <button type="button" class="psel-b" aria-haspopup="listbox"
+                            aria-expanded="false">
+                      <span class="psel-v">escolher</span>
+                      <svg class="psel-seta" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                           stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                    <div class="psel-menu" role="listbox"></div>
+                  </div>
+                </label>
+
+                <div class="linha">
+                  <button class="acao forte" id="tpl_guardar" type="button" disabled>
+                    Guardar no acervo</button>
+                </div>
+                <p class="nota" id="tpl_recado"></p>
+              </div>
+            </div>
+
+            <!-- AS MESMAS DUAS LISTAS DO RESTO DO SISTEMA, e não uma cópia paralela. O
+                 que se cria aqui aparece na tabela de Mineração e vice-versa: é o mesmo
+                 catalogo.json, o mesmo pedido pela esteira, a mesma caixa. -->
+            <details class="etq-gerir">
+              <summary>Criar e apagar mercados e etiquetas</summary>
+              <div class="cfg-duas">
+                <div class="caixa">
+                  <div class="cfg-topo"><h3>Mercados</h3>
+                    <div class="dir"><span class="cfg-cat-conta"></span></div>
+                  </div>
+                  <div class="cfg-cat" data-o="nicho">
+                    <div class="cfg-cat-lista"></div>
+                    <div class="cfg-cat-novo">
+                      <input type="text" maxlength="28" placeholder="nome do novo mercado">
+                      <button type="button" class="cfg-cat-btn">Criar</button>
+                    </div>
+                    <div class="cfg-cat-diz"></div>
+                  </div>
+                </div>
+                <div class="caixa">
+                  <div class="cfg-topo"><h3>Etiquetas</h3>
+                    <div class="dir"><span class="cfg-cat-conta"></span></div>
+                  </div>
+                  <div class="cfg-cat" data-o="etiqueta">
+                    <div class="cfg-cat-lista"></div>
+                    <div class="cfg-cat-novo">
+                      <input type="text" maxlength="28" placeholder="nome da nova etiqueta">
+                      <button type="button" class="cfg-cat-btn">Criar</button>
+                    </div>
+                    <div class="cfg-cat-diz"></div>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- A PORTA DO ESTÚDIO. O acervo mora numa pasta do seu computador, e sem a
+               permissão de gravar não há onde guardar template nenhum. -->
+          <div class="caixa ed-porta" id="tpl_porta" hidden>
+            <h3>Apontar a pasta do Estúdio</h3>
+            <p class="nota">O acervo de templates mora no seu computador, dentro da pasta
+              do Estúdio, e para guardar um template a página precisa de permissão de
+              <b>gravar</b> ali. Aponte a pasta <b>Estudio</b>, e não a <b>levas</b>: é um
+              nível acima, porque agora a tela precisa alcançar os templates, os pedidos e
+              as edições, e não só os vídeos.</p>
+            <p class="ed-caminho">C:\Users\Gabri\Estudio</p>
+            <div class="linha">
+              <button class="acao forte" id="tpl_apontar" type="button">
+                Apontar a pasta do Estúdio</button>
+            </div>
+            <p class="nota" id="tpl_porta_diz"></p>
+          </div>
         </div>
-        <div class="por-vir">
-          <div class="por-vir-selo">esperando a sua definição</div>
-          <h2>O que é um template aqui?</h2>
-          <p class="nota">O passo 1 está pronto e a leva já chega até aqui. Para desenhar
-            este, falta uma resposta sua: o que o template faz com o vídeo.</p>
-          <ul class="por-vir-lista">
-            <li>Uma moldura por cima do vídeo, com faixa, título e o vídeo encaixado
-              dentro de um campo.</li>
-            <li>Um recorte e reenquadre, mudando a proporção da peça.</li>
-            <li>Uma abertura e um fecho, colados antes e depois do vídeo.</li>
-            <li>Um estilo de legenda queimada na imagem.</li>
-          </ul>
+
+        <!-- ................................................ 2.2 · O VÍDEO DE EXEMPLO -->
+        <div class="ed-sub-tela" data-sub="2" hidden>
+          <div class="ed-cab">
+            <h2>O vídeo de exemplo</h2>
+            <p class="nota">É nele que você vê o template aplicado e acerta o
+              enquadramento. Vem um sorteado, e você troca se quiser.</p>
+          </div>
+          <div class="ex-linha">
+            <div class="ex-quadro">
+              <video id="ex_video" preload="metadata" muted playsinline loop></video>
+            </div>
+            <div class="ex-lado">
+              <div class="ex-nome" id="ex_nome">nenhum</div>
+              <div class="ex-dados" id="ex_dados"></div>
+              <div class="linha">
+                <button class="acao" id="ex_sortear" type="button">Sortear outro</button>
+                <button class="acao" id="ex_escolher" type="button">Escolher qual</button>
+              </div>
+              <button class="acao forte" id="ex_vai" type="button">
+                Ver com o template</button>
+            </div>
+          </div>
+          <div class="ex-grade" id="ex_grade" hidden></div>
+        </div>
+
+        <!-- ................................................ 2.3 · O ENQUADRAMENTO -->
+        <div class="ed-sub-tela" data-sub="3" hidden>
+          <div class="ed-cab">
+            <h2>O enquadramento</h2>
+            <p class="nota" id="enq_sub">Arraste o vídeo para posicionar. A imagem de
+              fundo é o template, no tamanho real da peça.</p>
+          </div>
+
+          <!-- O NAVEGADOR DE PEÇAS só aparece no modo uma a uma. -->
+          <div class="enq-nav" id="enq_nav" hidden>
+            <button class="acao mini" id="enq_ant" type="button">anterior</button>
+            <span id="enq_qual"></span>
+            <button class="acao mini" id="enq_prox" type="button">próxima</button>
+          </div>
+
+          <div class="enq-linha">
+            <div class="enq-palco" id="enq_palco">
+              <img class="enq-fundo" id="enq_fundo" alt="">
+              <div class="enq-video" id="enq_caixa">
+                <video id="enq_video" preload="metadata" muted playsinline loop></video>
+              </div>
+            </div>
+            <div class="enq-lado">
+              <div class="enq-bloco">
+                <h4>Encaixe</h4>
+                <div class="enq-botoes">
+                  <button class="acao mini ativa" data-enc="preencher" type="button">
+                    preencher</button>
+                  <button class="acao mini" data-enc="caber" type="button">caber</button>
+                  <button class="acao mini" data-enc="largura" type="button">largura</button>
+                </div>
+              </div>
+              <div class="enq-bloco">
+                <h4>Tamanho</h4>
+                <input type="range" id="enq_zoom" min="20" max="260" value="100">
+                <div class="enq-medida" id="enq_medida"></div>
+              </div>
+              <div class="enq-bloco">
+                <h4>Peça final</h4>
+                <div class="enq-medida" id="enq_tela"></div>
+              </div>
+              <button class="acao" id="enq_centro" type="button">Centralizar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ................................................ 2.4 · A QUEM SE APLICA -->
+        <div class="ed-sub-tela" data-sub="4" hidden>
+          <div class="ed-cab">
+            <h2>A quem se aplica</h2>
+            <p class="nota">O enquadramento que você acertou vale para as peças que
+              escolher aqui.</p>
+          </div>
+
+          <div class="apl-escolhas">
+            <button class="apl-op ativa" data-modo="todas" type="button">
+              <b>Todas as peças</b>
+              <span>o mesmo enquadramento em <i id="apl_n_todas">0</i></span>
+            </button>
+            <button class="apl-op" data-modo="algumas" type="button">
+              <b>Só as que eu marcar</b>
+              <span>mesmo enquadramento, nas escolhidas</span>
+            </button>
+            <button class="apl-op" data-modo="uma" type="button">
+              <b>Uma a uma</b>
+              <span>enquadramento próprio em cada peça</span>
+            </button>
+          </div>
+
+          <div class="apl-grade" id="apl_grade" hidden></div>
+
+          <div class="apl-pe">
+            <div class="apl-resumo" id="apl_resumo"></div>
+            <button class="acao forte" id="apl_montar" type="button">Montar</button>
+          </div>
+
+          <!-- O ANDAMENTO DA MONTAGEM. Quem monta é um programa deste computador, não a
+               esteira: ele lê o pedido de dentro da pasta do Estúdio e escreve aqui o que
+               está fazendo, peça por peça. -->
+          <div class="caixa apl-obra" id="apl_obra" hidden>
+            <div class="apl-obra-topo">
+              <span class="cfg-girando"></span>
+              <b id="apl_obra_txt">montando</b>
+              <span class="dir" id="apl_obra_tempo"></span>
+            </div>
+            <div class="apl-barra"><i id="apl_barra"></i></div>
+            <p class="nota" id="apl_obra_nota"></p>
+          </div>
         </div>
       </div>
 
@@ -5517,7 +5977,7 @@ function abrirMarcacao(conta) {
 function desenhaFolha() {
   desenhaMercadoDaFolha();
   desenhaEtiquetasDaFolha();
-  document.querySelectorAll("#etq_folha .cfg-cat").forEach(desenhaCatalogo);
+  document.querySelectorAll(".cfg-cat").forEach(desenhaCatalogo);
 }
 
 /* O MERCADO É UM SELETOR, E NÃO UM CAMPO. Ele é um só por perfil: isso é uma escolha
@@ -5620,7 +6080,11 @@ function desenhaCatalogo(caixa) {
   const uso = usoDoCatalogo()[o === "nicho" ? "nichos" : "etiquetas"];
   const itens = listaDo(o);
   const lista = caixa.querySelector(".cfg-cat-lista");
-  const conta = $(o === "nicho" ? "cat_n_nicho" : "cat_n_etq");
+  // O CONTADOR É O DA PRÓPRIA CAIXA. Ele era procurado por identificador fixo, e isso
+  // valia enquanto havia um par de caixas só. Agora há dois pares, um na folha de
+  // etiquetar perfil e outro no passo do template, e por identificador os quatro
+  // escreviam no mesmo lugar.
+  const conta = (caixa.closest(".caixa") || document).querySelector(".cfg-cat-conta");
 
   if (conta) conta.textContent = itens.length
     + (o === "nicho" ? (itens.length === 1 ? " mercado" : " mercados")
@@ -5701,6 +6165,7 @@ async function catPedir(caixa, texto, pronto, aoFim) {
       // perfis passaram para luxo" e, na linha de baixo, "luxo, sem uso".
       aoFim();
       desenhaFolha();
+      desenhaSeletoresDoTemplate();   // o passo 2 lê o mesmo catálogo
       // a tabela e os filtros de Baixar leem daqui, então mudam junto
       return desenhaMinerados();
     }
@@ -5715,7 +6180,7 @@ async function catPedir(caixa, texto, pronto, aoFim) {
 const temNome = (d, o, nome) => (d[o === "nicho" ? "nichos" : "etiquetas"] || [])
   .some(x => x.nome.toLowerCase() === nome.toLowerCase());
 
-document.querySelectorAll("#etq_folha .cfg-cat").forEach(caixa => {
+document.querySelectorAll(".cfg-cat").forEach(caixa => {
   const o = caixa.dataset.o;
   const campo = caixa.querySelector(".cfg-cat-novo input");
   const botao = caixa.querySelector(".cfg-cat-btn");
@@ -5937,7 +6402,8 @@ document.addEventListener("keydown", ev => {
 
 let EDIT_PASSO = 1;
 let EDIT_LEVA = null;              // a leva escolhida, como está na capa do acervo
-let EDIT_PASTA = null;             // o crachá da pasta `levas`, se já tivermos
+let EDIT_PASTA = null;             // a pasta `levas`, se já tivermos
+let EDIT_RAIZ = null;              // a pasta `Estudio`, uma acima: templates e pedidos
 let EDIT_PECAS = [];               // os arquivos da leva escolhida
 let EDIT_RASCUNHO = null;          // o rascunho aberto, se veio de um
 
@@ -5993,17 +6459,56 @@ async function guardarCracha(h) {
 }
 const pegarCracha = () => noCofre(COFRE.portas, false, s => s.get(COFRE.chave));
 
-/** A pasta ainda vale? Devolve o crachá só quando a permissão está de pé. */
+/** A pasta ainda vale? Devolve o crachá só quando a permissão está de pé.
+
+   LER DEIXOU DE BASTAR EM 19/08/2026, e o motivo é o passo 2. Até aqui a tela só olhava
+   os vídeos; agora ela guarda templates, deixa pedidos de montagem e lê o andamento
+   deles, tudo dentro da pasta do Estúdio. Isso é GRAVAR, e o navegador trata as duas
+   permissões como coisas separadas: quem tem uma não tem a outra.
+
+   O preço é um clique a mais na primeira vez de cada visita, no mesmo cartão que já
+   existia. Não há como pedir gravação sem o dedo dele, e não deveria haver. */
 async function pastaValendo(handle, pedir) {
   if (!handle) return null;
   try {
-    if (await handle.queryPermission({ mode: "read" }) === "granted") return handle;
+    if (await handle.queryPermission({ mode: "readwrite" }) === "granted") return handle;
     // PEDIR DE NOVO SÓ COM O DEDO DELE NO BOTÃO. O navegador recusa o pedido feito
     // sozinho, ao abrir a página, e a recusa vem calada: parece que a pasta se perdeu.
-    if (pedir && await handle.requestPermission({ mode: "read" }) === "granted")
+    if (pedir && await handle.requestPermission({ mode: "readwrite" }) === "granted")
       return handle;
   } catch (e) { /* crachá velho de uma pasta que não existe mais */ }
   return null;
+}
+
+/* ------------------------------------------------- a raiz do Estúdio e a pasta `levas`
+
+   O QUE A TELA APONTA MUDOU DE `levas` PARA `Estudio`, um nível acima. Antes bastava
+   `levas`, porque só se lia vídeo. Agora o passo 2 precisa alcançar mais três pastas
+   irmãs dela:
+
+       Estudio/levas/leva-28/     os vídeos brutos, que nada aqui altera
+       Estudio/templates/         o acervo, com as imagens e a ficha de cada uma
+       Estudio/pedidos/           os pedidos de montagem e o andamento deles
+       Estudio/edicoes/leva-28/   as peças montadas
+
+   O CRACHÁ ANTIGO CONTINUA SERVINDO PARA O PASSO 1, e isso não é gentileza: é evitar que
+   ele abra a aba e encontre a galeria vazia sem entender por quê. A diferença é
+   descoberta olhando: se dentro do que ele apontou existe uma subpasta `levas`, aquilo é
+   a raiz do Estúdio; se não existe, aquilo É a `levas` do crachá antigo, e o passo 2
+   pede a pasta de cima quando for a hora. */
+async function abrirRaiz(h) {
+  if (!h) return { raiz: null, levas: null };
+  try {
+    return { raiz: h, levas: await h.getDirectoryHandle("levas") };
+  } catch (e) { /* não tem `levas` dentro: é o crachá antigo */ }
+  return { raiz: null, levas: h };
+}
+
+/** Uma pasta irmã dentro da raiz do Estúdio. Devolve null se a raiz não estiver na mão. */
+async function pastaDo(nome, criar) {
+  if (!EDIT_RAIZ) return null;
+  try { return await EDIT_RAIZ.getDirectoryHandle(nome, { create: !!criar }); }
+  catch (e) { return null; }
 }
 
 /* -------------------------------------------------------------- os rascunhos */
@@ -6213,6 +6718,7 @@ function irParaPasso(n) {
   });
   document.querySelectorAll(".ed-etapa").forEach(s =>
     s.hidden = Number(s.dataset.passo) !== n);
+  if (n === 2) entrarNoTemplate();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -6249,13 +6755,15 @@ async function mostrarPecas() {
   //
   // Com crachá na mão, o que falta é um clique de confirmação, sem janela de arquivos.
   // Sem crachá, aí sim é escolher a pasta. O cartão mostra um ou outro.
-  const cracha = EDIT_PASTA || await pegarCracha();
-  EDIT_PASTA = await pastaValendo(cracha, false);
-  if (!EDIT_PASTA) {
+  const cracha = EDIT_RAIZ || EDIT_PASTA || await pegarCracha();
+  const valendo = await pastaValendo(cracha, false);
+  if (!valendo) {
+    EDIT_RAIZ = EDIT_PASTA = null;
     desenhaPorta(cracha);
     gal.innerHTML = "";
     return;
   }
+  ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(valendo));
   $("ed_porta").hidden = true;
 
   gal.innerHTML = '<div class="ed-carregando">abrindo a pasta da leva</div>';
@@ -6272,8 +6780,8 @@ async function mostrarPecas() {
   } catch (e) {
     gal.innerHTML = "";
     $("ed_porta").hidden = false;
-    parado("ed_recado_pasta", `não achei a pasta leva-${EDIT_LEVA.numero} dentro do que `
-      + "você apontou. Aponte a pasta `levas`, que é a que tem uma subpasta por leva.");
+    parado("ed_recado_pasta", `não achei a pasta leva-${EDIT_LEVA.numero}. Aponte a `
+      + "pasta `Estudio`, que é a que tem `levas` dentro dela.");
   }
 }
 
@@ -6382,8 +6890,8 @@ function desenhaPorta(cracha) {
 /** Escolher a pasta pela janela de arquivos. Só quando ainda não há crachá nenhum. */
 async function escolherPasta() {
   try {
-    const h = await window.showDirectoryPicker({ id: "estudio-levas", mode: "read" });
-    EDIT_PASTA = h;
+    const h = await window.showDirectoryPicker({ id: "estudio-raiz", mode: "readwrite" });
+    ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(h));
     const colou = await guardarCracha(h);
     parado("ed_recado_pasta", colou ? "pasta ligada."
       : "pasta ligada, mas o navegador não deixou guardar a escolha: na próxima visita "
@@ -6402,12 +6910,12 @@ $("ed_trocar_pasta").onclick = escolherPasta;
 /* LIBERAR É UM CLIQUE, e não uma escolha de novo. O crachá já diz qual pasta é; o que o
    navegador quer é o dedo dele autorizando a leitura nesta sessão. */
 $("ed_liberar").onclick = async () => {
-  const cracha = EDIT_PASTA || await pegarCracha();
+  const cracha = EDIT_RAIZ || EDIT_PASTA || await pegarCracha();
   if (!cracha) return desenhaPorta(null);
   const h = await pastaValendo(cracha, true);
   if (!h) return parado("ed_recado_pasta", "o navegador não liberou. Tente de novo, ou "
     + "aponte a pasta outra vez.");
-  EDIT_PASTA = h;
+  ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(h));
   parado("ed_recado_pasta", "");
   await mostrarPecas();
 };
@@ -6461,6 +6969,759 @@ setInterval(aoVivo, 15000);
 // juntos, o leitor de bilhetes rodava com a lista ainda vazia, desistia na hora, e a
 // tela abria mostrando zero post num perfil que já tinha sessenta lidos.
 atualizar().then(aoVivo);
+
+/* ==================================================================== O PASSO 2
+
+   O TEMPLATE É O FUNDO E O VÍDEO VAI POR CIMA DELE.
+
+   Minha primeira proposta era o contrário, uma moldura vazada por cima do vídeo, e o
+   Gabriel corrigiu em 19/08/2026: os templates dele são imagens fechadas, com borda, sem
+   fundo transparente. Vídeo atrás de imagem opaca não aparece, então a ordem das camadas
+   não é detalhe de gosto: é a diferença entre a peça existir e a peça ser um retângulo
+   colorido.
+
+   O TAMANHO DA PEÇA É O TAMANHO DO TEMPLATE. Não há escolha de proporção neste passo: a
+   imagem que ele sobe manda, e o que se ajusta é onde o vídeo se encaixa dentro dela.
+
+   AS QUATRO SUB-ETAPAS, na ordem que ele descreveu:
+     1  escolher o template, do acervo ou subindo um novo
+     2  pegar um vídeo de exemplo da leva, sorteado ou escolhido
+     3  ver o template aplicado nele e acertar o enquadramento
+     4  dizer a quem se aplica, e montar
+
+   QUEM MONTA É ESTE COMPUTADOR, e não a esteira do GitHub. Os vídeos já estão neste
+   disco: subir 440 MB para montar lá fora e baixar de volta seria quase 900 MB de
+   transporte para chegar no mesmo arquivo. A tela deixa um pedido escrito dentro da
+   pasta do Estúdio e o `oficina.py`, que passa de minuto em minuto, encontra e trabalha. */
+
+let TPL_SUB = 1;
+let TPL_ESCOLHIDO = null;          // o item do acervo que está valendo
+let TPL_ARQUIVO = null;            // o File escolhido para subir
+let TPL_NOVO_M = "", TPL_NOVO_E = "";
+let TPL_F_M = "", TPL_F_E = "";    // os filtros do acervo
+const ACERVO = { itens: [] };
+const TPL_URLS = new Map();        // id do template -> endereço temporário da imagem
+
+let EX_I = -1;                     // qual peça está servindo de exemplo
+let EX_URL = null;
+
+let TELA = { w: 1080, h: 1920 };   // o tamanho da peça, que é o do template
+let CAIXA = { x: 0, y: 0, w: 1080, h: 1920 };
+let ASPECTO = 9 / 16;              // largura dividida por altura, do vídeo
+const CAIXAS = new Map();          // peça -> caixa própria, no modo uma a uma
+let ENQ_UMA = -1;                  // qual peça está sendo enquadrada no modo uma a uma
+
+let APL_MODO = "todas";
+const APL_MARCADAS = new Set();
+let OBRA = null;                   // { id, desde, relogio }
+
+const TIQUE = '<span class="apl-tique"><svg viewBox="0 0 24 24" fill="none" '
+  + 'stroke="currentColor" stroke-width="3" stroke-linecap="round" '
+  + 'stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>';
+
+/* ---------------------------------------------------------- as listas suspensas
+
+   O DESENHO É O `psel` DO RESTO DO SISTEMA, e a fiação é feita uma vez por caixa. A
+   função é chamada de novo a cada redesenho, porque as opções mudam quando ele cria um
+   mercado, e religar os ouvintes em cada chamada faria cada clique disparar N vezes. */
+function pselMonta(id, opcoes, valor, aoEscolher) {
+  const caixa = $(id);
+  if (!caixa) return;
+  const b = caixa.querySelector(".psel-b");
+  const m = caixa.querySelector(".psel-menu");
+  caixa._aoEscolher = aoEscolher;
+  const achou = opcoes.find(o => o.v === valor) || opcoes[0];
+  caixa.querySelector(".psel-v").textContent = achou ? achou.r : "escolher";
+  m.innerHTML = opcoes.map(o =>
+    `<button type="button" role="option" data-v="${escapa(o.v)}"${
+      o.v === valor ? ' class="on"' : ""}>${escapa(o.r)}<i>✓</i></button>`).join("");
+  if (caixa._ligado) return;
+  caixa._ligado = true;
+  b.addEventListener("click", ev => {
+    ev.stopPropagation();
+    const abre = !m.classList.contains("aberto");
+    fecharPseis();
+    m.classList.toggle("aberto", abre);
+    b.setAttribute("aria-expanded", abre ? "true" : "false");
+  });
+  m.addEventListener("click", ev => {
+    ev.stopPropagation();
+    const x = ev.target.closest("button[data-v]");
+    if (!x) return;
+    fecharPseis();
+    caixa._aoEscolher(x.dataset.v);
+  });
+}
+
+function fecharPseis() {
+  document.querySelectorAll("#aba-editar .psel-menu.aberto").forEach(m => {
+    m.classList.remove("aberto");
+    m.parentNode.querySelector(".psel-b").setAttribute("aria-expanded", "false");
+  });
+}
+document.addEventListener("click", fecharPseis);
+
+/* ---------------------------------------------------------- o acervo em disco
+
+   ELE MORA NUMA PASTA DESTE COMPUTADOR, e não no GitHub. A ponte que liga a tela à
+   esteira carrega um campo de texto curto e nada mais: imagem não passa por ali. E não
+   precisa passar, porque quem monta as peças é este computador. O acervo fica visível no
+   Explorador, ele mexe na mão se quiser, e não custa nada. */
+async function lerAcervo() {
+  const p = await pastaDo("templates", true);
+  if (!p) { ACERVO.itens = []; return null; }
+  try {
+    const f = await (await p.getFileHandle("templates.json")).getFile();
+    const d = JSON.parse(await f.text());
+    ACERVO.itens = Array.isArray(d.itens) ? d.itens : [];
+  } catch (e) { ACERVO.itens = []; }   // acervo novo em folha não tem ficha ainda
+  return p;
+}
+
+async function gravarAcervo() {
+  const p = await pastaDo("templates", true);
+  if (!p) return false;
+  const h = await p.getFileHandle("templates.json", { create: true });
+  const w = await h.createWritable();
+  await w.write(JSON.stringify({ itens: ACERVO.itens }, null, 1));
+  await w.close();
+  return true;
+}
+
+async function enderecoDo(id) {
+  if (TPL_URLS.has(id)) return TPL_URLS.get(id);
+  const p = await pastaDo("templates", false);
+  if (!p) return "";
+  try {
+    const f = await (await p.getFileHandle(id)).getFile();
+    const u = URL.createObjectURL(f);
+    TPL_URLS.set(id, u);
+    return u;
+  } catch (e) { return ""; }
+}
+
+/** Largura e altura da imagem, que passam a ser as da peça montada. */
+function medirImagem(file) {
+  return new Promise(ok => {
+    const img = new Image();
+    const u = URL.createObjectURL(file);
+    img.onload = () => { ok({ w: img.naturalWidth, h: img.naturalHeight });
+                         URL.revokeObjectURL(u); };
+    img.onerror = () => { ok({ w: 0, h: 0 }); URL.revokeObjectURL(u); };
+    img.src = u;
+  });
+}
+
+/* ---------------------------------------------------------- entrar no passo 2 */
+function entrarNoTemplate() {
+  const temRaiz = !!EDIT_RAIZ;
+  $("tpl_porta").hidden = temRaiz;
+  document.querySelectorAll('.ed-sub-tela[data-sub="1"] .tpl-abas,'
+    + '.ed-sub-tela[data-sub="1"] .tpl-painel').forEach(x => {
+      if (x.classList.contains("tpl-painel"))
+        x.hidden = !temRaiz || x.dataset.tab !== abaDoTemplate();
+      else x.hidden = !temRaiz;
+    });
+  desenhaSeletoresDoTemplate();
+  desenhaSubTrilho();
+  if (temRaiz) lerAcervo().then(desenhaAcervo);
+}
+
+function abaDoTemplate() {
+  const b = document.querySelector(".tpl-aba.ativa");
+  return b ? b.dataset.tab : "acervo";
+}
+
+document.querySelectorAll(".tpl-aba").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".tpl-aba").forEach(x => x.classList.toggle("ativa", x === b));
+    document.querySelectorAll(".tpl-painel").forEach(p =>
+      p.hidden = p.dataset.tab !== b.dataset.tab);
+  };
+});
+
+/* ---------------------------------------------------------- os sub-passos
+
+   AVANÇAR EXIGE O ANTERIOR RESOLVIDO, voltar nunca exige nada. É o que faz disto um
+   passo a passo e não quatro páginas soltas com um índice do lado. */
+function podeIrAoSub(n) {
+  if (n >= 2 && !TPL_ESCOLHIDO) return false;
+  if (n >= 3 && EX_I < 0) return false;
+  return true;
+}
+
+function irParaSub(n) {
+  if (!podeIrAoSub(n)) return;
+  TPL_SUB = n;
+  document.querySelectorAll(".ed-sub-tela").forEach(s =>
+    s.hidden = Number(s.dataset.sub) !== n);
+  desenhaSubTrilho();
+  if (n === 2) desenhaExemplo();
+  if (n === 3) abrirEnquadramento();
+  if (n === 4) desenhaAplicar();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function desenhaSubTrilho() {
+  document.querySelectorAll("#ed_sub2 li").forEach(li => {
+    const q = Number(li.dataset.sub);
+    li.classList.toggle("agora", q === TPL_SUB);
+    li.classList.toggle("feito", q < TPL_SUB);
+  });
+  $("ed_r2").textContent = TPL_ESCOLHIDO ? TPL_ESCOLHIDO.nome : "nenhum escolhido";
+  // A BARRA DO PASSO 2 mede o quanto dele já foi andado, e não se ele acabou.
+  const b = document.querySelector('#ed_trilho .ed-ponto[data-passo="2"] .ed-barra b');
+  if (b && EDIT_PASSO === 2) b.style.height = ((TPL_SUB - 1) / 3 * 100) + "%";
+}
+
+document.querySelectorAll("#ed_sub2 li").forEach(li => {
+  li.onclick = ev => { ev.stopPropagation(); irParaSub(Number(li.dataset.sub)); };
+});
+
+/* ---------------------------------------------------------- 2.1 · o acervo na tela */
+function nomesCat(o) {
+  return (CATALOGO[o === "nicho" ? "nichos" : "etiquetas"] || [])
+    .map(x => x.nome).sort((a, b) => a.localeCompare(b, "pt"));
+}
+
+function desenhaSeletoresDoTemplate() {
+  if (!$("tpl_f_merc")) return;
+  const m = nomesCat("nicho").map(n => ({ v: n, r: n }));
+  const e = nomesCat("etiqueta").map(n => ({ v: n, r: n }));
+  pselMonta("tpl_f_merc", [{ v: "", r: "Todos os mercados" }, ...m], TPL_F_M,
+    v => { TPL_F_M = v; desenhaSeletoresDoTemplate(); desenhaAcervo(); });
+  pselMonta("tpl_f_etq", [{ v: "", r: "Todas as etiquetas" }, ...e], TPL_F_E,
+    v => { TPL_F_E = v; desenhaSeletoresDoTemplate(); desenhaAcervo(); });
+  pselMonta("tpl_n_merc", [{ v: "", r: "escolher" }, ...m], TPL_NOVO_M,
+    v => { TPL_NOVO_M = v; desenhaSeletoresDoTemplate(); conferirSubida(); });
+  pselMonta("tpl_n_etq", [{ v: "", r: "escolher" }, ...e], TPL_NOVO_E,
+    v => { TPL_NOVO_E = v; desenhaSeletoresDoTemplate(); conferirSubida(); });
+}
+
+function peneirados() {
+  return ACERVO.itens.filter(x =>
+    (!TPL_F_M || x.mercado === TPL_F_M) && (!TPL_F_E || x.etiqueta === TPL_F_E));
+}
+
+async function desenhaAcervo() {
+  const grade = $("tpl_grade");
+  if (!grade) return;
+  const itens = peneirados();
+  $("tpl_conta").textContent = itens.length
+    + (itens.length === 1 ? " template" : " templates");
+
+  if (!itens.length) {
+    grade.innerHTML = '<div class="tpl-vazio">'
+      + (ACERVO.itens.length ? "Nenhum template com esses rótulos."
+                             : "O acervo está vazio. Suba o primeiro na aba ao lado.")
+      + "</div>";
+    return;
+  }
+  grade.innerHTML = itens.map(x => `<div class="tpl-cartao${
+      TPL_ESCOLHIDO && TPL_ESCOLHIDO.id === x.id ? " ativo" : ""}" data-id="${escapa(x.id)}">
+      <img class="tpl-cartao-img" alt="">
+      <button type="button" class="tpl-cartao-x" title="tirar do acervo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+      <div class="tpl-cartao-pe"><b>${escapa(x.nome || x.id)}</b>
+        <div class="tpl-cartao-rot"><span>${escapa(x.mercado || "sem mercado")}</span>
+          <span>${escapa(x.etiqueta || "sem etiqueta")}</span>
+          <span>${x.w || "?"}x${x.h || "?"}</span></div></div>
+    </div>`).join("");
+
+  for (const cartao of grade.querySelectorAll(".tpl-cartao")) {
+    const u = await enderecoDo(cartao.dataset.id);
+    if (u) cartao.querySelector("img").src = u;
+  }
+}
+
+$("tpl_grade").addEventListener("click", async ev => {
+  const cartao = ev.target.closest(".tpl-cartao");
+  if (!cartao) return;
+  const item = ACERVO.itens.find(x => x.id === cartao.dataset.id);
+  if (!item) return;
+  if (ev.target.closest(".tpl-cartao-x")) return tirarDoAcervo(item);
+  escolherTemplate(item);
+});
+
+function escolherTemplate(item) {
+  TPL_ESCOLHIDO = item;
+  TELA = { w: item.w || 1080, h: item.h || 1920 };
+  CAIXAS.clear();               // enquadramento de outro template não vale para este
+  desenhaAcervo();
+  irParaSub(2);
+}
+
+/* APAGAR SEMPRE PODE, mas tirando também o arquivo. Ficha sem imagem vira cartão preto
+   que ninguém sabe de onde veio. */
+async function tirarDoAcervo(item) {
+  const p = await pastaDo("templates", false);
+  if (p) { try { await p.removeEntry(item.id); } catch (e) { /* já não estava lá */ } }
+  ACERVO.itens = ACERVO.itens.filter(x => x.id !== item.id);
+  if (TPL_ESCOLHIDO && TPL_ESCOLHIDO.id === item.id) TPL_ESCOLHIDO = null;
+  const u = TPL_URLS.get(item.id);
+  if (u) { URL.revokeObjectURL(u); TPL_URLS.delete(item.id); }
+  await gravarAcervo();
+  desenhaAcervo();
+  desenhaSubTrilho();
+}
+
+/* ---------------------------------------------------------- 2.1 · subir um novo */
+$("tpl_arquivo").addEventListener("change", async ev => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  TPL_ARQUIVO = f;
+  const u = URL.createObjectURL(f);
+  const prev = $("tpl_prev");
+  prev.src = u;
+  prev.hidden = false;
+  $("tpl_solta").classList.add("cheia");
+  if (!$("tpl_nome").value) $("tpl_nome").value = f.name.replace(/\.[^.]+$/, "").slice(0, 40);
+  const d = await medirImagem(f);
+  parado("tpl_recado", d.w ? `${d.w} por ${d.h} pixels. A peça montada sai neste tamanho.`
+                           : "não consegui ler essa imagem.");
+  conferirSubida();
+});
+$("tpl_nome").addEventListener("input", conferirSubida);
+
+function conferirSubida() {
+  const b = $("tpl_guardar");
+  if (b) b.disabled = !(TPL_ARQUIVO && TPL_NOVO_M && TPL_NOVO_E);
+}
+
+$("tpl_guardar").onclick = async () => {
+  if (!TPL_ARQUIVO || !TPL_NOVO_M || !TPL_NOVO_E) return;
+  const b = $("tpl_guardar");
+  b.disabled = true;
+  parado("tpl_recado", "guardando");
+  try {
+    const p = await pastaDo("templates", true);
+    if (!p) throw new Error("a pasta do Estúdio não está liberada");
+    const ext = (String(TPL_ARQUIVO.name).match(/\.(png|jpe?g|webp)$/i) || [".png"])[0]
+      .toLowerCase();
+    const id = "t" + Date.now() + ext;
+    const h = await p.getFileHandle(id, { create: true });
+    const w = await h.createWritable();
+    await w.write(TPL_ARQUIVO);
+    await w.close();
+    const d = await medirImagem(TPL_ARQUIVO);
+    const item = { id, nome: ($("tpl_nome").value || id).trim().slice(0, 40),
+                   mercado: TPL_NOVO_M, etiqueta: TPL_NOVO_E,
+                   w: d.w, h: d.h, bytes: TPL_ARQUIVO.size, criado: Date.now() };
+    ACERVO.itens.push(item);
+    await gravarAcervo();
+
+    TPL_ARQUIVO = null;
+    $("tpl_arquivo").value = "";
+    $("tpl_prev").hidden = true;
+    $("tpl_solta").classList.remove("cheia");
+    $("tpl_nome").value = "";
+    parado("tpl_recado", "guardado no acervo.");
+    document.querySelector('.tpl-aba[data-tab="acervo"]').click();
+    await desenhaAcervo();
+    escolherTemplate(item);
+  } catch (e) {
+    parado("tpl_recado", "não deu para guardar: " + e.message);
+  }
+  conferirSubida();
+};
+
+$("tpl_apontar").onclick = async () => {
+  try {
+    const h = await window.showDirectoryPicker({ id: "estudio-raiz", mode: "readwrite" });
+    const achado = await abrirRaiz(h);
+    if (!achado.raiz) return parado("tpl_porta_diz", "essa pasta não tem uma subpasta "
+      + "`levas` dentro. Aponte a `Estudio`, que é a de cima.");
+    EDIT_RAIZ = achado.raiz;
+    EDIT_PASTA = achado.levas;
+    await guardarCracha(h);
+    parado("tpl_porta_diz", "");
+    entrarNoTemplate();
+  } catch (e) {
+    if (e && e.name !== "AbortError") parado("tpl_porta_diz", "não deu: " + e.message);
+  }
+};
+
+/* ---------------------------------------------------------- 2.2 · o vídeo de exemplo
+
+   VEM UM SORTEADO, E ELE TROCA SE QUISER. Foi pedido assim, e é o certo: na maioria das
+   vezes tanto faz qual peça serve de exemplo, e obrigar a escolher uma entre quarenta e
+   uma é cobrar uma decisão que não muda nada. Quando importa, o botão está do lado. */
+function sortear() {
+  if (!EDIT_PECAS.length) return -1;
+  if (EDIT_PECAS.length === 1) return 0;
+  let n = EX_I;
+  while (n === EX_I) n = Math.floor(Math.random() * EDIT_PECAS.length);
+  return n;
+}
+
+async function usarExemplo(i) {
+  if (i < 0 || !EDIT_PECAS[i]) return;
+  EX_I = i;
+  if (EX_URL) URL.revokeObjectURL(EX_URL);
+  try {
+    const f = await EDIT_PECAS[i].h.getFile();
+    EX_URL = URL.createObjectURL(f);
+  } catch (e) { EX_URL = null; }
+  const v = $("ex_video");
+  v.src = EX_URL || "";
+  v.onloadedmetadata = () => {
+    if (v.videoWidth && v.videoHeight) ASPECTO = v.videoWidth / v.videoHeight;
+    const s = Math.round(v.duration || 0);
+    const n = lerNome(EDIT_PECAS[i].nome);
+    $("ex_dados").innerHTML = `${v.videoWidth} por ${v.videoHeight} pixels<br>`
+      + `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} de duração<br>`
+      + (n.indice != null ? n.indice.toFixed(2).replace(".", ",") + "x acima da mediana"
+                          : "");
+  };
+  $("ex_nome").textContent = EDIT_PECAS[i].nome;
+  document.querySelectorAll("#ex_grade .ex-mini").forEach(x =>
+    x.classList.toggle("ativo", Number(x.dataset.i) === i));
+}
+
+function desenhaExemplo() {
+  if (EX_I < 0 || !EDIT_PECAS[EX_I]) usarExemplo(sortear());
+}
+
+$("ex_sortear").onclick = () => usarExemplo(sortear());
+$("ex_escolher").onclick = () => {
+  const g = $("ex_grade");
+  if (!g.hidden) { g.hidden = true; return; }
+  g.hidden = false;
+  povoarGrade(g, EDIT_PECAS.map((_, i) => i), "ex-mini");
+  document.querySelectorAll("#ex_grade .ex-mini").forEach(x =>
+    x.classList.toggle("ativo", Number(x.dataset.i) === EX_I));
+};
+$("ex_grade").addEventListener("click", ev => {
+  const m = ev.target.closest(".ex-mini");
+  if (m) usarExemplo(Number(m.dataset.i));
+});
+$("ex_vai").onclick = () => irParaSub(3);
+
+/** Miniaturas de peças, abrindo o arquivo só quando entram na tela. */
+function povoarGrade(alvo, indices, classe) {
+  alvo.innerHTML = indices.map(i =>
+    `<div class="${classe}" data-i="${i}"><video preload="metadata" muted playsinline
+       data-arq="${i}"></video>${classe === "apl-mini" ? TIQUE : ""}</div>`).join("");
+  const olho = new IntersectionObserver((es, obs) => {
+    for (const e of es) {
+      if (!e.isIntersecting) continue;
+      obs.unobserve(e.target);
+      abrirArquivoDaGrade(e.target);
+    }
+  }, { rootMargin: "250px" });
+  alvo.querySelectorAll("video[data-arq]").forEach((v, k) => {
+    if (k < 12) abrirArquivoDaGrade(v); else olho.observe(v);
+  });
+}
+
+async function abrirArquivoDaGrade(v) {
+  if (v.src) return;
+  try {
+    const f = await EDIT_PECAS[Number(v.dataset.arq)].h.getFile();
+    v.src = URL.createObjectURL(f) + "#t=1.5";
+  } catch (e) { /* o arquivo saiu da pasta desde a leitura */ }
+}
+
+/* ---------------------------------------------------------- 2.3 · o enquadramento
+
+   TUDO AQUI É MEDIDO EM PIXEL DO TEMPLATE, e desenhado em por cento. O palco na tela tem
+   um tamanho qualquer, que muda com a janela; a peça tem 1080 por 1920. Guardando a
+   caixa em pixel de peça e desenhando em por cento, o retângulo que ele arrasta vale
+   igual quando o ffmpeg monta, sem nenhuma conta de conversão no caminho. */
+async function abrirEnquadramento() {
+  if (!TPL_ESCOLHIDO) return;
+  const palco = $("enq_palco");
+  palco.style.aspectRatio = `${TELA.w}/${TELA.h}`;
+  const u = await enderecoDo(TPL_ESCOLHIDO.id);
+  if (u) $("enq_fundo").src = u;
+  $("enq_tela").textContent = `${TELA.w} por ${TELA.h} pixels`;
+
+  const alvo = APL_MODO === "uma" && ENQ_UMA >= 0 ? ENQ_UMA : EX_I;
+  const v = $("enq_video");
+  if (v.dataset.i !== String(alvo)) {
+    v.dataset.i = String(alvo);
+    try {
+      const f = await EDIT_PECAS[alvo].h.getFile();
+      if (v.src) URL.revokeObjectURL(v.src);
+      v.src = URL.createObjectURL(f);
+    } catch (e) { /* sumiu da pasta */ }
+  }
+  v.onloadedmetadata = () => {
+    if (v.videoWidth && v.videoHeight) ASPECTO = v.videoWidth / v.videoHeight;
+    const guardada = CAIXAS.get(alvo);
+    if (guardada) { CAIXA = { ...guardada }; desenhaCaixa(); }
+    else encaixar("preencher");
+  };
+  if (v.readyState >= 1) v.onloadedmetadata();
+  v.play().catch(() => { /* alguns navegadores só tocam depois de um clique */ });
+
+  $("enq_nav").hidden = APL_MODO !== "uma";
+  if (APL_MODO === "uma")
+    $("enq_qual").textContent = `peça ${alvo + 1} de ${EDIT_PECAS.length}`;
+  $("enq_sub").textContent = APL_MODO === "uma"
+    ? "Cada peça tem o enquadramento dela. Ajuste e passe para a próxima."
+    : "Arraste o vídeo para posicionar. O fundo é o template, no tamanho real da peça.";
+}
+
+/** Os três encaixes prontos. `preencher` acerta em quase todo caso e é o de partida.
+
+   A CONTA É UMA SÓ, e sai da comparação entre a proporção do vídeo e a da peça:
+
+     preencher  a menor largura que faz o vídeo tapar os dois lados da peça
+     caber      a maior largura que faz o vídeo inteiro entrar, sem cortar nada
+     largura    o vídeo do tamanho exato da peça na horizontal, seja qual for a altura
+
+   Como a altura sempre sai da largura dividida pela proporção do vídeo, ele nunca é
+   esticado: o que muda é quanto sobra ou quanto se perde. */
+function encaixar(tipo) {
+  const w = tipo === "largura" ? TELA.w
+          : tipo === "preencher" ? Math.max(TELA.w, TELA.h * ASPECTO)
+                                 : Math.min(TELA.w, TELA.h * ASPECTO);
+  CAIXA.w = w;
+  CAIXA.h = w / ASPECTO;
+  CAIXA.x = (TELA.w - CAIXA.w) / 2;
+  CAIXA.y = (TELA.h - CAIXA.h) / 2;
+  document.querySelectorAll("[data-enc]").forEach(b =>
+    b.classList.toggle("ativa", b.dataset.enc === tipo));
+  desenhaCaixa();
+}
+
+/** O encaixe de partida, `preencher`, em pixels da peça. Sem mexer no que está na tela. */
+function caixaDePartida() {
+  const w = Math.max(TELA.w, TELA.h * ASPECTO);
+  const h = w / ASPECTO;
+  return { x: (TELA.w - w) / 2, y: (TELA.h - h) / 2, w, h };
+}
+
+function desenhaCaixa() {
+  const c = $("enq_caixa");
+  c.style.left = (CAIXA.x / TELA.w * 100) + "%";
+  c.style.top = (CAIXA.y / TELA.h * 100) + "%";
+  c.style.width = (CAIXA.w / TELA.w * 100) + "%";
+  c.style.height = (CAIXA.h / TELA.h * 100) + "%";
+  $("enq_zoom").value = Math.round(CAIXA.w / TELA.w * 100);
+  $("enq_medida").textContent = `${Math.round(CAIXA.w)} por ${Math.round(CAIXA.h)}`
+    + `  ·  x ${Math.round(CAIXA.x)}, y ${Math.round(CAIXA.y)}`;
+  if (APL_MODO === "uma" && ENQ_UMA >= 0) CAIXAS.set(ENQ_UMA, { ...CAIXA });
+}
+
+document.querySelectorAll("[data-enc]").forEach(b =>
+  b.onclick = () => encaixar(b.dataset.enc));
+
+$("enq_zoom").oninput = () => {
+  const cx = CAIXA.x + CAIXA.w / 2, cy = CAIXA.y + CAIXA.h / 2;
+  CAIXA.w = TELA.w * (Number($("enq_zoom").value) / 100);
+  CAIXA.h = CAIXA.w / ASPECTO;
+  CAIXA.x = cx - CAIXA.w / 2;
+  CAIXA.y = cy - CAIXA.h / 2;
+  document.querySelectorAll("[data-enc]").forEach(b => b.classList.remove("ativa"));
+  desenhaCaixa();
+};
+
+$("enq_centro").onclick = () => {
+  CAIXA.x = (TELA.w - CAIXA.w) / 2;
+  CAIXA.y = (TELA.h - CAIXA.h) / 2;
+  desenhaCaixa();
+};
+
+/* ARRASTAR COM O PONTEIRO, e não com o mouse: o mesmo código serve para dedo e caneta, e
+   `setPointerCapture` faz o arrasto continuar mesmo quando o ponteiro sai do palco. */
+(function ligarArrasto() {
+  const alvo = $("enq_caixa"), palco = $("enq_palco");
+  let de = null;
+  alvo.addEventListener("pointerdown", ev => {
+    ev.preventDefault();
+    alvo.setPointerCapture(ev.pointerId);
+    de = { cx: ev.clientX, cy: ev.clientY, x: CAIXA.x, y: CAIXA.y,
+           px: TELA.w / palco.getBoundingClientRect().width };
+  });
+  alvo.addEventListener("pointermove", ev => {
+    if (!de) return;
+    CAIXA.x = de.x + (ev.clientX - de.cx) * de.px;
+    CAIXA.y = de.y + (ev.clientY - de.cy) * de.px;
+    desenhaCaixa();
+  });
+  const solta = ev => {
+    if (!de) return;
+    de = null;
+    try { alvo.releasePointerCapture(ev.pointerId); } catch (e) { /* já soltou */ }
+  };
+  alvo.addEventListener("pointerup", solta);
+  alvo.addEventListener("pointercancel", solta);
+})();
+
+$("enq_ant").onclick = () => {
+  if (ENQ_UMA > 0) { ENQ_UMA--; abrirEnquadramento(); }
+};
+$("enq_prox").onclick = () => {
+  if (ENQ_UMA < EDIT_PECAS.length - 1) { ENQ_UMA++; abrirEnquadramento(); }
+  else irParaSub(4);
+};
+
+/* ---------------------------------------------------------- 2.4 · a quem se aplica */
+function desenhaAplicar() {
+  $("apl_n_todas").textContent = EDIT_PECAS.length
+    + (EDIT_PECAS.length === 1 ? " peça" : " peças");
+  document.querySelectorAll(".apl-op").forEach(b =>
+    b.classList.toggle("ativa", b.dataset.modo === APL_MODO));
+  const g = $("apl_grade");
+  g.hidden = APL_MODO !== "algumas";
+  if (APL_MODO === "algumas" && !g.dataset.cheia) {
+    povoarGrade(g, EDIT_PECAS.map((_, i) => i), "apl-mini");
+    g.dataset.cheia = "1";
+    g.querySelectorAll(".apl-mini").forEach(m =>
+      m.classList.toggle("marcado", APL_MARCADAS.has(Number(m.dataset.i))));
+  }
+  resumoDeAplicar();
+}
+
+function alvosDaMontagem() {
+  if (APL_MODO === "algumas") return [...APL_MARCADAS].sort((a, b) => a - b);
+  return EDIT_PECAS.map((_, i) => i);
+}
+
+function resumoDeAplicar() {
+  const n = alvosDaMontagem().length;
+  const b = $("apl_montar");
+  b.disabled = !n || !TPL_ESCOLHIDO || !!OBRA;
+  $("apl_resumo").innerHTML = TPL_ESCOLHIDO
+    ? `<b>${n}</b> ${n === 1 ? "peça" : "peças"} com o template `
+      + `<b>${escapa(TPL_ESCOLHIDO.nome)}</b>, em ${TELA.w} por ${TELA.h}.`
+    : "escolha um template no sub-passo 1.";
+}
+
+document.querySelectorAll(".apl-op").forEach(b => {
+  b.onclick = () => {
+    APL_MODO = b.dataset.modo;
+    if (APL_MODO === "uma") {
+      // UMA A UMA É VOLTAR PARA O ENQUADRAMENTO, e não uma tela nova. A ferramenta é a
+      // mesma; o que muda é que agora ela anda peça por peça e guarda a caixa de cada.
+      ENQ_UMA = 0;
+      desenhaAplicar();
+      return irParaSub(3);
+    }
+    desenhaAplicar();
+  };
+});
+
+$("apl_grade").addEventListener("click", ev => {
+  const m = ev.target.closest(".apl-mini");
+  if (!m) return;
+  const i = Number(m.dataset.i);
+  if (APL_MARCADAS.has(i)) APL_MARCADAS.delete(i); else APL_MARCADAS.add(i);
+  m.classList.toggle("marcado", APL_MARCADAS.has(i));
+  resumoDeAplicar();
+});
+
+/* ---------------------------------------------------------- deixar o pedido
+
+   A TELA NÃO MONTA NADA: ela escreve o pedido e passa a olhar o andamento. Quem monta é
+   o `oficina.py`, que roda neste computador de minuto em minuto. Por isso a primeira
+   frase que aparece é sobre a espera: sem ela, o minuto entre o clique e o primeiro sinal
+   de vida é indistinguível de tela travada, e isso já aconteceu no passo 8 da baixa. */
+async function nomeLivre(edicoes, base) {
+  for (let i = 1; i < 60; i++) {
+    const nome = i === 1 ? base : `${base} (${i})`;
+    try { await edicoes.getDirectoryHandle(nome); }
+    catch (e) { return { nome, n: i }; }
+  }
+  return { nome: base, n: 1 };
+}
+
+$("apl_montar").onclick = async () => {
+  if (!TPL_ESCOLHIDO || OBRA) return;
+  const alvos = alvosDaMontagem();
+  if (!alvos.length) return;
+  $("apl_montar").disabled = true;
+
+  try {
+    const pedidos = await pastaDo("pedidos", true);
+    const edicoes = await pastaDo("edicoes", true);
+    if (!pedidos || !edicoes) throw new Error("a pasta do Estúdio não está liberada");
+    const { nome: destino, n: qual } = await nomeLivre(edicoes, `leva-${EDIT_LEVA.numero}`);
+
+    const id = "p" + Date.now();
+    const pedido = {
+      id, leva: EDIT_LEVA.numero,
+      pasta: `leva-${EDIT_LEVA.numero}`, destino,
+      template: TPL_ESCOLHIDO.id, tela: { w: TELA.w, h: TELA.h },
+      caixa: { ...CAIXA },
+      // NO MODO UMA A UMA, PEÇA QUE ELE NÃO ABRIU RECEBE O ENCAIXE DE PARTIDA, e não a
+      // caixa da última que ele mexeu. Sem isto, parar no meio da fila fazia as peças
+      // restantes herdarem em silêncio um enquadramento pensado para outra: o pedido
+      // saía plausível e errado, que é o pior tipo de errado.
+      pecas: alvos.map(i => {
+        const p = { arquivo: EDIT_PECAS[i].nome };
+        if (APL_MODO === "uma") p.caixa = { ...(CAIXAS.get(i) || caixaDePartida()) };
+        return p;
+      })
+    };
+    const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
+    const w = await h.createWritable();
+    await w.write(JSON.stringify(pedido, null, 1));
+    await w.close();
+
+    OBRA = { id, desde: Date.now(), total: alvos.length, qual, relogio: null };
+    $("apl_obra").hidden = false;
+    $("apl_obra_txt").textContent = "pedido deixado";
+    $("apl_obra_nota").textContent = "a montagem começa em até um minuto, que é o passo "
+      + "do programa que faz esse trabalho aqui no computador.";
+    OBRA.relogio = setInterval(olharAObra, 3000);
+    olharAObra();
+  } catch (e) {
+    $("apl_montar").disabled = false;
+    $("apl_obra").hidden = false;
+    $("apl_obra_txt").textContent = "não deu para deixar o pedido";
+    $("apl_obra_nota").textContent = e.message;
+  }
+};
+
+async function olharAObra() {
+  if (!OBRA) return;
+  const seg = Math.round((Date.now() - OBRA.desde) / 1000);
+  $("apl_obra_tempo").textContent = seg < 60 ? seg + "s"
+    : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
+
+  const p = await pastaDo("pedidos", false);
+  if (!p) return;
+  let d = null;
+  try {
+    const f = await (await p.getFileHandle(`${OBRA.id}.andamento.json`)).getFile();
+    d = JSON.parse(await f.text());
+  } catch (e) { return; }        // ainda não começou: o arquivo nem existe
+
+  const feitos = d.feitos || 0, total = d.total || OBRA.total;
+  $("apl_barra").style.width = (total ? feitos / total * 100 : 0) + "%";
+
+  if (d.erro && d.fim) {
+    pararDeOlhar();
+    $("apl_obra_txt").textContent = "a montagem parou";
+    $("apl_obra_nota").textContent = d.erro;
+    return;
+  }
+  if (!d.fim) {
+    $("apl_obra_txt").textContent = `montando ${feitos + 1} de ${total}`;
+    $("apl_obra_nota").textContent = d.atual || "";
+    return;
+  }
+  pararDeOlhar();
+  const link = `estudio://edicao/${EDIT_LEVA.numero}`
+    + (OBRA.qual > 1 ? `-${OBRA.qual}` : "");
+  $("apl_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça montada" : "peças montadas"}`
+    + (d.falhas ? `, ${d.falhas} falharam` : "");
+  $("apl_obra_nota").innerHTML = `estão em <a href="${link}">${escapa(d.pasta || "")}</a>`
+    + ". Os vídeos brutos continuam onde estavam, intactos.";
+}
+
+function pararDeOlhar() {
+  if (OBRA && OBRA.relogio) clearInterval(OBRA.relogio);
+  OBRA = null;
+  $("apl_barra").style.width = "100%";
+  document.querySelector("#apl_obra .cfg-girando").style.display = "none";
+  resumoDeAplicar();
+}
 
 </script>
 </body>
