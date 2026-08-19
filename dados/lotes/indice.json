@@ -3,7 +3,7 @@
   {
    "numero": 22,
    "inicio": 1787146938,
-   "estado": "em curso",
+   "estado": "pronto",
    "baixados": 41,
    "limpos": 41,
    "reprovados": 0,
@@ -11,8 +11,9 @@
    "execucao": "32259599614",
    "contas": [
     "vinci.society"
-   ]
+   ],
+   "fim": 1787147037
   }
  ],
- "atualizado": 1787147030
+ "atualizado": 1787147037
 }
