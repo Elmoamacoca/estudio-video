@@ -1365,6 +1365,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   box-shadow:0 14px 34px rgba(0,0,0,.26)}
 .ajuda-bolha svg{width:20px;height:20px;flex-shrink:0;color:var(--accent)}
 .ajuda-bolha-rot{letter-spacing:-.01em}
+/* `hidden` NÃO VENCE QUEM TEM `display` ESCRITO, e sem esta linha a bolha aparecia nas
+   três abas: a troca de aba mandava escondê-la, o atributo entrava, e o `inline-flex`
+   daqui de cima passava por cima dele. O mesmo remendo já existe para `.ct-painel`. */
+.ajuda-bolha[hidden]{display:none}
 
 /* O celular perde o rótulo e vira só o círculo: ali a bolha disputa espaço com o
    polegar, e "Dúvidas" escrito não vale a largura. */
