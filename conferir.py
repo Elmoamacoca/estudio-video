@@ -15,7 +15,7 @@ import sys
 
 PROGRAMAS = ["minerar.py", "rodada.py", "selecionar.py", "atividade.py",
              "baixar.py", "limpar.py", "registro.py", "etiquetar.py",
-             "catalogo.py"]
+             "catalogo.py", "oficina.py"]
 
 
 def nomes_perdidos(caminho: str) -> list[str]:
