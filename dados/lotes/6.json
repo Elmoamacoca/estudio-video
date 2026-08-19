@@ -16,6 +16,11 @@
    "tipo": "baixa",
    "texto": "3 arquivos baixados, 16 MB.",
    "arquivos": 3
+  },
+  {
+   "quando": 1787098189,
+   "tipo": "falha",
+   "texto": "Lote fechado sem entrega."
   }
  ]
 }
