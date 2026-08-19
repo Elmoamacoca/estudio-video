@@ -4635,10 +4635,28 @@ function acelerar(minutos = 6) {
   }, 6000);
 }
 
+/* OS RÓTULOS SÃO NUMERADOS, E ISSO CONSERTA UM ERRO DE LEITURA REAL.
+
+   Eles eram só palavras: escolha, régua, baixa, preparo, tratando, tratamento, entrega,
+   entregue. Duas delas quase repetiam a anterior, "tratando" e "tratamento", "entrega" e
+   "entregue", e o Gabriel leu a lista em 19/08 sem conseguir dizer qual vinha antes de
+   qual. A ordem no arquivo sempre esteve certa; o que faltava era ela estar visível.
+
+   Com o número na frente, a sequência se lê sozinha, e as duas etapas que têm duas
+   linhas dividem o mesmo número de propósito: são a mesma etapa, uma começando e a
+   outra terminando. */
 const ETAPAS = {
-  escolha: "escolha", pedido: "pedido", selecao: "régua", baixa: "baixa",
-  preparo: "preparo", tratando: "tratando", limpeza: "tratamento",
-  entrega: "entrega", fim: "entregue", falha: "falha", guardado: "guardado",
+  escolha:  "1 · perfis escolhidos",
+  pedido:   "1 · pedido",
+  selecao:  "2 · régua aplicada",
+  baixa:    "3 · baixando do Instagram",
+  preparo:  "4 · preparo do tratamento",
+  tratando: "5 · tratando",
+  limpeza:  "5 · tratado",
+  entrega:  "6 · montando o pacote",
+  fim:      "7 · pacote entregue",
+  guardado: "8 · guardado no seu computador",
+  falha:    "falhou",
 };
 
 function desenhaRegistroDeLotes(indice) {
@@ -4688,7 +4706,21 @@ function desenhaRegistroDeLotes(indice) {
     : atual.estado === "em curso"
       ? `Trabalhando ${de}. ${num(atual.baixados || 0)} baixados, ${
           num(atual.limpos || 0)} tratados até agora.`
-      : `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}.`
+      // ENTREGUE NÃO É O FIM DO CAMINHO, e a tela dizia que era.
+      //
+      // Ela parava em "41 peças tratadas, 441 MB", que é verdade e é incompleta: naquele
+      // instante o material só existe na esteira, e a oitava etapa, a busca para o seu
+      // computador, ainda não aconteceu. O Gabriel olhou um cartão nesse estado em
+      // 19/08, viu o selo "pronto" e perguntou onde estava o último passo, o que aponta
+      // para a pasta. Ele não estava faltando: ainda não tinha chegado a hora dele.
+      //
+      // Agora o cartão distingue as duas coisas, e o que falta é dito enquanto falta.
+      : (atual.guardado
+          ? `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}. `
+            + "Já estão em C:\\Users\\Gabri\\Estudio\\levas\\leva-" + atual.numero
+          : `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}. `
+            + "Falta a última etapa: trazer para o seu computador, o que acontece "
+            + "sozinho em poucos minutos.")
         + (atual.reprovados ? ` ${num(atual.reprovados)} reprovados na limpeza.` : "");
 
   const html = LOTES.map(l => {
@@ -4711,10 +4743,19 @@ function desenhaRegistroDeLotes(indice) {
       <button class="liv-cabeca" type="button" aria-expanded="${aberto}">
         <span class="liv-ponto"></span>
         <span class="liv-id">
+          <!-- O SELO DIZ ATÉ ONDE A LEVA CHEGOU, e "pronto" cobria dois estados bem
+               diferentes: o pacote saiu da esteira, e o pacote já está no computador.
+               São os passos 7 e 8, e a diferença importa, porque o pacote da esteira
+               vence em catorze dias e o do computador não. -->
           <span class="liv-nome"><b>Leva ${l.numero}</b>
-            <span class="liv-etq">${l.estado}</span></span>
-          <span class="liv-sub">${quem} · ${num(l.limpos || 0)} tratados de ${
-            num(l.baixados || 0)} baixados${l.mb ? ` · ${l.mb} MB` : ""} · ${
+            <span class="liv-etq">${l.estado === "pronto"
+              ? (l.guardado ? "guardado" : "entregue") : l.estado}</span></span>
+          <!-- NA ORDEM EM QUE ACONTECE, e não ao contrário. Aqui estava escrito "41
+               tratados de 41 baixados", que põe o tratamento na frente da baixa e diz o
+               oposto do caminho. Foi essa linha que fez o Gabriel perguntar, em 19/08,
+               como a leva podia começar tratando e depois baixar. -->
+          <span class="liv-sub">${quem} · baixou ${num(l.baixados || 0)}, tratou ${
+            num(l.limpos || 0)}${l.mb ? ` · ${l.mb} MB` : ""} · ${
             quando(l.fim || l.inicio)}</span>
         </span>
         <svg class="liv-seta" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
