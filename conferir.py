@@ -66,6 +66,26 @@ def main() -> int:
     except Exception as e:
         erros.append(f"atividade.py: {type(e).__name__}: {e}")
 
+    # A SINTAXE DA TELA, quando ha' com que conferir.
+    #
+    # O que esta conferencia pega e' a classe de defeito mais cara desta tela: um erro de
+    # sintaxe no `tela.js` nao quebra um pedaco, quebra o arquivo inteiro, e a pagina abre
+    # pintada uma vez e congelada para sempre. Ja' aconteceu duas vezes. Em 18/08/2026 um
+    # bloco com `await` caiu dentro de uma funcao comum, por um substituir que pegou tres
+    # lugares em vez de um, e nada em Python veria isso.
+    #
+    # Se nao houver node na maquina, a conferencia passa em silencio: ela e' um ganho,
+    # nao uma exigencia de ambiente.
+    import shutil
+    import subprocess
+    tela = pathlib.Path(__file__).parent / "tela.js"
+    if shutil.which("node") and tela.exists():
+        r = subprocess.run(["node", "--check", str(tela)], capture_output=True,
+                           text=True, encoding="utf-8", errors="replace")
+        if r.returncode != 0:
+            primeira = [l for l in (r.stderr or "").splitlines() if "Error" in l]
+            erros.append(f"tela.js: {primeira[0] if primeira else 'sintaxe invalida'}")
+
     for e in erros:
         print("  FALHA:", e)
     print("conferencia:", "tudo passou" if not erros else f"{len(erros)} problema(s)")
