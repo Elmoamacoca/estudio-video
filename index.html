@@ -2085,34 +2085,50 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 /* ---------------------------------------------------- 2.3 · o enquadramento
 
-   O PALCO É A PEÇA EM TAMANHO REAL, ENCOLHIDA. A proporção vem do template pelo
-   `aspect-ratio` escrito no próprio elemento, e tudo dentro dele é medido em por cento:
-   assim o retângulo que o Gabriel arrasta na tela vale igual quando o ffmpeg monta a
-   peça em 1080 por 1920, sem nenhuma conta de conversão no meio. */
-.enq-linha{display:grid;grid-template-columns:1fr 210px;gap:26px;align-items:start}
-/* O PALCO É MEDIDO PELA ALTURA, e não pela largura, e isso não é gosto: é a única
-   forma de ele existir. Tudo dentro dele é `position:absolute`, então a largura natural
-   dele é zero. Ele era um item de grade com `margin:0 auto`, e margem automática no eixo
-   horizontal DESLIGA o esticar da grade: sem esticar e sem conteúdo em fluxo, o palco
-   virava uma tira de dois pixels com a peça inteira escondida dentro. Medido.
+   A MOLDURA RECORTA O VÍDEO, e é isso que separa este passo de um vídeo colado por cima.
+   O `enq-janela` tem `overflow:hidden` e fica exatamente onde está o bloco de cor chapada
+   do template; o vídeo mora dentro dele e pode ser bem maior que ele. O que sobra é
+   cortado pela moldura, igual ao Canva.
 
-   Com a altura fixa e `width:auto`, a proporção escrita pelo programa é quem calcula a
-   largura, e `justify-self` centraliza sem precisar de margem nenhuma. */
+   TUDO É MEDIDO EM PIXEL DA PEÇA e desenhado em por cento. O palco na tela muda de
+   tamanho com a janela do navegador; a peça tem 1080 por 1920 sempre. Guardando em pixel
+   de peça, o que ele arrasta aqui vale igual quando o ffmpeg monta, sem conversão. */
+.enq-linha{display:grid;grid-template-columns:1fr 230px;gap:26px;align-items:start}
+/* O PALCO É MEDIDO PELA ALTURA, e não pela largura, e isso não é gosto: é a única forma
+   de ele existir. Tudo dentro dele é `position:absolute`, então a largura natural é zero.
+   Ele já foi item de grade com `margin:0 auto`, e margem automática no eixo horizontal
+   DESLIGA o esticar da grade: o palco virava uma tira de dois pixels com a peça inteira
+   escondida dentro. Medido. */
 .enq-palco{position:relative;height:min(66vh,660px);width:auto;justify-self:center;
   border-radius:var(--r-md);overflow:hidden;background:var(--paper-2);
   border:1px solid var(--rule-solid);touch-action:none;user-select:none;
   aspect-ratio:9/16}
 .enq-fundo{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;
   pointer-events:none}
-.enq-video{position:absolute;cursor:grab;overflow:hidden;
-  box-shadow:0 0 0 1.5px rgba(255,255,255,.5),0 0 0 3px rgba(0,0,0,.35)}
-.enq-video:active{cursor:grabbing}
+.enq-janela{position:absolute;overflow:hidden;cursor:grab}
+.enq-palco[data-mexendo="moldura"] .enq-janela{cursor:default;pointer-events:none}
+.enq-janela:active{cursor:grabbing}
+.enq-video{position:absolute}
 .enq-video video{width:100%;height:100%;object-fit:fill;display:block}
 
+/* O CONTORNO DA MOLDURA e as quatro alças. Fora do modo de ajuste ele some inteiro:
+   linha tracejada por cima da peça o tempo todo é sujeira, não é informação. */
+.enq-marca{position:absolute;border:1.5px dashed rgba(255,255,255,.85);display:none;
+  box-shadow:0 0 0 1.5px rgba(0,0,0,.45);cursor:move}
+.enq-palco[data-mexendo="moldura"] .enq-marca{display:block}
+.enq-marca i{position:absolute;width:14px;height:14px;border-radius:3px;
+  background:var(--accent);border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.enq-marca i[data-canto="nw"]{left:-8px;top:-8px;cursor:nwse-resize}
+.enq-marca i[data-canto="ne"]{right:-8px;top:-8px;cursor:nesw-resize}
+.enq-marca i[data-canto="sw"]{left:-8px;bottom:-8px;cursor:nesw-resize}
+.enq-marca i[data-canto="se"]{right:-8px;bottom:-8px;cursor:nwse-resize}
+
 .enq-lado{display:flex;flex-direction:column;gap:18px}
+.enq-bloco[hidden]{display:none}
 .enq-bloco h4{margin:0 0 8px;font-size:11.5px;text-transform:uppercase;
   letter-spacing:.07em;color:var(--muted);font-weight:600}
 .enq-botoes{display:flex;gap:6px;flex-wrap:wrap}
+.enq-bloco .acao.mini{margin-top:9px}
 .enq-medida{font:12.5px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
   margin-top:7px}
 #enq_zoom{width:100%;accent-color:var(--accent)}
@@ -3266,12 +3282,22 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="ex-grade" id="ex_grade" hidden></div>
         </div>
 
-        <!-- ................................................ 2.3 · O ENQUADRAMENTO -->
+        <!-- ................................................ 2.3 · O ENQUADRAMENTO
+
+             ISTO É UM ENCAIXE, E NÃO UM VÍDEO POR CIMA. A primeira versão punha o reel
+             sobre o template inteiro, e o resultado foi o template sumir por baixo: o
+             Gabriel viu na hora e a palavra dele foi exata, "você apenas jogou o vídeo
+             por cima". Não era isso: o template tem uma MOLDURA, um bloco de cor chapada
+             marcando onde a mídia entra, e é dentro dela que o reel vive.
+
+             O comportamento é o do Canva. O vídeo fica preso à moldura: pode ser
+             arrastado e aumentado dentro dela, nunca escapa dela, e nunca encolhe a ponto
+             de deixar a cor da moldura aparecer atrás. -->
         <div class="ed-sub-tela" data-sub="3" hidden>
           <div class="ed-cab">
             <h2>O enquadramento</h2>
-            <p class="nota" id="enq_sub">Arraste o vídeo para posicionar. A imagem de
-              fundo é o template, no tamanho real da peça.</p>
+            <p class="nota" id="enq_sub">Arraste o vídeo dentro da moldura e use a régua
+              para aproximar.</p>
           </div>
 
           <!-- O NAVEGADOR DE PEÇAS só aparece no modo uma a uma. -->
@@ -3282,32 +3308,54 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           </div>
 
           <div class="enq-linha">
-            <div class="enq-palco" id="enq_palco">
+            <div class="enq-palco" id="enq_palco" data-mexendo="video">
               <img class="enq-fundo" id="enq_fundo" alt="">
-              <div class="enq-video" id="enq_caixa">
-                <video id="enq_video" preload="metadata" muted playsinline loop></video>
-              </div>
-            </div>
-            <div class="enq-lado">
-              <div class="enq-bloco">
-                <h4>Encaixe</h4>
-                <div class="enq-botoes">
-                  <button class="acao mini ativa" data-enc="preencher" type="button">
-                    preencher</button>
-                  <button class="acao mini" data-enc="caber" type="button">caber</button>
-                  <button class="acao mini" data-enc="largura" type="button">largura</button>
+              <div class="enq-janela" id="enq_janela">
+                <div class="enq-video" id="enq_caixa">
+                  <video id="enq_video" preload="metadata" muted playsinline loop></video>
                 </div>
               </div>
-              <div class="enq-bloco">
-                <h4>Tamanho</h4>
-                <input type="range" id="enq_zoom" min="20" max="260" value="100">
-                <div class="enq-medida" id="enq_medida"></div>
+              <!-- O CONTORNO DA MOLDURA, com as alças nos cantos. Só aparece quando ele
+                   está ajustando a moldura, senão vira sujeira em cima da peça. -->
+              <div class="enq-marca" id="enq_marca">
+                <i data-canto="nw"></i><i data-canto="ne"></i>
+                <i data-canto="sw"></i><i data-canto="se"></i>
               </div>
+            </div>
+
+            <div class="enq-lado">
+              <div class="enq-bloco">
+                <h4>Mexendo em</h4>
+                <div class="enq-botoes">
+                  <button class="acao mini ativa" data-mexe="video" type="button">
+                    o vídeo</button>
+                  <button class="acao mini" data-mexe="moldura" type="button">
+                    a moldura</button>
+                </div>
+                <div class="enq-medida" id="enq_dica"></div>
+              </div>
+
+              <div class="enq-bloco" id="enq_bl_video">
+                <h4>Aproximar</h4>
+                <input type="range" id="enq_zoom" min="100" max="300" value="100">
+                <div class="enq-medida" id="enq_medida"></div>
+                <button class="acao mini" id="enq_centro" type="button">reencaixar</button>
+              </div>
+
+              <div class="enq-bloco" id="enq_bl_moldura" hidden>
+                <h4>A moldura</h4>
+                <div class="enq-medida" id="enq_janela_med"></div>
+                <button class="acao mini" id="enq_redetectar" type="button">
+                  achar de novo</button>
+                <button class="acao mini" id="enq_tudo" type="button">
+                  a peça inteira</button>
+                <p class="nota mini" id="enq_janela_diz"></p>
+              </div>
+
               <div class="enq-bloco">
                 <h4>Peça final</h4>
                 <div class="enq-medida" id="enq_tela"></div>
               </div>
-              <button class="acao" id="enq_centro" type="button">Centralizar</button>
             </div>
           </div>
         </div>
@@ -7006,7 +7054,9 @@ let EX_I = -1;                     // qual peça está servindo de exemplo
 let EX_URL = null;
 
 let TELA = { w: 1080, h: 1920 };   // o tamanho da peça, que é o do template
-let CAIXA = { x: 0, y: 0, w: 1080, h: 1920 };
+let JANELA = { x: 0, y: 0, w: 1080, h: 1920 };   // onde a mídia entra, dentro do template
+let CAIXA = { x: 0, y: 0, w: 1080, h: 1920 };    // o vídeo inteiro, do qual só se vê o
+                                                 // pedaço que cai dentro da JANELA
 let ASPECTO = 9 / 16;              // largura dividida por altura, do vídeo
 const CAIXAS = new Map();          // peça -> caixa própria, no modo uma a uma
 let ENQ_UMA = -1;                  // qual peça está sendo enquadrada no modo uma a uma
@@ -7098,6 +7148,108 @@ async function enderecoDo(id) {
     TPL_URLS.set(id, u);
     return u;
   } catch (e) { return ""; }
+}
+
+/* ------------------------------------------------- achar a moldura do template
+
+   O TEMPLATE TEM UM BLOCO DE COR CHAPADA MARCANDO ONDE A MÍDIA ENTRA. No que o Gabriel
+   subiu em 19/08/2026 é um retângulo laranja de 946 por 729 sobre fundo preto, com o
+   logo embaixo. Esse bloco é a moldura: o reel vive dentro dele, e o resto do template
+   continua visível. Sem achar a moldura, o programa faz o que fez na primeira versão,
+   que foi cobrir a peça inteira com o vídeo e sumir com o template.
+
+   SÃO DOIS FORMATOS, e o segundo é o comum:
+
+     furo   uma parte transparente no PNG. Fácil de achar: onde o alfa é zero.
+     cor    um retângulo de cor sólida. Achado assim: para cada uma das seis cores mais
+            frequentes, mede-se a caixa que envolve todos os pixels dela e o quanto dessa
+            caixa é de fato daquela cor. Cor espalhada pela peça (o fundo, por exemplo)
+            tem caixa enorme e preenchimento baixo, e cai fora. Retângulo chapado dá
+            preenchimento perto de 1.
+
+   A FOLGA DE QUATRO PIXELS NÃO É CAPRICHO, é conserto de uma sobra medida. A borda do
+   bloco laranja é suavizada: entre o laranja puro e o preto há uma ou duas colunas de
+   tons intermediários, que nenhuma comparação de cor exata pega. Sem a folga sobraram
+   2.618 pixels de laranja aparecendo na peça montada, numa linha fina na base e na
+   direita. Com a folga, zero. Passar quatro pixels para dentro do fundo é invisível;
+   deixar uma linha da cor da moldura é a primeira coisa que se vê. */
+const FOLGA_DA_MOLDURA = 4;
+
+function comFolga(j, W, H) {
+  const x0 = Math.max(0, Math.round(j.x) - FOLGA_DA_MOLDURA);
+  const y0 = Math.max(0, Math.round(j.y) - FOLGA_DA_MOLDURA);
+  const x1 = Math.min(W, Math.round(j.x + j.w) + FOLGA_DA_MOLDURA);
+  const y1 = Math.min(H, Math.round(j.y + j.h) + FOLGA_DA_MOLDURA);
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+async function acharMoldura(file) {
+  let W = 0, H = 0, d = null;
+  try {
+    const bmp = await createImageBitmap(file);
+    W = bmp.width; H = bmp.height;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.drawImage(bmp, 0, 0);
+    if (bmp.close) bmp.close();
+    d = g.getImageData(0, 0, W, H).data;
+  } catch (e) { return null; }
+
+  const TOT = W * H, MIN = 0.035 * TOT, MAX = 0.93 * TOT, CHEIO = 0.96;
+
+  // 1) o furo transparente
+  let n = 0, x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for (let y = 0, p = 3; y < H; y++) for (let x = 0; x < W; x++, p += 4) {
+    if (d[p] >= 16) continue;
+    n++;
+    if (x < x0) x0 = x; if (x > x1) x1 = x;
+    if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (n >= MIN && x1 >= 0) {
+    const a = (x1 - x0 + 1) * (y1 - y0 + 1);
+    if (a <= MAX && n / a >= CHEIO)
+      return { ...comFolga({ x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 }, W, H),
+               achou: "furo" };
+  }
+
+  // 2) o retângulo de cor chapada. A contagem amostra um pixel a cada três: só serve
+  // para eleger candidatas, e a caixa de cada uma é medida depois no tamanho cheio.
+  const conta = new Map();
+  for (let i = 0, p = 0; i < TOT; i += 3, p += 12) {
+    const k = (d[p] << 16) | (d[p + 1] << 8) | d[p + 2];
+    conta.set(k, (conta.get(k) || 0) + 1);
+  }
+  const cores = [...conta.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+  let melhor = null;
+  for (const [k] of cores) {
+    const r = (k >> 16) & 255, v = (k >> 8) & 255, b = k & 255;
+    let m = 0; x0 = W; y0 = H; x1 = -1; y1 = -1;
+    for (let y = 0, p = 0; y < H; y++) for (let x = 0; x < W; x++, p += 4) {
+      if (d[p] !== r || d[p + 1] !== v || d[p + 2] !== b) continue;
+      m++;
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    if (x1 < 0) continue;
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1, a = bw * bh;
+    if (a < MIN || a > MAX || m / a < CHEIO) continue;
+    if (!melhor || a > melhor.a) melhor = { x: x0, y: y0, w: bw, h: bh, a };
+  }
+  if (melhor) return { ...comFolga(melhor, W, H), achou: "cor" };
+
+  // NÃO ACHOU NADA é resposta legítima: template sem moldura marcada existe, e aí a peça
+  // inteira é a área da mídia. O que não pode é fingir que achou.
+  return { x: 0, y: 0, w: W, h: H, achou: false };
+}
+
+/** O arquivo de imagem de um template do acervo. */
+async function arquivoDoTemplate(id) {
+  const p = await pastaDo("templates", false);
+  if (!p) return null;
+  try { return await (await p.getFileHandle(id)).getFile(); }
+  catch (e) { return null; }
 }
 
 /** Largura e altura da imagem, que passam a ser as da peça montada. */
@@ -7245,12 +7397,37 @@ $("tpl_grade").addEventListener("click", async ev => {
   escolherTemplate(item);
 });
 
-function escolherTemplate(item) {
+async function escolherTemplate(item) {
   TPL_ESCOLHIDO = item;
   TELA = { w: item.w || 1080, h: item.h || 1920 };
   CAIXAS.clear();               // enquadramento de outro template não vale para este
+
+  // TEMPLATE ANTIGO NÃO TEM MOLDURA GUARDADA, porque a primeira versão não procurava
+  // nenhuma. Achar agora e gravar na ficha resolve sozinho, sem ele subir de novo.
+  if (!item.janela) {
+    const f = await arquivoDoTemplate(item.id);
+    const mold = f ? await acharMoldura(f) : null;
+    item.janela = mold ? { x: mold.x, y: mold.y, w: mold.w, h: mold.h }
+                       : { x: 0, y: 0, w: TELA.w, h: TELA.h };
+    item.molduraAchada = mold ? mold.achou : false;
+    await gravarAcervo();
+  }
+  JANELA = { ...item.janela };
   desenhaAcervo();
   irParaSub(2);
+}
+
+/** Guarda na ficha do template a moldura como ele deixou. */
+async function salvarJanela() {
+  if (!TPL_ESCOLHIDO) return;
+  const j = { x: Math.round(JANELA.x), y: Math.round(JANELA.y),
+              w: Math.round(JANELA.w), h: Math.round(JANELA.h) };
+  const antes = TPL_ESCOLHIDO.janela || {};
+  if (antes.x === j.x && antes.y === j.y && antes.w === j.w && antes.h === j.h) return;
+  TPL_ESCOLHIDO.janela = j;
+  const na = ACERVO.itens.find(x => x.id === TPL_ESCOLHIDO.id);
+  if (na) { na.janela = j; na.molduraAchada = "mao"; }
+  await gravarAcervo();
 }
 
 /* APAGAR SEMPRE PODE, mas tirando também o arquivo. Ficha sem imagem vira cartão preto
@@ -7306,9 +7483,16 @@ $("tpl_guardar").onclick = async () => {
     await w.write(TPL_ARQUIVO);
     await w.close();
     const d = await medirImagem(TPL_ARQUIVO);
+    // A MOLDURA É ACHADA NA HORA DE SUBIR, e fica guardada na ficha do template. É
+    // trabalho de uma vez só: o mesmo template serve para leva nenhuma ou para vinte.
+    parado("tpl_recado", "procurando a moldura na imagem");
+    const mold = await acharMoldura(TPL_ARQUIVO);
     const item = { id, nome: ($("tpl_nome").value || id).trim().slice(0, 40),
                    mercado: TPL_NOVO_M, etiqueta: TPL_NOVO_E,
-                   w: d.w, h: d.h, bytes: TPL_ARQUIVO.size, criado: Date.now() };
+                   w: d.w, h: d.h, bytes: TPL_ARQUIVO.size, criado: Date.now(),
+                   janela: mold ? { x: mold.x, y: mold.y, w: mold.w, h: mold.h }
+                                : { x: 0, y: 0, w: d.w, h: d.h },
+                   molduraAchada: mold ? mold.achou : false };
     ACERVO.itens.push(item);
     await gravarAcervo();
 
@@ -7426,10 +7610,43 @@ async function abrirArquivoDaGrade(v) {
 
 /* ---------------------------------------------------------- 2.3 · o enquadramento
 
-   TUDO AQUI É MEDIDO EM PIXEL DO TEMPLATE, e desenhado em por cento. O palco na tela tem
-   um tamanho qualquer, que muda com a janela; a peça tem 1080 por 1920. Guardando a
-   caixa em pixel de peça e desenhando em por cento, o retângulo que ele arrasta vale
-   igual quando o ffmpeg monta, sem nenhuma conta de conversão no caminho. */
+   ISTO É UM ENCAIXE, E NÃO UM VÍDEO POR CIMA.
+
+   A primeira versão punha o reel sobre o template inteiro. O Gabriel olhou o resultado e
+   a frase dele foi exata: "você apenas jogou o vídeo por cima, e o template tá atrás".
+   Estava certo, e o erro era de conceito, não de conta: o template tem uma MOLDURA, um
+   bloco de cor chapada marcando onde a mídia entra, e é dentro dela que o reel vive. Tudo
+   o que estiver fora da moldura no template, fundo e logo, continua aparecendo.
+
+   O COMPORTAMENTO É O DO CANVA, e o pedido foi esse com todas as letras:
+
+     o vídeo é recortado pela moldura, e nunca escapa dela
+     dentro dela ele se arrasta e se aproxima à vontade
+     e nunca encolhe a ponto de deixar a cor da moldura aparecer atrás
+
+   A última regra é a que faz a peça sair limpa sozinha. No Canva dá para encolher a
+   mídia e ver o quadro vazio atrás; aqui isso nunca é o que se quer, porque o quadro
+   vazio é um retângulo laranja no meio da peça. Então a régua começa em 100%, que é o
+   encaixe justo, e só sobe.
+
+   TUDO É MEDIDO EM PIXEL DA PEÇA e desenhado em por cento, para o que ele arrasta aqui
+   valer igual quando o ffmpeg monta em 1080 por 1920. */
+
+/** O menor tamanho de vídeo que ainda tapa a moldura inteira, centrado nela. */
+function coberturaMinima() {
+  const w = Math.max(JANELA.w, JANELA.h * ASPECTO);
+  const h = w / ASPECTO;
+  return { x: JANELA.x + (JANELA.w - w) / 2, y: JANELA.y + (JANELA.h - h) / 2, w, h };
+}
+
+/** Prende o vídeo à moldura: nunca menor que ela, nunca deslocado a ponto de vazar. */
+function prender() {
+  const base = coberturaMinima();
+  if (CAIXA.w < base.w - 0.5) { CAIXA.w = base.w; CAIXA.h = base.h; }
+  CAIXA.x = Math.min(JANELA.x, Math.max(JANELA.x + JANELA.w - CAIXA.w, CAIXA.x));
+  CAIXA.y = Math.min(JANELA.y, Math.max(JANELA.y + JANELA.h - CAIXA.h, CAIXA.y));
+}
+
 async function abrirEnquadramento() {
   if (!TPL_ESCOLHIDO) return;
   const palco = $("enq_palco");
@@ -7437,6 +7654,7 @@ async function abrirEnquadramento() {
   const u = await enderecoDo(TPL_ESCOLHIDO.id);
   if (u) $("enq_fundo").src = u;
   $("enq_tela").textContent = `${TELA.w} por ${TELA.h} pixels`;
+  if (TPL_ESCOLHIDO.janela) JANELA = { ...TPL_ESCOLHIDO.janela };
 
   const alvo = APL_MODO === "uma" && ENQ_UMA >= 0 ? ENQ_UMA : EX_I;
   const v = $("enq_video");
@@ -7448,108 +7666,167 @@ async function abrirEnquadramento() {
       v.src = URL.createObjectURL(f);
     } catch (e) { /* sumiu da pasta */ }
   }
-  v.onloadedmetadata = () => {
+  const pronto = () => {
     if (v.videoWidth && v.videoHeight) ASPECTO = v.videoWidth / v.videoHeight;
     const guardada = CAIXAS.get(alvo);
-    if (guardada) { CAIXA = { ...guardada }; desenhaCaixa(); }
-    else encaixar("preencher");
+    CAIXA = guardada ? { ...guardada } : coberturaMinima();
+    desenhaCaixa();
   };
-  if (v.readyState >= 1) v.onloadedmetadata();
+  v.onloadedmetadata = pronto;
+  if (v.readyState >= 1) pronto();
   v.play().catch(() => { /* alguns navegadores só tocam depois de um clique */ });
+
+  const achou = TPL_ESCOLHIDO.molduraAchada;
+  $("enq_janela_diz").textContent =
+    achou === "furo" ? "achei pela parte transparente da imagem."
+    : achou === "cor" ? "achei pelo bloco de cor chapada da imagem."
+    : achou === "mao" ? "ajustada por você."
+    : "não achei moldura marcada nesta imagem, então a peça inteira virou a área da "
+      + "mídia. Se houver uma, marque aqui.";
 
   $("enq_nav").hidden = APL_MODO !== "uma";
   if (APL_MODO === "uma")
     $("enq_qual").textContent = `peça ${alvo + 1} de ${EDIT_PECAS.length}`;
   $("enq_sub").textContent = APL_MODO === "uma"
     ? "Cada peça tem o enquadramento dela. Ajuste e passe para a próxima."
-    : "Arraste o vídeo para posicionar. O fundo é o template, no tamanho real da peça.";
-}
-
-/** Os três encaixes prontos. `preencher` acerta em quase todo caso e é o de partida.
-
-   A CONTA É UMA SÓ, e sai da comparação entre a proporção do vídeo e a da peça:
-
-     preencher  a menor largura que faz o vídeo tapar os dois lados da peça
-     caber      a maior largura que faz o vídeo inteiro entrar, sem cortar nada
-     largura    o vídeo do tamanho exato da peça na horizontal, seja qual for a altura
-
-   Como a altura sempre sai da largura dividida pela proporção do vídeo, ele nunca é
-   esticado: o que muda é quanto sobra ou quanto se perde. */
-function encaixar(tipo) {
-  const w = tipo === "largura" ? TELA.w
-          : tipo === "preencher" ? Math.max(TELA.w, TELA.h * ASPECTO)
-                                 : Math.min(TELA.w, TELA.h * ASPECTO);
-  CAIXA.w = w;
-  CAIXA.h = w / ASPECTO;
-  CAIXA.x = (TELA.w - CAIXA.w) / 2;
-  CAIXA.y = (TELA.h - CAIXA.h) / 2;
-  document.querySelectorAll("[data-enc]").forEach(b =>
-    b.classList.toggle("ativa", b.dataset.enc === tipo));
-  desenhaCaixa();
-}
-
-/** O encaixe de partida, `preencher`, em pixels da peça. Sem mexer no que está na tela. */
-function caixaDePartida() {
-  const w = Math.max(TELA.w, TELA.h * ASPECTO);
-  const h = w / ASPECTO;
-  return { x: (TELA.w - w) / 2, y: (TELA.h - h) / 2, w, h };
+    : "Arraste o vídeo dentro da moldura e use a régua para aproximar.";
 }
 
 function desenhaCaixa() {
-  const c = $("enq_caixa");
-  c.style.left = (CAIXA.x / TELA.w * 100) + "%";
-  c.style.top = (CAIXA.y / TELA.h * 100) + "%";
-  c.style.width = (CAIXA.w / TELA.w * 100) + "%";
-  c.style.height = (CAIXA.h / TELA.h * 100) + "%";
-  $("enq_zoom").value = Math.round(CAIXA.w / TELA.w * 100);
-  $("enq_medida").textContent = `${Math.round(CAIXA.w)} por ${Math.round(CAIXA.h)}`
-    + `  ·  x ${Math.round(CAIXA.x)}, y ${Math.round(CAIXA.y)}`;
+  prender();
+  const jan = $("enq_janela"), c = $("enq_caixa"), marca = $("enq_marca");
+  for (const el of [jan, marca]) {
+    el.style.left = (JANELA.x / TELA.w * 100) + "%";
+    el.style.top = (JANELA.y / TELA.h * 100) + "%";
+    el.style.width = (JANELA.w / TELA.w * 100) + "%";
+    el.style.height = (JANELA.h / TELA.h * 100) + "%";
+  }
+  // O VÍDEO É POSICIONADO EM RELAÇÃO À MOLDURA, e não à peça: é a moldura que o recorta.
+  c.style.left = ((CAIXA.x - JANELA.x) / JANELA.w * 100) + "%";
+  c.style.top = ((CAIXA.y - JANELA.y) / JANELA.h * 100) + "%";
+  c.style.width = (CAIXA.w / JANELA.w * 100) + "%";
+  c.style.height = (CAIXA.h / JANELA.h * 100) + "%";
+
+  const base = coberturaMinima();
+  const perto = Math.round(CAIXA.w / base.w * 100);
+  $("enq_zoom").value = Math.min(300, perto);
+  $("enq_medida").textContent = `${perto}% do encaixe justo`;
+  $("enq_janela_med").textContent = `${Math.round(JANELA.w)} por ${Math.round(JANELA.h)}`
+    + `  ·  x ${Math.round(JANELA.x)}, y ${Math.round(JANELA.y)}`;
   if (APL_MODO === "uma" && ENQ_UMA >= 0) CAIXAS.set(ENQ_UMA, { ...CAIXA });
 }
 
-document.querySelectorAll("[data-enc]").forEach(b =>
-  b.onclick = () => encaixar(b.dataset.enc));
+/* ------------------------------------------------- os dois modos de mexer */
+document.querySelectorAll("[data-mexe]").forEach(b => {
+  b.onclick = () => {
+    const q = b.dataset.mexe;
+    $("enq_palco").dataset.mexendo = q;
+    document.querySelectorAll("[data-mexe]").forEach(x =>
+      x.classList.toggle("ativa", x === b));
+    $("enq_bl_video").hidden = q !== "video";
+    $("enq_bl_moldura").hidden = q !== "moldura";
+    $("enq_dica").textContent = q === "video"
+      ? "arraste dentro da moldura"
+      : "arraste a moldura, ou puxe pelos cantos";
+    // SAIR DO AJUSTE GRAVA. Moldura é característica do template, e não desta edição:
+    // acertar uma vez tem de valer para toda leva que use este template daqui em diante.
+    if (q === "video") salvarJanela();
+  };
+});
 
 $("enq_zoom").oninput = () => {
+  const base = coberturaMinima();
   const cx = CAIXA.x + CAIXA.w / 2, cy = CAIXA.y + CAIXA.h / 2;
-  CAIXA.w = TELA.w * (Number($("enq_zoom").value) / 100);
+  CAIXA.w = base.w * (Number($("enq_zoom").value) / 100);
   CAIXA.h = CAIXA.w / ASPECTO;
   CAIXA.x = cx - CAIXA.w / 2;
   CAIXA.y = cy - CAIXA.h / 2;
-  document.querySelectorAll("[data-enc]").forEach(b => b.classList.remove("ativa"));
   desenhaCaixa();
 };
 
-$("enq_centro").onclick = () => {
-  CAIXA.x = (TELA.w - CAIXA.w) / 2;
-  CAIXA.y = (TELA.h - CAIXA.h) / 2;
+$("enq_centro").onclick = () => { CAIXA = coberturaMinima(); desenhaCaixa(); };
+
+$("enq_tudo").onclick = () => {
+  JANELA = { x: 0, y: 0, w: TELA.w, h: TELA.h };
+  CAIXA = coberturaMinima();
   desenhaCaixa();
 };
 
-/* ARRASTAR COM O PONTEIRO, e não com o mouse: o mesmo código serve para dedo e caneta, e
-   `setPointerCapture` faz o arrasto continuar mesmo quando o ponteiro sai do palco. */
+$("enq_redetectar").onclick = async () => {
+  if (!TPL_ESCOLHIDO) return;
+  $("enq_janela_diz").textContent = "procurando";
+  const f = await arquivoDoTemplate(TPL_ESCOLHIDO.id);
+  const mold = f ? await acharMoldura(f) : null;
+  if (!mold) return void ($("enq_janela_diz").textContent = "não consegui ler a imagem.");
+  JANELA = { x: mold.x, y: mold.y, w: mold.w, h: mold.h };
+  TPL_ESCOLHIDO.molduraAchada = mold.achou;
+  CAIXA = coberturaMinima();
+  desenhaCaixa();
+  $("enq_janela_diz").textContent = mold.achou
+    ? (mold.achou === "furo" ? "achei pela parte transparente."
+                             : "achei pelo bloco de cor chapada.")
+    : "não achei moldura marcada nesta imagem.";
+};
+
+/* ------------------------------------------------- arrastar
+
+   UM SÓ TRATADOR PARA AS TRÊS COISAS que se arrastam aqui: o vídeo dentro da moldura, a
+   moldura inteira, e cada canto dela. O ponteiro é capturado no palco, então o arrasto
+   continua mesmo quando o dedo ou o mouse saem dele no meio do movimento. */
 (function ligarArrasto() {
-  const alvo = $("enq_caixa"), palco = $("enq_palco");
+  const palco = $("enq_palco");
   let de = null;
-  alvo.addEventListener("pointerdown", ev => {
+
+  palco.addEventListener("pointerdown", ev => {
+    const modo = palco.dataset.mexendo;
+    const canto = ev.target.closest("[data-canto]");
+    if (modo === "video" && !ev.target.closest("#enq_janela")) return;
+    if (modo === "moldura" && !canto && !ev.target.closest("#enq_marca")) return;
     ev.preventDefault();
-    alvo.setPointerCapture(ev.pointerId);
-    de = { cx: ev.clientX, cy: ev.clientY, x: CAIXA.x, y: CAIXA.y,
+    palco.setPointerCapture(ev.pointerId);
+    de = { cx: ev.clientX, cy: ev.clientY, modo, canto: canto && canto.dataset.canto,
+           caixa: { ...CAIXA }, janela: { ...JANELA },
            px: TELA.w / palco.getBoundingClientRect().width };
   });
-  alvo.addEventListener("pointermove", ev => {
+
+  palco.addEventListener("pointermove", ev => {
     if (!de) return;
-    CAIXA.x = de.x + (ev.clientX - de.cx) * de.px;
-    CAIXA.y = de.y + (ev.clientY - de.cy) * de.px;
+    const dx = (ev.clientX - de.cx) * de.px, dy = (ev.clientY - de.cy) * de.px;
+
+    if (de.modo === "video") {
+      CAIXA.x = de.caixa.x + dx;
+      CAIXA.y = de.caixa.y + dy;
+    } else if (de.canto) {
+      // O CANTO PUXA DOIS LADOS. Um mínimo de sessenta pixels impede a moldura de virar
+      // um risco do qual não dá mais para pegar nenhuma alça.
+      const j = { ...de.janela };
+      if (de.canto.includes("w")) { j.x = de.janela.x + dx; j.w = de.janela.w - dx; }
+      else j.w = de.janela.w + dx;
+      if (de.canto.includes("n")) { j.y = de.janela.y + dy; j.h = de.janela.h - dy; }
+      else j.h = de.janela.h + dy;
+      if (j.w < 60 || j.h < 60) return;
+      j.x = Math.max(0, Math.min(TELA.w - j.w, j.x));
+      j.y = Math.max(0, Math.min(TELA.h - j.h, j.y));
+      j.w = Math.min(TELA.w - j.x, j.w);
+      j.h = Math.min(TELA.h - j.y, j.h);
+      JANELA = j;
+      CAIXA = coberturaMinima();
+    } else {
+      JANELA.x = Math.max(0, Math.min(TELA.w - JANELA.w, de.janela.x + dx));
+      JANELA.y = Math.max(0, Math.min(TELA.h - JANELA.h, de.janela.y + dy));
+      CAIXA.x = de.caixa.x + (JANELA.x - de.janela.x);
+      CAIXA.y = de.caixa.y + (JANELA.y - de.janela.y);
+    }
     desenhaCaixa();
   });
+
   const solta = ev => {
     if (!de) return;
     de = null;
-    try { alvo.releasePointerCapture(ev.pointerId); } catch (e) { /* já soltou */ }
+    try { palco.releasePointerCapture(ev.pointerId); } catch (e) { /* já soltou */ }
   };
-  alvo.addEventListener("pointerup", solta);
-  alvo.addEventListener("pointercancel", solta);
+  palco.addEventListener("pointerup", solta);
+  palco.addEventListener("pointercancel", solta);
 })();
 
 $("enq_ant").onclick = () => {
@@ -7647,6 +7924,10 @@ $("apl_montar").onclick = async () => {
       id, leva: EDIT_LEVA.numero,
       pasta: `leva-${EDIT_LEVA.numero}`, destino,
       template: TPL_ESCOLHIDO.id, tela: { w: TELA.w, h: TELA.h },
+      // A MOLDURA VAI JUNTO. É ela que o montador usa para recortar: sem ela, ele volta
+      // a colar o vídeo por cima da peça inteira, que foi o erro da primeira versão.
+      janela: { x: Math.round(JANELA.x), y: Math.round(JANELA.y),
+                w: Math.round(JANELA.w), h: Math.round(JANELA.h) },
       caixa: { ...CAIXA },
       // NO MODO UMA A UMA, PEÇA QUE ELE NÃO ABRIU RECEBE O ENCAIXE DE PARTIDA, e não a
       // caixa da última que ele mexeu. Sem isto, parar no meio da fila fazia as peças
@@ -7654,7 +7935,7 @@ $("apl_montar").onclick = async () => {
       // saía plausível e errado, que é o pior tipo de errado.
       pecas: alvos.map(i => {
         const p = { arquivo: EDIT_PECAS[i].nome };
-        if (APL_MODO === "uma") p.caixa = { ...(CAIXAS.get(i) || caixaDePartida()) };
+        if (APL_MODO === "uma") p.caixa = { ...(CAIXAS.get(i) || coberturaMinima()) };
         return p;
       })
     };
