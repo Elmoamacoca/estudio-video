@@ -72,15 +72,5 @@
    "restam": 41
   }
  ],
- "lotes": [
-  {
-   "numero": 2,
-   "arquivos": 8,
-   "mb": 84,
-   "criterio": "reels acima de reels 1.5x",
-   "quando": 1787090052,
-   "execucao": "32190086644"
-  }
- ],
- "hoje": 8
+ "hoje": 0
 }
