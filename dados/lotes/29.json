@@ -50,6 +50,11 @@
    "texto": "107 tratados, 5 reprovados e fora da leva.",
    "aprovados": 107,
    "reprovados": 5
+  },
+  {
+   "quando": 1787177743,
+   "tipo": "entrega",
+   "texto": "Montando o pacote para entrega. Um lote grande leva alguns minutos aqui."
   }
  ]
 }
