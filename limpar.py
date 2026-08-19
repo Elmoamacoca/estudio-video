@@ -189,6 +189,26 @@ def limpar(entrada: Path, saida: Path) -> dict:
     casca = sem_udta(saida)
     laudo = auditar(saida)
     laudo["casca"] = casca
+
+    # A IMAGEM E O SOM PRECISAM SAIR IGUAIS, E ISSO PASSOU A SER CONFERIDO POR ARQUIVO.
+    #
+    # A funcao `mesma_midia` existia desde 18/08 e nao era chamada por ninguem: a
+    # comparacao tinha sido feita uma vez, na mao, para provar que a limpeza nao mexe no
+    # video, e depois a prova ficou valendo por confianca. Nao serve. O comando de limpeza
+    # copia as trilhas em vez de recodificar, mas "copia" e' uma promessa do ffmpeg, e
+    # promessa nao conferida e' a coisa que este projeto ja' descobriu ser falsa duas
+    # vezes: o comando conhecido nao limpava metadado, ele assinava, e o pacote da entrega
+    # ja' desceu pela metade sem avisar.
+    #
+    # Agora cada arquivo carrega no laudo a prova de que o que se ve e o que se ouve
+    # saiu byte a byte igual ao que entrou. Custo medido: 0,4 s por arquivo, contra os
+    # 0,06 s da limpeza. Vale: e' a unica resposta possivel a "o video perdeu qualidade?".
+    igual = mesma_midia(entrada, saida)
+    laudo["midia_igual"] = igual
+    if not igual:
+        laudo["limpo"] = False
+        laudo["erro"] = "a imagem ou o som mudaram na limpeza"
+
     laudo["segundos"] = round(time.time() - t0, 2)
     return laudo
 
@@ -206,7 +226,55 @@ def mesma_midia(a: Path, b: Path) -> bool:
     return all(resumo(a, q) == resumo(b, q) and resumo(a, q) for q in ("0:v", "0:a"))
 
 
+def conferir_pasta(pasta: Path) -> int:
+    """Audita uma pasta pronta e diz, arquivo por arquivo, o que sobrou dentro dela.
+
+    POR QUE EXISTE UM CONFERIDOR SEPARADO DO LIMPADOR.
+    A limpeza roda uma vez, na esteira, e o laudo dela fica gravado num arquivo que
+    ninguem abre. Isto aqui e' para o Gabriel rodar quando quiser, na pasta que ele tem
+    na mao, sem depender de acreditar no que aconteceu antes. Auditoria que so' quem fez
+    o trabalho consegue rodar nao e' auditoria.
+
+    A CONFERENCIA E' A MESMA DA ESTEIRA, e nao uma versao simplificada: le' a arvore de
+    caixas do arquivo inteiro, procura as caixas de dado, varre o texto fora da area de
+    midia atras das marcas conhecidas, e ainda pergunta ao ffprobe o que ELE ve'.
+
+        python limpar.py conferir "C:/Users/Gabri/Estudio/levas/leva-28"
+    """
+    arquivos = sorted(pasta.glob("*.mp4"))
+    if not arquivos:
+        print(f"nenhum .mp4 em {pasta}")
+        return 1
+
+    print(f"conferindo {len(arquivos)} arquivos em {pasta}\n")
+    sujos = []
+    for arq in arquivos:
+        laudo = auditar(arq)
+        if laudo["limpo"]:
+            print(f"  limpo    {arq.name}")
+        else:
+            sujos.append(arq.name)
+            print(f"  SUJO     {arq.name}")
+            for campo in ("sobras", "marcas", "tags_formato", "tags_trilha"):
+                if laudo.get(campo):
+                    print(f"             {campo}: {laudo[campo]}")
+
+    print()
+    if sujos:
+        print(f"{len(sujos)} de {len(arquivos)} com sobra de metadado:")
+        for n in sujos:
+            print(f"  {n}")
+        return 2
+    print(f"os {len(arquivos)} arquivos estao limpos: nenhuma caixa de dado, nenhuma "
+          "marca conhecida, nenhuma etiqueta de formato ou de trilha.")
+    return 0
+
+
 if __name__ == "__main__":
+    # O CONFERIDOR VEM ANTES, porque ele e' o unico modo que alguem roda a mao.
+    if len(sys.argv) > 1 and sys.argv[1] == "conferir":
+        raise SystemExit(conferir_pasta(Path(sys.argv[2] if len(sys.argv) > 2 else ".")))
+
     origem = Path(sys.argv[1] if len(sys.argv) > 1 else "brutos")
     destino = Path(sys.argv[2] if len(sys.argv) > 2 else "tratados")
     arquivos = sorted(origem.glob("*.mp4"))
