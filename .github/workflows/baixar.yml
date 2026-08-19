@@ -90,6 +90,16 @@ jobs:
       # Validado em 18/08/2026 nos oito reels do lote 2: o comando conhecido nao limpa,
       # assina, e sao tres camadas diferentes. O que reprova aqui e' apagado e nao entra
       # no lote; o laudo de cada arquivo fica gravado e aparece no registro da tela.
+      # A MAQUINA DA ESTEIRA NAO VEM COM FFMPEG. Medido no lote 6: o passo de tratar
+      # morreu com "No such file or directory: ffmpeg". Instalar custa menos de um
+      # minuto e so' acontece no trabalho de baixar, que ja' leva minutos.
+      - name: Instalar o ffmpeg
+        if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
+
       - name: Tratar
         if: inputs.quantos != 'sonda' && !startsWith(inputs.quantos, 'etiquetar:')
         run: |
