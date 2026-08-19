@@ -32,6 +32,11 @@
    "quando": 1787155772,
    "tipo": "preparo",
    "texto": "Ferramenta de vídeo pronta. Começando o tratamento."
+  },
+  {
+   "quando": 1787155774,
+   "tipo": "tratando",
+   "texto": "1 de 41 tratados."
   }
  ]
 }
