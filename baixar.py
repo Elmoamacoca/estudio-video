@@ -12,6 +12,7 @@ se o link ainda vale e, se venceu, pede o post de novo antes de desistir.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -110,26 +111,58 @@ def main(cru: str) -> int:
     registro = []
     t0 = time.time()
 
-    for n, item in enumerate(itens, 1):
-        nome = f"{item['indice']:07.2f}x_{item['conta']}_{item['codigo']}.mp4"
-        caminho = DESTINO / nome
-        if caminho.exists():
-            print(f"  [{n}/{len(itens)}] ja tinha: {nome}")
-            continue
+    # UMA CONTA DE CADA VEZ, porque o registro da tela conta cada uma separada.
+    # A ordem dentro da conta continua sendo a de desempenho, que e' a ordem em que a
+    # selecao chegou aqui.
+    fila: dict[str, list] = {}
+    for i in itens:
+        fila.setdefault(i["conta"], []).append(i)
 
-        sucesso, tam, erro = baixa_um(item["arquivo"], caminho)
-        if sucesso:
-            ok += 1
-            total_bytes += tam
-            registro.append({**{k: item[k] for k in
-                               ("codigo", "conta", "formato", "indice", "views",
-                                "curtidas", "comentarios", "duracao", "data",
-                                "legenda", "endereco")},
-                             "arquivo_local": nome, "bytes": tam})
-            print(f"  [{n}/{len(itens)}] ok {tam // 1024} KB  {nome}")
-        else:
-            falhas += 1
-            print(f"  [{n}/{len(itens)}] FALHOU ({erro})  {item['endereco']}")
+    leva = os.environ.get("LEVA") or os.environ.get("LOTE")
+
+    def avisar(conta: str, feitos: int, total: int, fim: bool = False) -> None:
+        """Manda o avanco para o registro da tela, se este trabalho pertence a uma leva.
+
+        Rodado na bancada, sem leva nenhuma, ele so' imprime e segue: o baixador continua
+        servindo para testar a mao, sem depender de acervo nem de rede.
+        """
+        if not leva:
+            return
+        try:
+            import registro as diario
+            diario.andamento(int(leva), conta, feitos, total, fim)
+        except Exception as e:
+            print(f"  (o registro da tela nao aceitou o avanco: {type(e).__name__})")
+
+    n = 0
+    for conta, lista in fila.items():
+        feitos = 0
+        print(f"\n-- @{conta}: {len(lista)} arquivos")
+        avisar(conta, 0, len(lista))
+        for item in lista:
+            n += 1
+            nome = f"{item['indice']:07.2f}x_{item['conta']}_{item['codigo']}.mp4"
+            caminho = DESTINO / nome
+            if caminho.exists():
+                print(f"  [{n}/{len(itens)}] ja tinha: {nome}")
+                continue
+
+            sucesso, tam, erro = baixa_um(item["arquivo"], caminho)
+            if sucesso:
+                ok += 1
+                feitos += 1
+                total_bytes += tam
+                registro.append({**{k: item[k] for k in
+                                   ("codigo", "conta", "formato", "indice", "views",
+                                    "curtidas", "comentarios", "duracao", "data",
+                                    "legenda", "endereco")},
+                                 "arquivo_local": nome, "bytes": tam})
+                print(f"  [{n}/{len(itens)}] ok {tam // 1024} KB  {nome}")
+                avisar(conta, feitos, len(lista))
+            else:
+                falhas += 1
+                print(f"  [{n}/{len(itens)}] FALHOU ({erro})  {item['endereco']}")
+        avisar(conta, feitos, len(lista), fim=True)
 
     gasto = time.time() - t0
     (DESTINO / "_lote.json").write_text(
