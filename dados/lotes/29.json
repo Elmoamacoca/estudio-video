@@ -27,6 +27,11 @@
    "quando": 1787177705,
    "tipo": "preparo",
    "texto": "Preparando a limpeza: buscando a ferramenta de vídeo."
+  },
+  {
+   "quando": 1787177715,
+   "tipo": "preparo",
+   "texto": "Ferramenta de vídeo pronta. Começando o tratamento."
   }
  ]
 }
