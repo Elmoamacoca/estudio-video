@@ -1,7 +1,7 @@
 {
  "prontas": 390,
  "avaliados": 1137,
- "ultima_rodada": 1787147527,
+ "ultima_rodada": 1787150449,
  "perfis": [
   {
    "conta": "blankpartners",
@@ -68,8 +68,8 @@
    "carrosseis": 0,
    "acima": 41,
    "baixaveis": 41,
-   "baixados": 41,
-   "restam": 0
+   "baixados": 0,
+   "restam": 41
   }
  ],
  "hoje": 0
