@@ -3,6 +3,10 @@
   {
    "nome": "moda",
    "criado": 1787146333
+  },
+  {
+   "nome": "luxo",
+   "criado": 1787146514
   }
  ],
  "etiquetas": [
@@ -11,5 +15,5 @@
    "criado": 1787146233
   }
  ],
- "atualizado": 1787146383
+ "atualizado": 1787146514
 }
