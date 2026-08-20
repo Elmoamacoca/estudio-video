@@ -27,6 +27,7 @@ DESTINO = Path("brutos")
 # este arquivo, o mesmo perfil aparecia com o mesmo numero para sempre, e o lote seguinte
 # rebaixava tudo de novo.
 BAIXADOS = Path("dados/baixados.json")
+REPROVADOS = Path("dados/reprovados.json")
 
 
 def pedido(texto: str) -> tuple[list, int]:
@@ -58,6 +59,17 @@ def ja_baixados() -> dict:
         return {}
 
 
+def ja_reprovados() -> dict:
+    """Quem ja' baixou e reprovou na limpeza. Baixar de novo da' no mesmo resultado, entao
+    ele sai da fila de vez em vez de voltar a cada leva."""
+    if not REPROVADOS.exists():
+        return {}
+    try:
+        return json.loads(REPROVADOS.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
 def baixa_um(url: str, destino: Path) -> tuple[bool, int, str]:
     try:
         req = urllib.request.Request(url, headers=CABECALHO)
@@ -84,7 +96,10 @@ def main(cru: str) -> int:
     # O QUE JA' VEIO NAO VEM DE NOVO. O perfil escolhido na tela ja' mostra o saldo, e
     # sem este corte o lote repetiria os mesmos arquivos a cada pedido.
     feitos = ja_baixados()
-    novos = [i for i in com_arquivo if i["codigo"] not in feitos.get(i["conta"], [])]
+    maus = ja_reprovados()
+    novos = [i for i in com_arquivo
+             if i["codigo"] not in feitos.get(i["conta"], [])
+             and i["codigo"] not in maus.get(i["conta"], [])]
     repetidos = len(com_arquivo) - len(novos)
 
     if contas:
