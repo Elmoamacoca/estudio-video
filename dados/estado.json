@@ -1,7 +1,7 @@
 {
  "prontas": 500,
  "avaliados": 1404,
- "ultima_rodada": 1787230878,
+ "ultima_rodada": 1787232083,
  "perfis": [
   {
    "conta": "blankpartners",
@@ -23,6 +23,7 @@
    "acima": 254,
    "baixaveis": 254,
    "baixados": 0,
+   "reprovados": 0,
    "restam": 254
   },
   {
@@ -47,6 +48,7 @@
    "acima": 95,
    "baixaveis": 93,
    "baixados": 0,
+   "reprovados": 0,
    "restam": 93
   },
   {
@@ -69,7 +71,8 @@
    "acima": 112,
    "baixaveis": 112,
    "baixados": 107,
-   "restam": 5
+   "reprovados": 5,
+   "restam": 0
   },
   {
    "conta": "vinci.society",
@@ -93,6 +96,7 @@
    "acima": 41,
    "baixaveis": 41,
    "baixados": 41,
+   "reprovados": 0,
    "restam": 0
   }
  ],
