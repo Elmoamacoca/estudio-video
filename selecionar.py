@@ -24,6 +24,7 @@ REGUA = Path("dados/regua.json")
 # os mesmos perfis com os mesmos números: baixar não mudaria nada na tela, e a unica
 # forma de saber o que ja' veio seria abrir os lotes um por um.
 BAIXADOS = Path("dados/baixados.json")
+REPROVADOS = Path("dados/reprovados.json")
 
 
 def ja_baixados() -> dict[str, set]:
@@ -31,6 +32,23 @@ def ja_baixados() -> dict[str, set]:
         return {}
     try:
         d = json.loads(BAIXADOS.read_text(encoding="utf-8"))
+        return {c: set(v) for c, v in d.items()}
+    except Exception:
+        return {}
+
+
+def ja_reprovados() -> dict[str, set]:
+    """Quem baixou e nao passou na limpeza. NAO VOLTA PARA A FILEIRA NUNCA MAIS.
+
+    A reprovacao e' da auditoria, que e' deterministica: baixar de novo da' no mesmo. Sem
+    esta lista, os cinco reels reprovados do `thenews.business` na leva 29 continuavam
+    aparecendo como disponiveis, e a esteira ia rebaixar e reprovar os mesmos cinco em
+    toda leva seguinte.
+    """
+    if not REPROVADOS.exists():
+        return {}
+    try:
+        d = json.loads(REPROVADOS.read_text(encoding="utf-8"))
         return {c: set(v) for c, v in d.items()}
     except Exception:
         return {}
@@ -195,21 +213,33 @@ def selecionar(r: dict | None = None) -> dict:
     # a diferenca. Agora o numero do cartao e' exatamente o que desce.
     reels_por_perfil: dict[str, int] = {}
     feitos = ja_baixados()
+    maus = ja_reprovados()
     baixados_por_perfil: dict[str, int] = {}
+    reprovados_por_perfil: dict[str, int] = {}
     for x in escolhidos:
         if x["formato"] == "reels" and x.get("arquivo"):
             reels_por_perfil[x["conta"]] = reels_por_perfil.get(x["conta"], 0) + 1
             if x["codigo"] in feitos.get(x["conta"], ()):
-                baixados_por_perfil[x["conta"]] = \
-                    baixados_por_perfil.get(x["conta"], 0) + 1
+                baixados_por_perfil[x["conta"]] = (
+                    baixados_por_perfil.get(x["conta"], 0) + 1)
+            elif x["codigo"] in maus.get(x["conta"], ()):
+                reprovados_por_perfil[x["conta"]] = (
+                    reprovados_por_perfil.get(x["conta"], 0) + 1)
 
     for pf in perfis:
         pf["acima"] = acima_por_perfil.get(pf["conta"], 0)
         pf["baixaveis"] = reels_por_perfil.get(pf["conta"], 0)
         pf["baixados"] = baixados_por_perfil.get(pf["conta"], 0)
+        pf["reprovados"] = reprovados_por_perfil.get(pf["conta"], 0)
         # O QUE A FILEIRA DE BAIXAR MOSTRA. Zero aqui tira o perfil da fileira, e e' o
         # que faz ela encolher a cada lote em vez de repetir os mesmos cartoes.
-        pf["restam"] = max(0, pf["baixaveis"] - pf["baixados"])
+        #
+        # O REPROVADO SAI DA CONTA JUNTO COM O BAIXADO, e essa foi a correcao de 20/08.
+        # Ele nao esta' na mao, e' verdade, mas tambem nao ha' como te-lo: a auditoria de
+        # limpeza e' deterministica e ele reprovaria de novo. Contado como disponivel, o
+        # perfil ficava para sempre na fileira oferecendo peca que nunca entrega. Foi o
+        # que aconteceu com cinco reels do `thenews.business` depois da leva 29.
+        pf["restam"] = max(0, pf["baixaveis"] - pf["baixados"] - pf["reprovados"])
 
     return {
         "criterio": criterio,
