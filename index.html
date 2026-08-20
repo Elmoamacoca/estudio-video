@@ -6995,6 +6995,8 @@ async function mostrarPecas() {
     arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
     EDIT_PECAS = arquivos;
     desenhaPecas();
+    // AS PEÇAS CHEGARAM: se havia rascunho esperando por elas, agora ele pode abrir.
+    await tentarRetomar();
     salvarRascunho();
   } catch (e) {
     gal.innerHTML = "";
@@ -7438,6 +7440,62 @@ function medirImagem(file) {
 /* ---------------------------------------------------------- entrar no passo 2 */
 let RETOMAR = null;             // o rascunho esperando para ser aberto
 
+/* RASCUNHO VELHO SE RECONSTRÓI PELO PEDIDO QUE ELE MANDOU.
+
+   Os rascunhos gravados antes de 20/08/2026 guardavam só o número do passo: nada de
+   template, moldura ou enquadramento, porque o programa da época não gravava isso. Não dá
+   para inventar o que nunca foi escrito, mas dá para achar em outro lugar.
+
+   O PEDIDO DE MONTAGEM É ESSE OUTRO LUGAR. Quando ele chega ao fim do passo 2 e manda
+   montar, a tela escreve na pasta do Estúdio um arquivo com exatamente o que faltava:
+   qual template, o tamanho da peça, a moldura e o enquadramento. Se existe pedido daquela
+   leva, o rascunho pode ser remontado a partir dele, e volta para o fim do passo 2, que é
+   de onde o pedido saiu.
+
+   Vale para pedido cumprido, para pedido na fila e para pedido em pausa: os três são
+   registro do que ele decidiu. */
+async function pedidoDaLeva(numero) {
+  const cantos = [];
+  const pasta = await pastaDo("pedidos", false);
+  if (!pasta) return null;
+  const olhar = async (p) => {
+    try {
+      for await (const [nome, h] of p.entries()) {
+        if (h.kind !== "file") continue;
+        if (nome.endsWith(".andamento.json")) continue;
+        if (!nome.endsWith(".json") && !nome.endsWith(".json.pausado")) continue;
+        try {
+          const d = JSON.parse(await (await h.getFile()).text());
+          if (d && d.leva === numero && d.template) cantos.push(d);
+        } catch (e) { /* pedido ilegível não atrapalha os outros */ }
+      }
+    } catch (e) { /* pasta sem permissão ou inexistente */ }
+  };
+  await olhar(pasta);
+  try { await olhar(await pasta.getDirectoryHandle("feitos")); } catch (e) { /* sem feitos */ }
+  if (!cantos.length) return null;
+  cantos.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+  return cantos[0];
+}
+
+/** Transforma um pedido no estado de passo 2 que o rascunho deveria ter guardado. */
+function comoRascunho(p, r) {
+  return {
+    ...r,
+    passo: 2,
+    // SUB-PASSO 4, porque foi de lá que o pedido saiu: quem mandou montar chegou ao fim.
+    sub: 4,
+    template: p.template,
+    exemplo: 0,
+    janela: p.janela || null,
+    caixa: p.caixa || null,
+    modo: "todas",
+    marcadas: [],
+    caixas: [],
+    tela: p.tela || null,
+  };
+}
+
 async function entrarNoTemplate() {
   const temRaiz = !!EDIT_RAIZ;
   $("tpl_porta").hidden = temRaiz;
@@ -7451,7 +7509,7 @@ async function entrarNoTemplate() {
   desenhaSubTrilho();
   if (!temRaiz) return;
   await lerAcervo();
-  await retomarPasso2();
+  await tentarRetomar();
   await desenhaAcervo();
 }
 
@@ -7461,11 +7519,30 @@ async function entrarNoTemplate() {
    porque ele define o tamanho da peça e a moldura; depois o vídeo de exemplo, porque sem
    ele o sub-passo 3 não tem o que enquadrar; depois o enquadramento e o alcance. Só no
    fim se anda até o sub-passo guardado, porque `irParaSub` recusa avançar sem o anterior
-   resolvido, e é isso que fazia o rascunho cair sempre no sub-passo 1. */
+   resolvido, e é isso que fazia o rascunho cair sempre no sub-passo 1.
+
+   ELE ESPERA AS PEÇAS, e essa foi a segunda causa do mesmo sintoma. Ao abrir a página, a
+   permissão de ler a pasta volta para "perguntar", então `mostrarPecas` sai de mãos
+   vazias e `EDIT_PECAS` fica em zero. Sem peça não há vídeo de exemplo, e sem vídeo de
+   exemplo o sub-passo 3 se recusa a abrir: o rascunho parava no template mesmo tendo tudo
+   guardado. Agora o pedido de retomada fica de pé até as peças chegarem, e quem as
+   carrega chama de volta. */
+async function tentarRetomar() {
+  if (!RETOMAR) return;
+  if (!EDIT_PECAS.length) return;          // sem peças ainda: espera a pasta ser liberada
+  if (!ACERVO.itens.length) await lerAcervo();
+  // RASCUNHO SEM PASSO 2 GRAVADO tenta se reconstruir pelo pedido que ele mandou montar.
+  if (!RETOMAR.template) {
+    const p = await pedidoDaLeva(RETOMAR.leva);
+    if (p) RETOMAR = comoRascunho(p, RETOMAR);
+  }
+  await retomarPasso2();
+}
+
 async function retomarPasso2() {
   const r = RETOMAR;
+  if (!r) return;
   RETOMAR = null;
-  if (!r || !r.template) return;
 
   const item = ACERVO.itens.find(x => x.id === r.template);
   if (!item) return;            // o template saiu do acervo desde então
@@ -7482,6 +7559,9 @@ async function retomarPasso2() {
   if (r.exemplo >= 0 && EDIT_PECAS[r.exemplo]) await usarExemplo(r.exemplo);
   const alvo = Math.min(4, Math.max(1, r.sub || 1));
   if (alvo > 1) irParaSub(alvo);
+  // GRAVA JÁ COMPLETO. Rascunho reconstruído pelo pedido só se reconstrói uma vez: da
+  // próxima ele abre direto, sem varrer a pasta de pedidos de novo.
+  salvarRascunho();
 }
 
 function abaDoTemplate() {
