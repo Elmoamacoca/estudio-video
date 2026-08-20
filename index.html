@@ -4025,33 +4025,134 @@ irPara((location.hash || "#minerar").slice(1), false);
    continua sendo a do commit do momento. Se ela demorar, vale quem chegar primeiro. */
 const PACIENCIA = 2500;
 
+/* A LEITURA PERGUNTA "MUDOU?" EM VEZ DE BAIXAR TUDO DE NOVO.
+
+   MEDIDO EM 19/08/2026, com a tela lenta a ponto de o Gabriel achar que tinha travado:
+   a cada vinte e cinco segundos ela rebaixava os sete arquivos do acervo, e um deles,
+   `selecao.json`, tem 824 KB. Vezes duas vias, dá 1,7 MB por volta, uns 4 MB por minuto
+   de aba aberta, para trazer quase sempre exatamente o mesmo conteúdo.
+
+   A CULPA ERA DE DUAS LINHAS QUE DESLIGAVAM O CACHE DO NAVEGADOR: `cache: "no-store"` e
+   um `?t=` com a hora no fim de cada endereço. As duas juntas garantem que nada nunca é
+   reaproveitado. Elas existiam por um motivo real, que era não ver arquivo velho, mas
+   resolviam isso do jeito mais caro possível.
+
+   `cache: "no-cache"` faz o certo: o navegador PERGUNTA ao servidor toda vez, mas usa o
+   que já tem quando a resposta é "não mudou". Nunca se vê dado velho, e não se baixa o
+   mesmo byte duas vezes.
+
+   E POR QUE NÃO FAZER A PERGUNTA NA MÃO. Foi o que tentei primeiro, mandando eu mesmo o
+   cabeçalho de etiqueta. Não dá, e medi os dois motivos: o GitHub responde 403 à pergunta
+   de permissão que o navegador faz antes de deixar um cabeçalho desses atravessar
+   domínios, e ele também não libera a leitura da etiqueta pelo programa. Feito na mão,
+   quebra tudo; deixado com o navegador, funciona.
+
+   A PONTE ADOECE, E QUANDO ADOECE ELA SEGURA em vez de recusar. Foi o outro lado do
+   problema de hoje: medi a mesma leitura levando 57 s e terminando em erro, depois 7 s,
+   depois 0,4 s. Segurar é pior que recusar, porque o navegador só abre seis ligações por
+   endereço: com pedidos pendurados por um minuto, os seguintes ficam na fila sem nem
+   sair, e a tela inteira parece travada.
+
+   Duas defesas, e as duas nasceram dessa medição:
+
+     1. o pedido à ponte é CORTADO quando a paciência acaba, em vez de ficar pendurado.
+        Sem isto, cada volta deixa mais uma ligação presa, e em poucos minutos não sobra
+        nenhuma vaga para o caminho que funciona.
+     2. depois de três tropeços seguidos, a tela PARA DE CHAMAR a ponte para leitura por
+        três minutos e vai direto na fonte. A ponte continua servindo para mandar pedido,
+        que é o trabalho que só ela faz. */
+let PONTE_TROPECOS = 0;
+let PONTE_DE_CAMA_ATE = 0;
+const TROPECOS_ATE_DEITAR = 3;
+const DESCANSO_DA_PONTE = 3 * 60 * 1000;
+
+const ponteDeCama = () => Date.now() < PONTE_DE_CAMA_ATE;
+function ponteTropecou() {
+  if (++PONTE_TROPECOS >= TROPECOS_ATE_DEITAR)
+    PONTE_DE_CAMA_ATE = Date.now() + DESCANSO_DA_PONTE;
+}
+function ponteFirme() { PONTE_TROPECOS = 0; PONTE_DE_CAMA_ATE = 0; }
+
+/** A fonte, sempre revalidada e sem `?t=`: sem endereço único não há o que reaproveitar. */
+const pegarDaFonte = caminho => fetch(`${CRU}/${caminho}`, { cache: "no-cache" })
+  .then(r => r.ok ? r.json().then(d => ({ tem: true, d, via: "fonte" }))
+                  : { tem: false, sumiu: r.status === 404, via: "fonte" })
+  .catch(() => ({ tem: false, via: "fonte" }));
+
+const pegarDaPonte = (dentro, sinal) =>
+  fetch(`${PONTE}/dados/${dentro}?t=${Date.now()}`, { cache: "no-store", signal: sinal })
+    .then(r => r.ok ? r.json().then(d => ({ tem: true, d, via: "ponte" }))
+                    : { tem: false, sumiu: r.status === 404, via: "ponte" })
+    .catch(() => ({ tem: false, via: "ponte" }));
+
+/* FALHA NÃO GANHA CORRIDA. Sem isto, uma via que quebra em vinte milissegundos venceria
+   a outra que ia responder certo em duzentos, e a leitura devolveria nada tendo o dado
+   disponível. A promessa que nunca se resolve tira a perdedora da disputa sem cancelá-la:
+   ela continua valendo lá embaixo, para o caso de a outra também falhar. */
+const sóQuemResponde = p => p.then(x => (x.tem || x.sumiu) ? x : new Promise(() => {}));
+
+/* ARQUIVOS QUE NUNCA SOMEM NÃO PRECISAM DA PONTE.
+
+   A ponte serve para uma coisa na leitura: dizer com autoridade que um arquivo foi
+   APAGADO, porque a fonte tem cache de borda e chegou a servir por minutos levas que
+   tinham acabado de ser limpas. Arquivo que nunca é apagado não tem essa dúvida.
+
+   E há um motivo medido para tirar o `selecao.json` dela em especial: 824 KB é grande
+   demais para a ponte. Medido hoje, um por um: `estado.json` 0,48 s, `retratos.json`
+   0,53 s, `fontes.json` 0,84 s, `catalogo.json` 0,42 s, os dois índices 0,42 s. E o
+   `selecao.json`, TRINTA SEGUNDOS, quando não termina em erro 500 com "Network
+   connection lost". Um pedido desses fica pendurado ocupando uma das seis ligações que o
+   navegador dá por endereço, e é o que fazia a tela inteira parecer travada. */
+const SEM_PONTE = new Set(["dados/selecao.json", "dados/estado.json",
+                           "dados/retratos.json", "dados/fontes.json"]);
+
 async function ler(caminho) {
   // O CAMINHO DE DENTRO SOBREVIVE. Antes ficava só o nome do arquivo, e pedir
   // `dados/atividade/vinci.society.json` virava `dados/vinci.society.json`, que não
   // existe. O livro de atividade mora em pasta própria e precisa da pasta.
   const dentro = caminho.replace(/^dados\//, "");
-  const agora = Date.now();
-  // A RESPOSTA VEM ROTULADA, e não crua. Sem o rótulo não dá para separar duas coisas
-  // que parecem a mesma: "a ponte disse que esse arquivo não existe" e "a ponte não
-  // respondeu". No primeiro caso o endereço cru não deve ser consultado, porque ele tem
-  // cache de borda e serve por minutos um arquivo que já foi apagado: foi o que fez a
-  // tela mostrar levas que tinham acabado de ser limpas.
-  const pegar = end => fetch(end, { cache: "no-store" })
-    .then(r => r.ok ? r.json().then(d => ({ tem: true, d }))
-                    : { tem: false, sumiu: r.status === 404 })
-    .catch(() => ({ tem: false }));
+  const daFonte = pegarDaFonte(caminho);
 
-  const daPonte = pegar(`${PONTE}/dados/${dentro}?t=${agora}`);
-  const doCru = pegar(`${CRU}/${caminho}?t=${agora}`);
+  // COM A PONTE DE CAMA, NEM SE BATE NA PORTA DELA. Abrir o pedido só para ele ficar
+  // pendurado é o que entope as vagas de ligação do navegador.
+  if (SEM_PONTE.has(caminho) || ponteDeCama()) {
+    const f = await daFonte;
+    return f.tem ? f.d : null;
+  }
+
+  /* A CORRIDA É ENTRE AS DUAS VIAS DE VERDADE, e não entre uma via e um cronômetro.
+
+     Antes a tela esperava a ponte por dois segundos e meio antes de sequer olhar para a
+     resposta da fonte, mesmo quando a fonte já tinha respondido em sessenta
+     milissegundos. Medido hoje, com a ponte acordando: 3.970 ms na primeira chamada e
+     uns 400 ms depois, contra 58 ms da fonte. Ou seja, a tela ficava parada esperando a
+     via lenta com o dado na mão.
+
+     Agora vence quem responder primeiro. A ponte continua na disputa porque ela é a
+     única que sabe dizer com certeza que um arquivo foi APAGADO: a fonte tem cache de
+     borda e chegou a servir por minutos levas que tinham acabado de ser limpas. Quando
+     ela ganha, a autoridade dela vale; quando perde, o dado da fonte serve, e a volta
+     seguinte, vinte e cinco segundos depois, corrige se for o caso. */
+  const freio = new AbortController();
+  const daPonte = pegarDaPonte(dentro, freio.signal);
   const tarde = new Promise(r => setTimeout(() => r({ tarde: true }), PACIENCIA));
 
-  const primeiro = await Promise.race([daPonte, tarde]);
-  if (primeiro.tem) return primeiro.d;
-  if (primeiro.sumiu) return null;                     // a ponte falou: não existe
-  const cru = await doCru;
-  if (cru.tem) return cru.d;
-  const ponte = await daPonte;
-  return ponte.tem ? ponte.d : null;
+  const primeiro = await Promise.race([sóQuemResponde(daPonte),
+                                       sóQuemResponde(daFonte), tarde]);
+  if (primeiro.tem || primeiro.sumiu) {
+    if (primeiro.via === "ponte") ponteFirme();
+    else freio.abort();          // a fonte resolveu: solta a vaga de ligação da ponte
+    return primeiro.tem ? primeiro.d : null;
+  }
+
+  // NINGUÉM RESPONDEU NO PRAZO. Aí sim a ponte levou tropeço, e a espera continua pelas
+  // duas, na ordem de quem costuma acertar.
+  freio.abort();
+  ponteTropecou();
+  const f = await daFonte;
+  if (f.tem) return f.d;
+  const b = await daPonte;
+  return b.tem ? b.d : null;
 }
 
 async function mandar(rota, corpo) {
@@ -5982,12 +6083,21 @@ let etqEtiquetas = new Set();
    serve por minutos o arquivo de antes. Quem espera precisa da resposta do momento, ou
    fica esperando para sempre uma coisa que ja' aconteceu. */
 async function lerFresco(caminho) {
+  // ESTA VAI SÓ PELA PONTE DE PROPÓSITO: ela existe para perguntar ao acervo se a
+  // mudança já entrou, e a fonte tem cache de borda que responderia o valor velho.
+  //
+  // O FREIO É NOVO, e a razão é a mesma da leitura comum: ponte doente segura o pedido
+  // por até um minuto, e esta função é chamada de três em três segundos enquanto a tela
+  // espera. Sem cortar, cada espera de quatro minutos deixava oitenta pedidos pendurados.
   const dentro = caminho.replace(/^dados\//, "");
+  const freio = new AbortController();
+  const corte = setTimeout(() => freio.abort(), 8000);
   try {
     const r = await fetch(`${PONTE}/dados/${dentro}?t=${Date.now()}`,
-                          { cache: "no-store" });
+                          { cache: "no-store", signal: freio.signal });
     return r.ok ? await r.json() : null;
   } catch (e) { return null; }
+  finally { clearTimeout(corte); }
 }
 
 /** Quantos perfis carregam cada nome hoje. Sai da tabela, que ja' tem todos. */
