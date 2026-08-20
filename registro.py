@@ -24,6 +24,8 @@ from pathlib import Path
 PASTA = Path("dados/lotes")
 INDICE = PASTA / "indice.json"
 BAIXADOS = Path("dados/baixados.json")
+# QUEM REPROVOU NA LIMPEZA NAO VOLTA PARA A FILEIRA. Ver `fechar()` para o porque.
+REPROVADOS = Path("dados/reprovados.json")
 LOTE = Path("brutos/_lote.json")
 LIMPEZA = Path("tratados/_limpeza.json")
 
@@ -183,21 +185,39 @@ def limpo(numero: int) -> None:
 def fechar(numero: int, entregue: bool) -> None:
     """Marca o que foi entregue e fecha o lote.
 
-    SO' O QUE PASSOU NA LIMPEZA CONTA COMO ENTREGUE. O arquivo que baixou e reprovou fica
-    sem marca, e o perfil segue mostrando aquele saldo, que e' a verdade: aquela peca
-    ainda nao esta' na mao.
+    SO' O QUE PASSOU NA LIMPEZA CONTA COMO ENTREGUE, e o que reprovou vai para uma lista
+    propria, de onde nunca mais sai.
+
+    A PRIMEIRA VERSAO DEIXAVA O REPROVADO SEM MARCA NENHUMA, com o argumento de que aquela
+    peca "ainda nao esta' na mao" e por isso o perfil devia seguir mostrando o saldo. O
+    argumento estava errado na pratica: sem marca, o reel volta para a fileira, e a esteira
+    baixa e reprova o mesmo arquivo de novo, todas as vezes, para sempre. Aconteceu com
+    cinco reels do `thenews.business` na leva 29: os 112 baixados viraram 107 limpos, e os
+    cinco reprovados continuaram aparecendo como disponiveis.
+
+    A reprovacao aqui e' da auditoria de limpeza, que e' deterministica: o mesmo arquivo
+    reprova de novo. Repetir o download nao muda o resultado, so' gasta.
     """
     reg = ler(LOTE, {}).get("itens", [])
-    aprovados = {x["arquivo"] for x in ler(LIMPEZA, {}).get("laudos", []) if x.get("limpo")}
+    laudos = ler(LIMPEZA, {}).get("laudos", [])
+    aprovados = {x["arquivo"] for x in laudos if x.get("limpo")}
+    caidos = {x["arquivo"] for x in laudos if not x.get("limpo")}
     feitos = ler(BAIXADOS, {})
+    maus = ler(REPROVADOS, {})
     marcados = 0
     for i in reg:
-        if entregue and i.get("arquivo_local") in aprovados:
+        local = i.get("arquivo_local")
+        if entregue and local in aprovados:
             feitos.setdefault(i["conta"], [])
             if i["codigo"] not in feitos[i["conta"]]:
                 feitos[i["conta"]].append(i["codigo"])
                 marcados += 1
+        elif local in caidos:
+            maus.setdefault(i["conta"], [])
+            if i["codigo"] not in maus[i["conta"]]:
+                maus[i["conta"]].append(i["codigo"])
     escrever(BAIXADOS, feitos)
+    escrever(REPROVADOS, maus)
 
     d = ler(LIMPEZA, {})
     ok = len([x for x in d.get("laudos", []) if x.get("limpo")])
