@@ -2154,7 +2154,46 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @media(max-width:1180px){ .enq-dois{grid-template-columns:1fr 1fr} }
 @media(max-width:820px){ .enq-dois{grid-template-columns:1fr} }
 
-/* ---------------------------------------------------- 3 · depois da montagem */
+/* ------------------------------------------------- 2 · o recorte do B-roll
+
+   DOIS LADOS E UMA COLUNA DE CONTROLES, o mesmo desenho do enquadramento, porque é a
+   mesma pergunta: o que entra e o que fica de fora. À esquerda o reel com o retângulo
+   marcado, à direita só o que vai ser gravado.
+
+   A ALTURA MANDA E A LARGURA SEGUE. Os quadros são `height` fixa com `width:auto`, e não
+   o contrário: tudo dentro deles é `position:absolute`, então a largura natural é zero e
+   um `margin:0 auto` num item de grade ainda desliga o esticamento. Foi assim que o palco
+   do enquadramento chegou a sair com dois pixels de largura. */
+.rec-dois{display:grid;grid-template-columns:1fr 1fr 250px;gap:24px;align-items:start}
+.rec-lado-a h4,.rec-lado-b h4{margin:0 0 9px;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);font-weight:600}
+.rec-quadro{position:relative;height:min(56vh,540px);width:auto;margin:0 auto;
+  justify-self:center;border-radius:var(--r-md);overflow:hidden;background:#000;
+  border:1px solid var(--rule-solid);aspect-ratio:9/16}
+.rec-quadro video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  display:block}
+/* O LADO DIREITO É UMA JANELA, e não um vídeo redimensionado: o vídeo dentro dele é
+   ampliado e deslocado para que sobre exatamente o retângulo do B-roll. É a mesma conta
+   que o ffmpeg faz no `crop`, e por isso o que se vê aqui é o que sai no arquivo. */
+.rec-corte{background:#000;aspect-ratio:auto;max-width:100%}
+.rec-corte video{inset:auto;object-fit:fill}
+
+/* O QUE FICA DE FORA ESCURECE. Só o contorno não separa o que entra do que sai. */
+.rec-marca{position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,.66);
+  border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
+.rec-marca[hidden]{display:none}
+
+.rec-lado{display:flex;flex-direction:column;gap:18px}
+.rec-bloco h4{margin:0 0 8px;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);font-weight:600}
+.rec-bloco .acao.mini{margin-top:9px;width:100%}
+.rec-medida{font:12px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
+  margin-top:8px;text-align:center}
+
+@media(max-width:1180px){ .rec-dois{grid-template-columns:1fr 1fr} }
+@media(max-width:820px){ .rec-dois{grid-template-columns:1fr} }
+
+/* ------------------------------------------------------- 4 · a legenda */
 .pos-caixa{max-width:520px}
 .pos-n{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
 .pos-n b{font-size:30px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
@@ -2919,27 +2958,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
       <div id="lot_lista"></div>
       <div class="gal-vazia" id="lot_vazio">Nenhuma leva pedida ainda.</div>
-      <!-- ---------------------------------------- PASSO 3 · DEPOIS DA MONTAGEM -->
-      <div class="ed-etapa" data-passo="3" hidden>
-        <div class="ed-cab">
-          <h2>Depois da montagem</h2>
-          <p class="nota">As peças estão prontas no seu computador.</p>
-        </div>
-        <div class="caixa pos-caixa">
-          <div class="pos-n"><b id="pos_n">0</b><span>peças montadas</span></div>
-          <p class="ed-caminho" id="pos_pasta"></p>
-          <div class="linha">
-            <a class="acao forte" id="pos_abrir" href="#">Abrir a pasta</a>
-          </div>
-          <p class="nota">Os vídeos brutos continuam onde estavam, intactos.</p>
-        </div>
-        <div class="por-vir">
-          <div class="por-vir-selo">esperando a sua definição</div>
-          <h2>O que vem depois</h2>
-          <p class="nota">Este passo está criado e vazio de propósito. Diga o que ele
-            deve fazer e eu construo aqui.</p>
-        </div>
-      </div>
 
     </div>
   </div>
@@ -3049,18 +3067,36 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
       </div>
 
-      <!-- O PASSO 2 TEM PASSOS DENTRO DELE, e foi assim que o Gabriel descreveu: "tem
-           várias etapas dentro da etapa de template". Eles só aparecem quando ele está
-           no 2. Fora dele, o trilho volta a ser uma linha por passo, senão a espinha
-           vira um índice de livro. -->
+      <!-- O RECORTE VEM ANTES DO TEMPLATE, e a ordem é a correção de um erro de desenho.
+           Enquanto o template era o passo 2, o recorte do B-roll acontecia espremido
+           dentro dele e obrigado a caber na proporção da moldura: cada reel põe a
+           filmagem num tamanho diferente, então forçar todos na mesma proporção cortava
+           pedaço de uns e sobrava nos outros. O Gabriel cravou a inversão em 20/08/2026:
+           "a etapa dois vai ser a etapa de recorte", "o que vai ditar como o template vai
+           ser trabalhado agora é o B-roll". -->
       <div class="ed-ponto" data-passo="2">
         <div class="ed-ponto-n">02</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
           <div class="ed-ponto-txt">
+            <h3>O recorte</h3>
+            <p id="ed_r2">o B-roll de cada vídeo</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- O PASSO 3 TEM PASSOS DENTRO DELE, e foi assim que o Gabriel descreveu: "tem
+           várias etapas dentro da etapa de template". Eles só aparecem quando ele está
+           no 3. Fora dele, o trilho volta a ser uma linha por passo, senão a espinha
+           vira um índice de livro. -->
+      <div class="ed-ponto" data-passo="3">
+        <div class="ed-ponto-n">03</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt">
             <h3>O template</h3>
-            <p id="ed_r2">nenhum escolhido</p>
-            <ol class="ed-sub" id="ed_sub2">
+            <p id="ed_r3">nenhum escolhido</p>
+            <ol class="ed-sub" id="ed_sub3">
               <li data-sub="1"><i></i>o template</li>
               <li data-sub="2"><i></i>o vídeo de exemplo</li>
               <li data-sub="3"><i></i>o enquadramento</li>
@@ -3070,18 +3106,19 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
       </div>
 
-      <!-- O PASSO 3 ENTRA VAZIO DE PROPÓSITO, e a decisão é do Gabriel em 20/08/2026:
-           "só cria ela". O que ele quis dizer é que o passo 2 precisa TERMINAR em algum
-           lugar. Sem um passo depois, montar era o fim da linha, e o único botão que
-           sobrava na tela era montar de novo, que é a última coisa que se quer oferecer
-           a quem acabou de montar cento e sete peças. -->
-      <div class="ed-ponto" data-passo="3">
-        <div class="ed-ponto-n">03</div>
+      <!-- O PASSO 4 ENTRA VAZIO DE PROPÓSITO. O Gabriel nomeou o passo em 20/08/2026,
+           "a quarta etapa seria a criação de legenda", e não disse o que ele faz. Então
+           ele existe, tem nome e destrava depois da montagem; o miolo espera a definição.
+           Sem um passo depois, montar era o fim da linha, e o único botão que sobrava na
+           tela era montar de novo, que é a última coisa que se quer oferecer a quem
+           acabou de montar cento e sete peças. -->
+      <div class="ed-ponto" data-passo="4">
+        <div class="ed-ponto-n">04</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
           <div class="ed-ponto-txt">
-            <h3>Depois da montagem</h3>
-            <p id="ed_r3">a definir com você</p>
+            <h3>A legenda</h3>
+            <p id="ed_r4">a definir com você</p>
           </div>
         </div>
       </div>
@@ -3158,6 +3195,91 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
              discordando. Passo que exigir um aceite terá o botão dele, no lugar dele. -->
       </div>
 
+      <!-- ---------------------------------------- PASSO 2 · O RECORTE DO B-ROLL
+
+           O QUE ELE FAZ: acha em cada reel o retângulo da filmagem, o B-roll, e grava só
+           ele. O arroba e a legenda de quem postou ficam de fora.
+
+           POR QUE ELE VEM ANTES DO TEMPLATE. Enquanto o recorte morava dentro do passo do
+           template, ele era obrigado a caber na proporção da moldura, e por isso comia
+           pedaço do B-roll. O Gabriel viu isso sorteando vídeo por vídeo: "o enquadramento
+           não está pegando o vídeo inteiro", "tem B-roll que são maiores, B-rolls que são
+           menores". Sem template no caminho não há proporção a obedecer, e sai o B-roll
+           inteiro, do jeito que ele é.
+
+           UM CLIQUE, TODAS AS PEÇAS. Não há aqui um vídeo de cada vez para ajustar na
+           mão: o retângulo é medido em cada peça na hora de gravar. O vídeo desta tela é
+           só para conferir que o método está certo antes de soltar nas cento e sete. -->
+      <div class="ed-etapa" data-passo="2" hidden>
+        <div class="ed-cab">
+          <h2>O recorte do B-roll</h2>
+          <p class="nota">O sistema mede o retângulo da filmagem em cada vídeo e grava só
+            ele. Confira num exemplo e depois solte na leva inteira.</p>
+        </div>
+
+        <div class="rec-dois">
+          <div class="rec-lado-a">
+            <h4>O reel, com o B-roll marcado</h4>
+            <div class="rec-quadro" id="rec_fonte">
+              <video id="rec_video" preload="metadata" muted playsinline loop></video>
+              <div class="rec-marca" id="rec_marca" hidden></div>
+            </div>
+            <div class="rec-medida" id="rec_med_a"></div>
+          </div>
+
+          <div class="rec-lado-b">
+            <h4>O que vai ser gravado</h4>
+            <div class="rec-quadro rec-corte" id="rec_saida">
+              <video id="rec_corte" preload="metadata" muted playsinline loop></video>
+            </div>
+            <div class="rec-medida" id="rec_med_b"></div>
+          </div>
+
+          <div class="rec-lado">
+            <div class="rec-bloco">
+              <h4>Conferir</h4>
+              <p class="nota mini" id="rec_diz">medindo…</p>
+              <button class="acao mini" id="rec_sortear" type="button">ver outro reel</button>
+            </div>
+
+            <!-- OS DOIS FORMATOS QUE APARECEM NA LEVA, e a conta vale como aviso: reel
+                 sem card é reel que não tem B-roll separado, e nesse a resposta certa é
+                 gravar o vídeo inteiro. -->
+            <div class="rec-bloco">
+              <h4>O que tem na leva</h4>
+              <p class="nota mini" id="rec_mistura">ainda não medi a leva toda.</p>
+            </div>
+
+            <div class="rec-bloco">
+              <h4>Onde para</h4>
+              <p class="ed-caminho" id="rec_caminho"></p>
+              <p class="nota mini">Os vídeos brutos continuam onde estavam, intactos. Ao
+                lado dos recortes fica a ficha dizendo de qual bruto veio cada um.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="apl-pe">
+          <div class="apl-resumo" id="rec_resumo"></div>
+          <button class="acao forte" id="rec_aplicar" type="button">Recortar</button>
+          <div class="apl-feito" id="rec_feito" hidden>
+            <a class="acao" id="rec_pasta" href="#">Abrir a pasta dos recortes</a>
+            <button class="acao forte" id="rec_segue" type="button">
+              Ir para o passo 3</button>
+          </div>
+        </div>
+
+        <div class="caixa apl-obra" id="rec_obra" hidden>
+          <div class="apl-obra-topo">
+            <span class="cfg-girando"></span>
+            <b id="rec_obra_txt">recortando</b>
+            <span class="dir" id="rec_obra_tempo"></span>
+          </div>
+          <div class="apl-barra"><i id="rec_barra"></i></div>
+          <p class="nota" id="rec_obra_nota"></p>
+        </div>
+      </div>
+
       <!-- ---------------------------------------- PASSO 2 · O TEMPLATE
 
            O TEMPLATE É O FUNDO E O VÍDEO VAI POR CIMA DELE. Minha primeira proposta era
@@ -3169,9 +3291,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
            tela do template manda, e o que se ajusta é onde o vídeo se encaixa dentro
            dela. Ele já disse que vai subir templates na proporção de reels, então na
            prática o vídeo preenche quase tudo e o ajuste é exceção. -->
-      <div class="ed-etapa" data-passo="2" hidden>
+      <div class="ed-etapa" data-passo="3" hidden>
 
-        <!-- ................................................ 2.1 · ESCOLHER O TEMPLATE -->
+        <!-- ................................................ 3.1 · ESCOLHER O TEMPLATE -->
         <div class="ed-sub-tela" data-sub="1">
           <div class="ed-cab">
             <h2>O template</h2>
@@ -3321,7 +3443,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           </div>
         </div>
 
-        <!-- ................................................ 2.2 · O VÍDEO DE EXEMPLO -->
+        <!-- ................................................ 3.2 · O VÍDEO DE EXEMPLO -->
         <div class="ed-sub-tela" data-sub="2" hidden>
           <div class="ed-cab">
             <h2>O vídeo de exemplo</h2>
@@ -3346,7 +3468,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="ex-grade" id="ex_grade" hidden></div>
         </div>
 
-        <!-- ................................................ 2.3 · O ENQUADRAMENTO
+        <!-- ................................................ 3.3 · O ENQUADRAMENTO
 
              AQUI SE ESCOLHE O B-ROLL, e essa é a virada de 20/08/2026. Os reels que ele
              minera são cartões de notícia: em cima o arroba e a legenda de quem postou,
@@ -3437,7 +3559,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           </div>
         </div>
 
-        <!-- ................................................ 2.4 · A QUEM SE APLICA -->
+        <!-- ................................................ 3.4 · A QUEM SE APLICA -->
         <div class="ed-sub-tela" data-sub="4" hidden>
           <div class="ed-cab">
             <h2>A quem se aplica</h2>
@@ -3474,7 +3596,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="apl-feito" id="apl_feito" hidden>
               <a class="acao" id="apl_pasta" href="#">Abrir a pasta das peças</a>
               <button class="acao forte" id="apl_segue" type="button">
-                Ir para o passo 3</button>
+                Ir para o passo 4</button>
             </div>
           </div>
 
@@ -3490,6 +3612,32 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="apl-barra"><i id="apl_barra"></i></div>
             <p class="nota" id="apl_obra_nota"></p>
           </div>
+        </div>
+      </div>
+
+      <!-- ---------------------------------------- PASSO 4 · A LEGENDA
+
+           NOMEADO PELO GABRIEL EM 20/08/2026 e ainda sem miolo: "a quarta etapa seria a
+           criação de legenda". Ele existe com nome e destrava depois da montagem, para o
+           passo 3 ter onde terminar. O que ele faz é a próxima definição. -->
+      <div class="ed-etapa" data-passo="4" hidden>
+        <div class="ed-cab">
+          <h2>A legenda</h2>
+          <p class="nota">As peças estão prontas no seu computador.</p>
+        </div>
+        <div class="caixa pos-caixa">
+          <div class="pos-n"><b id="pos_n">0</b><span>peças montadas</span></div>
+          <p class="ed-caminho" id="pos_pasta"></p>
+          <div class="linha">
+            <a class="acao forte" id="pos_abrir" href="#">Abrir a pasta</a>
+          </div>
+          <p class="nota">Os vídeos brutos continuam onde estavam, intactos.</p>
+        </div>
+        <div class="por-vir">
+          <div class="por-vir-selo">esperando a sua definição</div>
+          <h2>A criação da legenda</h2>
+          <p class="nota">Este passo está criado e vazio de propósito. Diga o que ele
+            deve fazer e eu construo aqui.</p>
         </div>
       </div>
 
@@ -6650,7 +6798,15 @@ let EDIT_PASSO = 1;
 let EDIT_LEVA = null;              // a leva escolhida, como está na capa do acervo
 let EDIT_PASTA = null;             // a pasta `levas`, se já tivermos
 let EDIT_RAIZ = null;              // a pasta `Estudio`, uma acima: templates e pedidos
-let EDIT_PECAS = [];               // os arquivos da leva escolhida
+let EDIT_PECAS = [];               // os arquivos BRUTOS da leva escolhida
+let EDIT_RECORTES = [];            // os B-rolls recortados no passo 2, quando já existem
+let RECORTADO = null;              // { pecas, pasta, link } do recorte cumprido
+
+/* DE ONDE O TEMPLATE TIRA AS PEÇAS. Desde que o recorte virou o passo 2, o passo do
+   template trabalha em cima dos recortes e não mais do bruto: é o B-roll que entra na
+   moldura, e ele já está sozinho no arquivo. Enquanto não houver recorte, o bruto serve,
+   e assim nada quebra numa leva que ainda não passou pelo passo 2. */
+function pecas3() { return EDIT_RECORTES.length ? EDIT_RECORTES : EDIT_PECAS; }
 let EDIT_RASCUNHO = null;          // o rascunho aberto, se veio de um
 
 const TEM_PORTA = typeof window.showDirectoryPicker === "function";
@@ -6783,6 +6939,11 @@ async function salvarRascunho() {
   const r = {
     id: EDIT_RASCUNHO ? EDIT_RASCUNHO.id : `e${Date.now()}`,
     leva: EDIT_LEVA.numero,
+    // A VERSÃO DA NUMERAÇÃO DOS PASSOS. Em 20/08/2026 o recorte entrou como passo 2 e
+    // empurrou template para 3 e legenda para 4. Rascunho gravado antes disso guarda um
+    // "2" que quer dizer template, e abriria no recorte: com a marca aqui, o restaurador
+    // sabe deslocar. Sem ela o rascunho velho abriria no passo errado em silêncio.
+    v: 2,
     contas: EDIT_LEVA.contas || [],
     pecas: EDIT_PECAS.length,
     passo: EDIT_PASSO,
@@ -6995,6 +7156,9 @@ async function entrarNaOficina(passo, rasc) {
   // quando estiver pronto evita uma corrida entre as duas coisas.
   RETOMAR = rasc || null;
   if (!rasc) esquecerPasso2();     // leva nova entra limpa, sem herdar a anterior
+  // RASCUNHO DA NUMERAÇÃO ANTIGA se desloca um passo para a frente: o que era template
+  // virou 3, o que vinha depois virou 4, e o recorte tomou o 2.
+  if (rasc && !rasc.v && passo >= 2) passo = passo + 1;
 
   // AS PEÇAS PRIMEIRO. Sem elas não há vídeo de exemplo para retomar, e o passo 2 fica
   // preso no sub-passo 1 por falta de peça, que era exatamente o sintoma.
@@ -7006,6 +7170,10 @@ async function entrarNaOficina(passo, rasc) {
 /** Apaga o passo 2 da memória da tela. Leva nova não herda template da leva anterior. */
 function esquecerPasso2() {
   MONTADO = null;
+  RECORTADO = null;
+  EDIT_RECORTES = [];
+  REC_I = -1;
+  REC_ACHADO = null;
   desenhaFeito();
   TPL_ESCOLHIDO = null;
   TPL_SUB = 1;
@@ -7029,7 +7197,8 @@ function irParaPasso(n) {
   });
   document.querySelectorAll(".ed-etapa").forEach(s =>
     s.hidden = Number(s.dataset.passo) !== n);
-  if (n === 2) entrarNoTemplate();
+  if (n === 2) entrarNoRecorte();
+  if (n === 3) entrarNoTemplate();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -7039,7 +7208,8 @@ document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
     // VOLTAR SEMPRE PODE; AVANÇAR, SÓ COM O PASSO ANTERIOR RESOLVIDO. É o que faz disto
     // um passo a passo e não um menu com quatro páginas soltas.
     if (n > 1 && !EDIT_LEVA) return;
-    if (n > 2 && !MONTADO) return;      // o passo 3 é o depois da montagem
+    if (n > 2 && !RECORTADO) return;    // sem B-roll recortado não há o que templatar
+    if (n > 3 && !MONTADO) return;      // o passo 4 é o depois da montagem
     irParaPasso(n);
     salvarRascunho();
   });
@@ -7087,6 +7257,10 @@ async function mostrarPecas() {
         arquivos.push({ nome, h });
     arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
     EDIT_PECAS = arquivos;
+    // O ESTADO DO PASSO 2 VEM DO DISCO, e não da memória da tela. Se a pasta
+    // `recortes/leva-N` já existe com a ficha dentro, esta leva foi recortada, e isso
+    // vale mesmo que a página tenha sido fechada e reaberta no dia seguinte.
+    await procurarRecortes();
     desenhaPecas();
     // AS PEÇAS CHEGARAM: se havia rascunho esperando por elas, agora ele pode abrir.
     await tentarRetomar();
@@ -7283,6 +7457,263 @@ setInterval(aoVivo, 15000);
 // juntos, o leitor de bilhetes rodava com a lista ainda vazia, desistia na hora, e a
 // tela abria mostrando zero post num perfil que já tinha sessenta lidos.
 atualizar().then(aoVivo);
+
+/* ==========================================================================
+   PASSO 2 · O RECORTE DO B-ROLL
+
+   O QUE ACONTECE AQUI: cada reel da leva é medido, o retângulo da filmagem é achado, e
+   grava-se só ele numa pasta nova. O arroba e a legenda de quem postou ficam de fora.
+
+   POR QUE ELE VEM ANTES DO TEMPLATE, e é a correção de um erro de desenho meu. Enquanto o
+   recorte morava dentro do passo do template, ele era obrigado a caber na proporção da
+   moldura, e por isso comia pedaço do B-roll. O Gabriel viu sorteando vídeo por vídeo: "o
+   enquadramento não está pegando o vídeo inteiro", "tem B-roll que são maiores, B-rolls
+   que são menores". Sem template no caminho não há proporção a obedecer.
+
+   UM CLIQUE, TODAS AS PEÇAS. Não há aqui um vídeo por vez para ajustar na mão, e é
+   pedido explícito: "que eu clique no botão e ele aplique em tudo, que eu não precise
+   estar fazendo esse processo manual com cada vídeo". O vídeo desta tela serve só para
+   conferir o método antes de soltar na leva inteira. */
+
+let REC_I = -1;                    // qual peça está sendo conferida
+let REC_ACHADO = null;             // o B-roll medido nela
+let REC_OBRA = null;               // o pedido de recorte em curso
+
+async function entrarNoRecorte() {
+  $("rec_caminho").textContent = "Estudio\\recortes\\leva-"
+    + (EDIT_LEVA ? EDIT_LEVA.numero : "");
+  await procurarRecortes();
+  desenhaRecortado();
+  resumoDoRecorte();
+  if (!EDIT_PECAS.length) {
+    $("rec_diz").textContent = "libere a pasta do Estúdio no passo 1 para eu poder medir.";
+    return;
+  }
+  if (REC_I < 0 || !EDIT_PECAS[REC_I]) await verOutroReel();
+}
+
+/** Sorteia um reel da leva e mede o B-roll dele, para conferência. */
+async function verOutroReel() {
+  if (!EDIT_PECAS.length) return;
+  let i = Math.floor(Math.random() * EDIT_PECAS.length);
+  if (EDIT_PECAS.length > 1)
+    while (i === REC_I) i = Math.floor(Math.random() * EDIT_PECAS.length);
+  REC_I = i;
+  const v = $("rec_video"), corte = $("rec_corte");
+  $("rec_diz").textContent = "medindo…";
+  $("rec_marca").hidden = true;
+  try {
+    const f = await EDIT_PECAS[i].h.getFile();
+    const u = URL.createObjectURL(f);
+    if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
+    v.dataset.url = u;
+    v.src = u; corte.src = u;
+    await new Promise(ok => {
+      if (v.readyState >= 1) return ok();
+      v.addEventListener("loadedmetadata", ok, { once: true });
+    });
+  } catch (e) {
+    $("rec_diz").textContent = "não consegui abrir este arquivo.";
+    return;
+  }
+  v.play().catch(() => {});
+  corte.play().catch(() => {});
+  REC_ACHADO = await acharBrollAqui(v);
+  desenhaRecorteExemplo();
+}
+
+/* O ESPELHO EXATO DO QUE O `oficina.py` GRAVA: o mesmo retângulo, na esquerda marcado
+   sobre o reel e na direita já sozinho. Se os dois lados discordassem, a conferência
+   desta tela não valeria nada. */
+function desenhaRecorteExemplo() {
+  const v = $("rec_video");
+  const lar = v.videoWidth || 1080, alt = v.videoHeight || 1920;
+  const b = REC_ACHADO || { x: 0, y: 0, w: 1, h: 1, modo: "tela cheia" };
+  const m = $("rec_marca");
+  m.hidden = false;
+  m.style.left = (b.x * 100) + "%";
+  m.style.top = (b.y * 100) + "%";
+  m.style.width = (b.w * 100) + "%";
+  m.style.height = (b.h * 100) + "%";
+
+  const pw = Math.max(1, Math.round(b.w * lar)), ph = Math.max(1, Math.round(b.h * alt));
+  const saida = $("rec_saida"), c = $("rec_corte");
+
+  /* O TAMANHO DA CAIXA DA DIREITA É CONTA, E NÃO CSS, e a razão é que o recorte muda de
+     forma a cada vídeo: há B-roll deitado e há B-roll em pé. Com `aspect-ratio` mais
+     altura fixa, o navegador calcula a largura e ignora o `max-width` na hora de refazer
+     a altura, então um recorte largo estourava a coluna e a página inteira ganhava
+     rolagem horizontal. Medido aqui na tela antes de ir para o ar. */
+  const disp = saida.parentElement ? saida.parentElement.clientWidth : 0;
+  const altura = $("rec_fonte").getBoundingClientRect().height || 420;
+  let cw = altura * pw / ph, ch = altura;
+  if (disp && cw > disp) { cw = disp; ch = disp * ph / pw; }
+  saida.style.width = Math.round(cw) + "px";
+  saida.style.height = Math.round(ch) + "px";
+  saida.style.aspectRatio = "auto";
+  c.style.width = (100 / b.w) + "%";
+  c.style.height = (100 / b.h) + "%";
+  c.style.left = (-b.x / b.w * 100) + "%";
+  c.style.top = (-b.y / b.h * 100) + "%";
+
+  $("rec_med_a").textContent = "o reel tem " + lar + " por " + alt;
+  $("rec_med_b").textContent = "o recorte sai com " + pw + " por " + ph;
+  $("rec_diz").innerHTML = b.modo === "card"
+    ? "achei o card: o recorte pega <b>só a filmagem</b>, sem o arroba e sem a legenda."
+    : "este reel <b>não tem card</b>: a filmagem ocupa o quadro inteiro, então é ele "
+      + "inteiro que vai ser gravado.";
+}
+
+$("rec_sortear").onclick = () => verOutroReel();
+
+/* -------------------------------------------------- o que já foi recortado */
+
+/** Procura na pasta `recortes` uma leva já recortada e a carrega. */
+async function procurarRecortes() {
+  // SEM ONDE OLHAR, NÃO SE APAGA O QUE JÁ SE SABE. A primeira versão zerava o estado
+  // antes de conferir se dava para conferir, e aí bastava a pasta não estar liberada
+  // naquele instante para o passo 3 destravar o passo 4 e depois trancá-lo de novo. O
+  // que se sabe só é substituído depois de olhar de verdade na pasta.
+  if (!EDIT_LEVA || !EDIT_RAIZ) return;
+  const raiz = await pastaDo("recortes", false);
+  if (!raiz) return;
+  EDIT_RECORTES = [];
+  RECORTADO = null;
+  const nome = "leva-" + EDIT_LEVA.numero;
+  let pasta = null;
+  try { pasta = await raiz.getDirectoryHandle(nome); } catch (e) { return; }
+  const arquivos = [];
+  let ficha = false;
+  for await (const [n, h] of pasta.entries()) {
+    if (h.kind !== "file") continue;
+    if (n === "_origem.json") ficha = true;
+    else if (n.toLowerCase().endsWith(".mp4")) arquivos.push({ nome: n, h });
+  }
+  if (!ficha || !arquivos.length) return;
+  arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
+  EDIT_RECORTES = arquivos;
+  RECORTADO = { pecas: arquivos.length, pasta: nome,
+                link: "estudio://recorte/" + EDIT_LEVA.numero };
+}
+
+/* DEPOIS DE RECORTAR NÃO SE OFERECE RECORTAR DE NOVO, pela mesma razão que valeu no
+   passo do template: "eu já apliquei uma vez, por que vai ser aplicado novamente?". O
+   botão fica escondido enquanto houver recorte pronto desta leva, e no lugar dele vêm
+   abrir a pasta e seguir para o template. */
+function desenhaRecortado() {
+  const tem = !!RECORTADO;
+  const r2 = $("ed_r2");
+  if (r2) r2.textContent = tem
+    ? num(RECORTADO.pecas) + (RECORTADO.pecas === 1 ? " recorte pronto" : " recortes prontos")
+    : "o B-roll de cada vídeo";
+  $("rec_aplicar").hidden = tem;
+  $("rec_feito").hidden = !tem;
+  if (!tem) return;
+  $("rec_resumo").innerHTML = "<b>" + num(RECORTADO.pecas) + "</b> "
+    + (RECORTADO.pecas === 1 ? "recorte pronto" : "recortes prontos");
+  $("rec_pasta").href = RECORTADO.link;
+}
+
+function resumoDoRecorte() {
+  if (RECORTADO) return;
+  const n = EDIT_PECAS.length;
+  $("rec_resumo").innerHTML = "<b>" + num(n) + "</b> "
+    + (n === 1 ? "peça" : "peças") + " para recortar";
+  $("rec_aplicar").textContent = "Recortar "
+    + (n === 1 ? "a peça" : "as " + num(n) + " peças");
+  $("rec_aplicar").disabled = !n;
+}
+
+/* ---------------------------------------------------------- deixar o pedido
+
+   A TELA NÃO RECORTA NADA: ela escreve o pedido e passa a olhar o andamento. Quem recorta
+   é o `oficina.py`, que roda neste computador de minuto em minuto. Por isso a primeira
+   frase que aparece é sobre a espera: sem ela, o minuto entre o clique e o primeiro sinal
+   de vida é indistinguível de tela travada. */
+$("rec_aplicar").onclick = async () => {
+  if (!EDIT_LEVA || REC_OBRA || !EDIT_PECAS.length) return;
+  $("rec_aplicar").disabled = true;
+  try {
+    const pedidos = await pastaDo("pedidos", true);
+    if (!pedidos) throw new Error("a pasta do Estúdio não está liberada");
+    await pastaDo("recortes", true);
+    const id = "r" + Date.now();
+    const pedido = {
+      id, tipo: "recorte", leva: EDIT_LEVA.numero,
+      pasta: "leva-" + EDIT_LEVA.numero, destino: "leva-" + EDIT_LEVA.numero,
+      tela: { w: 1080, h: 1920 },
+      // SEM RETÂNGULO ESCRITO AQUI: cada peça é medida na hora de gravar, porque cada
+      // reel põe a filmagem num lugar e num tamanho diferentes. Mandar um retângulo só
+      // para as cento e sete seria justamente o erro que este passo veio consertar.
+      pecas: EDIT_PECAS.map(p => ({ arquivo: p.nome }))
+    };
+    const h = await pedidos.getFileHandle(id + ".json", { create: true });
+    const w = await h.createWritable();
+    await w.write(JSON.stringify(pedido, null, 1));
+    await w.close();
+
+    REC_OBRA = { id, desde: Date.now(), total: EDIT_PECAS.length, relogio: null };
+    $("rec_obra").hidden = false;
+    $("rec_obra_txt").textContent = "pedido deixado";
+    $("rec_obra_nota").textContent = "o recorte começa em até um minuto, que é o passo do "
+      + "programa que faz esse trabalho aqui no computador.";
+    REC_OBRA.relogio = setInterval(olharORecorte, 3000);
+    olharORecorte();
+  } catch (e) {
+    $("rec_aplicar").disabled = false;
+    $("rec_obra").hidden = false;
+    $("rec_obra_txt").textContent = "não deu para deixar o pedido";
+    $("rec_obra_nota").textContent = e.message;
+  }
+};
+
+async function olharORecorte() {
+  if (!REC_OBRA) return;
+  const seg = Math.round((Date.now() - REC_OBRA.desde) / 1000);
+  $("rec_obra_tempo").textContent = seg < 60 ? seg + "s"
+    : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
+
+  const p = await pastaDo("pedidos", false);
+  if (!p) return;
+  let d = null;
+  try {
+    const f = await (await p.getFileHandle(REC_OBRA.id + ".andamento.json")).getFile();
+    d = JSON.parse(await f.text());
+  } catch (e) { return; }
+  if (!d) return;
+
+  if (d.erro) return pararORecorte("não deu: " + d.erro);
+  const feitos = d.feitos || 0, total = d.total || REC_OBRA.total;
+  $("rec_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
+  if (!d.fim) {
+    $("rec_obra_txt").textContent = "recortando " + (feitos + 1) + " de " + total;
+    $("rec_obra_nota").textContent = d.atual ? "agora: " + d.atual : "";
+    return;
+  }
+  clearInterval(REC_OBRA.relogio);
+  REC_OBRA = null;
+  const cards = d.cards || 0;
+  $("rec_obra_txt").textContent = feitos
+    + (feitos === 1 ? " recorte pronto" : " recortes prontos")
+    + (d.falhas ? ", " + d.falhas + " falharam" : "");
+  $("rec_mistura").innerHTML = "<b>" + cards + "</b> com card, <b>"
+    + Math.max(0, feitos - cards) + "</b> de tela cheia.";
+  await procurarRecortes();
+  desenhaRecortado();
+  const link = RECORTADO ? RECORTADO.link : "#";
+  $("rec_obra_nota").innerHTML = "estão em <a href=\"" + link + "\">"
+    + escapa(d.pasta || "") + "</a>. Os brutos continuam onde estavam, intactos.";
+  salvarRascunho();
+}
+
+function pararORecorte(recado) {
+  if (REC_OBRA && REC_OBRA.relogio) clearInterval(REC_OBRA.relogio);
+  REC_OBRA = null;
+  $("rec_aplicar").disabled = false;
+  $("rec_obra_txt").textContent = recado;
+}
+
+$("rec_segue").onclick = () => irParaPasso(3);
 
 /* ==================================================================== O PASSO 2
 
@@ -7593,6 +8024,7 @@ function comoRascunho(p, r) {
 }
 
 async function entrarNoTemplate() {
+  if (!EDIT_RECORTES.length) await procurarRecortes();
   const temRaiz = !!EDIT_RAIZ;
   $("tpl_porta").hidden = temRaiz;
   document.querySelectorAll('.ed-sub-tela[data-sub="1"] .tpl-abas,'
@@ -7619,13 +8051,13 @@ async function entrarNoTemplate() {
 
    ELE ESPERA AS PEÇAS, e essa foi a segunda causa do mesmo sintoma. Ao abrir a página, a
    permissão de ler a pasta volta para "perguntar", então `mostrarPecas` sai de mãos
-   vazias e `EDIT_PECAS` fica em zero. Sem peça não há vídeo de exemplo, e sem vídeo de
+   vazias e `pecas3()` fica em zero. Sem peça não há vídeo de exemplo, e sem vídeo de
    exemplo o sub-passo 3 se recusa a abrir: o rascunho parava no template mesmo tendo tudo
    guardado. Agora o pedido de retomada fica de pé até as peças chegarem, e quem as
    carrega chama de volta. */
 async function tentarRetomar() {
   if (!RETOMAR) return;
-  if (!EDIT_PECAS.length) return;          // sem peças ainda: espera a pasta ser liberada
+  if (!pecas3().length) return;          // sem peças ainda: espera a pasta ser liberada
   if (!ACERVO.itens.length) await lerAcervo();
   // RASCUNHO SEM PASSO 2 GRAVADO tenta se reconstruir pelo pedido que ele mandou montar.
   if (!RETOMAR.template) {
@@ -7654,7 +8086,7 @@ async function retomarPasso2() {
   if (r.recorte) RECORTE = { ...r.recorte };
   BROLL_MODO = r.broll === "fixo" ? "fixo" : "auto";
 
-  if (r.exemplo >= 0 && EDIT_PECAS[r.exemplo]) await usarExemplo(r.exemplo);
+  if (r.exemplo >= 0 && pecas3()[r.exemplo]) await usarExemplo(r.exemplo);
   const alvo = Math.min(4, Math.max(1, r.sub || 1));
   if (alvo > 1) irParaSub(alvo);
   // GRAVA JÁ COMPLETO. Rascunho reconstruído pelo pedido só se reconstrói uma vez: da
@@ -7699,18 +8131,18 @@ function irParaSub(n) {
 }
 
 function desenhaSubTrilho() {
-  document.querySelectorAll("#ed_sub2 li").forEach(li => {
+  document.querySelectorAll("#ed_sub3 li").forEach(li => {
     const q = Number(li.dataset.sub);
     li.classList.toggle("agora", q === TPL_SUB);
     li.classList.toggle("feito", q < TPL_SUB);
   });
-  $("ed_r2").textContent = TPL_ESCOLHIDO ? TPL_ESCOLHIDO.nome : "nenhum escolhido";
+  $("ed_r3").textContent = TPL_ESCOLHIDO ? TPL_ESCOLHIDO.nome : "nenhum escolhido";
   // A BARRA DO PASSO 2 mede o quanto dele já foi andado, e não se ele acabou.
-  const b = document.querySelector('#ed_trilho .ed-ponto[data-passo="2"] .ed-barra b');
-  if (b && EDIT_PASSO === 2) b.style.height = ((TPL_SUB - 1) / 3 * 100) + "%";
+  const b = document.querySelector('#ed_trilho .ed-ponto[data-passo="3"] .ed-barra b');
+  if (b && EDIT_PASSO === 3) b.style.height = ((TPL_SUB - 1) / 3 * 100) + "%";
 }
 
-document.querySelectorAll("#ed_sub2 li").forEach(li => {
+document.querySelectorAll("#ed_sub3 li").forEach(li => {
   li.onclick = ev => { ev.stopPropagation(); irParaSub(Number(li.dataset.sub)); };
 });
 
@@ -7918,19 +8350,19 @@ $("tpl_apontar").onclick = async () => {
    vezes tanto faz qual peça serve de exemplo, e obrigar a escolher uma entre quarenta e
    uma é cobrar uma decisão que não muda nada. Quando importa, o botão está do lado. */
 function sortear() {
-  if (!EDIT_PECAS.length) return -1;
-  if (EDIT_PECAS.length === 1) return 0;
+  if (!pecas3().length) return -1;
+  if (pecas3().length === 1) return 0;
   let n = EX_I;
-  while (n === EX_I) n = Math.floor(Math.random() * EDIT_PECAS.length);
+  while (n === EX_I) n = Math.floor(Math.random() * pecas3().length);
   return n;
 }
 
 async function usarExemplo(i) {
-  if (i < 0 || !EDIT_PECAS[i]) return;
+  if (i < 0 || !pecas3()[i]) return;
   EX_I = i;
   if (EX_URL) URL.revokeObjectURL(EX_URL);
   try {
-    const f = await EDIT_PECAS[i].h.getFile();
+    const f = await pecas3()[i].h.getFile();
     EX_URL = URL.createObjectURL(f);
   } catch (e) { EX_URL = null; }
   const v = $("ex_video");
@@ -7938,20 +8370,20 @@ async function usarExemplo(i) {
   v.onloadedmetadata = () => {
     if (v.videoWidth && v.videoHeight) ASPECTO = v.videoWidth / v.videoHeight;
     const s = Math.round(v.duration || 0);
-    const n = lerNome(EDIT_PECAS[i].nome);
+    const n = lerNome(pecas3()[i].nome);
     $("ex_dados").innerHTML = `${v.videoWidth} por ${v.videoHeight} pixels<br>`
       + `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} de duração<br>`
       + (n.indice != null ? n.indice.toFixed(2).replace(".", ",") + "x acima da mediana"
                           : "");
   };
-  $("ex_nome").textContent = EDIT_PECAS[i].nome;
+  $("ex_nome").textContent = pecas3()[i].nome;
   document.querySelectorAll("#ex_grade .ex-mini").forEach(x =>
     x.classList.toggle("ativo", Number(x.dataset.i) === i));
   anotarMexida();
 }
 
 function desenhaExemplo() {
-  if (EX_I < 0 || !EDIT_PECAS[EX_I]) usarExemplo(sortear());
+  if (EX_I < 0 || !pecas3()[EX_I]) usarExemplo(sortear());
 }
 
 $("ex_sortear").onclick = () => usarExemplo(sortear());
@@ -7959,7 +8391,7 @@ $("ex_escolher").onclick = () => {
   const g = $("ex_grade");
   if (!g.hidden) { g.hidden = true; return; }
   g.hidden = false;
-  povoarGrade(g, EDIT_PECAS.map((_, i) => i), "ex-mini");
+  povoarGrade(g, pecas3().map((_, i) => i), "ex-mini");
   document.querySelectorAll("#ex_grade .ex-mini").forEach(x =>
     x.classList.toggle("ativo", Number(x.dataset.i) === EX_I));
 };
@@ -7989,7 +8421,7 @@ function povoarGrade(alvo, indices, classe) {
 async function abrirArquivoDaGrade(v) {
   if (v.src) return;
   try {
-    const f = await EDIT_PECAS[Number(v.dataset.arq)].h.getFile();
+    const f = await pecas3()[Number(v.dataset.arq)].h.getFile();
     v.src = URL.createObjectURL(f) + "#t=1.5";
   } catch (e) { /* o arquivo saiu da pasta desde a leitura */ }
 }
@@ -8052,6 +8484,19 @@ function irNoTempo(v, t) {
   });
 }
 
+/* A JANELA DO B-ROLL, aqui no navegador, pelo mesmo método do `oficina.py`.
+
+   OS REELS MINERADOS SÃO CARTÕES DE NOTÍCIA: em cima o arroba e a legenda de quem
+   postou, pintados uma vez e parados; embaixo, dentro de um retângulo, a filmagem. O que
+   vai para a peça da Borusa é a filmagem, e o lugar e o tamanho dela mudam em cada vídeo.
+
+   POR QUE NÃO BASTA MEDIR MOVIMENTO, que era a primeira versão: movimento acha o que se
+   MEXE dentro da janela, e não a janela. Quando o fundo da filmagem é parado, uma cortina
+   ou uma parede, e só o rosto se move, o retângulo encolhia para o rosto. O Gabriel viu
+   na hora: "ele pega apenas uma parte do vídeo".
+
+   TRÊS TEMPOS: o que se mexe é a semente, a cor do card sai da margem de cima e de baixo,
+   e a janela é o trecho contínuo de linhas e colunas que não são a cor do card. */
 async function acharBrollAqui(v) {
   const N = 10, LARG = 160;
   if (!v || !v.videoWidth || !isFinite(v.duration) || v.duration <= 0) return null;
@@ -8061,7 +8506,7 @@ async function acharBrollAqui(v) {
   const g = c.getContext("2d", { willReadFrequently: true });
   const antes = v.currentTime, tocava = !v.paused;
   v.pause();
-  const cinzas = [];
+  const quadros = [];
   try {
     // AS PONTAS FICAM DE FORA. A legenda de muitos reels ENTRA animada nos primeiros
     // segundos, e nesse intervalo ela se mexe igual à filmagem: o detector a incluía no
@@ -8071,43 +8516,107 @@ async function acharBrollAqui(v) {
     for (let i = 0; i < N; i++) {
       await irNoTempo(v, v.duration * (INI + (FIM - INI) * (i + 0.5) / N));
       g.drawImage(v, 0, 0, LARG, ALT);
-      const d = g.getImageData(0, 0, LARG, ALT).data;
-      const cinza = new Uint8Array(LARG * ALT);
-      for (let p = 0, k = 0; k < cinza.length; k++, p += 4)
-        cinza[k] = (d[p] * 299 + d[p + 1] * 587 + d[p + 2] * 114) / 1000;
-      cinzas.push(cinza);
+      quadros.push(g.getImageData(0, 0, LARG, ALT).data);
     }
   } catch (e) { return null; }
   finally {
     v.currentTime = antes;
     if (tocava) v.play().catch(() => {});
   }
-  if (cinzas.length < 3) return null;
-
+  if (quadros.length < 3) return null;
+  const inteiro = { x: 0, y: 0, w: 1, h: 1, modo: "tela cheia" };
   const n = LARG * ALT;
+
+  // 1 ..... a semente: o que se mexe. Linha ou coluna só conta se boa parte dela mexeu;
+  // um ponto solto variando por ruído de compressão existe em toda parte.
   const mexe = new Uint8Array(n);
-  for (let k = 0; k < n; k++) {
+  for (let k = 0, p = 0; k < n; k++, p += 4) {
     let mn = 255, mx = 0;
-    for (const q of cinzas) { const g2 = q[k]; if (g2 < mn) mn = g2; if (g2 > mx) mx = g2; }
+    for (const q of quadros) {
+      const cz = (q[p] * 299 + q[p + 1] * 587 + q[p + 2] * 114) / 1000;
+      if (cz < mn) mn = cz;
+      if (cz > mx) mx = cz;
+    }
     mexe[k] = (mx - mn) > 10 ? 1 : 0;
   }
-  // LINHA OU COLUNA SÓ CONTA SE BOA PARTE DELA MEXEU. Um ponto solto variando por ruído
-  // de compressão existe em toda parte; o que marca a filmagem é a linha inteira mudando.
+  const linhaDe = m => { const r = new Float32Array(ALT);
+    for (let y = 0; y < ALT; y++) { let s = 0;
+      for (let x = 0; x < LARG; x++) s += m[y * LARG + x]; r[y] = s / LARG; } return r; };
+  const colunaDe = (m, a, b) => { const r = new Float32Array(LARG), h = b - a + 1;
+    for (let x = 0; x < LARG; x++) { let s = 0;
+      for (let y = a; y <= b; y++) s += m[y * LARG + x]; r[x] = s / h; } return r; };
+
+  const pm = linhaDe(mexe);
   let y0 = -1, y1 = -1, x0 = -1, x1 = -1;
-  for (let y = 0; y < ALT; y++) {
-    let s = 0;
-    for (let x = 0; x < LARG; x++) s += mexe[y * LARG + x];
-    if (s / LARG > 0.18) { if (y0 < 0) y0 = y; y1 = y; }
-  }
-  for (let x = 0; x < LARG; x++) {
-    let s = 0;
-    for (let y = 0; y < ALT; y++) s += mexe[y * LARG + x];
-    if (s / ALT > 0.18) { if (x0 < 0) x0 = x; x1 = x; }
-  }
+  for (let y = 0; y < ALT; y++) if (pm[y] > 0.18) { if (y0 < 0) y0 = y; y1 = y; }
+  const pmx = colunaDe(mexe, 0, ALT - 1);
+  for (let x = 0; x < LARG; x++) if (pmx[x] > 0.18) { if (x0 < 0) x0 = x; x1 = x; }
   if (y0 < 0 || x0 < 0) return null;
-  const larg = (x1 - x0 + 1) / LARG, alt = (y1 - y0 + 1) / ALT;
-  if (larg * alt < 0.05) return null;
-  return { x: x0 / LARG, y: y0 / ALT, w: larg, h: alt };
+
+  // 2 ..... a cor do card, tirada da margem de cima e da de baixo. São as duas que num
+  // card são SEMPRE fundo: o arroba mora no alto e o retângulo nunca encosta na borda
+  // superior. A esquerda e a direita não servem, porque há janela que vai de ponta a
+  // ponta na largura.
+  const m = Math.max(2, Math.round(ALT * 0.02));
+  const meio = (h, total) => { let acc = 0;
+    for (let i = 0; i < 256; i++) { acc += h[i]; if (acc * 2 >= total) return i; } return 0; };
+  const hist = [new Uint32Array(256), new Uint32Array(256), new Uint32Array(256)];
+  let quantos = 0;
+  const naBorda = f => { for (let y = 0; y < m; y++) for (const yy of [y, ALT - 1 - y])
+      for (let x = 0; x < LARG; x++) f((yy * LARG + x) * 4); };
+  for (const q of quadros) naBorda(p => {
+    hist[0][q[p]]++; hist[1][q[p + 1]]++; hist[2][q[p + 2]]++; quantos++;
+  });
+  const cor = [meio(hist[0], quantos), meio(hist[1], quantos), meio(hist[2], quantos)];
+  const hl = new Uint32Array(256);
+  let ql = 0;
+  for (const q of quadros) naBorda(p => {
+    hl[Math.max(Math.abs(q[p] - cor[0]), Math.abs(q[p + 1] - cor[1]),
+                Math.abs(q[p + 2] - cor[2]))]++; ql++;
+  });
+  const liso = meio(hl, ql);
+  if (liso > 26) return inteiro;                  // margem viva: não há card
+
+  // 3 ..... o que NÃO é o fundo do card. A tolerância acompanha o quanto a margem é
+  // lisa: card preto cravado aceita desvio pequeno como sinal.
+  const tol = Math.max(10, liso * 2 + 8);
+  const janela = new Uint8Array(n);
+  for (let k = 0, p = 0; k < n; k++, p += 4) {
+    let d = 0;
+    for (const q of quadros) {
+      const e = Math.max(Math.abs(q[p] - cor[0]), Math.abs(q[p + 1] - cor[1]),
+                         Math.abs(q[p + 2] - cor[2]));
+      if (e > d) d = e;
+    }
+    janela[k] = (d > tol || mexe[k]) ? 1 : 0;
+  }
+
+  // 4 ..... a janela é o TRECHO CONTÍNUO de linhas cheias em volta da semente, mais a
+  // RAMPA das pontas. Um limite só era frágil pelos dois lados: limite alto parava dentro
+  // da filmagem quando o topo dela era escuro, limite baixo vazava para a legenda.
+  const trecho = (perfil, centro, chao, beira) => {
+    const lim = Math.max(chao, perfil[centro] * 0.6);
+    let a = centro, b = centro;
+    while (a > 0 && perfil[a - 1] >= lim) a--;
+    while (b < perfil.length - 1 && perfil[b + 1] >= lim) b++;
+    while (a > 0 && perfil[a - 1] > beira) a--;
+    while (b < perfil.length - 1 && perfil[b + 1] > beira) b++;
+    return [a, b];
+  };
+  const cy = (y0 + y1) >> 1, cx = (x0 + x1) >> 1;
+  [y0, y1] = trecho(linhaDe(janela), cy, 0.30, 0.10);
+  // NA LARGURA O CHÃO É BAIXO DE PROPÓSITO: dentro da faixa de linhas da janela, a coluna
+  // de fundo do card dá zero cravado, então qualquer sinal já é janela. Com chão alto,
+  // filmagem escura (o interior de um carro) virava fundo e o recorte comia a lateral.
+  [x0, x1] = trecho(colunaDe(janela, y0, y1), cx, 0.15, 0.04);
+  const pd = new Float32Array(ALT), largura = x1 - x0 + 1;
+  for (let y = 0; y < ALT; y++) { let s = 0;
+    for (let x = x0; x <= x1; x++) s += janela[y * LARG + x]; pd[y] = s / largura; }
+  [y0, y1] = trecho(pd, cy, 0.30, 0.10);
+
+  if ((y1 - y0 + 1) * (x1 - x0 + 1) > 0.92 * ALT * LARG) return inteiro;
+  return { x: x0 / LARG, y: y0 / ALT, w: (x1 - x0 + 1) / LARG,
+           h: (y1 - y0 + 1) / ALT, modo: "card" };
 }
 
 /** O vídeo inteiro, já na proporção da moldura. É o que vale quando não se acha nada. */
@@ -8129,7 +8638,7 @@ async function abrirEnquadramento() {
   if (v.dataset.i !== String(alvo)) {
     v.dataset.i = String(alvo);
     try {
-      const f = await EDIT_PECAS[alvo].h.getFile();
+      const f = await pecas3()[alvo].h.getFile();
       if (v.src) URL.revokeObjectURL(v.src);
       const end = URL.createObjectURL(f);
       v.src = end;
@@ -8165,7 +8674,7 @@ async function abrirEnquadramento() {
 
   $("enq_nav").hidden = APL_MODO !== "uma";
   if (APL_MODO === "uma")
-    $("enq_qual").textContent = `peça ${alvo + 1} de ${EDIT_PECAS.length}`;
+    $("enq_qual").textContent = `peça ${alvo + 1} de ${pecas3().length}`;
 }
 
 function desenhaRecorte() {
@@ -8344,20 +8853,20 @@ $("enq_ant").onclick = () => {
   if (ENQ_UMA > 0) { ENQ_UMA--; abrirEnquadramento(); }
 };
 $("enq_prox").onclick = () => {
-  if (ENQ_UMA < EDIT_PECAS.length - 1) { ENQ_UMA++; abrirEnquadramento(); }
+  if (ENQ_UMA < pecas3().length - 1) { ENQ_UMA++; abrirEnquadramento(); }
   else irParaSub(4);
 };
 
 /* ---------------------------------------------------------- 2.4 · a quem se aplica */
 function desenhaAplicar() {
-  $("apl_n_todas").textContent = EDIT_PECAS.length
-    + (EDIT_PECAS.length === 1 ? " peça" : " peças");
+  $("apl_n_todas").textContent = pecas3().length
+    + (pecas3().length === 1 ? " peça" : " peças");
   document.querySelectorAll(".apl-op").forEach(b =>
     b.classList.toggle("ativa", b.dataset.modo === APL_MODO));
   const g = $("apl_grade");
   g.hidden = APL_MODO !== "algumas";
   if (APL_MODO === "algumas" && !g.dataset.cheia) {
-    povoarGrade(g, EDIT_PECAS.map((_, i) => i), "apl-mini");
+    povoarGrade(g, pecas3().map((_, i) => i), "apl-mini");
     g.dataset.cheia = "1";
     g.querySelectorAll(".apl-mini").forEach(m =>
       m.classList.toggle("marcado", APL_MARCADAS.has(Number(m.dataset.i))));
@@ -8367,7 +8876,7 @@ function desenhaAplicar() {
 
 function alvosDaMontagem() {
   if (APL_MODO === "algumas") return [...APL_MARCADAS].sort((a, b) => a - b);
-  return EDIT_PECAS.map((_, i) => i);
+  return pecas3().map((_, i) => i);
 }
 
 function resumoDeAplicar() {
@@ -8437,6 +8946,9 @@ $("apl_montar").onclick = async () => {
     const pedido = {
       id, leva: EDIT_LEVA.numero,
       pasta: `leva-${EDIT_LEVA.numero}`, destino,
+      // A FONTE É A PASTA DOS RECORTES, e não mais a do bruto: o passo 2 já tirou o
+      // arroba e a legenda de quem postou, e o que sobrou no arquivo é só o B-roll.
+      fonte: EDIT_RECORTES.length ? "recortes" : "levas",
       template: TPL_ESCOLHIDO.id, tela: { w: TELA.w, h: TELA.h },
       // A MOLDURA VAI JUNTO. É ela que o montador usa para recortar: sem ela, ele volta
       // a colar o vídeo por cima da peça inteira, que foi o erro da primeira versão.
@@ -8452,7 +8964,7 @@ $("apl_montar").onclick = async () => {
       // restantes herdarem em silêncio um enquadramento pensado para outra: o pedido
       // saía plausível e errado, que é o pior tipo de errado.
       pecas: alvos.map(i => {
-        const p = { arquivo: EDIT_PECAS[i].nome };
+        const p = { arquivo: pecas3()[i].nome };
         // NO MODO UMA A UMA o recorte de cada peça é o que ele acertou nela. Peça que
         // ele não abriu fica sem recorte, e aí o programa que monta acha o B-roll dela
         // sozinho, que é o comportamento certo e não a caixa da última peça mexida.
@@ -8517,7 +9029,7 @@ async function olharAObra() {
   $("apl_obra_nota").innerHTML = `estão em <a href="${link}">${escapa(d.pasta || "")}</a>`
     + ". Os vídeos brutos continuam onde estavam, intactos.";
   desenhaFeito();
-  irParaPasso(3);
+  irParaPasso(4);
 }
 
 /* DEPOIS DE MONTAR NÃO SE OFERECE MONTAR DE NOVO.
@@ -8525,7 +9037,7 @@ async function olharAObra() {
    Decisão do Gabriel em 20/08/2026, e a frase dele encerra o assunto: "eu já apliquei uma
    vez, por que vai ser aplicado novamente? não faz sentido". O botão de montar sai de
    cena e no lugar vêm os dois que importam: abrir a pasta com as peças prontas e seguir
-   para o passo 3.
+   para o passo 4.
 
    ELE DEIXOU RESSALVA de que um dia o botão talvez volte, então ele não foi apagado: fica
    escondido enquanto houver montagem cumprida desta leva. */
@@ -8543,7 +9055,7 @@ function desenhaFeito() {
   $("pos_abrir").href = MONTADO.link;
 }
 
-$("apl_segue").onclick = () => irParaPasso(3);
+$("apl_segue").onclick = () => irParaPasso(4);
 
 function pararDeOlhar() {
   if (OBRA && OBRA.relogio) clearInterval(OBRA.relogio);
