@@ -6681,19 +6681,63 @@ async function salvarRascunho() {
     const todos = (await listarRascunhos()) || [];
     EDIT_RASCUNHO = todos.find(x => x.leva === EDIT_LEVA.numero) || null;
   }
+  /* O RASCUNHO GUARDA O PASSO 2 INTEIRO, e não só o número do passo.
+
+     ELE NÃO GUARDAVA NADA DISSO, e o Gabriel bateu de frente com isso em 20/08/2026: ele
+     tinha parado no sub-passo 4, "a quem se aplica", já com template escolhido e
+     enquadramento acertado. Ao abrir o rascunho no dia seguinte, voltou para o sub-passo
+     1, escolher o template, com tudo perdido. A frase dele foi certeira: "assim o
+     rascunho nem tem serventia, nem faz sentido existir".
+
+     Estava certo. O que se guardava era `passo`, que só vale 1 ou 2, e o passo 2 tem
+     quatro sub-passos dentro dele mais o template, o vídeo de exemplo, a moldura, o
+     enquadramento, o alcance e as peças marcadas. Nada disso sobrevivia. */
   const r = {
     id: EDIT_RASCUNHO ? EDIT_RASCUNHO.id : `e${Date.now()}`,
     leva: EDIT_LEVA.numero,
     contas: EDIT_LEVA.contas || [],
     pecas: EDIT_PECAS.length,
     passo: EDIT_PASSO,
+    sub: TPL_SUB,
+    template: TPL_ESCOLHIDO ? TPL_ESCOLHIDO.id : null,
+    exemplo: EX_I,
+    janela: { ...JANELA },
+    caixa: { ...CAIXA },
+    modo: APL_MODO,
+    marcadas: [...APL_MARCADAS],
+    // O ENQUADRAMENTO PEÇA A PEÇA, do modo uma a uma. Sem isto, quem tivesse acertado
+    // trinta peças à mão perderia as trinta ao fechar a aba.
+    caixas: [...CAIXAS.entries()],
     mexido: Math.floor(Date.now() / 1000),
   };
   if (!EDIT_RASCUNHO) r.aberto = r.mexido;
   else r.aberto = EDIT_RASCUNHO.aberto || r.mexido;
   EDIT_RASCUNHO = r;
   await noCofre(COFRE.rascunhos, true, s => s.put(r));
-  desenhaRascunhos();
+  // A LISTA SÓ SE REDESENHA QUANDO ELA ESTÁ NA FRENTE DELE. Redesenhar a portaria a cada
+  // gravação significa reler o banco do navegador inteiro no meio de um arrasto.
+  if (!$("ed_portaria").hidden) desenhaRascunhos();
+}
+
+/* GRAVAR DEPOIS QUE A MÃO PARA, e não a cada quadro do arrasto. Mexer no enquadramento
+   dispara dezenas de mudanças por segundo; gravar em todas encheria o banco do navegador
+   de escrita à toa e engasgaria o arrasto. Seiscentos milissegundos de silêncio bastam
+   para saber que ele parou de mexer. */
+let RELOGIO_DO_RASCUNHO = null;
+function anotarMexida() {
+  if (RELOGIO_DO_RASCUNHO) clearTimeout(RELOGIO_DO_RASCUNHO);
+  RELOGIO_DO_RASCUNHO = setTimeout(() => {
+    RELOGIO_DO_RASCUNHO = null;
+    salvarRascunho();
+  }, 600);
+}
+
+/** A frase do cartão: onde ele parou, em palavras, e não "no passo 2". */
+function ondeParou(r) {
+  if ((r.passo || 1) < 2) return "vendo as peças da leva";
+  return ["", "escolhendo o template", "escolhendo o vídeo de exemplo",
+          "acertando o enquadramento", "pronto para montar"][r.sub || 1]
+         || "no template";
 }
 
 async function desenhaRascunhos() {
@@ -6707,7 +6751,7 @@ async function desenhaRascunhos() {
       <span class="ed-rasc-n">Leva ${r.leva}</span>
       <span class="ed-rasc-quem">${(r.contas || []).length
         ? "@" + r.contas.join(", @") : "todos os perfis"}</span>
-      <span class="ed-rasc-onde">no passo ${r.passo}${
+      <span class="ed-rasc-onde">${ondeParou(r)}${
         r.pecas ? ` · ${r.pecas} peças` : ""}</span>
       <span class="ed-rasc-quando">${quando(r.mexido)}</span>
       <button class="ed-rasc-x" type="button" data-apagar="${r.id}"
@@ -6732,7 +6776,7 @@ $("ed_rasc_lista").addEventListener("click", async ev => {
   if (!r) return;
   EDIT_RASCUNHO = r;
   EDIT_LEVA = (LOTES || []).find(l => l.numero === r.leva) || { numero: r.leva };
-  await entrarNaOficina(r.passo || 1);
+  await entrarNaOficina(r.passo || 1, r);
 });
 
 /* ----------------------------------------------------- trocar de tela
@@ -6834,7 +6878,7 @@ $("ed_levas").addEventListener("click", async ev => {
    A ANIMAÇÃO NÃO É ENFEITE: ela é o que separa "escolhi" de "comecei". As barras do
    trilho nascem em zero e sobem, e os passos entram um atrás do outro. Sem isso a troca
    de tela é um pisca, e a oficina parece que já estava aberta. */
-async function entrarNaOficina(passo) {
+async function entrarNaOficina(passo, rasc) {
   // ENTRAR NA OFICINA NÃO ESPERA NADA, e essa foi a queixa do Gabriel em 19/08/2026:
   // depois dos ajustes de fluidez ele sentiu a troca MAIS lenta, e estava certo. Eu
   // tinha somado 130 milissegundos de saída da tela anterior a 380 de entrada desta,
@@ -6855,12 +6899,29 @@ async function entrarNaOficina(passo) {
   void $("ed_trilho").offsetWidth;          // força o navegador a aceitar o recomeço
   $("ed_trilho").classList.add("entrou");
 
+  // O QUE RETOMAR FICA GUARDADO AQUI ATÉ O ACERVO ABRIR. O passo 2 só consegue voltar
+  // ao lugar certo depois de ler o acervo de templates, que mora numa pasta do disco e
+  // demora alguns milissegundos. Guardar o rascunho num canto e deixar o passo 2 pegá-lo
+  // quando estiver pronto evita uma corrida entre as duas coisas.
+  RETOMAR = rasc || null;
+  if (!rasc) esquecerPasso2();     // leva nova entra limpa, sem herdar a anterior
+
+  // AS PEÇAS PRIMEIRO. Sem elas não há vídeo de exemplo para retomar, e o passo 2 fica
+  // preso no sub-passo 1 por falta de peça, que era exatamente o sintoma.
+  await mostrarPecas();
   irParaPasso(passo || 1);
-  // AS PEÇAS PRIMEIRO, O RASCUNHO DEPOIS. Gravar o rascunho são duas idas ao banco do
-  // navegador, e nenhuma delas precisa acontecer antes de a tela ter o que mostrar.
-  const pecas = mostrarPecas();
-  salvarRascunho();
-  await pecas;
+  if ((passo || 1) < 2) salvarRascunho();
+}
+
+/** Apaga o passo 2 da memória da tela. Leva nova não herda template da leva anterior. */
+function esquecerPasso2() {
+  TPL_ESCOLHIDO = null;
+  TPL_SUB = 1;
+  EX_I = -1;
+  APL_MODO = "todas";
+  APL_MARCADAS.clear();
+  CAIXAS.clear();
+  ENQ_UMA = -1;
 }
 
 /* -------------------------------------------------------------- o trilho */
@@ -7375,7 +7436,9 @@ function medirImagem(file) {
 }
 
 /* ---------------------------------------------------------- entrar no passo 2 */
-function entrarNoTemplate() {
+let RETOMAR = null;             // o rascunho esperando para ser aberto
+
+async function entrarNoTemplate() {
   const temRaiz = !!EDIT_RAIZ;
   $("tpl_porta").hidden = temRaiz;
   document.querySelectorAll('.ed-sub-tela[data-sub="1"] .tpl-abas,'
@@ -7386,7 +7449,39 @@ function entrarNoTemplate() {
     });
   desenhaSeletoresDoTemplate();
   desenhaSubTrilho();
-  if (temRaiz) lerAcervo().then(desenhaAcervo);
+  if (!temRaiz) return;
+  await lerAcervo();
+  await retomarPasso2();
+  await desenhaAcervo();
+}
+
+/* VOLTAR PARA ONDE ELE PAROU, e não para o começo.
+
+   Cada coisa é reposta na ordem em que o passo 2 precisa dela: primeiro o template,
+   porque ele define o tamanho da peça e a moldura; depois o vídeo de exemplo, porque sem
+   ele o sub-passo 3 não tem o que enquadrar; depois o enquadramento e o alcance. Só no
+   fim se anda até o sub-passo guardado, porque `irParaSub` recusa avançar sem o anterior
+   resolvido, e é isso que fazia o rascunho cair sempre no sub-passo 1. */
+async function retomarPasso2() {
+  const r = RETOMAR;
+  RETOMAR = null;
+  if (!r || !r.template) return;
+
+  const item = ACERVO.itens.find(x => x.id === r.template);
+  if (!item) return;            // o template saiu do acervo desde então
+  TPL_ESCOLHIDO = item;
+  TELA = { w: item.w || 1080, h: item.h || 1920 };
+  JANELA = { ...(r.janela || item.janela || { x: 0, y: 0, w: TELA.w, h: TELA.h }) };
+  APL_MODO = r.modo || "todas";
+  APL_MARCADAS.clear();
+  for (const i of (r.marcadas || [])) APL_MARCADAS.add(i);
+  CAIXAS.clear();
+  for (const [i, c] of (r.caixas || [])) CAIXAS.set(Number(i), c);
+  if (r.caixa) CAIXA = { ...r.caixa };
+
+  if (r.exemplo >= 0 && EDIT_PECAS[r.exemplo]) await usarExemplo(r.exemplo);
+  const alvo = Math.min(4, Math.max(1, r.sub || 1));
+  if (alvo > 1) irParaSub(alvo);
 }
 
 function abaDoTemplate() {
@@ -7415,6 +7510,7 @@ function podeIrAoSub(n) {
 function irParaSub(n) {
   if (!podeIrAoSub(n)) return;
   TPL_SUB = n;
+  anotarMexida();               // o rascunho tem de saber em qual sub-passo ele está
   document.querySelectorAll(".ed-sub-tela").forEach(s =>
     s.hidden = Number(s.dataset.sub) !== n);
   desenhaSubTrilho();
@@ -7525,6 +7621,7 @@ async function escolherTemplate(item) {
   JANELA = { ...item.janela };
   desenhaAcervo();
   irParaSub(2);
+  anotarMexida();
 }
 
 /** Guarda na ficha do template a moldura como ele deixou. */
@@ -7672,6 +7769,7 @@ async function usarExemplo(i) {
   $("ex_nome").textContent = EDIT_PECAS[i].nome;
   document.querySelectorAll("#ex_grade .ex-mini").forEach(x =>
     x.classList.toggle("ativo", Number(x.dataset.i) === i));
+  anotarMexida();
 }
 
 function desenhaExemplo() {
@@ -7824,6 +7922,7 @@ function desenhaCaixa() {
   $("enq_janela_med").textContent = `${Math.round(JANELA.w)} por ${Math.round(JANELA.h)}`
     + `  ·  x ${Math.round(JANELA.x)}, y ${Math.round(JANELA.y)}`;
   if (APL_MODO === "uma" && ENQ_UMA >= 0) CAIXAS.set(ENQ_UMA, { ...CAIXA });
+  anotarMexida();
 }
 
 /* ------------------------------------------------- os dois modos de mexer */
@@ -7982,6 +8081,7 @@ function resumoDeAplicar() {
 document.querySelectorAll(".apl-op").forEach(b => {
   b.onclick = () => {
     APL_MODO = b.dataset.modo;
+    anotarMexida();
     if (APL_MODO === "uma") {
       // UMA A UMA É VOLTAR PARA O ENQUADRAMENTO, e não uma tela nova. A ferramenta é a
       // mesma; o que muda é que agora ela anda peça por peça e guarda a caixa de cada.
@@ -8000,6 +8100,7 @@ $("apl_grade").addEventListener("click", ev => {
   if (APL_MARCADAS.has(i)) APL_MARCADAS.delete(i); else APL_MARCADAS.add(i);
   m.classList.toggle("marcado", APL_MARCADAS.has(i));
   resumoDeAplicar();
+  anotarMexida();
 });
 
 /* ---------------------------------------------------------- deixar o pedido
