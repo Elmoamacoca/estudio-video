@@ -21,6 +21,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<!-- AS FONTES DA PEÇA, que são outra coisa: estas não desenham a tela, elas desenham o
+     reel. Entraram em 21/08 porque o seletor tinha sete opções e o Gabriel disse o
+     óbvio, "era pra ter vários outros tipos de fonte".
+
+     ELAS PRECISAM EXISTIR NOS DOIS LADOS. Aqui o navegador as busca no Google para
+     mostrar; na hora de gravar quem desenha é o `oficina.py`, que lê os mesmos arquivos
+     de `Estudio/fontes`. Fonte que existisse só de um lado faria a peça sair diferente
+     do que ele viu na tela, e é por isso que a lista dos dois lados é a mesma. -->
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Barlow+Condensed:wght@400;700&family=Bebas+Neue&family=Inter:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;700&family=Roboto+Condensed:wght@400;700&display=swap">
 <style>
 
 
@@ -1838,6 +1848,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 /* ------------------------------------------------------ a porta da pasta */
 .ed-porta{margin-bottom:20px}
+.ed-caminho+.nota.mini{margin-top:10px}
 .ed-caminho{margin:12px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,
   monospace;font-size:12.5px;color:var(--ink);background:var(--paper-2);
   border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
@@ -1989,7 +2000,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    passo: quatro sub-itens abertos o tempo todo transformariam a espinha num índice. */
 .ed-sub{list-style:none;margin:10px 0 0;padding:0;display:none;flex-direction:column;
   gap:7px}
-.ed-ponto[data-passo="2"].ativo .ed-sub{display:flex}
+.ed-ponto[data-passo="3"].ativo .ed-sub{display:flex}
 .ed-sub li{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);
   cursor:pointer;opacity:.55;transition:opacity .18s,color .18s}
 .ed-sub li i{flex:0 0 7px;width:7px;height:7px;border-radius:50%;
@@ -2363,6 +2374,187 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .tpl-subir,.ex-linha,.enq-linha{grid-template-columns:1fr}
 }
 
+
+/* ==================================================================== ABA · CONFIGURAÇÕES
+
+   O DESENHO É O DO SOCIAL TRACKER, e é cópia de propósito. O Gabriel mandou a chave da IA
+   sair de dentro da edição em 21/08/2026 e apontou para onde ela devia ir: "é que nem tem
+   agora do Social Tracker; se não sabe do que eu estou falando, vai no Social Tracker pra
+   ver". Duas telas do mesmo dono que se configuram de dois jeitos diferentes é uma a mais
+   para aprender sem motivo nenhum. */
+
+.cfg-corpo{display:flex;gap:0;min-height:min(74vh,760px);
+  border:1px solid var(--rule-solid);border-radius:16px;overflow:hidden;
+  background:var(--paper)}
+
+.cfg-menu{width:260px;flex:0 0 260px;display:flex;flex-direction:column;padding:12px;
+  border-right:1px solid var(--rule-solid);background:var(--paper-2)}
+.cfg-menu-topo{display:flex;align-items:center;gap:11px;padding:6px 8px 14px 6px;
+  border-bottom:1px solid var(--rule-solid);margin-bottom:14px}
+.cfg-menu-id{display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.cfg-menu-id b{font-size:13px;font-weight:600;letter-spacing:-.1px;line-height:1}
+.cfg-menu-id span{font-size:11px;color:var(--muted);line-height:1}
+.cfg-menu-rolo{flex:1;display:flex;flex-direction:column;gap:16px}
+.cfg-grupo{display:flex;flex-direction:column;gap:2px}
+.cfg-grupo-tit{padding:0 8px 6px;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted)}
+.cfg-item{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px;border-radius:9px;color:var(--muted);text-decoration:none;
+  font-size:13px;transition:background .15s ease,color .15s ease}
+.cfg-item:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);
+  color:var(--ink);text-decoration:none}
+.cfg-item.cfg-ativo{background:color-mix(in srgb,var(--ink) 7%,transparent);
+  color:var(--ink);font-weight:600}
+.cfg-item-esq{display:flex;align-items:center;gap:10px;min-width:0}
+.cfg-ic{width:16px;height:16px;flex:0 0 16px;color:var(--muted)}
+.cfg-item.cfg-ativo .cfg-ic{color:var(--ink)}
+.cfg-menu-pe{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--rule-solid)}
+.cfg-menu-pe .nota{margin:0}
+
+.cfg-conteudo{flex:1;min-width:0;padding:26px 28px 32px;overflow:auto}
+.cfg-pagina{display:none}
+.cfg-pagina.cfg-ativa{display:block;animation:sub-entra .24s cubic-bezier(.16,1,.3,1) both}
+@media(prefers-reduced-motion:reduce){.cfg-pagina.cfg-ativa{animation:none}}
+.cfg-pagina-cab{margin-bottom:20px}
+.cfg-pagina-cab h2{margin:0 0 5px;font-size:21px;letter-spacing:-.3px}
+.cfg-pagina-cab p{margin:0;color:var(--muted);font-size:13.5px}
+.cfg-pagina .caixa{margin-bottom:16px}
+
+.cfg-linhas{display:flex;flex-direction:column;gap:2px}
+.cfg-linha{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:12px 0;border-bottom:1px solid var(--rule-solid)}
+.cfg-linha:last-child{border-bottom:0;padding-bottom:0}
+.cfg-linha .dir{flex:0 0 auto;display:flex;align-items:center;gap:9px}
+.cfg-nome{font-size:14px;font-weight:600;margin-bottom:3px}
+.cfg-desc{font-size:12.5px;line-height:1.55;color:var(--muted);max-width:62ch}
+
+.cfg-pares{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:2px}
+.cfg-pares.cfg-uma{grid-template-columns:1fr}
+.cfg-par{display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid var(--rule-solid);font-size:13px;color:var(--muted)}
+.cfg-par:last-child{border-bottom:0}
+.cfg-par b{margin-left:auto;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+.cfg-glossario{display:flex;flex-direction:column;gap:14px}
+.cfg-glo-t{display:flex;align-items:center;gap:8px;margin-bottom:3px;font-size:13.5px}
+.cfg-glo span{font-size:12.5px;line-height:1.55;color:var(--muted)}
+
+/* OS CAMPOS. Nada de widget cru do navegador aqui: a escolha de serviço usa o mesmo
+   `psel` do resto do sistema, que foi exatamente a bronca do Gabriel na fase 3. */
+.cfg-campos{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.cfg-campo{display:flex;flex-direction:column;gap:6px;min-width:190px}
+.cfg-campo.cresce{flex:1 1 230px}
+.cfg-campo>span{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+.cfg-campo input,.cfg-pagina textarea{width:100%;padding:9px 11px;font:inherit;
+  font-size:13.5px;color:var(--ink);background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:9px;outline:0}
+.cfg-pagina textarea{line-height:1.55;resize:vertical;min-height:120px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.cfg-campo input:focus,.cfg-pagina textarea:focus{border-color:var(--accent)}
+.cfg-pe{display:flex;align-items:center;gap:12px;padding-top:6px}
+.cfg-recado{font-size:12.5px;color:var(--muted)}
+.cfg-pe .acao.forte{margin-left:auto}
+
+/* A AMOSTRA DE CADA FONTE, escrita na própria fonte. Uma lista de nomes não diz nada:
+   o que se escolhe aqui é o desenho da letra, então ele tem de estar na tela. */
+.cfg-mostra{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:2px}
+.cfg-fonte{display:flex;align-items:baseline;gap:10px;padding:11px 2px;
+  border-bottom:1px solid var(--rule-solid);min-width:0}
+.cfg-fonte i{font-style:normal;font-size:10.5px;color:var(--muted);
+  flex:0 0 auto;letter-spacing:.02em}
+.cfg-fonte b{font-size:19px;font-weight:700;line-height:1.1;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+
+@media(max-width:880px){
+  .cfg-corpo{flex-direction:column}
+  .cfg-menu{width:auto;flex:1 1 auto;border-right:0;
+    border-bottom:1px solid var(--rule-solid)}
+  .cfg-menu-rolo{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .cfg-conteudo{padding:20px 16px 26px}
+}
+
+
+/* ==================================================== FASE 3 · A IA, SÓ A ESPERA
+
+   ELA NÃO PERGUNTA MAIS NADA. Antes era uma lista de 107 caixas de texto, uma por peça,
+   e o Gabriel cortou: "é pra literalmente eu ter apenas a tela de carregamento da IA
+   escrevendo, algo parecido com o recorte". */
+.ia-pronta{display:flex;align-items:center;gap:18px;padding:18px 20px;
+  border:1px solid var(--rule-solid);border-radius:14px;background:var(--paper-2)}
+.ia-pronta-txt{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ia-pronta-txt b{font-size:14.5px}
+.ia-pronta-txt .nota{margin:0}
+.ia-pronta .acao{margin-left:auto;flex:0 0 auto}
+
+
+/* ============================================== FASE 4 · A GALERIA DAS PEÇAS PRONTAS
+
+   O QUE ELE PEDIU, com estas palavras: "a tela mostrando como ficou, para no mais tardar
+   eu ajustar na mão, depois clicar em um botão para fabricar". Então cada peça aqui é
+   desenhada, e não fabricada: aparece na hora, e a conversão só roda no fim. */
+.gal-topo{display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.gal-conta{font-size:13.5px;color:var(--muted)}
+.gal-conta b{color:var(--ink)}
+.gal-acoes{display:flex;align-items:center;gap:10px;margin-left:auto}
+
+.gal-grade{display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+.gal-peca{border:1px solid var(--rule-solid);border-radius:12px;overflow:hidden;
+  background:var(--paper-2);cursor:pointer;transition:border-color .15s ease,
+  transform .15s ease}
+.gal-peca:hover{border-color:var(--accent);transform:translateY(-2px)}
+.gal-peca.mexida{border-color:var(--accent)}
+
+/* A PEÇA EM MINIATURA. `container-type:size` faz o tamanho da letra ser fração da altura
+   da peça, igual ao editor e igual ao que o `oficina.py` calcula na hora de gravar: é o
+   que garante que a miniatura mostre a mesma proporção do arquivo. */
+.gal-tela{position:relative;aspect-ratio:9/16;overflow:hidden;container-type:size;
+  background:#000}
+.gal-tela video,.gal-tela .gal-broll{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:fill;display:block}
+.gal-el{position:absolute;white-space:pre-wrap;word-break:break-word;
+  line-height:1.22;pointer-events:none}
+.gal-el img{width:100%;height:100%;object-fit:contain;display:block}
+.gal-pe{display:flex;align-items:center;gap:7px;padding:8px 10px;font-size:11.5px;
+  color:var(--muted)}
+.gal-pe b{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.gal-pe .gal-selo{margin-left:auto;flex:0 0 auto;font-size:10px;padding:2px 7px;
+  border-radius:999px;background:var(--accent-tint);color:var(--accent)}
+
+/* A PEÇA ABERTA. Mexer aqui vale para esta peça e mais nenhuma. */
+.gal-fundo{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.62);
+  backdrop-filter:blur(2px)}
+.gal-lupa{position:fixed;z-index:71;inset:50% auto auto 50%;
+  transform:translate(-50%,-50%);width:min(940px,94vw);max-height:92vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid var(--rule-solid);border-radius:16px;background:var(--paper);
+  box-shadow:0 26px 70px rgba(0,0,0,.45)}
+.gal-lupa-cab{display:flex;align-items:center;gap:12px;padding:14px 16px;
+  border-bottom:1px solid var(--rule-solid)}
+.gal-lupa-cab b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gal-lupa-cab .acao{margin-left:auto}
+.gal-x{width:30px;height:30px;flex:0 0 30px;border:0;border-radius:8px;cursor:pointer;
+  background:transparent;color:var(--muted);font-size:20px;line-height:1}
+.gal-x:hover{background:var(--paper-2);color:var(--ink)}
+.gal-lupa-corpo{display:flex;gap:20px;padding:18px 16px;overflow:auto}
+.gal-lupa-tela{position:relative;flex:0 0 auto;height:min(58vh,560px);aspect-ratio:9/16;
+  container-type:size;overflow:hidden;border-radius:12px;background:#000}
+.gal-lupa-tela video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.gal-lupa-tela .gal-el{cursor:pointer;pointer-events:auto;
+  outline:1px dashed transparent;outline-offset:2px}
+.gal-lupa-tela .gal-el:hover{outline-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.gal-lupa-tela .gal-el.sel{outline:1px solid var(--accent);outline-offset:2px}
+.gal-lupa-lado{flex:1;min-width:230px;display:flex;flex-direction:column;gap:16px}
+.gal-lupa-vazio .nota{margin:0}
+.gal-lupa-lado .acao.larga{margin-top:auto}
+
+@media(max-width:760px){
+  .gal-lupa-corpo{flex-direction:column}
+  .gal-lupa-tela{height:auto;width:min(260px,70vw);align-self:center}
+}
+
 </style>
 </head>
 <body>
@@ -2423,7 +2615,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
     <img class="marca marca-escura" src="data:image/png;base64,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" alt="">Estúdio</a>
   <nav class="nav-itens" id="itens">
     <span class="pilula" id="pilula"></span>
-    <a href="#minerar" data-aba="minerar" class="ativo">Mineração</a><a href="#baixar" data-aba="baixar">Baixar</a><a href="#editar" data-aba="editar">Edição</a>
+    <a href="#minerar" data-aba="minerar" class="ativo">Mineração</a><a href="#baixar" data-aba="baixar">Baixar</a><a href="#editar" data-aba="editar">Edição</a><a href="#config" data-aba="config">Configurações</a>
   </nav>
   <div class="nav-dir">
     <span class="status offline" id="estado">
@@ -2454,7 +2646,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   </div>
  </div>
  <div class="nav-menu" id="menu">
-   <a href="#minerar" data-aba="minerar" class="ativo">Mineração</a><a href="#baixar" data-aba="baixar">Baixar</a><a href="#editar" data-aba="editar">Edição</a>
+   <a href="#minerar" data-aba="minerar" class="ativo">Mineração</a><a href="#baixar" data-aba="baixar">Baixar</a><a href="#editar" data-aba="editar">Edição</a><a href="#config" data-aba="config">Configurações</a>
  </div>
 </header>
 
@@ -3502,11 +3694,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                         rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>
                       <span>sim, aberto</span></button>
                   </div>
-                  <label class="ed-instr" id="p_instr_caixa" hidden>
-                    <span>o que ela deve escrever aqui</span>
-                    <textarea id="p_instrucao" rows="2"
-                      placeholder="ex: uma manchete curta sobre a notícia"></textarea>
-                  </label>
                 </section>
 
                 <button class="acao mini larga perigo" id="ed_apagar_txt" type="button">
@@ -3600,89 +3787,37 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         <div class="ed-sub-tela" data-sub="3" hidden>
           <div class="ed-cab">
             <h2>A IA escreve</h2>
-            <p class="nota">Ela lê a frase do card original de cada reel e escreve uma
-              equivalente, nas caixas que você deixou abertas.</p>
+            <!-- ESTA FASE NAO PERGUNTA NADA, e isso e' conserto. Ela pedia o texto de
+                 cada peca, uma por uma, e o Gabriel viu o absurdo: "eu cheguei na etapa
+                 da IA escrever, e' pra literalmente eu ter apenas a tela de carregamento
+                 da IA escrevendo, algo parecido com o recorte". Entao e' isso: um botao,
+                 uma barra, e no fim as pecas prontas para ele olhar. -->
+            <p class="nota">Ela abre a frase do card original de cada reel, entende o que
+              está escrito e escreve uma equivalente nas caixas que você deixou abertas.
+              Uma passada só, em todas as peças.</p>
           </div>
 
           <div class="leg-vazio" id="ia_sem_campo" hidden>
             <b>Nenhuma caixa aberta no template.</b>
-            <p class="nota">Volte à fase do texto, selecione uma caixa e marque
-              <i>sim, aberto</i>. Só essas a IA escreve.</p>
+            <p class="nota">Volte à fase do texto, escolha uma caixa e marque
+              <i>sim, aberto</i>. A IA só escreve nessas.</p>
+          </div>
+
+          <div class="leg-vazio" id="ia_sem_chave" hidden>
+            <b>Nenhuma IA configurada.</b>
+            <p class="nota">A chave, o serviço e o prompt moram na aba de
+              <a href="#config" data-aba="config">Configurações</a>. Configure lá uma vez
+              e esta fase passa a funcionar sozinha.</p>
           </div>
 
           <div id="ia_corpo" hidden>
-          <!-- A IA SE CONFIGURA AQUI, e não num arquivo escondido. O Gabriel perguntou as
-               três coisas de uma vez: "que IA está escrevendo? É via API? Já existe uma
-               tela para poder configurar, caso tenha limite essa IA, para poder
-               substituir por outra? Tem um prompt para ela específico?". As três moram
-               nesta gaveta: o serviço e a chave, a reserva para quando a cota acabar, e o
-               prompt inteiro, editável. -->
-          <div class="ia-cab">
-            <div class="ia-quem" id="ia_quem">nenhuma IA configurada</div>
-            <button class="acao mini" id="ia_abrir_cfg" type="button">
-              configurar a IA</button>
-          </div>
-
-          <div class="caixa ia-cfg" id="ia_cfg" hidden>
-            <div class="ia-cfg-linha">
-              <div class="ia-cfg-campo">
-                <span>serviço</span>
-                <div class="psel" id="ia_servico"></div>
+            <div class="ia-pronta">
+              <div class="ia-pronta-txt">
+                <b id="ia_quem">nenhuma IA configurada</b>
+                <span class="nota mini" id="ia_quanto"></span>
               </div>
-              <div class="ia-cfg-campo cresce">
-                <span>chave da API</span>
-                <input id="ia_chave" type="password" placeholder="cole a chave aqui"
-                       autocomplete="off" spellcheck="false">
-              </div>
-              <div class="ia-cfg-campo cresce">
-                <span>modelo</span>
-                <input id="ia_modelo" placeholder="deixe vazio para o padrão"
-                       autocomplete="off" spellcheck="false">
-              </div>
-            </div>
-
-            <!-- A RESERVA. "Caso tenha limite essa IA, para poder substituir por outra."
-                 Ela entra sozinha quando a primeira recusa por cota, no meio da leva. -->
-            <div class="ia-cfg-linha">
-              <div class="ia-cfg-campo">
-                <span>reserva, quando a cota acabar</span>
-                <div class="psel" id="ia_servico2"></div>
-              </div>
-              <div class="ia-cfg-campo cresce">
-                <span>chave da reserva</span>
-                <input id="ia_chave2" type="password" placeholder="opcional"
-                       autocomplete="off" spellcheck="false">
-              </div>
-              <div class="ia-cfg-campo cresce">
-                <span>modelo da reserva</span>
-                <input id="ia_modelo2" placeholder="deixe vazio para o padrão"
-                       autocomplete="off" spellcheck="false">
-              </div>
-            </div>
-
-            <div class="ia-cfg-campo">
-              <span>o prompt, que vale para todas as peças</span>
-              <textarea id="ia_prompt" rows="9" spellcheck="false"></textarea>
-              <p class="nota mini">Onde estiver <b>{limite}</b> entra o número de
-                caracteres que cabe na caixa. A instrução que você escreveu em cada caixa
-                aberta é acrescentada no fim.</p>
-            </div>
-
-            <div class="ia-cfg-pe">
-              <button class="acao mini" id="ia_prompt_padrao" type="button">
-                voltar ao prompt padrão</button>
-              <span class="ia-cfg-recado" id="ia_cfg_recado"></span>
-              <button class="acao mini" id="ia_testar" type="button">testar numa peça</button>
-              <button class="acao forte" id="ia_guardar" type="button">Guardar</button>
-            </div>
-            <p class="nota mini">A chave fica num arquivo dentro da pasta do Estúdio, no
-              seu computador, e não sai dele. Quem chama a IA é o programa que roda aqui.</p>
-          </div>
-
-            <div class="ia-topo">
-              <div class="ia-campos" id="ia_campos"></div>
               <button class="acao forte" id="ia_escrever" type="button">
-                Escrever nas <i id="ia_n">0</i> peças</button>
+                Começar a escrever</button>
             </div>
             <p class="nota mini" id="ia_recado"></p>
 
@@ -3695,8 +3830,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
               <div class="apl-barra"><i id="ia_barra"></i></div>
               <p class="nota" id="ia_obra_nota"></p>
             </div>
-
-            <div class="ia-lista" id="ia_lista"></div>
           </div>
 
           <div class="ed-pe">
@@ -3704,37 +3837,80 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
               Voltar às imagens</button>
             <div class="ed-pe-conta" id="ed_conta_ia"></div>
             <button class="acao forte" id="ed_vai_ajuste" type="button">
-              Seguir para os ajustes</button>
+              Ver as peças prontas</button>
           </div>
         </div>
 
-        <!-- ................................................ 3.4 · OS AJUSTES -->
+        <!-- ................................................ 3.4 · OS AJUSTES
+
+             AQUI ELE OLHA E APROVA, e a forma foi decidida por ele em 21/08/2026. A
+             pergunta era se as peças apareciam já fabricadas ou só desenhadas na tela, e
+             a resposta foi: "a tela mostrando como ficou, para no mais tardar eu ajustar
+             na mão, depois clicar em um botão para fabricar".
+
+             POR QUE ISSO IMPORTA: fabricar as 107 antes de ele olhar custa outra rodada
+             inteira de conversão, e cada ajuste depois obrigaria a fabricar tudo de novo.
+             Desenhadas na tela elas aparecem na hora, ele mexe à vontade, e a fabricação
+             acontece uma vez só, no fim, já aprovada. -->
         <div class="ed-sub-tela" data-sub="4" hidden>
           <div class="ed-cab">
-            <h2>Os ajustes</h2>
-            <p class="nota">Título longo não cabe onde o curto cabia. Aqui o tamanho e a
-              posição são acertados peça a peça, sem tocar no que está travado.</p>
+            <h2>As peças prontas</h2>
+            <p class="nota">Cada uma como vai ficar: o fundo, o texto, as imagens e o
+              B-roll no lugar. Clique numa peça para acertar essa peça sozinha.</p>
           </div>
 
-          <div class="apl-escolhas">
-            <button class="apl-op ativa" data-modo="todas" type="button">
-              <b>Todas as peças</b>
-              <span>o mesmo template em <i id="apl_n_todas">0</i></span>
-            </button>
-            <button class="apl-op" data-modo="algumas" type="button">
-              <b>Só as que eu marcar</b>
-              <span>mesmo template, nas escolhidas</span>
-            </button>
+          <div class="gal-topo">
+            <div class="gal-conta" id="gal_conta"></div>
+            <div class="gal-acoes">
+              <button class="acao mini" id="ajs_acertar" type="button">
+                Encolher o texto que não coube</button>
+              <button class="acao forte" id="apl_montar" type="button">
+                Fabricar as peças</button>
+            </div>
           </div>
 
-          <div class="apl-grade" id="apl_grade" hidden></div>
+          <div class="gal-grade" id="gal_grade"></div>
+
+          <!-- A PECA ABERTA, para acertar uma so'. O que se mexe aqui vale para esta
+               peça e mais nenhuma, e o template continua intacto. -->
+          <div class="gal-fundo" id="gal_fundo" hidden></div>
+          <div class="gal-lupa" id="gal_lupa" hidden>
+            <div class="gal-lupa-cab">
+              <b id="gal_lupa_nome">peça</b>
+              <button class="acao mini" id="gal_lupa_zerar" type="button">
+                desfazer os ajustes desta peça</button>
+              <button class="gal-x" id="gal_lupa_fechar" type="button"
+                      aria-label="fechar">&times;</button>
+            </div>
+            <div class="gal-lupa-corpo">
+              <div class="gal-lupa-tela" id="gal_lupa_tela"></div>
+              <aside class="gal-lupa-lado">
+                <div class="gal-lupa-vazio" id="gal_lupa_vazio">
+                  <p class="nota">Clique num texto ou numa imagem da peça para acertar o
+                    tamanho e a posição dela.</p>
+                </div>
+                <div id="gal_lupa_props" hidden>
+                  <section class="ed-bloco">
+                    <h4>Tamanho</h4>
+                    <div class="ed-passo" id="gl_tamanho"></div>
+                  </section>
+                  <section class="ed-bloco">
+                    <h4>Posição</h4>
+                    <div class="ed-passo" id="gl_x"></div>
+                    <div class="ed-passo" id="gl_y"></div>
+                  </section>
+                  <p class="nota mini" id="gl_travado" hidden>Este item está travado no
+                    template. Mexer aqui muda só esta peça.</p>
+                </div>
+                <button class="acao mini larga" id="gl_para_todas" type="button">
+                  usar estes ajustes em todas as peças</button>
+              </aside>
+            </div>
+          </div>
 
           <div class="ed-pe">
             <button class="acao" id="ed_volta_ia" type="button">Voltar à IA</button>
             <div class="apl-resumo" id="apl_resumo"></div>
-            <button class="acao" id="ajs_acertar" type="button">
-              Acertar as disposições</button>
-            <button class="acao forte" id="apl_montar" type="button">Montar as peças</button>
             <div class="apl-feito" id="apl_feito" hidden>
               <a class="acao" id="apl_pasta" href="#">Abrir a pasta das peças</a>
               <button class="acao forte" id="apl_segue" type="button">
@@ -3745,7 +3921,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="caixa apl-obra" id="apl_obra" hidden>
             <div class="apl-obra-topo">
               <span class="cfg-girando"></span>
-              <b id="apl_obra_txt">montando</b>
+              <b id="apl_obra_txt">fabricando</b>
               <span class="dir" id="apl_obra_tempo"></span>
             </div>
             <div class="apl-barra"><i id="apl_barra"></i></div>
@@ -3781,6 +3957,262 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             está aqui, vazio, esperando você dizer o que ele faz.</p>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ========================================================== ABA 4 · CONFIGURAÇÕES
+
+     ELA NASCEU AQUI, E NÃO DENTRO DA EDIÇÃO. A chave da IA morava numa gaveta da fase 3,
+     no meio do trabalho, e o Gabriel cortou isso em 21/08/2026: "a função de configuração
+     não deve aparecer dentro do momento de editar, nunca. Era pra ser uma aba no
+     cabeçalho, antes de tudo, antes de clicar na aba de editar. É que nem tem agora do
+     Social Tracker. E a gente configurava lá dentro, validava lá dentro: está funcionando
+     a API? Qual o limite da API atual? Tudo isso lá dentro."
+
+     O DESENHO É O DE LÁ, de propósito: menu à esquerda com grupos, páginas à direita, e
+     cada página feita de caixas. Duas telas do mesmo dono que se configuram de dois
+     jeitos diferentes é uma a mais para aprender sem motivo. -->
+<section class="aba" id="aba-config" hidden>
+  <div class="cfg-corpo">
+    <aside class="cfg-menu">
+      <div class="cfg-menu-topo">
+        <span class="cfg-menu-id"><b>Estúdio</b><span>configurações</span></span>
+      </div>
+      <div class="cfg-menu-rolo">
+        <div class="cfg-grupo">
+          <span class="cfg-grupo-tit">Escrita</span>
+          <a class="cfg-item" href="#ia" data-cfg="ia"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg><span class="cfg-rot">A IA que escreve</span></span></a>
+        </div>
+        <div class="cfg-grupo">
+          <span class="cfg-grupo-tit">Máquina</span>
+          <a class="cfg-item" href="#motor" data-cfg="motor"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span class="cfg-rot">O motor do recorte</span></span></a>
+          <a class="cfg-item" href="#fontes" data-cfg="fontes"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="cfg-rot">As fontes da peça</span></span></a>
+          <a class="cfg-item" href="#pastas" data-cfg="pastas"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span class="cfg-rot">As pastas</span></span></a>
+        </div>
+      </div>
+      <div class="cfg-menu-pe">
+        <span class="nota mini">tudo aqui fica neste computador</span>
+      </div>
+    </aside>
+
+    <div class="cfg-conteudo">
+
+      <!-- ................................................................ A IA -->
+      <div class="cfg-pagina cfg-ativa" data-pg="ia">
+        <div class="cfg-pagina-cab">
+          <h2>A IA que escreve</h2>
+          <p>quem escreve as headlines na fase 3 do template, e o que ela já gastou</p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Está funcionando?</h3>
+            <div class="dir"><span class="badge badge-sinal" id="ia_selo">sem chave</span></div>
+          </div>
+          <div class="cfg-linhas">
+            <div class="cfg-linha">
+              <div>
+                <div class="cfg-nome" id="ia_estado_nome">nenhuma IA configurada</div>
+                <div class="cfg-desc" id="ia_estado_desc">preencha o serviço e a chave
+                  abaixo, e depois clique em provar. A prova manda uma frase de verdade e
+                  volta em segundos, para você não descobrir o erro no meio de 107
+                  peças.</div>
+              </div>
+              <div class="dir">
+                <button class="acao" id="ia_provar" type="button">Provar agora</button>
+              </div>
+            </div>
+          </div>
+          <p class="nota mini" id="ia_prova_diz"></p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo"><h3>O serviço</h3><div class="dir"></div></div>
+          <div class="cfg-campos">
+            <label class="cfg-campo">
+              <span>qual serviço</span>
+              <div class="psel cfg-sel" id="ia_servico"></div>
+            </label>
+            <label class="cfg-campo cresce">
+              <span>chave da API</span>
+              <input id="ia_chave" type="password" placeholder="cole a chave aqui"
+                     autocomplete="off" spellcheck="false">
+            </label>
+            <label class="cfg-campo cresce">
+              <span>modelo</span>
+              <input id="ia_modelo" placeholder="deixe vazio para o padrão"
+                     autocomplete="off" spellcheck="false">
+            </label>
+          </div>
+          <p class="nota mini" id="ia_onde_pegar"></p>
+        </div>
+
+        <!-- A RESERVA. Ela é o pedido literal: "caso tenha limite essa IA, para poder
+             substituir por outra". A troca acontece sozinha, no meio da leva, quando a
+             primeira recusa por cota; sem ela uma leva de 107 pararia na peça cinquenta
+             e o resto teria de ser refeito na mão. -->
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>A reserva, para quando a cota acabar</h3>
+            <div class="dir"><span class="badge badge-secondary" id="ia_selo2">vazia</span></div>
+          </div>
+          <div class="cfg-campos">
+            <label class="cfg-campo">
+              <span>qual serviço</span>
+              <div class="psel cfg-sel" id="ia_servico2"></div>
+            </label>
+            <label class="cfg-campo cresce">
+              <span>chave da API</span>
+              <input id="ia_chave2" type="password" placeholder="opcional"
+                     autocomplete="off" spellcheck="false">
+            </label>
+            <label class="cfg-campo cresce">
+              <span>modelo</span>
+              <input id="ia_modelo2" placeholder="deixe vazio para o padrão"
+                     autocomplete="off" spellcheck="false">
+            </label>
+          </div>
+          <p class="nota mini">Quando a primeira responder que a cota acabou, esta assume
+            na peça seguinte, sem parar a leva e sem perguntar nada.</p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Quanto já se gastou</h3>
+            <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia">hoje</span></div>
+          </div>
+          <div class="cfg-pares cfg-uma cfg-numeros" id="ia_uso"></div>
+          <p class="nota mini" id="ia_uso_nota">A conta é do que este computador pediu, e
+            não do que o serviço registrou. Nenhum dos três publica o saldo por programa;
+            o que dá para saber com certeza é o que saiu daqui e o que voltou recusado.</p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>O prompt</h3>
+            <div class="dir">
+              <button class="acao mini" id="ia_prompt_padrao" type="button">
+                voltar ao padrão</button>
+            </div>
+          </div>
+          <textarea id="ia_prompt" rows="11" spellcheck="false"></textarea>
+          <p class="nota mini">Vale para todas as peças e para todas as caixas abertas.
+            Onde estiver <b>{limite}</b> entra o número de caracteres que cabe naquela
+            caixa, calculado da largura dela e do tamanho da letra que você escolheu.</p>
+        </div>
+
+        <div class="cfg-pe">
+          <span class="cfg-recado" id="ia_cfg_recado"></span>
+          <button class="acao forte" id="ia_guardar" type="button">Guardar</button>
+        </div>
+      </div>
+
+      <!-- ............................................................ O MOTOR -->
+      <div class="cfg-pagina" data-pg="motor">
+        <div class="cfg-pagina-cab">
+          <h2>O motor do recorte</h2>
+          <p>onde o vídeo é convertido, e quanto isso custa de relógio</p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Onde a conversão acontece</h3>
+            <div class="dir"><span class="badge badge-sinal" id="mot_onde">a descobrir</span></div>
+          </div>
+          <div class="cfg-linhas">
+            <div class="cfg-linha">
+              <div>
+                <div class="cfg-nome">Na placa de vídeo</div>
+                <div class="cfg-desc">Esta máquina tem Intel Iris Xe, com Quick Sync. O
+                  quadro entra na placa quando é decodificado e só sai de lá já
+                  codificado: ampliar, aplicar a máscara e gravar acontecem os três lá
+                  dentro. Se a placa recusar uma peça, ela volta sozinha para o
+                  processador, sem falhar.</div>
+              </div>
+              <div class="dir"><span class="badge badge-secondary">3 peças por vez</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>O que foi medido</h3>
+            <div class="dir"><span class="badge badge-secondary">21/08/2026</span></div>
+          </div>
+          <div class="cfg-pares cfg-uma cfg-numeros">
+            <div class="cfg-par"><span>uma peça de 52 s, no processador</span><b>25,0 s</b></div>
+            <div class="cfg-par"><span>a mesma peça, na placa</span><b>15,9 s</b></div>
+            <div class="cfg-par"><span>12 peças em fila, no processador</span><b>3 min 40 s</b></div>
+            <div class="cfg-par"><span>as mesmas 12, três por vez na placa</span><b>2 min 25 s</b></div>
+            <div class="cfg-par"><span>diferença dentro da janela, de 255</span><b>1,96</b></div>
+          </div>
+          <p class="nota mini">Três por vez é medição, não palpite: uma de cada vez dá 2
+            min 5 s de conversão, três dão 1 min 48 s e cinco dão 2 min 29 s. Acima de três
+            quem esgota é o bloco de vídeo da placa, e as peças passam a esperar umas
+            pelas outras.</p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo"><h3>Glossário</h3><div class="dir"></div></div>
+          <div class="cfg-glossario">
+            <div class="cfg-glo"><div class="cfg-glo-t"><b>Máscara</b></div>
+              <span>o desenho da forma do B-roll, branco onde a filmagem passa e preto no
+                resto. É ela que faz o recorte sair com a borda arredondada igual à do
+                original, em vez de um retângulo reto.</span></div>
+            <div class="cfg-glo"><div class="cfg-glo-t"><b>Moldura</b></div>
+              <span>a mesma forma escrita ao contrário, com furo no meio. A placa cola por
+                cima em vez de multiplicar, e é assim que ela trabalha.</span></div>
+            <div class="cfg-glo"><div class="cfg-glo-t"><b>Quick Sync</b></div>
+              <span>o pedaço da placa Intel que converte vídeo sozinho, sem usar o
+                processador. É o que libera a máquina enquanto a leva roda.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ........................................................... AS FONTES -->
+      <div class="cfg-pagina" data-pg="fontes">
+        <div class="cfg-pagina-cab">
+          <h2>As fontes da peça</h2>
+          <p>as que desenham o reel, e não as que desenham esta tela</p>
+        </div>
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Quais existem</h3>
+            <div class="dir"><span class="badge badge-secondary" id="fon_n">0</span></div>
+          </div>
+          <div class="cfg-mostra" id="fon_lista"></div>
+        </div>
+        <div class="caixa">
+          <div class="cfg-topo"><h3>Por que a lista é esta</h3><div class="dir"></div></div>
+          <p class="nota">Cada uma precisa existir nos dois lados: aqui, para o navegador
+            mostrar enquanto você monta, e no computador, para o programa desenhar na hora
+            de gravar. Fonte que existisse só de um lado faria a peça sair diferente do que
+            você viu na tela.</p>
+          <p class="nota">As nove novas vieram do Google Fonts, licença aberta, sem custo,
+            e estão em <b>Estudio\fontes</b>. As outras já vinham com o Windows, menos a
+            Izmir e a Apple Garamond, que são suas.</p>
+        </div>
+      </div>
+
+      <!-- ........................................................... AS PASTAS -->
+      <div class="cfg-pagina" data-pg="pastas">
+        <div class="cfg-pagina-cab">
+          <h2>As pastas</h2>
+          <p>onde cada coisa mora neste computador</p>
+        </div>
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>A pasta do Estúdio</h3>
+            <div class="dir"><span class="badge badge-sinal" id="pas_selo">não liberada</span></div>
+          </div>
+          <div class="cfg-linhas" id="pas_lista"></div>
+          <p class="nota mini">O navegador só enxerga esta pasta depois que você libera o
+            acesso uma vez, na aba de Edição. Nada sai daqui para lugar nenhum.</p>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -4016,7 +4448,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <img class="marca marca-clara" src="data:image/png;base64,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" alt="">
       <img class="marca marca-escura" src="data:image/png;base64,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" alt="">
     </div>
-    <nav class="rodape-menu"><a href="#minerar" data-aba="minerar">Mineração</a><a href="#baixar" data-aba="baixar">Baixar</a><a href="#editar" data-aba="editar">Edição</a></nav>
+    <nav class="rodape-menu"><a href="#minerar" data-aba="minerar">Mineração</a><a href="#baixar" data-aba="baixar">Baixar</a><a href="#editar" data-aba="editar">Edição</a><a href="#config" data-aba="config">Configurações</a></nav>
     <div class="rodape-botoes">
       <a href="https://github.com/Elmoamacoca/estudio-video/tree/main/dados" target="_blank"
          rel="noopener" aria-label="Abrir o acervo">
@@ -4368,6 +4800,9 @@ function irPara(chave, empurrar) {
   // SAIR DA ABA SAI DO MODO FOCADO. A classe vive no `body`, entao ela sobreviveria a
   // troca de aba e deixaria o sistema inteiro sem cabecalho, sem nada explicando.
   if (chave !== "editar") document.body.classList.remove("ed-focado");
+  // A ABA DE CONFIGURACOES SE PINTA AO SER ABERTA, e nao no carregamento da pagina: ela
+  // depende da pasta do Estudio, que so' e' liberada na aba de Edicao.
+  if (chave === "config") { lerIA(); desenhaCfgIA(); }
   const folha = document.getElementById("faq_folha");
   if (folha && !folha.hidden) {
     folha.hidden = true;
@@ -7089,8 +7524,6 @@ async function salvarRascunho() {
     passo: EDIT_PASSO,
     sub: TPL_SUB,
     template: TPL ? TPL.id : null,
-    modo: APL_MODO,
-    marcadas: [...APL_MARCADAS],
     mexido: Math.floor(Date.now() / 1000),
   };
   if (!EDIT_RASCUNHO) r.aberto = r.mexido;
@@ -7312,8 +7745,6 @@ function esquecerOsPassos() {
   TPL_SUB = 1;
   EL_SEL = null;
   ED_BROLL_I = -1;
-  APL_MODO = "todas";
-  APL_MARCADAS.clear();
   ESCRITO.clear();
   AJUSTES.clear();
   desenhaFeito();
@@ -8089,11 +8520,48 @@ const novoId = () => "e" + Math.random().toString(36).slice(2, 8);
 const PALETA = ["#000000", "#101418", "#1C1C1E", "#F5F3EF", "#FFFFFF",
                 "#BA5A18", "#E8A33D", "#2F5D50", "#1E3A5F", "#8A1C1C"];
 
+/* AS FONTES DA PEÇA. Eram sete, e o Gabriel abriu o seletor e disse o óbvio: "aqui
+   deveria ter vários outros tipos de fonte, e não tem". As sete eram as do Windows mais
+   duas dele, e faltava justamente a família que um reel de página escura usa, que é
+   manchete pesada e condensada.
+
+   AS NOVE NOVAS VÊM DO GOOGLE FONTS, licença aberta, sem custo. Elas precisam existir nos
+   dois lados: aqui o navegador as busca para mostrar, e na hora de gravar o `oficina.py`
+   lê os mesmos arquivos de `Estudio/fontes`. Fonte que existisse só de um lado faria a
+   peça sair diferente do que ele viu na tela, e é por isso que as duas listas são a
+   mesma. O `g` agrupa a lista na aba de Configurações e o seletor ignora. */
 const FONTES = [
-  { v: "segoe", r: "Segoe UI" }, { v: "arial", r: "Arial" },
-  { v: "arialn", r: "Arial Narrow" }, { v: "impact", r: "Impact" },
-  { v: "georgia", r: "Georgia" }, { v: "izmir", r: "Izmir" },
-  { v: "garamond", r: "Apple Garamond" },
+  { v: "anton", r: "Anton", g: "manchete" },
+  { v: "bebas", r: "Bebas Neue", g: "manchete" },
+  { v: "archivobk", r: "Archivo Black", g: "manchete" },
+  { v: "impact", r: "Impact", g: "manchete" },
+  { v: "arialblack", r: "Arial Black", g: "manchete" },
+  { v: "segoeblack", r: "Segoe UI Black", g: "manchete" },
+  { v: "franklin", r: "Franklin Gothic", g: "manchete" },
+  { v: "oswald", r: "Oswald", g: "condensada" },
+  { v: "robotocond", r: "Roboto Condensed", g: "condensada" },
+  { v: "barlowcond", r: "Barlow Condensed", g: "condensada" },
+  { v: "arialn", r: "Arial Narrow", g: "condensada" },
+  { v: "bahnschrift", r: "Bahnschrift", g: "condensada" },
+  { v: "montserrat", r: "Montserrat", g: "sem serifa" },
+  { v: "poppins", r: "Poppins", g: "sem serifa" },
+  { v: "inter", r: "Inter", g: "sem serifa" },
+  { v: "segoe", r: "Segoe UI", g: "sem serifa" },
+  { v: "arial", r: "Arial", g: "sem serifa" },
+  { v: "verdana", r: "Verdana", g: "sem serifa" },
+  { v: "tahoma", r: "Tahoma", g: "sem serifa" },
+  { v: "trebuchet", r: "Trebuchet MS", g: "sem serifa" },
+  { v: "calibri", r: "Calibri", g: "sem serifa" },
+  { v: "candara", r: "Candara", g: "sem serifa" },
+  { v: "corbel", r: "Corbel", g: "sem serifa" },
+  { v: "georgia", r: "Georgia", g: "com serifa" },
+  { v: "times", r: "Times New Roman", g: "com serifa" },
+  { v: "cambria", r: "Cambria", g: "com serifa" },
+  { v: "constantia", r: "Constantia", g: "com serifa" },
+  { v: "garamond", r: "Apple Garamond", g: "com serifa" },
+  { v: "izmir", r: "Izmir", g: "com serifa" },
+  { v: "consolas", r: "Consolas", g: "de máquina" },
+  { v: "courier", r: "Courier New", g: "de máquina" },
 ];
 const PESOS = [{ v: "400", r: "normal" }, { v: "700", r: "negrito" }];
 
@@ -8236,12 +8704,27 @@ const soTexto = () => (TPL ? TPL.elementos.filter(e => e.tipo === "texto") : [])
 const soImagem = () => (TPL ? TPL.elementos.filter(e => e.tipo === "imagem") : []);
 const elSel = () => (TPL ? TPL.elementos.find(x => x.id === EL_SEL) : null);
 
-function fonteCss(n) {
-  return ({ segoe: "'Segoe UI',sans-serif", arial: "Arial,sans-serif",
-            arialn: "'Arial Narrow',Arial,sans-serif", impact: "Impact,sans-serif",
-            georgia: "Georgia,serif", izmir: "Izmir,'Segoe UI',sans-serif",
-            garamond: "'Apple Garamond',Georgia,serif" })[n] || "'Segoe UI',sans-serif";
-}
+const FONTE_CSS = {
+  anton: "'Anton',sans-serif", bebas: "'Bebas Neue',sans-serif",
+  archivobk: "'Archivo Black',sans-serif", impact: "Impact,sans-serif",
+  arialblack: "'Arial Black',Arial,sans-serif",
+  segoeblack: "'Segoe UI Black','Segoe UI',sans-serif",
+  franklin: "'Franklin Gothic Medium',Arial,sans-serif",
+  oswald: "'Oswald',sans-serif", robotocond: "'Roboto Condensed',sans-serif",
+  barlowcond: "'Barlow Condensed',sans-serif",
+  arialn: "'Arial Narrow',Arial,sans-serif", bahnschrift: "'Bahnschrift',sans-serif",
+  montserrat: "'Montserrat',sans-serif", poppins: "'Poppins',sans-serif",
+  inter: "'Inter',sans-serif", segoe: "'Segoe UI',sans-serif", arial: "Arial,sans-serif",
+  verdana: "Verdana,sans-serif", tahoma: "Tahoma,sans-serif",
+  trebuchet: "'Trebuchet MS',sans-serif", calibri: "Calibri,sans-serif",
+  candara: "Candara,sans-serif", corbel: "Corbel,sans-serif",
+  georgia: "Georgia,serif", times: "'Times New Roman',serif", cambria: "Cambria,serif",
+  constantia: "Constantia,serif", garamond: "'Apple Garamond',Georgia,serif",
+  izmir: "Izmir,'Segoe UI',sans-serif", consolas: "Consolas,monospace",
+  courier: "'Courier New',monospace",
+};
+
+function fonteCss(n) { return FONTE_CSS[n] || "'Segoe UI',sans-serif"; }
 
 async function desenhaEditor() {
   if (!TPL) return;
@@ -8343,8 +8826,6 @@ function desenhaProps() {
       b.classList.toggle("on", b.dataset.a === el.alinha));
     $("p_trava").querySelectorAll("button").forEach(b =>
       b.classList.toggle("on", (b.dataset.trava === "1") === !!el.trava));
-    $("p_instr_caixa").hidden = !!el.trava;
-    $("p_instrucao").value = el.instrucao || "";
   }
   if (eImagem) {
     $("p_img_nome").textContent = (el.arquivo || "").slice(-26);
@@ -8375,7 +8856,6 @@ function mexeNoSel(f, leve) {
 }
 
 $("p_texto").oninput = e => mexeNoSel(el => el.texto = e.target.value, true);
-$("p_instrucao").oninput = e => mexeNoSel(el => el.instrucao = e.target.value, true);
 $("p_alinha").onclick = e => {
   const b = e.target.closest("button[data-a]");
   if (b) mexeNoSel(el => el.alinha = b.dataset.a);
@@ -8399,7 +8879,7 @@ $("ed_add_texto").onclick = () => {
   if (!TPL) TPL = tplVazio();
   TPL.elementos.push({ id: novoId(), tipo: "texto", texto: "escreva aqui",
     x: 0.08, y: 0.08, w: 0.84, tamanho: 0.038, cor: "#FFFFFF", fonte: "arialn",
-    peso: 700, alinha: "centro", trava: true, instrucao: "" });
+    peso: 700, alinha: "centro", trava: true });
   EL_SEL = TPL.elementos[TPL.elementos.length - 1].id;
   desenhaEditor();
 };
@@ -8519,6 +8999,10 @@ async function trocarBroll(i) {
     const u = URL.createObjectURL(f);
     v.dataset.url = u;
     v.src = u;
+    // A MASCARA ENTRA AQUI, e e' o conserto da cor de fundo que nao mudava. O recorte e'
+    // preto opaco fora da janela do B-roll, e video nao tem transparencia: sem recortar
+    // esse preto, ele tapa o fundo inteiro e a cor escolhida nunca aparece.
+    vestirMascara(v, await mascaraDe(EDIT_RECORTES[i].nome));
     v.play().catch(() => {});
   } catch (e) { return; }
   diz(`peça ${i + 1} de ${EDIT_RECORTES.length}`);
@@ -8567,227 +9051,79 @@ $("ed_salvar_tpl").onclick = async () => {
 let ESCRITO = new Map();           // arquivo -> { idDaCaixa: texto }
 const abertas = () => soTexto().filter(e => !e.trava);
 
+/* ============================================== FASE 3 · A IA ESCREVE, E SÓ ISSO
+
+   ELA NÃO PERGUNTA MAIS NADA. Até 21/08/2026 esta fase abria uma lista de 107 caixas de
+   texto, uma por peça, com a frase do card ao lado, e esperava que ele escrevesse ou
+   revisasse cada uma. O Gabriel leu isso na tela e cortou: "não é pra esse momento eu
+   falar qual o texto dessa peça, está louco? Remove. Eu cheguei na etapa da IA escrever,
+   é pra literalmente eu ter apenas a tela de carregamento da IA escrevendo, algo parecido
+   com o recorte... e no final eu vou conseguir pegar e avaliar cada um desses. Mas não é
+   pra eu colocar um por um, não faz sentido".
+
+   ENTÃO SÃO TRÊS ESTADOS e mais nada: falta caixa aberta, falta chave, ou está pronta
+   para começar. Terminada a escrita, a tela vai sozinha para a galeria da fase 4. */
+
 async function entrarNaIA() {
-  if (!IA.chave && EDIT_RAIZ) await lerIA();
-  desenhaIACab();
+  await lerIA();
   const campos = abertas();
+  const temChave = !!(IA.chave || (IA.reserva && IA.reserva.chave));
   $("ia_sem_campo").hidden = !!campos.length;
-  $("ia_corpo").hidden = !campos.length;
-  if (!campos.length) return;
-
-  $("ia_campos").innerHTML = campos.map(c => `
-    <div class="ia-campo">
-      <b>${escapa((c.texto || "caixa aberta").slice(0, 34))}</b>
-      <span class="nota mini">${escapa(c.instrucao || "sem instrução")}</span>
-    </div>`).join("");
-
-  const alvos = alvosDaMontagem();
-  $("ia_n").textContent = alvos.length;
-  $("ia_lista").innerHTML = alvos.map(i => {
-    const p = pecas3()[i];
-    if (!p) return "";
-    const g = ESCRITO.get(p.nome) || {};
-    return `<div class="ia-linha" data-arq="${escapa(p.nome)}">
-      <div class="ia-frase" data-frase="${escapa(p.nome)}"></div>
-      <div class="ia-caixas">${campos.map(c => `<textarea rows="2" data-campo="${c.id}"
-        placeholder="${escapa(c.instrucao || "o texto desta peça")}"
-        >${escapa(g[c.id] || "")}</textarea>`).join("")}</div>
-    </div>`;
-  }).join("");
-  await mostrarFrases();
+  $("ia_sem_chave").hidden = !campos.length || temChave;
+  $("ia_corpo").hidden = !campos.length || !temChave;
   contaEscrito();
+  if (!campos.length || !temChave) return;
+  const n = pecas3().length;
+  $("ia_quem").textContent = "escrevendo com " + nomeDoServico(IA.servico);
+  $("ia_quanto").textContent =
+    `${campos.length} ${campos.length === 1 ? "caixa aberta" : "caixas abertas"}, `
+    + `em ${n} ${n === 1 ? "peça" : "peças"}`
+    + (IA.reserva && IA.reserva.chave
+       ? `. Se a cota acabar, a ${nomeDoServico(IA.reserva.servico)} assume sozinha.` : ".");
+  $("ia_escrever").disabled = !!IA_OBRA || !n;
 }
-
-/* A FRASE DO CARD APARECE AO LADO DA CAIXA, e não só no arquivo. Sem ver a frase de
-   origem, não há como julgar se o que a IA escreveu tem a ver com o vídeo. */
-async function mostrarFrases() {
-  let pasta = null;
-  try {
-    const raiz = await pastaDo("recortes", false);
-    pasta = await (await raiz.getDirectoryHandle("leva-" + EDIT_LEVA.numero))
-      .getDirectoryHandle("_frases");
-  } catch (e) { return; }
-  for (const d of $("ia_lista").querySelectorAll(".ia-frase")) {
-    const nome = d.dataset.frase.replace(/\.mp4$/i, ".png");
-    try {
-      const f = await (await pasta.getFileHandle(nome)).getFile();
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(f);
-      d.appendChild(img);
-    } catch (e) {
-      d.textContent = "sem card";
-    }
-  }
-}
-
-$("ia_lista").addEventListener("input", ev => {
-  const t = ev.target;
-  if (t.tagName !== "TEXTAREA") return;
-  const arq = t.closest(".ia-linha").dataset.arq;
-  const atual = ESCRITO.get(arq) || {};
-  atual[t.dataset.campo] = t.value;
-  ESCRITO.set(arq, atual);
-  contaEscrito();
-});
 
 function contaEscrito() {
-  const campos = abertas(), alvos = alvosDaMontagem();
+  const campos = abertas(), n = pecas3().length;
   let cheias = 0;
-  for (const i of alvos) {
-    const p = pecas3()[i];
-    if (!p) continue;
+  for (const p of pecas3()) {
     const g = ESCRITO.get(p.nome) || {};
-    if (campos.every(c => (g[c.id] || "").trim())) cheias++;
+    if (campos.length && campos.every(c => (g[c.id] || "").trim())) cheias++;
   }
-  $("ed_conta_ia").innerHTML = `<b>${cheias}</b> de ${alvos.length} `
-    + (alvos.length === 1 ? "peça escrita" : "peças escritas");
+  $("ed_conta_ia").innerHTML = `<b>${cheias}</b> de ${n} `
+    + (n === 1 ? "peça escrita" : "peças escritas");
 }
 
-/* ---------------------------------------------------- a IA que escreve
-
-   QUAL IA, VIA API, COM TELA DE CONFIGURAÇÃO E COM PROMPT. O Gabriel perguntou as quatro
-   coisas de uma vez em 20/08/2026, e a resposta honesta na hora era "nenhuma, ainda". Ela
-   agora existe: três serviços gratuitos que leem imagem, chave dele, reserva para quando
-   a cota acabar, e o prompt inteiro visível e editável.
-
-   A CHAVE NÃO MORA NO NAVEGADOR. Ela vai para `Estudio/ia.json`, no computador dele, e
-   quem chama o serviço é o `oficina.py`. O navegador nunca faz a chamada: as 107 imagens
-   estão no disco, e uma leva não pode depender de a aba ficar aberta. */
-
-const IA_SERVICOS = [
-  { v: "gemini", r: "Google Gemini", modelo: "gemini-2.0-flash",
-    onde: "aistudio.google.com" },
-  { v: "groq", r: "Groq", modelo: "meta-llama/llama-4-scout-17b-16e-instruct",
-    onde: "console.groq.com" },
-  { v: "openrouter", r: "OpenRouter",
-    modelo: "meta-llama/llama-3.2-11b-vision-instruct:free", onde: "openrouter.ai" },
-];
-
-const IA_PROMPT_PADRAO =
-  "Voce le a frase de um card de noticia e escreve OUTRA frase equivalente, para um "
-  + "perfil diferente publicar.\nREGRAS:\n"
-  + "1. Mesma noticia, mesmo sentido, palavras diferentes.\n"
-  + "2. Uma linha so, no maximo {limite} caracteres.\n"
-  + "3. Portugues do Brasil, direto, sem aspas, sem emoji, sem hashtag.\n"
-  + "4. Nao invente numero, nome nem data que nao esteja na imagem.\n"
-  + "5. Se a imagem nao tiver frase legivel, responda exatamente: SEM FRASE.\n"
-  + "Responda SO com a frase.";
-
-let IA = { servico: "gemini", chave: "", modelo: "", prompt: "",
-           reserva: { servico: "groq", chave: "", modelo: "" } };
-let IA_OBRA = null;
-
-async function lerIA() {
-  try {
-    const p = await pastaDo("", false) || EDIT_RAIZ;
-    const f = await (await p.getFileHandle("ia.json")).getFile();
-    const d = JSON.parse(await f.text());
-    IA = Object.assign(IA, d);
-    IA.reserva = Object.assign({ servico: "groq", chave: "", modelo: "" }, d.reserva || {});
-  } catch (e) { /* ainda não há ficha; vale o padrão */ }
-  desenhaIACab();
-}
-
-async function gravarIA() {
-  if (!EDIT_RAIZ) throw new Error("a pasta do Estúdio não está liberada");
-  const h = await EDIT_RAIZ.getFileHandle("ia.json", { create: true });
-  const w = await h.createWritable();
-  await w.write(JSON.stringify(IA, null, 1));
-  await w.close();
-}
-
-function nomeDoServico(v) {
-  const s = IA_SERVICOS.find(x => x.v === v);
-  return s ? s.r : v || "nenhum";
-}
-
-function desenhaIACab() {
-  const tem = !!IA.chave;
-  const rez = IA.reserva && IA.reserva.chave;
-  $("ia_quem").innerHTML = tem
-    ? `escrevendo com <b>${escapa(nomeDoServico(IA.servico))}</b>`
-      + (rez ? `, reserva em <b>${escapa(nomeDoServico(IA.reserva.servico))}</b>` : "")
-    : "nenhuma IA configurada";
-  $("ia_escrever").disabled = !tem;
-}
-
-function abrirCfgIA() {
-  const cfg = $("ia_cfg");
-  cfg.hidden = !cfg.hidden;
-  if (cfg.hidden) return;
-  pselNovo($("ia_servico"), IA_SERVICOS, IA.servico, v => {
-    IA.servico = v;
-    $("ia_modelo").placeholder = (IA_SERVICOS.find(x => x.v === v) || {}).modelo || "";
-  });
-  pselNovo($("ia_servico2"), IA_SERVICOS, IA.reserva.servico, v => {
-    IA.reserva.servico = v;
-    $("ia_modelo2").placeholder = (IA_SERVICOS.find(x => x.v === v) || {}).modelo || "";
-  });
-  $("ia_chave").value = IA.chave || "";
-  $("ia_modelo").value = IA.modelo || "";
-  $("ia_modelo").placeholder = (IA_SERVICOS.find(x => x.v === IA.servico) || {}).modelo || "";
-  $("ia_chave2").value = IA.reserva.chave || "";
-  $("ia_modelo2").value = IA.reserva.modelo || "";
-  $("ia_modelo2").placeholder =
-    (IA_SERVICOS.find(x => x.v === IA.reserva.servico) || {}).modelo || "";
-  $("ia_prompt").value = IA.prompt || IA_PROMPT_PADRAO;
-}
-
-$("ia_abrir_cfg").onclick = abrirCfgIA;
-$("ia_prompt_padrao").onclick = () => { $("ia_prompt").value = IA_PROMPT_PADRAO; };
-
-async function guardarIA() {
-  if ($("ia_cfg").hidden) return;         // gaveta fechada: nao ha' campo para ler
-  IA.chave = $("ia_chave").value.trim();
-  IA.modelo = $("ia_modelo").value.trim();
-  IA.prompt = $("ia_prompt").value.trim();
-  IA.reserva.chave = $("ia_chave2").value.trim();
-  IA.reserva.modelo = $("ia_modelo2").value.trim();
-  await gravarIA();
-  desenhaIACab();
-}
-
-$("ia_guardar").onclick = async () => {
-  try {
-    await guardarIA();
-    parado("ia_cfg_recado", "guardado em Estudio\\ia.json");
-  } catch (e) { parado("ia_cfg_recado", e.message); }
-};
-
-/* TESTAR NUMA PEÇA SÓ, antes de soltar nas cento e sete. Chave errada, modelo que não
-   existe e cota estourada aparecem todos aqui, em oito segundos, em vez de aparecerem no
-   meio de uma leva. */
-$("ia_testar").onclick = () => pedirEscrita(true);
-$("ia_escrever").onclick = () => pedirEscrita(false);
-
-async function pedirEscrita(soUma) {
+/* A TELA NÃO CHAMA A IA. Ela deixa o pedido e passa a olhar o andamento, igual ao
+   recorte. Quem chama é o `oficina.py`, e por um motivo que não é de gosto: as imagens
+   das frases dos cards estão no disco, e uma leva de 107 não pode depender de esta aba
+   continuar aberta. */
+async function pedirEscrita() {
   if (IA_OBRA) return;
   const campos = abertas();
-  if (!campos.length) return;
-  const alvos = alvosDaMontagem();
-  if (!alvos.length) return;
-  const lista = soUma ? alvos.slice(0, 1) : alvos;
+  const alvos = pecas3();
+  if (!campos.length || !alvos.length) return;
   try {
-    await guardarIA();
     const pedidos = await pastaDo("pedidos", true);
     if (!pedidos) throw new Error("a pasta do Estúdio não está liberada");
     const id = "e" + Date.now();
     const pedido = {
       id, tipo: "escrever", leva: EDIT_LEVA.numero,
       pasta: `leva-${EDIT_LEVA.numero}`,
-      // CADA CAIXA ABERTA LEVA O SEU LIMITE E A SUA INSTRUÇÃO. O limite sai da largura e
-      // do tamanho da letra que ele escolheu: é quanto texto cabe ali sem encolher nada.
-      campos: campos.map(c => ({ id: c.id, instrucao: c.instrucao || "",
-                                 limite: cabemAqui(c) })),
-      pecas: lista.map(i => ({ arquivo: pecas3()[i].nome }))
+      // CADA CAIXA LEVA O SEU LIMITE. Ele sai da largura da caixa e do tamanho da letra
+      // que ele escolheu: é quanto texto cabe ali sem nada precisar encolher depois.
+      campos: campos.map(c => ({ id: c.id, limite: cabemAqui(c) })),
+      pecas: alvos.map(p => ({ arquivo: p.nome })),
     };
     const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
     const w = await h.createWritable();
     await w.write(JSON.stringify(pedido, null, 1));
     await w.close();
 
-    IA_OBRA = { id, desde: Date.now(), total: lista.length, relogio: null };
+    IA_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null };
+    $("ia_escrever").disabled = true;
     $("ia_obra").hidden = false;
+    $("ia_barra").style.width = "0%";
     document.querySelector("#ia_obra .cfg-girando").style.display = "";
     $("ia_obra_txt").textContent = "pedido deixado";
     $("ia_obra_nota").textContent = "a escrita começa em até um minuto, que é o passo do "
@@ -8798,6 +9134,7 @@ async function pedirEscrita(soUma) {
     parado("ia_recado", e.message);
   }
 }
+$("ia_escrever").onclick = () => pedirEscrita();
 
 /** Quantos caracteres cabem na caixa, com a fonte e o tamanho que ele escolheu. */
 function cabemAqui(campo) {
@@ -8822,68 +9159,645 @@ async function olharAEscrita() {
   } catch (e) { return; }
   if (!d) return;
 
-  if (d.erro) {
+  const parar = () => {
     clearInterval(IA_OBRA.relogio);
     IA_OBRA = null;
     document.querySelector("#ia_obra .cfg-girando").style.display = "none";
+    $("ia_escrever").disabled = false;
+  };
+  if (d.erro) {
+    parar();
     $("ia_obra_txt").textContent = "não deu: " + d.erro;
     return;
   }
   const feitos = d.feitos || 0, total = d.total || IA_OBRA.total;
   $("ia_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
   if (!d.fim) {
-    $("ia_obra_txt").textContent = `escrevendo ${feitos + 1} de ${total}`;
+    $("ia_obra_txt").textContent = `escrevendo ${Math.min(feitos + 1, total)} de ${total}`;
     $("ia_obra_nota").textContent = d.atual ? `agora: ${d.atual}` : "";
     return;
   }
-  clearInterval(IA_OBRA.relogio);
-  IA_OBRA = null;
-  document.querySelector("#ia_obra .cfg-girando").style.display = "none";
+  parar();
   $("ia_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça escrita" : "peças escritas"}`
     + (d.falhas ? `, ${d.falhas} falharam` : "");
   const ruim = (d.diario || []).find(x => x.erro);
   $("ia_obra_nota").textContent = ruim ? ruim.erro : "";
-  // O QUE ELA ESCREVEU VOLTA PARA AS CAIXAS DA TELA, para ele ler antes de montar.
+  // O QUE ELA ESCREVEU VOLTA PARA AS CAIXAS, e daí para a galeria da fase 4.
   for (const [arq, textos] of Object.entries(d.textos || {})) {
     ESCRITO.set(arq, Object.assign(ESCRITO.get(arq) || {}, textos));
   }
-  await entrarNaIA();
+  contaEscrito();
+  await lerUsoDaIA();
+  if (feitos) irParaSub(4);          // terminou de escrever: mostra as peças prontas
 }
 
-/* ------------------------------------------------- 3.4 · os ajustes
 
-   TÍTULO LONGO NÃO CABE ONDE O CURTO CABIA. Esta fase acerta tamanho e posição peça a
-   peça, e o que está travado não é tocado. Sem a IA, o acerto é o de cabimento: a caixa
-   encolhe a letra até o texto caber na largura que ela tem, que é a conta que a IA
-   também teria de fazer no fim. */
+/* ==================================================== A IA, E ONDE ELA SE CONFIGURA
 
-let AJUSTES = new Map();           // arquivo -> { idDaCaixa: { tamanho } }
+   AQUI FICA O ESTADO; A TELA DELA MORA NA ABA DE CONFIGURAÇÕES. O Gabriel foi específico
+   em 21/08/2026: "a função de configuração não deve aparecer dentro do momento de editar,
+   nunca. Era pra ser uma aba na headline que a gente tem, no cabeçalho, antes de tudo,
+   antes de clicar na aba de editar... e a gente configurava lá dentro, validava lá
+   dentro: está funcionando a API? Qual o limite da API atual?".
 
+   A CHAVE NÃO MORA NO NAVEGADOR. Ela vai para `Estudio/ia.json`, no computador dele. Quem
+   chama a IA para valer é o `oficina.py`; a única chamada que sai daqui é a prova, e ela
+   existe justamente para a resposta ser imediata. */
+
+const IA_SERVICOS = [
+  { v: "gemini", r: "Google Gemini", modelo: "gemini-2.0-flash",
+    onde: "aistudio.google.com" },
+  { v: "groq", r: "Groq", modelo: "meta-llama/llama-4-scout-17b-16e-instruct",
+    onde: "console.groq.com" },
+  { v: "openrouter", r: "OpenRouter",
+    modelo: "meta-llama/llama-3.2-11b-vision-instruct:free", onde: "openrouter.ai" },
+];
+
+const IA_PROMPT_PADRAO =
+  "Voce le a frase de um card de noticia e escreve OUTRA frase equivalente, para um "
+  + "perfil diferente publicar.\nREGRAS:\n"
+  + "1. Mesma noticia, mesmo sentido, palavras diferentes.\n"
+  + "2. Uma linha so, no maximo {limite} caracteres.\n"
+  + "3. Portugues do Brasil, direto, sem aspas, sem emoji, sem hashtag.\n"
+  + "4. Nao invente numero, nome nem data que nao esteja na imagem.\n"
+  + "5. Se a imagem nao tiver frase legivel, responda exatamente: SEM FRASE.\n"
+  + "Responda SO com a frase.";
+
+let IA = { servico: "gemini", chave: "", modelo: "", prompt: "",
+           reserva: { servico: "groq", chave: "", modelo: "" } };
+let IA_OBRA = null;
+let IA_USO = null;
+let IA_LIDA = false;
+
+function fichaDoServico(v) { return IA_SERVICOS.find(x => x.v === v) || IA_SERVICOS[0]; }
+function nomeDoServico(v) { return fichaDoServico(v).r; }
+
+async function lerIA() {
+  if (IA_LIDA) return;
+  if (!EDIT_RAIZ) { desenhaCfgIA(); return; }
+  try {
+    const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
+    const d = JSON.parse(await f.text());
+    IA = Object.assign(IA, d);
+    IA.reserva = Object.assign({ servico: "groq", chave: "", modelo: "" }, d.reserva || {});
+  } catch (e) { /* ainda não há ficha; vale o padrão */ }
+  IA_LIDA = true;
+  await lerUsoDaIA();
+  desenhaCfgIA();
+}
+
+async function gravarIA() {
+  if (!EDIT_RAIZ) throw new Error("libere a pasta do Estúdio na aba de Edição, uma vez");
+  const h = await EDIT_RAIZ.getFileHandle("ia.json", { create: true });
+  const w = await h.createWritable();
+  await w.write(JSON.stringify(IA, null, 1));
+  await w.close();
+}
+
+/* QUANTO JÁ SE GASTOU, e a conta é do que saiu daqui. Nenhum dos três serviços publica o
+   saldo restante por programa, então prometer "faltam tantas" seria invenção. O que dá
+   para saber com certeza é quantos pedidos este computador mandou hoje, quantos voltaram
+   recusados por cota e qual serviço atendeu o último. */
+async function lerUsoDaIA() {
+  try {
+    const f = await (await EDIT_RAIZ.getFileHandle("ia-uso.json")).getFile();
+    IA_USO = JSON.parse(await f.text());
+  } catch (e) { IA_USO = null; }
+  desenhaUsoDaIA();
+}
+
+function desenhaUsoDaIA() {
+  const u = IA_USO || {};
+  const linha = (r, v) => `<div class="cfg-par"><span>${r}</span><b>${v}</b></div>`;
+  $("ia_uso_dia").textContent = u.dia ? "em " + u.dia.split("-").reverse().join("/") : "hoje";
+  $("ia_uso").innerHTML =
+    linha("frases pedidas", num(u.pedidos || 0))
+    + linha("recusadas por cota", num(u.sem_cota || 0))
+    + linha("outros erros", num(u.erros || 0))
+    + linha("último atendimento", u.ultimo && u.ultimo.servico
+        ? nomeDoServico(u.ultimo.servico) : "nenhum ainda");
+}
+
+function desenhaCfgIA() {
+  const ficha = fichaDoServico(IA.servico), f2 = fichaDoServico(IA.reserva.servico);
+  pselNovo($("ia_servico"), IA_SERVICOS, IA.servico, v => {
+    IA.servico = v;
+    $("ia_modelo").placeholder = fichaDoServico(v).modelo;
+    $("ia_onde_pegar").innerHTML = "A chave gratuita do "
+      + `<b>${escapa(fichaDoServico(v).r)}</b> sai em <b>${escapa(fichaDoServico(v).onde)}</b>.`;
+  });
+  pselNovo($("ia_servico2"), IA_SERVICOS, IA.reserva.servico, v => {
+    IA.reserva.servico = v;
+    $("ia_modelo2").placeholder = fichaDoServico(v).modelo;
+  });
+  $("ia_chave").value = IA.chave || "";
+  $("ia_modelo").value = IA.modelo || "";
+  $("ia_modelo").placeholder = ficha.modelo;
+  $("ia_chave2").value = IA.reserva.chave || "";
+  $("ia_modelo2").value = IA.reserva.modelo || "";
+  $("ia_modelo2").placeholder = f2.modelo;
+  $("ia_prompt").value = IA.prompt || IA_PROMPT_PADRAO;
+  $("ia_onde_pegar").innerHTML = "A chave gratuita do "
+    + `<b>${escapa(ficha.r)}</b> sai em <b>${escapa(ficha.onde)}</b>.`;
+  $("ia_selo").textContent = IA.chave ? "com chave" : "sem chave";
+  $("ia_selo2").textContent = IA.reserva.chave ? "com chave" : "vazia";
+  $("ia_estado_nome").textContent = IA.chave
+    ? "escrevendo com " + nomeDoServico(IA.servico)
+    : "nenhuma IA configurada";
+}
+
+$("ia_prompt_padrao").onclick = () => { $("ia_prompt").value = IA_PROMPT_PADRAO; };
+
+function lerCamposDaIA() {
+  IA.chave = $("ia_chave").value.trim();
+  IA.modelo = $("ia_modelo").value.trim();
+  IA.prompt = $("ia_prompt").value.trim();
+  IA.reserva.chave = $("ia_chave2").value.trim();
+  IA.reserva.modelo = $("ia_modelo2").value.trim();
+}
+
+$("ia_guardar").onclick = async () => {
+  lerCamposDaIA();
+  try {
+    await gravarIA();
+    desenhaCfgIA();
+    parado("ia_cfg_recado", "guardado em Estudio\\ia.json");
+  } catch (e) { parado("ia_cfg_recado", e.message); }
+};
+
+/* A PROVA, e ela sai DAQUI e não do programa local. É a única chamada que o navegador faz
+   a uma IA, e existe por um motivo só: resposta em segundos. Se ela fosse pelo caminho
+   normal, provar a chave custaria o minuto que o programa leva para passar na pasta, e
+   ninguém confere uma chave esperando um minuto por tentativa.
+
+   E ELA PROVA O QUE IMPORTA, que é ler imagem. Um "responda PRONTO" diria que a chave
+   existe e nada mais; o trabalho de verdade é olhar o card e reescrever a frase, então a
+   prova desenha uma frase numa imagem e pede exatamente isso. */
+async function provarIA() {
+  const b = $("ia_provar");
+  b.disabled = true;
+  const antes = b.textContent;
+  b.textContent = "provando...";
+  parado("ia_prova_diz", "");
+  lerCamposDaIA();
+  try {
+    if (!IA.chave) throw new Error("preencha a chave primeiro");
+    const frase = "Bolsa fecha em alta de 2% nesta terça, puxada pelos bancos";
+    const dito = await chamarIA(IA.servico, IA.chave, IA.modelo,
+      IA_PROMPT_PADRAO.replace("{limite}", "70"), await imagemDeProva(frase));
+    $("ia_selo").textContent = "funcionando";
+    $("ia_estado_nome").textContent = "escrevendo com " + nomeDoServico(IA.servico);
+    $("ia_estado_desc").textContent = "a prova mandou uma frase de card e ela voltou "
+      + "reescrita, então a chave, o modelo e a leitura de imagem estão de pé.";
+    parado("ia_prova_diz", `deu certo. Da frase "${frase}" ela escreveu: "${dito}"`);
+  } catch (e) {
+    $("ia_selo").textContent = "não respondeu";
+    parado("ia_prova_diz", "não deu: " + e.message);
+  }
+  b.disabled = false;
+  b.textContent = antes;
+}
+$("ia_provar").onclick = provarIA;
+
+/** Desenha a frase numa imagem, que é a forma como a IA vê o card de verdade. */
+async function imagemDeProva(frase) {
+  const c = document.createElement("canvas");
+  c.width = 720; c.height = 200;
+  const x = c.getContext("2d");
+  x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height);
+  x.fillStyle = "#111111"; x.font = "bold 34px Arial, sans-serif";
+  const palavras = frase.split(" ");
+  let linha = "", y = 70;
+  for (const p of palavras) {
+    if (x.measureText(linha + " " + p).width > 660 && linha) {
+      x.fillText(linha, 30, y); y += 46; linha = p;
+    } else linha = linha ? linha + " " + p : p;
+  }
+  x.fillText(linha, 30, y);
+  return c.toDataURL("image/png").split(",")[1];
+}
+
+/** Uma chamada à IA, no formato que cada serviço pede. É o mesmo do `oficina.py`. */
+async function chamarIA(servico, chave, modelo, prompt, b64) {
+  const ficha = fichaDoServico(servico);
+  modelo = modelo || ficha.modelo;
+  let url, corpo, cabeca = { "Content-Type": "application/json" };
+  if (servico === "gemini") {
+    url = "https://generativelanguage.googleapis.com/v1beta/models/"
+      + encodeURIComponent(modelo) + ":generateContent?key=" + encodeURIComponent(chave);
+    const partes = [{ text: prompt }];
+    if (b64) partes.push({ inline_data: { mime_type: "image/png", data: b64 } });
+    corpo = { contents: [{ parts: partes }],
+              generationConfig: { temperature: 0.9, maxOutputTokens: 200 } };
+  } else {
+    url = servico === "groq" ? "https://api.groq.com/openai/v1/chat/completions"
+                             : "https://openrouter.ai/api/v1/chat/completions";
+    const conteudo = [{ type: "text", text: prompt }];
+    if (b64) conteudo.push({ type: "image_url",
+                             image_url: { url: "data:image/png;base64," + b64 } });
+    corpo = { model: modelo, temperature: 0.9, max_tokens: 200,
+              messages: [{ role: "user", content: conteudo }] };
+    cabeca.Authorization = "Bearer " + chave;
+  }
+  let r;
+  try {
+    r = await fetch(url, { method: "POST", headers: cabeca, body: JSON.stringify(corpo) });
+  } catch (e) {
+    throw new Error("não consegui falar com o serviço daqui do navegador. "
+      + "A chave pode estar certa mesmo assim: quem chama de verdade é o programa "
+      + "deste computador.");
+  }
+  const txt = await r.text();
+  if (!r.ok) {
+    if (r.status === 429 || r.status === 402) throw new Error("a cota deste serviço acabou");
+    if (r.status === 400 || r.status === 401 || r.status === 403) {
+      throw new Error("o serviço recusou a chave ou o modelo (" + r.status + ")");
+    }
+    throw new Error(r.status + ": " + txt.slice(0, 160));
+  }
+  let d;
+  try { d = JSON.parse(txt); } catch (e) { throw new Error("resposta ilegível"); }
+  const dito = servico === "gemini"
+    ? d.candidates?.[0]?.content?.parts?.[0]?.text
+    : d.choices?.[0]?.message?.content;
+  if (!dito) throw new Error("o serviço respondeu sem texto");
+  return dito.trim().replace(/^"|"$/g, "");
+}
+
+
+/* ---------------------------------------------------- a aba de Configurações
+
+   O MENU DA ESQUERDA TROCA A PÁGINA DA DIREITA, e é o mesmo desenho do Social Tracker. */
+
+function irParaCfg(pg) {
+  document.querySelectorAll("#aba-config .cfg-pagina").forEach(p =>
+    p.classList.toggle("cfg-ativa", p.dataset.pg === pg));
+  document.querySelectorAll("#aba-config .cfg-item").forEach(a =>
+    a.classList.toggle("cfg-ativo", a.dataset.cfg === pg));
+  if (pg === "fontes") desenhaAsFontes();
+  if (pg === "pastas") desenhaAsPastas();
+  if (pg === "motor") desenhaOMotor();
+}
+document.querySelectorAll("#aba-config .cfg-item").forEach(a => {
+  a.onclick = ev => { ev.preventDefault(); irParaCfg(a.dataset.cfg); };
+});
+document.querySelector('#aba-config .cfg-item').classList.add("cfg-ativo");
+
+/* CADA FONTE ESCRITA NA PRÓPRIA FONTE. Uma lista de nomes não diz nada: o que se escolhe
+   ali é o desenho da letra, então ele precisa estar na tela. */
+function desenhaAsFontes() {
+  $("fon_n").textContent = FONTES.length + " famílias";
+  $("fon_lista").innerHTML = FONTES.map(f =>
+    `<div class="cfg-fonte"><i>${escapa(f.g || "")}</i>`
+    + `<b style="font-family:${fonteCss(f.v)}">${escapa(f.r)}</b></div>`).join("");
+}
+
+function desenhaOMotor() {
+  $("mot_onde").textContent = "3 peças por vez";
+}
+
+async function desenhaAsPastas() {
+  const selo = $("pas_selo"), lista = $("pas_lista");
+  if (!EDIT_RAIZ) {
+    selo.textContent = "não liberada";
+    lista.innerHTML = '<div class="cfg-linha"><div><div class="cfg-nome">'
+      + 'A pasta ainda não foi liberada</div><div class="cfg-desc">Abra a aba de Edição e '
+      + 'libere a pasta do Estúdio uma vez. O navegador só enxerga o disco com essa '
+      + 'permissão, e ela vale para tudo que o sistema grava.</div></div></div>';
+    return;
+  }
+  selo.textContent = "liberada";
+  const contar = async nome => {
+    try {
+      const d = await EDIT_RAIZ.getDirectoryHandle(nome);
+      let n = 0;
+      for await (const _ of d.values()) n++;
+      return n;
+    } catch (e) { return null; }
+  };
+  const quadros = [
+    ["levas", "os reels baixados, ainda inteiros"],
+    ["recortes", "o B-roll de cada reel, já em 1080 por 1920"],
+    ["edicoes", "as peças montadas, prontas para publicar"],
+    ["templates", "os templates guardados"],
+    ["fontes", "as fontes que o programa usa para desenhar o texto"],
+    ["pedidos", "a fila entre esta tela e o programa deste computador"],
+  ];
+  const linhas = [];
+  for (const [nome, diz] of quadros) {
+    const n = await contar(nome);
+    linhas.push('<div class="cfg-linha"><div><div class="cfg-nome">Estudio\\' + nome
+      + '</div><div class="cfg-desc">' + diz + '</div></div><div class="dir">'
+      + '<span class="badge badge-secondary">'
+      + (n === null ? "não existe" : num(n) + (n === 1 ? " item" : " itens"))
+      + "</span></div></div>");
+  }
+  lista.innerHTML = linhas.join("");
+}
+
+/* ============================================ FASE 4 · AS PEÇAS PRONTAS
+
+   ELE OLHA, AJUSTA, E SÓ ENTÃO MANDA FABRICAR. A forma foi decidida por ele em
+   21/08/2026, respondendo à única pergunta que eu não podia responder sozinho: as peças
+   aparecem já fabricadas ou desenhadas na tela? "A tela mostrando como ficou, para no
+   mais tardar eu ajustar na mão, depois clicar em um botão para fabricar."
+
+   POR QUE ISSO NÃO É DETALHE: fabricar as 107 antes de ele olhar custa uma rodada inteira
+   de conversão, e cada ajuste depois obrigaria a refazer tudo. Desenhadas, elas aparecem
+   na hora, ele mexe à vontade, e a conversão roda uma vez só, no fim, já aprovada. */
+
+let AJUSTES = new Map();          // arquivo -> { idDaCaixa: { tamanho, x, y } }
+let GAL_ABERTA = -1;              // qual peça está aberta na lupa
+let GAL_SEL = null;               // qual elemento está escolhido dentro dela
+const MASCARAS = new Map();       // arquivo -> endereço da máscara já virada em alfa
+
+/* O RECORTE É PRETO POR FORA, E VÍDEO NÃO TEM TRANSPARÊNCIA. Foi isso que fez a cor de
+   fundo não aparecer: o Gabriel escolhia verde, escolhia laranja, e a tela continuava
+   preta, porque o retângulo preto do vídeo cobre o fundo inteiro. "Não sei o que está
+   acontecendo aqui, mas olha o que acontece, olha onde é que aparece o verde."
+
+   A MÁSCARA JÁ EXISTIA NO DISCO para exatamente isto, e o preview simplesmente não a
+   usava: o arquivo gravado saía com a cor certa e a tela mostrava outra coisa. Aqui ela
+   vira um alfa e recorta o vídeo, então o que se vê é o que sai.
+
+   A VOLTA PELO CANVAS É NECESSÁRIA. A máscara no disco é preta e branca, opaca inteira, e
+   `mask-image` do navegador olha o ALFA e não o brilho. Sem esta conversão a máscara seria
+   opaca de ponta a ponta e não recortaria nada. */
+async function mascaraDe(nome) {
+  if (MASCARAS.has(nome)) return MASCARAS.get(nome);
+  let url = null;
+  try {
+    const raiz = await pastaDo("recortes", false);
+    const pasta = await (await raiz.getDirectoryHandle("leva-" + EDIT_LEVA.numero))
+      .getDirectoryHandle("_mascaras");
+    const arq = await (await pasta.getFileHandle(nome.replace(/\.[^.]+$/, ".png"))).getFile();
+    url = await alfaDaMascara(arq);
+  } catch (e) { url = null; }     // peça de tela cheia não tem máscara, e nem precisa
+  MASCARAS.set(nome, url);
+  return url;
+}
+
+function alfaDaMascara(arquivo) {
+  return new Promise(pronto => {
+    const img = new Image();
+    const de = URL.createObjectURL(arquivo);
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const x = c.getContext("2d");
+        x.drawImage(img, 0, 0);
+        const d = x.getImageData(0, 0, c.width, c.height);
+        for (let i = 0; i < d.data.length; i += 4) {
+          d.data[i + 3] = d.data[i];     // branco vira opaco, preto vira furo
+          d.data[i] = d.data[i + 1] = d.data[i + 2] = 0;
+        }
+        x.putImageData(d, 0, 0);
+        c.toBlob(b => { URL.revokeObjectURL(de); pronto(b ? URL.createObjectURL(b) : null); });
+      } catch (e) { URL.revokeObjectURL(de); pronto(null); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(de); pronto(null); };
+    img.src = de;
+  });
+}
+
+function vestirMascara(v, url) {
+  v.style.webkitMaskImage = url ? `url(${url})` : "";
+  v.style.maskImage = url ? `url(${url})` : "";
+  v.style.webkitMaskSize = "100% 100%";
+  v.style.maskSize = "100% 100%";
+}
+
+/** O texto que esta peça mostra nesta caixa: o da IA se ela escreveu, senão o do molde. */
+function textoDaPeca(el, nome) {
+  if (el.trava) return el.texto || "";
+  const g = ESCRITO.get(nome) || {};
+  return (g[el.id] || el.texto || "");
+}
+
+/** O acerto desta peça para este elemento, com o do molde como piso. */
+function medidaDaPeca(el, nome) {
+  const a = (AJUSTES.get(nome) || {})[el.id] || {};
+  return { tamanho: a.tamanho != null ? a.tamanho : el.tamanho,
+           x: a.x != null ? a.x : el.x, y: a.y != null ? a.y : el.y,
+           mexido: a.tamanho != null || a.x != null || a.y != null };
+}
+
+/* DESENHA UMA PEÇA numa caixa 9 por 16. É o mesmo cálculo do editor e o mesmo que o
+   `oficina.py` faz na hora de gravar: o tamanho da letra é fração da ALTURA da peça, e é
+   `container-type:size` no CSS que faz `cqh` significar isso aqui. */
+async function pintaPeca(alvo, peca, indice, interativa) {
+  if (!TPL) return;
+  alvo.style.background = TPL.fundoCor || "#000000";
+  alvo.innerHTML = "";
+  const v = document.createElement("video");
+  v.muted = true; v.playsInline = true; v.loop = true; v.preload = "metadata";
+  v.dataset.arq = indice;
+  alvo.appendChild(v);
+
+  for (const el of TPL.elementos) {
+    const m = medidaDaPeca(el, peca.nome);
+    const d = document.createElement("div");
+    d.className = "gal-el" + (interativa && el.id === GAL_SEL ? " sel" : "");
+    d.dataset.id = el.id;
+    d.style.left = (m.x * 100) + "%";
+    d.style.top = (m.y * 100) + "%";
+    d.style.width = (el.w * 100) + "%";
+    if (el.tipo === "texto") {
+      d.style.color = el.cor;
+      d.style.fontFamily = fonteCss(el.fonte);
+      d.style.fontWeight = el.peso;
+      d.style.textAlign = el.alinha === "centro" ? "center"
+        : el.alinha === "direita" ? "right" : "left";
+      d.style.fontSize = (m.tamanho * 100) + "cqh";
+      d.textContent = textoDaPeca(el, peca.nome) || " ";
+    } else {
+      d.style.height = (el.h * 100) + "%";
+      const u = await enderecoDo(el.arquivo);
+      if (u) { const i = document.createElement("img"); i.src = u; d.appendChild(i); }
+    }
+    alvo.appendChild(d);
+  }
+  return v;
+}
+
+/** Abre o vídeo do disco e veste a máscara. Só quando a peça entra na tela. */
+async function acenderPeca(v) {
+  if (v.dataset.aceso) return;
+  v.dataset.aceso = "1";
+  const p = pecas3()[Number(v.dataset.arq)];
+  if (!p) return;
+  try {
+    const f = await p.h.getFile();
+    v.src = URL.createObjectURL(f) + "#t=1.5";
+    vestirMascara(v, await mascaraDe(p.nome));
+  } catch (e) { /* o arquivo saiu da pasta desde a leitura */ }
+}
+
+async function desenhaGaleria() {
+  const g = $("gal_grade");
+  const pecas = pecas3();
+  const campos = abertas();
+  let escritas = 0, mexidas = 0;
+  for (const p of pecas) {
+    const t = ESCRITO.get(p.nome) || {};
+    if (campos.length && campos.every(c => (t[c.id] || "").trim())) escritas++;
+    if (AJUSTES.has(p.nome)) mexidas++;
+  }
+  $("gal_conta").innerHTML = `<b>${pecas.length}</b> `
+    + (pecas.length === 1 ? "peça" : "peças")
+    + (campos.length ? `, <b>${escritas}</b> com texto da IA` : "")
+    + (mexidas ? `, <b>${mexidas}</b> com ajuste seu` : "");
+
+  g.innerHTML = "";
+  const videos = [];
+  for (let i = 0; i < pecas.length; i++) {
+    const cartao = document.createElement("div");
+    cartao.className = "gal-peca" + (AJUSTES.has(pecas[i].nome) ? " mexida" : "");
+    cartao.dataset.i = i;
+    const tela = document.createElement("div");
+    tela.className = "gal-tela";
+    cartao.appendChild(tela);
+    const pe = document.createElement("div");
+    pe.className = "gal-pe";
+    pe.innerHTML = `<b>${escapa(String(pecas[i].nome).slice(0, 18))}</b>`
+      + (AJUSTES.has(pecas[i].nome) ? '<span class="gal-selo">ajustada</span>' : "");
+    cartao.appendChild(pe);
+    g.appendChild(cartao);
+    videos.push(await pintaPeca(tela, pecas[i], i, false));
+  }
+  // AS PRIMEIRAS ABREM JÁ; O RESTO ESPERA CHEGAR NA TELA. Cento e sete vídeos abertos de
+  // uma vez travam a aba, e a maioria nunca chega a ser olhada.
+  const olho = new IntersectionObserver((es, obs) => {
+    for (const e of es) {
+      if (!e.isIntersecting) continue;
+      acenderPeca(e.target);
+      obs.unobserve(e.target);
+    }
+  }, { rootMargin: "300px" });
+  videos.forEach((v, k) => { if (!v) return; if (k < 8) acenderPeca(v); else olho.observe(v); });
+  resumoDeAplicar();
+}
+
+/* ------------------------------------------------ a peça aberta, para acertar uma só */
+
+$("gal_grade").addEventListener("click", ev => {
+  const c = ev.target.closest(".gal-peca");
+  if (c) abrirLupa(Number(c.dataset.i));
+});
+
+async function abrirLupa(i) {
+  const p = pecas3()[i];
+  if (!p) return;
+  GAL_ABERTA = i;
+  GAL_SEL = null;
+  $("gal_lupa_nome").textContent = p.nome;
+  $("gal_fundo").hidden = false;
+  $("gal_lupa").hidden = false;
+  await redesenhaLupa();
+}
+
+async function redesenhaLupa() {
+  const p = pecas3()[GAL_ABERTA];
+  if (!p) return;
+  const v = await pintaPeca($("gal_lupa_tela"), p, GAL_ABERTA, true);
+  if (v) { acenderPeca(v); v.play().catch(() => {}); }
+  desenhaLupaProps();
+}
+
+function fecharLupa() {
+  GAL_ABERTA = -1;
+  GAL_SEL = null;
+  $("gal_fundo").hidden = true;
+  $("gal_lupa").hidden = true;
+  desenhaGaleria();
+}
+$("gal_lupa_fechar").onclick = fecharLupa;
+$("gal_fundo").onclick = fecharLupa;
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && GAL_ABERTA >= 0) fecharLupa();
+});
+
+$("gal_lupa_tela").addEventListener("click", ev => {
+  const d = ev.target.closest(".gal-el");
+  GAL_SEL = d ? d.dataset.id : null;
+  $("gal_lupa_tela").querySelectorAll(".gal-el").forEach(x =>
+    x.classList.toggle("sel", x.dataset.id === GAL_SEL));
+  desenhaLupaProps();
+});
+
+function desenhaLupaProps() {
+  const el = TPL && TPL.elementos.find(x => x.id === GAL_SEL);
+  $("gal_lupa_vazio").hidden = !!el;
+  $("gal_lupa_props").hidden = !el;
+  $("gl_para_todas").disabled = !AJUSTES.has((pecas3()[GAL_ABERTA] || {}).nome);
+  if (!el) return;
+  const nome = pecas3()[GAL_ABERTA].nome;
+  const m = medidaDaPeca(el, nome);
+  $("gl_travado").hidden = !el.trava;
+  const guardar = (chave, valor) => {
+    const a = AJUSTES.get(nome) || {};
+    a[el.id] = Object.assign({}, a[el.id], { [chave]: valor });
+    AJUSTES.set(nome, a);
+    redesenhaLupa();
+  };
+  if (el.tipo === "texto") {
+    passoNovo($("gl_tamanho"), 10, 140, 2, Math.round(m.tamanho * 1000),
+              v => (v / 10).toFixed(1) + "%", v => guardar("tamanho", v / 1000));
+  } else {
+    passoNovo($("gl_tamanho"), 3, 100, 2, Math.round(el.w * 100), v => v + "%", () => {});
+  }
+  passoNovo($("gl_x"), -20, 100, 1, Math.round(m.x * 100),
+            v => "esquerda " + v + "%", v => guardar("x", v / 100));
+  passoNovo($("gl_y"), -20, 100, 1, Math.round(m.y * 100),
+            v => "topo " + v + "%", v => guardar("y", v / 100));
+}
+
+$("gal_lupa_zerar").onclick = () => {
+  const p = pecas3()[GAL_ABERTA];
+  if (!p) return;
+  AJUSTES.delete(p.nome);
+  redesenhaLupa();
+};
+
+$("gl_para_todas").onclick = () => {
+  const p = pecas3()[GAL_ABERTA];
+  const a = p && AJUSTES.get(p.nome);
+  if (!a) return;
+  for (const outra of pecas3()) {
+    AJUSTES.set(outra.nome, JSON.parse(JSON.stringify(a)));
+  }
+  parado("apl_resumo", "os ajustes desta peça passaram para todas.");
+  redesenhaLupa();
+};
+
+/* ------------------------------------------------ o acerto de cabimento, em bloco
+
+   TÍTULO LONGO NÃO CABE ONDE O CURTO CABIA. A IA escreve com um limite de caracteres, mas
+   limite não é largura: uma palavra comprida estoura a caixa mesmo dentro do limite. Aqui
+   a letra encolhe até o texto caber em três linhas, peça por peça, e o que está travado
+   não é tocado. */
 $("ajs_acertar").onclick = () => {
   const campos = abertas();
   if (!campos.length) return parado("apl_resumo", "nenhuma caixa aberta para acertar.");
-  AJUSTES.clear();
-  const alvos = alvosDaMontagem();
   let mexidas = 0;
-  for (const i of alvos) {
-    const p = pecas3()[i];
-    if (!p) continue;
+  for (const p of pecas3()) {
     const g = ESCRITO.get(p.nome) || {};
-    const desta = {};
     for (const c of campos) {
       const texto = (g[c.id] || c.texto || "").trim();
       if (!texto) continue;
       const cabe = tamanhoQueCabe(c, texto);
       if (Math.abs(cabe - c.tamanho) > 0.0005) {
-        desta[c.id] = { tamanho: cabe };
+        const a = AJUSTES.get(p.nome) || {};
+        a[c.id] = Object.assign({}, a[c.id], { tamanho: cabe });
+        AJUSTES.set(p.nome, a);
         mexidas++;
       }
     }
-    if (Object.keys(desta).length) AJUSTES.set(p.nome, desta);
   }
-  resumoDeAplicar();
+  desenhaGaleria();
   parado("apl_resumo", mexidas
-    ? `${mexidas} ${mexidas === 1 ? "caixa acertada" : "caixas acertadas"} para o texto caber.`
+    ? `${mexidas} ${mexidas === 1 ? "caixa encolhida" : "caixas encolhidas"} para o texto caber.`
     : "todos os textos já cabem do jeito que estão.");
 };
 
@@ -8930,7 +9844,7 @@ function irParaSub(n) {
     if (n !== 2) destino.appendChild($("ed_medida"));
   }
   if (n === 3) entrarNaIA();
-  if (n === 4) desenhaAplicar();
+  if (n === 4) desenhaGaleria();
   desenhaSubTrilho();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -8971,9 +9885,6 @@ async function tentarRetomar() {
   if (!EDIT_PECAS.length) return;         // espera a pasta ser liberada
   const r = RETOMAR;
   RETOMAR = null;
-  APL_MODO = r.modo || "todas";
-  APL_MARCADAS.clear();
-  for (const i of (r.marcadas || [])) APL_MARCADAS.add(i);
   if (!ACERVO.itens.length) await lerAcervo();
   if (r.template) {
     const arq = await arquivoDoAcervo(r.template + ".json");
@@ -9008,62 +9919,16 @@ async function entrarNoTemplate() {
 }
 
 
-/* ---------------------------------------------------- 3.4 · a quem se aplica */
+/* ---------------------------------------------------- a montagem
 
-let APL_MODO = "todas";
-const APL_MARCADAS = new Set();
+   NÃO HÁ MAIS "TODAS OU ALGUMAS". A escolha existia quando a fase 4 era uma pergunta; ela
+   agora é a galeria, onde as peças estão todas na tela e o que se faz é olhar e ajustar.
+   Montar é sempre a leva inteira. */
+
 let OBRA = null;
 let MONTADO = null;                // { pecas, pasta, link } da montagem cumprida
 
-const TIQUE = '<span class="apl-tique"><svg viewBox="0 0 24 24" fill="none" '
-  + 'stroke="currentColor" stroke-width="3" stroke-linecap="round" '
-  + 'stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>';
-
-/** Miniaturas de peças, abrindo o arquivo só quando entram na tela. */
-function povoarGrade(alvo, indices, classe) {
-  alvo.innerHTML = indices.map(i =>
-    `<div class="${classe}" data-i="${i}"><video preload="metadata" muted playsinline
-       data-arq="${i}"></video>${classe === "apl-mini" ? TIQUE : ""}</div>`).join("");
-  const olho = new IntersectionObserver((es, obs) => {
-    for (const e of es) {
-      if (!e.isIntersecting) continue;
-      obs.unobserve(e.target);
-      abrirArquivoDaGrade(e.target);
-    }
-  }, { rootMargin: "250px" });
-  alvo.querySelectorAll("video[data-arq]").forEach((v, k) => {
-    if (k < 12) abrirArquivoDaGrade(v); else olho.observe(v);
-  });
-}
-
-async function abrirArquivoDaGrade(v) {
-  if (v.src) return;
-  try {
-    const f = await pecas3()[Number(v.dataset.arq)].h.getFile();
-    v.src = URL.createObjectURL(f) + "#t=1.5";
-  } catch (e) { /* o arquivo saiu da pasta desde a leitura */ }
-}
-
-function desenhaAplicar() {
-  $("apl_n_todas").textContent = pecas3().length
-    + (pecas3().length === 1 ? " peça" : " peças");
-  document.querySelectorAll(".apl-op").forEach(b =>
-    b.classList.toggle("ativa", b.dataset.modo === APL_MODO));
-  const g = $("apl_grade");
-  g.hidden = APL_MODO !== "algumas";
-  if (APL_MODO === "algumas" && !g.dataset.cheia) {
-    povoarGrade(g, pecas3().map((_, i) => i), "apl-mini");
-    g.dataset.cheia = "1";
-    g.querySelectorAll(".apl-mini").forEach(m =>
-      m.classList.toggle("marcado", APL_MARCADAS.has(Number(m.dataset.i))));
-  }
-  resumoDeAplicar();
-}
-
-function alvosDaMontagem() {
-  if (APL_MODO === "algumas") return [...APL_MARCADAS].sort((a, b) => a - b);
-  return pecas3().map((_, i) => i);
-}
+function alvosDaMontagem() { return pecas3().map((_, i) => i); }
 
 function resumoDeAplicar() {
   const n = alvosDaMontagem().length;
@@ -9072,34 +9937,6 @@ function resumoDeAplicar() {
   $("apl_resumo").innerHTML = TPL
     ? `<b>${n}</b> ${n === 1 ? "peça" : "peças"}, em ${TELA.w} por ${TELA.h}.`
     : "monte o template nas fases anteriores.";
-}
-
-document.querySelectorAll(".apl-op").forEach(b => {
-  b.onclick = () => { APL_MODO = b.dataset.modo; desenhaAplicar(); };
-});
-
-$("apl_grade").addEventListener("click", ev => {
-  const m = ev.target.closest(".apl-mini");
-  if (!m) return;
-  const i = Number(m.dataset.i);
-  if (APL_MARCADAS.has(i)) APL_MARCADAS.delete(i); else APL_MARCADAS.add(i);
-  m.classList.toggle("marcado", APL_MARCADAS.has(i));
-  resumoDeAplicar();
-});
-
-/* ---------------------------------------------------------- deixar o pedido
-
-   A TELA NÃO MONTA NADA: ela escreve o pedido e passa a olhar o andamento. Quem monta é
-   o `oficina.py`, que roda neste computador de minuto em minuto. Por isso a primeira
-   frase que aparece é sobre a espera: sem ela, o minuto entre o clique e o primeiro
-   sinal de vida é indistinguível de tela travada. */
-async function nomeLivre(edicoes, base) {
-  for (let i = 1; i < 60; i++) {
-    const nome = i === 1 ? base : `${base} (${i})`;
-    try { await edicoes.getDirectoryHandle(nome); }
-    catch (e) { return { nome, n: i }; }
-  }
-  return { nome: base, n: 1 };
 }
 
 $("apl_montar").onclick = async () => {
