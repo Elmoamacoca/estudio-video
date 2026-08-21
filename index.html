@@ -7216,8 +7216,8 @@ function esquecerOsPassos() {
   ED_BROLL_I = -1;
   APL_MODO = "todas";
   APL_MARCADAS.clear();
-  LEG.clear();
-  LEG_PRONTO = null;
+  ESCRITO.clear();
+  AJUSTES.clear();
   desenhaFeito();
 }
 
@@ -8658,6 +8658,40 @@ $("ed_vai_ia").onclick = () => irParaSub(3);
 $("ed_volta_imagens").onclick = () => irParaSub(2);
 $("ed_vai_ajuste").onclick = () => irParaSub(4);
 $("ed_volta_ia").onclick = () => irParaSub(3);
+
+/* RETOMAR UM RASCUNHO. O que se recupera é onde ele parou e qual template estava na
+   bancada; o resto vem do disco, que é onde ele de fato mora. Enquanto as peças não
+   chegam, o pedido de retomada fica pendurado: a permissão da pasta só é dada depois de
+   um clique, e sem pasta não há recorte nem acervo para abrir. Foi exatamente esse o
+   sintoma que travou o rascunho no primeiro sub-passo. */
+let RETOMAR = null;
+
+async function tentarRetomar() {
+  if (!RETOMAR) return;
+  if (!EDIT_PECAS.length) return;         // espera a pasta ser liberada
+  const r = RETOMAR;
+  RETOMAR = null;
+  APL_MODO = r.modo || "todas";
+  APL_MARCADAS.clear();
+  for (const i of (r.marcadas || [])) APL_MARCADAS.add(i);
+  if (!ACERVO.itens.length) await lerAcervo();
+  if (r.template) {
+    const arq = await arquivoDoAcervo(r.template + ".json");
+    if (arq) {
+      try {
+        TPL = JSON.parse(await arq.text());
+        TPL.id = r.template;
+        TPL.elementos = TPL.elementos || [];
+      } catch (e) { TPL = null; }
+    }
+  }
+  if (TPL) {
+    await entrarNoTemplate();
+    const alvo = Math.min(4, Math.max(1, r.sub || 1));
+    if (alvo > 1) irParaSub(alvo);
+  }
+  salvarRascunho();
+}
 
 async function entrarNoTemplate() {
   if (!EDIT_RECORTES.length) await procurarRecortes();
