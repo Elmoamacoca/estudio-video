@@ -2433,6 +2433,45 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .ia-chave-botoes{margin-left:0}
 }
 
+
+/* ==================================================== A JANELA DA CHAVE DA IA
+
+   "NA HORA DE CLICAR EM ACRESCENTAR UMA CHAVE, deve aparecer uma opção de pop-up." Antes,
+   acrescentar abria uma linha vazia com três campos espremidos no meio da lista. */
+.pop-fundo{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.62);
+  backdrop-filter:blur(2px)}
+.pop{position:fixed;z-index:81;inset:50% auto auto 50%;transform:translate(-50%,-50%);
+  width:min(520px,94vw);max-height:92vh;display:flex;flex-direction:column;
+  border:1px solid var(--rule-solid);border-radius:16px;background:var(--paper);
+  box-shadow:0 26px 70px rgba(0,0,0,.45)}
+.pop-cab{display:flex;align-items:center;gap:12px;padding:16px 18px;
+  border-bottom:1px solid var(--rule-solid)}
+.pop-cab b{font-size:15px;letter-spacing:-.2px}
+.pop-cab .gal-x{margin-left:auto}
+.pop-corpo{display:flex;flex-direction:column;gap:16px;padding:20px 18px}
+.pop-corpo .cfg-campo{min-width:0}
+.pop-corpo .nota.mini{margin:0;line-height:1.55}
+.pop-pe{display:flex;align-items:center;gap:10px;padding:14px 18px;
+  border-top:1px solid var(--rule-solid)}
+.pop-pe .acao.forte{margin-left:auto}
+.pop-diz{font-size:12.5px;line-height:1.55;color:var(--muted)}
+.pop-diz:empty{display:none}
+.pop-diz.boa{color:var(--accent)}
+.pop-diz.ruim{color:#e0574b}
+.pop-diz i{font-style:italic}
+
+/* A LINHA DA FILA VIRA RESUMO. Ela mostra o que existe; mexer abre a janela. */
+.ia-chave-corpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.ia-chave-topo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ia-chave-topo b{font-size:14px}
+.ia-chave-resumo{font-size:12px;color:var(--muted);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ia-chave-resumo i{font-style:normal;opacity:.5;margin:0 4px}
+.ia-chave-diz:empty{display:none}
+.ia-chave-diz{font-size:12px;line-height:1.5;color:var(--muted);margin-top:2px}
+.ia-chave-botoes{flex:0 0 auto;display:flex;align-items:center;gap:6px;
+  align-self:flex-start}
+
 </style>
 </head>
 <body>
@@ -3845,18 +3884,18 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
      ELA NASCEU AQUI, E NÃO DENTRO DA EDIÇÃO. A chave da IA morava numa gaveta da fase 3,
      no meio do trabalho, e o Gabriel cortou isso em 21/08/2026: "a função de configuração
      não deve aparecer dentro do momento de editar, nunca. Era pra ser uma aba no
-     cabeçalho, antes de tudo, antes de clicar na aba de editar. É que nem tem agora do
-     Social Tracker. E a gente configurava lá dentro, validava lá dentro: está funcionando
-     a API? Qual o limite da API atual? Tudo isso lá dentro."
+     cabeçalho, antes de tudo. É que nem tem agora do Social Tracker".
 
-     O DESENHO É O DE LÁ, de propósito: menu à esquerda com grupos, páginas à direita, e
-     cada página feita de caixas. Duas telas do mesmo dono que se configuram de dois
-     jeitos diferentes é uma a mais para aprender sem motivo. -->
+     E ELA SE ESCREVE COM LETRA MAIÚSCULA. A primeira versão saiu com tudo em caixa baixa,
+     e ele leu na hora: "escreva direito, está tudo minúsculo, nem para começar com a
+     primeira letra maiúscula". O resto do sistema sempre escreveu assim ("Salvar a
+     marcação", "Baixar planilha", "O que vai ser gravado"); era esta aba que estava fora
+     do padrão da casa. -->
 <section class="aba" id="aba-config" hidden>
   <div class="cfg-corpo">
     <aside class="cfg-menu">
       <div class="cfg-menu-topo">
-        <span class="cfg-menu-id"><b>Estúdio</b><span>configurações</span></span>
+        <span class="cfg-menu-id"><b>Estúdio</b><span>Configurações</span></span>
       </div>
       <div class="cfg-menu-rolo">
         <div class="cfg-grupo">
@@ -3871,7 +3910,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
       </div>
       <div class="cfg-menu-pe">
-        <span class="nota mini">tudo aqui fica neste computador</span>
+        <span class="nota mini">Tudo aqui fica neste computador</span>
       </div>
     </aside>
 
@@ -3881,20 +3920,19 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="cfg-pagina cfg-ativa" data-pg="ia">
         <div class="cfg-pagina-cab">
           <h2>A IA que escreve</h2>
-          <p>a fila de chaves, o prompt, e o que já se gastou hoje</p>
+          <p>A fila de chaves, o prompt, e o que já se gastou hoje.</p>
         </div>
 
         <!-- ONDE ISTO VAI PARAR, e a caixa existe porque a pergunta foi essa: "tem que
              verificar se eu alterar ou salvar alguma coisa aqui vai impactar no
-             back-end". Vai, e por um caminho só: este arquivo. O programa que fala com a
-             IA lê dele a cada leva. Mas o navegador só escreve no disco depois que a
-             pasta é liberada uma vez, e antes disso Guardar não tinha onde gravar e
-             falhava sem explicar. O botão abaixo resolve isso aqui mesmo. -->
+             back-end". Vai, e por um caminho só: este arquivo. Mas o navegador só escreve
+             no disco depois que a pasta é liberada uma vez, e antes disso Guardar não
+             tinha onde gravar e falhava sem explicar. O botão abaixo resolve isso aqui. -->
         <div class="caixa">
           <div class="cfg-topo">
             <h3>Onde isto é guardado</h3>
             <div class="dir"><span class="badge badge-sinal" id="ia_selo_pasta">
-              pasta não liberada</span></div>
+              Pasta não liberada</span></div>
           </div>
           <div class="cfg-linhas">
             <div class="cfg-linha">
@@ -3914,18 +3952,22 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
         <!-- A FILA. "Eu preciso ter um sistema de rotacionamento, caso alguma chave,
              alguma coisa aqui bata o limite." Então não são duas, principal e reserva:
-             são quantas ele quiser, em ordem. -->
+             são quantas ele quiser, em ordem.
+
+             CADA LINHA AQUI SÓ MOSTRA. Os campos ficavam soltos dentro da linha, três de
+             cada vez, e ficou apertado e confuso: "na hora de clicar em acrescentar uma
+             chave, deve aparecer uma opção de pop-up". Agora a linha é o resumo do que
+             existe, e mexer numa chave abre a janela lá embaixo. -->
         <div class="caixa">
           <div class="cfg-topo">
             <h3>A fila de chaves</h3>
             <div class="dir">
-              <span class="badge badge-secondary" id="ia_n_chaves">nenhuma</span>
+              <span class="badge badge-secondary" id="ia_n_chaves">Nenhuma</span>
             </div>
           </div>
           <div class="ia-fila" id="ia_fila"></div>
           <div class="ia-fila-pe">
-            <button class="acao mini" id="ia_add" type="button">
-              acrescentar uma chave</button>
+            <button class="acao" id="ia_add" type="button">Acrescentar uma chave</button>
             <span class="nota mini" id="ia_fila_diz"></span>
           </div>
           <p class="nota mini">A primeira da fila que estiver de pé atende, e continua
@@ -3937,7 +3979,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         <div class="caixa">
           <div class="cfg-topo">
             <h3>Quanto já se gastou</h3>
-            <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia">hoje</span></div>
+            <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia">Hoje</span></div>
           </div>
           <div class="cfg-pares cfg-uma cfg-numeros" id="ia_uso"></div>
           <p class="nota mini">A conta é do que este computador pediu, e não do saldo que
@@ -3950,7 +3992,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <h3>O prompt</h3>
             <div class="dir">
               <button class="acao mini" id="ia_prompt_padrao" type="button">
-                voltar ao padrão</button>
+                Voltar ao padrão</button>
             </div>
           </div>
           <textarea id="ia_prompt" rows="11" spellcheck="false"></textarea>
@@ -3969,13 +4011,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="cfg-pagina" data-pg="motor">
         <div class="cfg-pagina-cab">
           <h2>O motor do recorte</h2>
-          <p>onde o vídeo é convertido, e quanto isso custa de relógio</p>
+          <p>Onde o vídeo é convertido, e quanto isso custa de relógio.</p>
         </div>
 
         <div class="caixa">
           <div class="cfg-topo">
             <h3>Onde a conversão acontece</h3>
-            <div class="dir"><span class="badge badge-sinal" id="mot_onde">a descobrir</span></div>
+            <div class="dir"><span class="badge badge-sinal" id="mot_onde">Na placa</span></div>
           </div>
           <div class="cfg-linhas">
             <div class="cfg-linha">
@@ -3998,11 +4040,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="dir"><span class="badge badge-secondary">21/08/2026</span></div>
           </div>
           <div class="cfg-pares cfg-uma cfg-numeros">
-            <div class="cfg-par"><span>uma peça de 52 s, no processador</span><b>25,0 s</b></div>
-            <div class="cfg-par"><span>a mesma peça, na placa</span><b>15,9 s</b></div>
+            <div class="cfg-par"><span>Uma peça de 52 s, no processador</span><b>25,0 s</b></div>
+            <div class="cfg-par"><span>A mesma peça, na placa</span><b>15,9 s</b></div>
             <div class="cfg-par"><span>12 peças em fila, no processador</span><b>3 min 40 s</b></div>
-            <div class="cfg-par"><span>as mesmas 12, três por vez na placa</span><b>2 min 25 s</b></div>
-            <div class="cfg-par"><span>diferença dentro da janela, de 255</span><b>1,96</b></div>
+            <div class="cfg-par"><span>As mesmas 12, três por vez na placa</span><b>2 min 25 s</b></div>
+            <div class="cfg-par"><span>Diferença dentro da janela, de 255</span><b>1,96</b></div>
           </div>
           <p class="nota mini">Três por vez é medição, não palpite. As mesmas 12 peças, só
             a conversão, na placa: uma de cada vez levou 2 min 5 s, três levaram 1 min 48 s
@@ -4014,14 +4056,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="cfg-topo"><h3>Glossário</h3><div class="dir"></div></div>
           <div class="cfg-glossario">
             <div class="cfg-glo"><div class="cfg-glo-t"><b>Máscara</b></div>
-              <span>o desenho da forma do B-roll, branco onde a filmagem passa e preto no
+              <span>O desenho da forma do B-roll, branco onde a filmagem passa e preto no
                 resto. É ela que faz o recorte sair com a borda arredondada igual à do
                 original, em vez de um retângulo reto.</span></div>
             <div class="cfg-glo"><div class="cfg-glo-t"><b>Moldura</b></div>
-              <span>a mesma forma escrita ao contrário, com furo no meio. A placa cola por
+              <span>A mesma forma escrita ao contrário, com furo no meio. A placa cola por
                 cima em vez de multiplicar, e é assim que ela trabalha.</span></div>
             <div class="cfg-glo"><div class="cfg-glo-t"><b>Quick Sync</b></div>
-              <span>o pedaço da placa Intel que converte vídeo sozinho, sem usar o
+              <span>O pedaço da placa Intel que converte vídeo sozinho, sem usar o
                 processador. É o que libera a máquina enquanto a leva roda.</span></div>
           </div>
         </div>
@@ -4031,7 +4073,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="cfg-pagina" data-pg="fontes">
         <div class="cfg-pagina-cab">
           <h2>As fontes da peça</h2>
-          <p>as que desenham o reel, e não as que desenham esta tela</p>
+          <p>As que desenham o reel, e não as que desenham esta tela.</p>
         </div>
         <div class="caixa">
           <div class="cfg-topo">
@@ -4056,22 +4098,64 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="cfg-pagina" data-pg="pastas">
         <div class="cfg-pagina-cab">
           <h2>As pastas</h2>
-          <p>onde cada coisa mora neste computador</p>
+          <p>Onde cada coisa mora neste computador.</p>
         </div>
         <div class="caixa">
           <div class="cfg-topo">
             <h3>A pasta do Estúdio</h3>
-            <div class="dir"><span class="badge badge-sinal" id="pas_selo">não liberada</span></div>
+            <div class="dir"><span class="badge badge-sinal" id="pas_selo">Não liberada</span></div>
           </div>
           <div class="cfg-linhas" id="pas_lista"></div>
           <p class="nota mini">O navegador só enxerga esta pasta depois que você libera o
-            acesso uma vez, na aba de Edição. Nada sai daqui para lugar nenhum.</p>
+            acesso uma vez. Nada sai daqui para lugar nenhum.</p>
         </div>
       </div>
 
     </div>
   </div>
 </section>
+
+
+<!-- ================================================ A JANELA DA CHAVE
+
+     "NA HORA DE CLICAR EM ACRESCENTAR UMA CHAVE, deve aparecer uma opção de pop-up, ao
+     invés disso que você colocou." Antes, acrescentar abria uma linha vazia com três
+     campos espremidos dentro dela, no meio da lista. Aqui a lista só mostra o que existe,
+     e mexer numa chave, ou criar outra, acontece nesta janela.
+
+     ELA MORA FORA DA SEÇÃO DA ABA de propósito, e a razão é a mesma do tira-dúvidas:
+     `.aba` tem animação de entrada com `transform`, e elemento assim vira âncora para
+     quem é `position:fixed`. Posta lá dentro, a janela pararia na altura da seção em vez
+     de ficar centrada na tela. -->
+<div class="pop-fundo" id="ch_fundo" hidden></div>
+<div class="pop" id="ch_pop" hidden role="dialog" aria-modal="true"
+     aria-labelledby="ch_titulo">
+  <div class="pop-cab">
+    <b id="ch_titulo">Acrescentar uma chave</b>
+    <button class="gal-x" id="ch_fechar" type="button" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="pop-corpo">
+    <label class="cfg-campo">
+      <span>Serviço</span>
+      <div class="psel cfg-sel" id="ch_servico"></div>
+    </label>
+    <label class="cfg-campo">
+      <span>Chave da API</span>
+      <input id="ch_chave" type="password" placeholder="Cole a chave aqui"
+             autocomplete="off" spellcheck="false">
+    </label>
+    <label class="cfg-campo">
+      <span>Modelo</span>
+      <input id="ch_modelo" autocomplete="off" spellcheck="false">
+    </label>
+    <p class="nota mini" id="ch_onde"></p>
+    <div class="pop-diz" id="ch_diz"></div>
+  </div>
+  <div class="pop-pe">
+    <button class="acao" id="ch_provar" type="button">Provar</button>
+    <button class="acao forte" id="ch_ok" type="button">Acrescentar</button>
+  </div>
+</div>
 
 
 <!-- ============================================================ O TIRA-DÚVIDAS
@@ -7804,7 +7888,7 @@ function desenhaPorta(cracha) {
    já existe crachá, um clique basta; quando não existe, abre a janela de arquivos. */
 async function pedirPasta() {
   if (EDIT_RAIZ) return EDIT_RAIZ;
-  if (!TEM_PORTA) throw new Error("este navegador não abre pastas do computador");
+  if (!TEM_PORTA) throw new Error("Este navegador não abre pastas do computador.");
   const cracha = CRACHA_NA_MAO || await pegarCracha();
   if (cracha) {
     const h = await pastaValendo(cracha, true);
@@ -8408,37 +8492,37 @@ const PALETA = ["#000000", "#101418", "#1C1C1E", "#F5F3EF", "#FFFFFF",
    peça sair diferente do que ele viu na tela, e é por isso que as duas listas são a
    mesma. O `g` agrupa a lista na aba de Configurações e o seletor ignora. */
 const FONTES = [
-  { v: "anton", r: "Anton", g: "manchete" },
-  { v: "bebas", r: "Bebas Neue", g: "manchete" },
-  { v: "archivobk", r: "Archivo Black", g: "manchete" },
-  { v: "impact", r: "Impact", g: "manchete" },
-  { v: "arialblack", r: "Arial Black", g: "manchete" },
-  { v: "segoeblack", r: "Segoe UI Black", g: "manchete" },
-  { v: "franklin", r: "Franklin Gothic", g: "manchete" },
-  { v: "oswald", r: "Oswald", g: "condensada" },
-  { v: "robotocond", r: "Roboto Condensed", g: "condensada" },
-  { v: "barlowcond", r: "Barlow Condensed", g: "condensada" },
-  { v: "arialn", r: "Arial Narrow", g: "condensada" },
-  { v: "bahnschrift", r: "Bahnschrift", g: "condensada" },
-  { v: "montserrat", r: "Montserrat", g: "sem serifa" },
-  { v: "poppins", r: "Poppins", g: "sem serifa" },
-  { v: "inter", r: "Inter", g: "sem serifa" },
-  { v: "segoe", r: "Segoe UI", g: "sem serifa" },
-  { v: "arial", r: "Arial", g: "sem serifa" },
-  { v: "verdana", r: "Verdana", g: "sem serifa" },
-  { v: "tahoma", r: "Tahoma", g: "sem serifa" },
-  { v: "trebuchet", r: "Trebuchet MS", g: "sem serifa" },
-  { v: "calibri", r: "Calibri", g: "sem serifa" },
-  { v: "candara", r: "Candara", g: "sem serifa" },
-  { v: "corbel", r: "Corbel", g: "sem serifa" },
-  { v: "georgia", r: "Georgia", g: "com serifa" },
-  { v: "times", r: "Times New Roman", g: "com serifa" },
-  { v: "cambria", r: "Cambria", g: "com serifa" },
-  { v: "constantia", r: "Constantia", g: "com serifa" },
-  { v: "garamond", r: "Apple Garamond", g: "com serifa" },
-  { v: "izmir", r: "Izmir", g: "com serifa" },
-  { v: "consolas", r: "Consolas", g: "de máquina" },
-  { v: "courier", r: "Courier New", g: "de máquina" },
+  { v: "anton", r: "Anton", g: "Manchete" },
+  { v: "bebas", r: "Bebas Neue", g: "Manchete" },
+  { v: "archivobk", r: "Archivo Black", g: "Manchete" },
+  { v: "impact", r: "Impact", g: "Manchete" },
+  { v: "arialblack", r: "Arial Black", g: "Manchete" },
+  { v: "segoeblack", r: "Segoe UI Black", g: "Manchete" },
+  { v: "franklin", r: "Franklin Gothic", g: "Manchete" },
+  { v: "oswald", r: "Oswald", g: "Condensada" },
+  { v: "robotocond", r: "Roboto Condensed", g: "Condensada" },
+  { v: "barlowcond", r: "Barlow Condensed", g: "Condensada" },
+  { v: "arialn", r: "Arial Narrow", g: "Condensada" },
+  { v: "bahnschrift", r: "Bahnschrift", g: "Condensada" },
+  { v: "montserrat", r: "Montserrat", g: "Sem serifa" },
+  { v: "poppins", r: "Poppins", g: "Sem serifa" },
+  { v: "inter", r: "Inter", g: "Sem serifa" },
+  { v: "segoe", r: "Segoe UI", g: "Sem serifa" },
+  { v: "arial", r: "Arial", g: "Sem serifa" },
+  { v: "verdana", r: "Verdana", g: "Sem serifa" },
+  { v: "tahoma", r: "Tahoma", g: "Sem serifa" },
+  { v: "trebuchet", r: "Trebuchet MS", g: "Sem serifa" },
+  { v: "calibri", r: "Calibri", g: "Sem serifa" },
+  { v: "candara", r: "Candara", g: "Sem serifa" },
+  { v: "corbel", r: "Corbel", g: "Sem serifa" },
+  { v: "georgia", r: "Georgia", g: "Com serifa" },
+  { v: "times", r: "Times New Roman", g: "Com serifa" },
+  { v: "cambria", r: "Cambria", g: "Com serifa" },
+  { v: "constantia", r: "Constantia", g: "Com serifa" },
+  { v: "garamond", r: "Apple Garamond", g: "Com serifa" },
+  { v: "izmir", r: "Izmir", g: "Com serifa" },
+  { v: "consolas", r: "Consolas", g: "De máquina" },
+  { v: "courier", r: "Courier New", g: "De máquina" },
 ];
 const PESOS = [{ v: "400", r: "normal" }, { v: "700", r: "negrito" }];
 
@@ -8952,7 +9036,7 @@ async function entrarNaIA() {
   contaEscrito();
   if (!campos.length || !temChave) return;
   const n = pecas3().length;
-  $("ia_quem").textContent = "escrevendo com " + nomeDoServico(vivas[0].servico);
+  $("ia_quem").textContent = "Escrevendo com " + nomeDoServico(vivas[0].servico);
   $("ia_quanto").textContent =
     `${campos.length} ${campos.length === 1 ? "caixa aberta" : "caixas abertas"}, `
     + `em ${n} ${n === 1 ? "peça" : "peças"}`
@@ -9004,8 +9088,8 @@ async function pedirEscrita() {
     $("ia_obra").hidden = false;
     $("ia_barra").style.width = "0%";
     document.querySelector("#ia_obra .cfg-girando").style.display = "";
-    $("ia_obra_txt").textContent = "pedido deixado";
-    $("ia_obra_nota").textContent = "a escrita começa em até um minuto, que é o passo do "
+    $("ia_obra_txt").textContent = "Pedido deixado";
+    $("ia_obra_nota").textContent = "A escrita começa em até um minuto, que é o passo do "
       + "programa que fala com a IA aqui do computador.";
     IA_OBRA.relogio = setInterval(olharAEscrita, 3000);
     olharAEscrita();
@@ -9046,14 +9130,14 @@ async function olharAEscrita() {
   };
   if (d.erro) {
     parar();
-    $("ia_obra_txt").textContent = "não deu: " + d.erro;
+    $("ia_obra_txt").textContent = "Não deu: " + d.erro;
     return;
   }
   const feitos = d.feitos || 0, total = d.total || IA_OBRA.total;
   $("ia_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
   if (!d.fim) {
-    $("ia_obra_txt").textContent = `escrevendo ${Math.min(feitos + 1, total)} de ${total}`;
-    $("ia_obra_nota").textContent = d.atual ? `agora: ${d.atual}` : "";
+    $("ia_obra_txt").textContent = `Escrevendo ${Math.min(feitos + 1, total)} de ${total}`;
+    $("ia_obra_nota").textContent = d.atual ? `Agora: ${d.atual}` : "";
     return;
   }
   parar();
@@ -9151,7 +9235,7 @@ async function lerIA() {
 }
 
 async function gravarIA() {
-  if (!EDIT_RAIZ) throw new Error("libere a pasta do Estúdio primeiro, no botão acima");
+  if (!EDIT_RAIZ) throw new Error("Libere a pasta do Estúdio primeiro, no botão acima.");
   const h = await EDIT_RAIZ.getFileHandle("ia.json", { create: true });
   const w = await h.createWritable();
   await w.write(JSON.stringify(IA, null, 1));
@@ -9170,9 +9254,9 @@ $("ia_liberar").onclick = async () => {
     IA_LIDA = false;
     await lerIA();
     desenhaCfgIA();
-    parado("ia_cfg_recado", "pasta liberada.");
+    parado("ia_cfg_recado", "Pasta liberada.");
   } catch (e) {
-    parado("ia_cfg_recado", e.message || "a liberação foi cancelada");
+    parado("ia_cfg_recado", e.message || "A liberação foi cancelada.");
   }
 };
 
@@ -9190,26 +9274,37 @@ function desenhaUsoDaIA() {
   const u = IA_USO || {};
   const linha = (r, v) => `<div class="cfg-par"><span>${r}</span><b>${v}</b></div>`;
   $("ia_uso_dia").textContent = u.dia
-    ? "em " + u.dia.split("-").reverse().join("/") : "hoje";
+    ? "Em " + u.dia.split("-").reverse().join("/") : "Hoje";
   $("ia_uso").innerHTML =
-    linha("frases pedidas", num(u.pedidos || 0))
-    + linha("recusadas por limite", num(u.sem_cota || 0))
-    + linha("outros erros", num(u.erros || 0))
-    + linha("chaves que ainda respondem",
+    linha("Frases pedidas", num(u.pedidos || 0))
+    + linha("Recusadas por limite", num(u.sem_cota || 0))
+    + linha("Outros erros", num(u.erros || 0))
+    + linha("Chaves que ainda respondem",
             IA.chaves.length ? `${IA.chaves.filter(c => !estaEsgotada(c)).length} de ${IA.chaves.length}`
-                             : "nenhuma na fila");
+                             : "Nenhuma na fila");
 }
 
 function usoDaChave(c) { return ((IA_USO || {}).chaves || {})[c.id] || {}; }
 function estaEsgotada(c) { return !!usoDaChave(c).esgotada; }
 
-/* ------------------------------------------------ a fila desenhada */
+/* ------------------------------------------------ a fila desenhada
+
+   CADA LINHA AQUI SÓ MOSTRA. Antes ela carregava três campos soltos dentro dela, serviço,
+   chave e modelo, e ficava apertada: "está tudo minúsculo, tudo esquisito, tudo bugado.
+   Na hora de clicar em acrescentar uma chave, deve aparecer uma opção de pop-up". Então a
+   linha virou o resumo do que existe, e mexer numa chave abre a janela. */
+
+function pontinhos(chave) {
+  const c = String(chave || "");
+  if (c.length <= 10) return "•".repeat(Math.max(4, c.length));
+  return c.slice(0, 4) + "••••••" + c.slice(-4);
+}
 
 function desenhaCfgIA() {
   const fila = $("ia_fila");
   $("ia_n_chaves").textContent = IA.chaves.length
-    ? IA.chaves.length + (IA.chaves.length === 1 ? " chave" : " chaves") : "nenhuma";
-  $("ia_selo_pasta").textContent = EDIT_RAIZ ? "pasta liberada" : "pasta não liberada";
+    ? IA.chaves.length + (IA.chaves.length === 1 ? " chave" : " chaves") : "Nenhuma";
+  $("ia_selo_pasta").textContent = EDIT_RAIZ ? "Pasta liberada" : "Pasta não liberada";
   $("ia_liberar").hidden = !!EDIT_RAIZ;
   $("ia_prompt").value = IA.prompt || IA_PROMPT_PADRAO;
 
@@ -9225,67 +9320,41 @@ function desenhaCfgIA() {
 
   fila.innerHTML = IA.chaves.map((c, i) => {
     const u = usoDaChave(c), ficha = fichaDoServico(c.servico);
-    const selo = u.esgotada ? '<span class="ia-selo ruim">bateu o limite hoje</span>'
-      : u.pedidos ? '<span class="ia-selo boa">respondendo</span>'
-      : '<span class="ia-selo">ainda não usada</span>';
+    const selo = u.esgotada ? '<span class="ia-selo ruim">Bateu o limite hoje</span>'
+      : u.pedidos ? '<span class="ia-selo boa">Respondendo</span>'
+      : '<span class="ia-selo">Ainda não usada</span>';
     const conta = u.pedidos
       ? `${num(u.pedidos)} ${u.pedidos === 1 ? "frase" : "frases"} hoje`
         + (u.sem_cota ? `, ${num(u.sem_cota)} recusadas` : "")
-      : "sem uso hoje";
+      : "Sem uso hoje";
     return `<div class="ia-chave" data-i="${i}">
       <div class="ia-chave-n">${i + 1}</div>
-      <div class="ia-chave-campos">
-        <label class="cfg-campo"><span>serviço</span>
-          <div class="psel cfg-sel" data-psel="${i}"></div></label>
-        <label class="cfg-campo cresce"><span>chave da API</span>
-          <input type="password" data-campo="chave" autocomplete="off" spellcheck="false"
-                 value="${escapa(c.chave || "")}" placeholder="cole a chave aqui"></label>
-        <label class="cfg-campo cresce"><span>modelo</span>
-          <input data-campo="modelo" autocomplete="off" spellcheck="false"
-                 value="${escapa(c.modelo || "")}"
-                 placeholder="${escapa(ficha.modelo)}"></label>
+      <div class="ia-chave-corpo">
+        <div class="ia-chave-topo"><b>${escapa(ficha.r)}</b>${selo}</div>
+        <div class="ia-chave-resumo">${escapa(pontinhos(c.chave))}
+          <i>·</i> ${escapa(c.modelo || "Modelo padrão")}
+          <i>·</i> ${escapa(conta)}</div>
+        <div class="ia-chave-diz" data-diz="${i}"></div>
       </div>
-      <div class="ia-chave-pe">
-        ${selo}<span class="nota mini">${escapa(conta)}</span>
-        <span class="ia-chave-diz" data-diz="${i}"></span>
-        <span class="ia-chave-botoes">
-          <button class="acao mini" data-acao="provar" type="button">provar</button>
-          <button class="ia-mover" data-acao="sobe" type="button"
-                  aria-label="subir na fila"${i === 0 ? " disabled" : ""}>&uarr;</button>
-          <button class="ia-mover" data-acao="desce" type="button"
-                  aria-label="descer na fila"${i === IA.chaves.length - 1 ? " disabled" : ""}>&darr;</button>
-          <button class="ia-mover perigo" data-acao="tira" type="button"
-                  aria-label="tirar da fila">&times;</button>
-        </span>
-      </div>
+      <span class="ia-chave-botoes">
+        <button class="acao mini" data-acao="provar" type="button">Provar</button>
+        <button class="acao mini" data-acao="editar" type="button">Editar</button>
+        <button class="ia-mover" data-acao="sobe" type="button"
+                aria-label="Subir na fila"${i === 0 ? " disabled" : ""}>&uarr;</button>
+        <button class="ia-mover" data-acao="desce" type="button"
+                aria-label="Descer na fila"${i === IA.chaves.length - 1 ? " disabled" : ""}>&darr;</button>
+        <button class="ia-mover perigo" data-acao="tira" type="button"
+                aria-label="Tirar da fila">&times;</button>
+      </span>
     </div>`;
   }).join("");
 
-  // OS SELETORES SÃO OS DA CASA, e não os do navegador. Foi a bronca dele na fase 3:
-  // "você tem literalmente dentro do próprio estúdio referência de como montar".
-  IA.chaves.forEach((c, i) => {
-    pselNovo(fila.querySelector(`[data-psel="${i}"]`), IA_SERVICOS, c.servico, v => {
-      c.servico = v;
-      const campo = fila.querySelector(`.ia-chave[data-i="${i}"] [data-campo="modelo"]`);
-      if (campo) campo.placeholder = fichaDoServico(v).modelo;
-    });
-  });
   const vivas = IA.chaves.filter(c => !estaEsgotada(c)).length;
   $("ia_fila_diz").textContent = vivas === IA.chaves.length
-    ? "a fila inteira está de pé."
+    ? "A fila inteira está de pé."
     : `${vivas} de ${IA.chaves.length} ainda respondem hoje; as outras voltam quando o dia virar.`;
   desenhaUsoDaIA();
 }
-
-/* O QUE ELE DIGITA VAI PARA A FILA NA HORA, e não só ao clicar em Guardar. Guardar é o
-   que grava no disco; sem esta linha, mexer numa chave e provar outra levaria o valor
-   antigo. */
-$("ia_fila").addEventListener("input", ev => {
-  const inp = ev.target.closest("input[data-campo]");
-  if (!inp) return;
-  const i = Number(inp.closest(".ia-chave").dataset.i);
-  if (IA.chaves[i]) IA.chaves[i][inp.dataset.campo] = inp.value.trim();
-});
 
 $("ia_fila").addEventListener("click", async ev => {
   const b = ev.target.closest("[data-acao]");
@@ -9293,6 +9362,7 @@ $("ia_fila").addEventListener("click", async ev => {
   const i = Number(b.closest(".ia-chave").dataset.i);
   const acao = b.dataset.acao;
   if (acao === "tira") { IA.chaves.splice(i, 1); desenhaCfgIA(); return; }
+  if (acao === "editar") { abrirJanelaDaChave(i); return; }
   if (acao === "sobe" && i > 0) {
     [IA.chaves[i - 1], IA.chaves[i]] = [IA.chaves[i], IA.chaves[i - 1]];
     desenhaCfgIA(); return;
@@ -9304,18 +9374,11 @@ $("ia_fila").addEventListener("click", async ev => {
   if (acao === "provar") await provarChave(i, b);
 });
 
-$("ia_add").onclick = () => {
-  IA.chaves.push({ id: novaChaveId(), servico: "gemini", chave: "", modelo: "" });
-  desenhaCfgIA();
-  const ultimo = $("ia_fila").querySelector(".ia-chave:last-child input[data-campo='chave']");
-  if (ultimo) ultimo.focus();
-};
-
+$("ia_add").onclick = () => abrirJanelaDaChave(-1);
 $("ia_prompt_padrao").onclick = () => { $("ia_prompt").value = IA_PROMPT_PADRAO; };
 
 $("ia_guardar").onclick = async () => {
   IA.prompt = $("ia_prompt").value.trim();
-  const vazias = IA.chaves.filter(c => !c.chave).length;
   try {
     const gravado = await gravarIA();
     IA_LIDA = true;
@@ -9323,35 +9386,123 @@ $("ia_guardar").onclick = async () => {
     // O RECADO DIZ O QUE FOI PARAR NO ARQUIVO, lido de volta dele. É a resposta à
     // pergunta "salvar aqui vai impactar no back-end": foi para lá, e é isto que está lá.
     const n = (gravado.chaves || []).length;
-    parado("ia_cfg_recado", `guardado em Estudio\\ia.json: `
+    parado("ia_cfg_recado", `Guardado em Estudio\\ia.json: `
       + `${n} ${n === 1 ? "chave" : "chaves"} na fila e um prompt de `
-      + `${(gravado.prompt || "").length} caracteres. É deste arquivo que o programa lê.`
-      + (vazias ? ` (${vazias} sem chave preenchida, e essas ele ignora)` : ""));
+      + `${(gravado.prompt || "").length} caracteres. É deste arquivo que o programa lê.`);
   } catch (e) { parado("ia_cfg_recado", e.message); }
 };
 
-/* A PROVA, e ela sai DAQUI e não do programa local. É a única chamada que o navegador faz
-   a uma IA, e existe por um motivo só: resposta em segundos. Pelo caminho normal, provar
-   uma chave custaria o minuto que o programa leva para passar na pasta, e ninguém confere
-   uma chave esperando um minuto por tentativa.
 
-   E ELA PROVA O QUE IMPORTA, que é ler imagem. Um "responda PRONTO" diria que a chave
-   existe e nada mais; o trabalho de verdade é olhar o card e reescrever a frase, então a
-   prova desenha uma frase numa imagem e pede exatamente isso. */
+/* ------------------------------------------------ a janela da chave
+
+   ACRESCENTAR E EDITAR SÃO A MESMA JANELA, e a diferença é só o que ela traz preenchido e
+   o que diz o botão do canto. `CH_QUAL` guarda qual linha está sendo mexida: -1 quer dizer
+   uma chave nova. */
+
+let CH_QUAL = -1;
+let CH_RASCUNHO = null;
+
+function abrirJanelaDaChave(i) {
+  CH_QUAL = i;
+  const c = i >= 0 ? IA.chaves[i] : { servico: "gemini", chave: "", modelo: "" };
+  CH_RASCUNHO = { servico: c.servico, chave: c.chave, modelo: c.modelo };
+  $("ch_titulo").textContent = i >= 0 ? `Chave ${i + 1} da fila` : "Acrescentar uma chave";
+  $("ch_ok").textContent = i >= 0 ? "Salvar" : "Acrescentar";
+  $("ch_chave").value = c.chave || "";
+  $("ch_modelo").value = c.modelo || "";
+  $("ch_diz").textContent = "";
+  $("ch_diz").className = "pop-diz";
+  pselNovo($("ch_servico"), IA_SERVICOS, c.servico, v => {
+    CH_RASCUNHO.servico = v;
+    desenhaOndePegar();
+  });
+  desenhaOndePegar();
+  $("ch_fundo").hidden = false;
+  $("ch_pop").hidden = false;
+  setTimeout(() => $("ch_chave").focus(), 30);
+}
+
+function desenhaOndePegar() {
+  const ficha = fichaDoServico(CH_RASCUNHO.servico);
+  $("ch_modelo").placeholder = ficha.modelo;
+  $("ch_onde").innerHTML = `A chave gratuita do <b>${escapa(ficha.r)}</b> sai em `
+    + `<b>${escapa(ficha.onde)}</b>. Deixe o modelo vazio para usar o padrão, que é `
+    + `<b>${escapa(ficha.modelo)}</b>.`;
+}
+
+function fecharJanelaDaChave() {
+  CH_QUAL = -1;
+  $("ch_fundo").hidden = true;
+  $("ch_pop").hidden = true;
+}
+$("ch_fechar").onclick = fecharJanelaDaChave;
+$("ch_fundo").onclick = fecharJanelaDaChave;
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && !$("ch_pop").hidden) fecharJanelaDaChave();
+});
+
+const leJanela = () => ({
+  servico: CH_RASCUNHO.servico,
+  chave: $("ch_chave").value.trim(),
+  modelo: $("ch_modelo").value.trim(),
+});
+
+$("ch_ok").onclick = () => {
+  const d = leJanela();
+  if (!d.chave) {
+    $("ch_diz").className = "pop-diz ruim";
+    $("ch_diz").textContent = "Falta colar a chave.";
+    return;
+  }
+  if (CH_QUAL >= 0) Object.assign(IA.chaves[CH_QUAL], d);
+  else IA.chaves.push(Object.assign({ id: novaChaveId() }, d));
+  fecharJanelaDaChave();
+  desenhaCfgIA();
+  parado("ia_cfg_recado", "A fila mudou na tela. Clique em Guardar para gravar no "
+    + "arquivo que o programa lê.");
+};
+
+/* PROVAR DENTRO DA JANELA, antes de a chave entrar na fila. Chave errada, modelo que não
+   existe e cota estourada aparecem aqui em segundos, e não no meio de 107 peças. */
+$("ch_provar").onclick = async () => {
+  const b = $("ch_provar"), diz = $("ch_diz");
+  const d = leJanela();
+  b.disabled = true;
+  const antes = b.textContent;
+  b.textContent = "Provando...";
+  diz.className = "pop-diz";
+  diz.textContent = "";
+  try {
+    if (!d.chave) throw new Error("Falta colar a chave.");
+    const frase = "Bolsa fecha em alta de 2% nesta terça, puxada pelos bancos";
+    const dito = await chamarIA(d.servico, d.chave, d.modelo,
+      IA_PROMPT_PADRAO.replace("{limite}", "70"), await imagemDeProva(frase));
+    diz.className = "pop-diz boa";
+    diz.innerHTML = `Funcionou. Da frase <i>${escapa(frase)}</i> ela escreveu: `
+      + `<b>${escapa(dito)}</b>`;
+  } catch (e) {
+    diz.className = "pop-diz ruim";
+    diz.textContent = e.message;
+  }
+  b.disabled = false;
+  b.textContent = antes;
+};
+
+/* A PROVA DE UMA CHAVE QUE JÁ ESTÁ NA FILA, a partir da lista. */
 async function provarChave(i, botao) {
   const c = IA.chaves[i];
   if (!c) return;
   const diz = $("ia_fila").querySelector(`[data-diz="${i}"]`);
   botao.disabled = true;
   const antes = botao.textContent;
-  botao.textContent = "provando...";
+  botao.textContent = "Provando...";
   if (diz) { diz.textContent = ""; diz.className = "ia-chave-diz"; }
   try {
-    if (!c.chave) throw new Error("preencha a chave primeiro");
+    if (!c.chave) throw new Error("Esta chave está vazia.");
     const frase = "Bolsa fecha em alta de 2% nesta terça, puxada pelos bancos";
     const dito = await chamarIA(c.servico, c.chave, c.modelo,
       IA_PROMPT_PADRAO.replace("{limite}", "70"), await imagemDeProva(frase));
-    if (diz) { diz.className = "ia-chave-diz boa"; diz.textContent = "respondeu: " + dito; }
+    if (diz) { diz.className = "ia-chave-diz boa"; diz.textContent = "Respondeu: " + dito; }
   } catch (e) {
     if (diz) { diz.className = "ia-chave-diz ruim"; diz.textContent = e.message; }
   }
@@ -9452,20 +9603,20 @@ function desenhaAsFontes() {
 }
 
 function desenhaOMotor() {
-  $("mot_onde").textContent = "3 peças por vez";
+  $("mot_onde").textContent = "Na placa, 3 por vez";
 }
 
 async function desenhaAsPastas() {
   const selo = $("pas_selo"), lista = $("pas_lista");
   if (!EDIT_RAIZ) {
-    selo.textContent = "não liberada";
+    selo.textContent = "Não liberada";
     lista.innerHTML = '<div class="cfg-linha"><div><div class="cfg-nome">'
       + 'A pasta ainda não foi liberada</div><div class="cfg-desc">Abra a aba de Edição e '
       + 'libere a pasta do Estúdio uma vez. O navegador só enxerga o disco com essa '
       + 'permissão, e ela vale para tudo que o sistema grava.</div></div></div>';
     return;
   }
-  selo.textContent = "liberada";
+  selo.textContent = "Liberada";
   const contar = async nome => {
     try {
       const d = await EDIT_RAIZ.getDirectoryHandle(nome);
@@ -9475,12 +9626,12 @@ async function desenhaAsPastas() {
     } catch (e) { return null; }
   };
   const quadros = [
-    ["levas", "os reels baixados, ainda inteiros"],
-    ["recortes", "o B-roll de cada reel, já em 1080 por 1920"],
-    ["edicoes", "as peças montadas, prontas para publicar"],
-    ["templates", "os templates guardados"],
-    ["fontes", "as fontes que o programa usa para desenhar o texto"],
-    ["pedidos", "a fila entre esta tela e o programa deste computador"],
+    ["levas", "Os reels baixados, ainda inteiros"],
+    ["recortes", "O B-roll de cada reel, já em 1080 por 1920"],
+    ["edicoes", "As peças montadas, prontas para publicar"],
+    ["templates", "Os templates guardados"],
+    ["fontes", "As fontes que o programa usa para desenhar o texto"],
+    ["pedidos", "A fila entre esta tela e o programa deste computador"],
   ];
   const linhas = [];
   for (const [nome, diz] of quadros) {
@@ -9488,7 +9639,7 @@ async function desenhaAsPastas() {
     linhas.push('<div class="cfg-linha"><div><div class="cfg-nome">Estudio\\' + nome
       + '</div><div class="cfg-desc">' + diz + '</div></div><div class="dir">'
       + '<span class="badge badge-secondary">'
-      + (n === null ? "não existe" : num(n) + (n === 1 ? " item" : " itens"))
+      + (n === null ? "Não existe" : num(n) + (n === 1 ? " item" : " itens"))
       + "</span></div></div>");
   }
   lista.innerHTML = linhas.join("");
@@ -9646,7 +9797,7 @@ async function desenhaGaleria() {
   $("gal_conta").innerHTML = `<b>${pecas.length}</b> `
     + (pecas.length === 1 ? "peça" : "peças")
     + (campos.length ? `, <b>${escritas}</b> com texto da IA` : "")
-    + (mexidas ? `, <b>${mexidas}</b> com ajuste seu` : "");
+    + (mexidas ? `, <b>${mexidas}</b> com ajuste seu` : "") + ".";
 
   g.innerHTML = "";
   const videos = [];
@@ -9747,9 +9898,9 @@ function desenhaLupaProps() {
     passoNovo($("gl_tamanho"), 3, 100, 2, Math.round(el.w * 100), v => v + "%", () => {});
   }
   passoNovo($("gl_x"), -20, 100, 1, Math.round(m.x * 100),
-            v => "esquerda " + v + "%", v => guardar("x", v / 100));
+            v => "Esquerda " + v + "%", v => guardar("x", v / 100));
   passoNovo($("gl_y"), -20, 100, 1, Math.round(m.y * 100),
-            v => "topo " + v + "%", v => guardar("y", v / 100));
+            v => "Topo " + v + "%", v => guardar("y", v / 100));
 }
 
 $("gal_lupa_zerar").onclick = () => {
@@ -9766,7 +9917,7 @@ $("gl_para_todas").onclick = () => {
   for (const outra of pecas3()) {
     AJUSTES.set(outra.nome, JSON.parse(JSON.stringify(a)));
   }
-  parado("apl_resumo", "os ajustes desta peça passaram para todas.");
+  parado("apl_resumo", "Os ajustes desta peça passaram para todas.");
   redesenhaLupa();
 };
 
@@ -9778,7 +9929,7 @@ $("gl_para_todas").onclick = () => {
    não é tocado. */
 $("ajs_acertar").onclick = () => {
   const campos = abertas();
-  if (!campos.length) return parado("apl_resumo", "nenhuma caixa aberta para acertar.");
+  if (!campos.length) return parado("apl_resumo", "Nenhuma caixa aberta para acertar.");
   let mexidas = 0;
   for (const p of pecas3()) {
     const g = ESCRITO.get(p.nome) || {};
@@ -9797,7 +9948,7 @@ $("ajs_acertar").onclick = () => {
   desenhaGaleria();
   parado("apl_resumo", mexidas
     ? `${mexidas} ${mexidas === 1 ? "caixa encolhida" : "caixas encolhidas"} para o texto caber.`
-    : "todos os textos já cabem do jeito que estão.");
+    : "Todos os textos já cabem do jeito que estão.");
 };
 
 /* QUANTO A LETRA PRECISA ENCOLHER para o texto caber em três linhas dentro da caixa. A
@@ -9935,7 +10086,7 @@ function resumoDeAplicar() {
   if (MONTADO) return desenhaFeito();
   $("apl_resumo").innerHTML = TPL
     ? `<b>${n}</b> ${n === 1 ? "peça" : "peças"}, em ${TELA.w} por ${TELA.h}.`
-    : "monte o template nas fases anteriores.";
+    : "Monte o template nas fases anteriores.";
 }
 
 $("apl_montar").onclick = async () => {
