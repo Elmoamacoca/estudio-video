@@ -2363,6 +2363,76 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .gal-lupa-tela{height:auto;width:min(260px,70vw);align-self:center}
 }
 
+
+/* ================================================= O AR DA ABA DE CONFIGURAÇÕES
+
+   "TEM MUITO TEXTO QUE ESTÁ GRUDADO UM COM O OUTRO." Ele estava certo, e a causa era uma
+   linha só: `.nota.mini` carrega `margin:-3px 0 9px`, uma margem NEGATIVA no topo. Ela faz
+   sentido onde nasceu, logo abaixo de um rótulo de campo; aqui ela puxava a explicação
+   para cima de tudo o que viesse antes, e o texto encostava.
+
+   MEDIDO NA TELA antes de mexer: o vão entre a lista de números e a nota de baixo era de
+   MENOS três pixels, ou seja, sobrepostos. Abaixo, todas as notas desta aba passam a ter
+   margem positiva de verdade, e as caixas ganham respiro entre o título e o conteúdo. */
+#aba-config .nota,
+#aba-config .nota.mini{margin:16px 0 0}
+#aba-config .cfg-campo .nota.mini{margin:6px 0 0}
+#aba-config .cfg-topo{margin-bottom:16px}
+#aba-config .cfg-pagina .caixa{margin-bottom:20px;padding:22px}
+#aba-config .cfg-pagina-cab{margin-bottom:24px}
+#aba-config .cfg-pagina-cab h2{margin-bottom:7px}
+#aba-config .cfg-nome{margin-bottom:6px}
+#aba-config .cfg-linha{padding:15px 0}
+#aba-config .cfg-par{padding:12px 0}
+#aba-config .cfg-campos{gap:16px}
+#aba-config textarea+.nota.mini{margin-top:12px}
+#aba-config .cfg-pe{padding-top:4px;padding-bottom:8px}
+
+
+/* ===================================================== A FILA DE CHAVES DA IA
+
+   UMA LINHA POR CHAVE, na ordem em que elas atendem. O número à esquerda é a vez dela; as
+   setas mudam essa ordem; o selo diz se ela ainda responde hoje. */
+.ia-fila{display:flex;flex-direction:column;gap:12px}
+.ia-chave{display:flex;gap:14px;padding:14px;border:1px solid var(--rule-solid);
+  border-radius:12px;background:var(--paper-2)}
+.ia-chave-n{flex:0 0 26px;width:26px;height:26px;display:flex;align-items:center;
+  justify-content:center;border-radius:50%;background:var(--paper);
+  border:1px solid var(--rule-solid);font-size:12px;font-weight:700;color:var(--muted)}
+.ia-chave-campos{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:14px;
+  align-items:flex-end}
+.ia-chave-pe{flex:1 1 100%;display:flex;align-items:center;flex-wrap:wrap;gap:10px;
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-solid)}
+.ia-chave-pe .nota{margin:0}
+.ia-chave-botoes{margin-left:auto;display:flex;align-items:center;gap:6px}
+.ia-mover{width:28px;height:28px;flex:0 0 28px;border:1px solid var(--rule-solid);
+  border-radius:8px;background:var(--paper);color:var(--muted);cursor:pointer;
+  font-size:13px;line-height:1}
+.ia-mover:hover:not(:disabled){color:var(--ink);border-color:var(--ink)}
+.ia-mover:disabled{opacity:.35;cursor:default}
+.ia-mover.perigo:hover{color:#e0574b;border-color:#e0574b}
+
+.ia-selo{flex:0 0 auto;font-size:10.5px;padding:3px 9px;border-radius:999px;
+  background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--muted)}
+.ia-selo.boa{background:var(--accent-tint);color:var(--accent)}
+.ia-selo.ruim{background:color-mix(in srgb,#e0574b 16%,transparent);color:#e0574b}
+.ia-chave-diz{flex:1 1 220px;min-width:0;font-size:12px;line-height:1.5;
+  color:var(--muted)}
+.ia-chave-diz.boa{color:var(--accent)}
+.ia-chave-diz.ruim{color:#e0574b}
+
+.ia-vazia{display:flex;flex-direction:column;gap:7px;padding:20px;border-radius:12px;
+  border:1px dashed var(--rule-solid);text-align:center}
+.ia-vazia b{font-size:14px}
+.ia-vazia .nota{margin:0;font-size:12.5px;line-height:1.55}
+.ia-fila-pe{display:flex;align-items:center;gap:12px;margin-top:14px}
+.ia-fila-pe .nota{margin:0}
+
+@media(max-width:760px){
+  .ia-chave{flex-wrap:wrap}
+  .ia-chave-botoes{margin-left:0}
+}
+
 </style>
 </head>
 <body>
@@ -3811,79 +3881,57 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="cfg-pagina cfg-ativa" data-pg="ia">
         <div class="cfg-pagina-cab">
           <h2>A IA que escreve</h2>
-          <p>quem escreve as headlines na fase 3 do template, e o que ela já gastou</p>
+          <p>a fila de chaves, o prompt, e o que já se gastou hoje</p>
         </div>
 
+        <!-- ONDE ISTO VAI PARAR, e a caixa existe porque a pergunta foi essa: "tem que
+             verificar se eu alterar ou salvar alguma coisa aqui vai impactar no
+             back-end". Vai, e por um caminho só: este arquivo. O programa que fala com a
+             IA lê dele a cada leva. Mas o navegador só escreve no disco depois que a
+             pasta é liberada uma vez, e antes disso Guardar não tinha onde gravar e
+             falhava sem explicar. O botão abaixo resolve isso aqui mesmo. -->
         <div class="caixa">
           <div class="cfg-topo">
-            <h3>Está funcionando?</h3>
-            <div class="dir"><span class="badge badge-sinal" id="ia_selo">sem chave</span></div>
+            <h3>Onde isto é guardado</h3>
+            <div class="dir"><span class="badge badge-sinal" id="ia_selo_pasta">
+              pasta não liberada</span></div>
           </div>
           <div class="cfg-linhas">
             <div class="cfg-linha">
               <div>
-                <div class="cfg-nome" id="ia_estado_nome">nenhuma IA configurada</div>
-                <div class="cfg-desc" id="ia_estado_desc">preencha o serviço e a chave
-                  abaixo, e depois clique em provar. A prova manda uma frase de verdade e
-                  volta em segundos, para você não descobrir o erro no meio de 107
-                  peças.</div>
+                <div class="cfg-nome">Estudio\ia.json</div>
+                <div class="cfg-desc" id="ia_pasta_desc">O navegador precisa da sua
+                  permissão para escrever no disco. Libere a pasta do Estúdio uma vez e o
+                  botão Guardar passa a gravar aqui; é deste arquivo que o programa deste
+                  computador lê a fila de chaves e o prompt, no começo de cada leva.</div>
               </div>
               <div class="dir">
-                <button class="acao" id="ia_provar" type="button">Provar agora</button>
+                <button class="acao" id="ia_liberar" type="button">Liberar a pasta</button>
               </div>
             </div>
           </div>
-          <p class="nota mini" id="ia_prova_diz"></p>
         </div>
 
-        <div class="caixa">
-          <div class="cfg-topo"><h3>O serviço</h3><div class="dir"></div></div>
-          <div class="cfg-campos">
-            <label class="cfg-campo">
-              <span>qual serviço</span>
-              <div class="psel cfg-sel" id="ia_servico"></div>
-            </label>
-            <label class="cfg-campo cresce">
-              <span>chave da API</span>
-              <input id="ia_chave" type="password" placeholder="cole a chave aqui"
-                     autocomplete="off" spellcheck="false">
-            </label>
-            <label class="cfg-campo cresce">
-              <span>modelo</span>
-              <input id="ia_modelo" placeholder="deixe vazio para o padrão"
-                     autocomplete="off" spellcheck="false">
-            </label>
-          </div>
-          <p class="nota mini" id="ia_onde_pegar"></p>
-        </div>
-
-        <!-- A RESERVA. Ela é o pedido literal: "caso tenha limite essa IA, para poder
-             substituir por outra". A troca acontece sozinha, no meio da leva, quando a
-             primeira recusa por cota; sem ela uma leva de 107 pararia na peça cinquenta
-             e o resto teria de ser refeito na mão. -->
+        <!-- A FILA. "Eu preciso ter um sistema de rotacionamento, caso alguma chave,
+             alguma coisa aqui bata o limite." Então não são duas, principal e reserva:
+             são quantas ele quiser, em ordem. -->
         <div class="caixa">
           <div class="cfg-topo">
-            <h3>A reserva, para quando a cota acabar</h3>
-            <div class="dir"><span class="badge badge-secondary" id="ia_selo2">vazia</span></div>
+            <h3>A fila de chaves</h3>
+            <div class="dir">
+              <span class="badge badge-secondary" id="ia_n_chaves">nenhuma</span>
+            </div>
           </div>
-          <div class="cfg-campos">
-            <label class="cfg-campo">
-              <span>qual serviço</span>
-              <div class="psel cfg-sel" id="ia_servico2"></div>
-            </label>
-            <label class="cfg-campo cresce">
-              <span>chave da API</span>
-              <input id="ia_chave2" type="password" placeholder="opcional"
-                     autocomplete="off" spellcheck="false">
-            </label>
-            <label class="cfg-campo cresce">
-              <span>modelo</span>
-              <input id="ia_modelo2" placeholder="deixe vazio para o padrão"
-                     autocomplete="off" spellcheck="false">
-            </label>
+          <div class="ia-fila" id="ia_fila"></div>
+          <div class="ia-fila-pe">
+            <button class="acao mini" id="ia_add" type="button">
+              acrescentar uma chave</button>
+            <span class="nota mini" id="ia_fila_diz"></span>
           </div>
-          <p class="nota mini">Quando a primeira responder que a cota acabou, esta assume
-            na peça seguinte, sem parar a leva e sem perguntar nada.</p>
+          <p class="nota mini">A primeira da fila que estiver de pé atende, e continua
+            atendendo enquanto der certo: trocar de serviço no meio da leva trocaria também
+            o jeito de escrever. Quando ela é recusada por limite, descansa 90 segundos e a
+            próxima assume. Três recusas seguidas e ela sai da fila até o dia virar.</p>
         </div>
 
         <div class="caixa">
@@ -3892,9 +3940,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia">hoje</span></div>
           </div>
           <div class="cfg-pares cfg-uma cfg-numeros" id="ia_uso"></div>
-          <p class="nota mini" id="ia_uso_nota">A conta é do que este computador pediu, e
-            não do que o serviço registrou. Nenhum dos três publica o saldo por programa;
-            o que dá para saber com certeza é o que saiu daqui e o que voltou recusado.</p>
+          <p class="nota mini">A conta é do que este computador pediu, e não do saldo que
+            sobra lá. Nenhum dos três serviços publica quanto resta por programa; o que dá
+            para saber com certeza é o que saiu daqui e o que voltou recusado.</p>
         </div>
 
         <div class="caixa">
@@ -7751,6 +7799,26 @@ function desenhaPorta(cracha) {
   if (jaTem) $("ed_porta_nome").textContent = cracha.name;
 }
 
+/* LIBERAR A PASTA DE FORA DA ABA DE EDIÇÃO. A aba de Configurações precisa gravar
+   `ia.json`, e o navegador só escreve no disco com a permissão dada por um clique. Quando
+   já existe crachá, um clique basta; quando não existe, abre a janela de arquivos. */
+async function pedirPasta() {
+  if (EDIT_RAIZ) return EDIT_RAIZ;
+  if (!TEM_PORTA) throw new Error("este navegador não abre pastas do computador");
+  const cracha = CRACHA_NA_MAO || await pegarCracha();
+  if (cracha) {
+    const h = await pastaValendo(cracha, true);
+    if (h) {
+      ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(h));
+      return EDIT_RAIZ;
+    }
+  }
+  const h = await window.showDirectoryPicker({ id: "estudio-raiz", mode: "readwrite" });
+  ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(h));
+  await guardarCracha(h);
+  return EDIT_RAIZ;
+}
+
 /** Escolher a pasta pela janela de arquivos. Só quando ainda não há crachá nenhum. */
 async function escolherPasta() {
   try {
@@ -8876,19 +8944,21 @@ const abertas = () => soTexto().filter(e => !e.trava);
 async function entrarNaIA() {
   await lerIA();
   const campos = abertas();
-  const temChave = !!(IA.chave || (IA.reserva && IA.reserva.chave));
+  const vivas = IA.chaves.filter(c => c.chave && !estaEsgotada(c));
+  const temChave = vivas.length > 0;
   $("ia_sem_campo").hidden = !!campos.length;
   $("ia_sem_chave").hidden = !campos.length || temChave;
   $("ia_corpo").hidden = !campos.length || !temChave;
   contaEscrito();
   if (!campos.length || !temChave) return;
   const n = pecas3().length;
-  $("ia_quem").textContent = "escrevendo com " + nomeDoServico(IA.servico);
+  $("ia_quem").textContent = "escrevendo com " + nomeDoServico(vivas[0].servico);
   $("ia_quanto").textContent =
     `${campos.length} ${campos.length === 1 ? "caixa aberta" : "caixas abertas"}, `
     + `em ${n} ${n === 1 ? "peça" : "peças"}`
-    + (IA.reserva && IA.reserva.chave
-       ? `. Se a cota acabar, a ${nomeDoServico(IA.reserva.servico)} assume sozinha.` : ".");
+    + (vivas.length > 1
+       ? `. Se ela bater o limite, as outras ${vivas.length - 1} da fila assumem sozinhas.`
+       : ". É a única chave da fila hoje.");
   $("ia_escrever").disabled = !!IA_OBRA || !n;
 }
 
@@ -9032,47 +9102,86 @@ const IA_PROMPT_PADRAO =
   + "5. Se a imagem nao tiver frase legivel, responda exatamente: SEM FRASE.\n"
   + "Responda SO com a frase.";
 
-let IA = { servico: "gemini", chave: "", modelo: "", prompt: "",
-           reserva: { servico: "groq", chave: "", modelo: "" } };
+/* A FILA DE CHAVES, e não mais principal e reserva.
+
+   "EU PRECISO TER UM SISTEMA DE ROTACIONAMENTO, caso alguma chave, alguma coisa aqui bata
+   o limite." Duas chaves não são um rodízio, são um plano B: quando a segunda cai também,
+   a leva para. Aqui a fila tem o tamanho que ele quiser, e cada uma mostra o próprio
+   estado, porque com rodízio a pergunta que importa não é quanto se gastou no total, e sim
+   qual delas ainda funciona. */
+
+let IA = { chaves: [], prompt: "" };
 let IA_OBRA = null;
 let IA_USO = null;
 let IA_LIDA = false;
 
 function fichaDoServico(v) { return IA_SERVICOS.find(x => x.v === v) || IA_SERVICOS[0]; }
 function nomeDoServico(v) { return fichaDoServico(v).r; }
+const novaChaveId = () => "k" + Math.random().toString(36).slice(2, 8);
+
+/* A FICHA ANTIGA CONTINUA SENDO LIDA e vira fila de duas na entrada, do mesmo jeito que o
+   `oficina.py` faz do lado de lá. Ninguém reconfigura nada por causa de uma mudança
+   minha, e as duas pontas leem o arquivo igual. */
+function viraFila(d) {
+  if (Array.isArray(d.chaves)) {
+    return { chaves: d.chaves.filter(c => c && c.chave)
+                       .map(c => ({ id: c.id || novaChaveId(), servico: c.servico || "gemini",
+                                    chave: c.chave, modelo: c.modelo || "" })),
+             prompt: d.prompt || "" };
+  }
+  const fila = [];
+  for (const parte of [d, d.reserva || {}]) {
+    if (parte.chave) fila.push({ id: parte.id || novaChaveId(),
+                                 servico: parte.servico || "gemini",
+                                 chave: parte.chave, modelo: parte.modelo || "" });
+  }
+  return { chaves: fila, prompt: d.prompt || "" };
+}
 
 async function lerIA() {
   if (IA_LIDA) return;
-  // SEM A PASTA LIBERADA A TELA AINDA PRECISA SE PINTAR, com o padrão e com a conta
-  // zerada. Caixa vazia sem explicação parece tela quebrada.
   if (!EDIT_RAIZ) { desenhaCfgIA(); desenhaUsoDaIA(); return; }
   try {
     const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
-    const d = JSON.parse(await f.text());
-    IA = Object.assign(IA, d);
-    IA.reserva = Object.assign({ servico: "groq", chave: "", modelo: "" }, d.reserva || {});
-  } catch (e) { /* ainda não há ficha; vale o padrão */ }
+    IA = viraFila(JSON.parse(await f.text()) || {});
+  } catch (e) { /* ainda não há ficha; a fila nasce vazia */ }
   IA_LIDA = true;
   await lerUsoDaIA();
   desenhaCfgIA();
 }
 
 async function gravarIA() {
-  if (!EDIT_RAIZ) throw new Error("libere a pasta do Estúdio na aba de Edição, uma vez");
+  if (!EDIT_RAIZ) throw new Error("libere a pasta do Estúdio primeiro, no botão acima");
   const h = await EDIT_RAIZ.getFileHandle("ia.json", { create: true });
   const w = await h.createWritable();
   await w.write(JSON.stringify(IA, null, 1));
   await w.close();
+  // A PROVA DE QUE CHEGOU: lê de volta o arquivo que o programa vai ler, e devolve o que
+  // ele encontrou lá. Sem isso, "guardado" é só uma palavra na tela.
+  const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
+  return JSON.parse(await f.text());
 }
 
-/* QUANTO JÁ SE GASTOU, e a conta é do que saiu daqui. Nenhum dos três serviços publica o
-   saldo restante por programa, então prometer "faltam tantas" seria invenção. O que dá
-   para saber com certeza é quantos pedidos este computador mandou hoje, quantos voltaram
-   recusados por cota e qual serviço atendeu o último. */
+/* A PASTA SE LIBERA AQUI TAMBÉM. Ela era liberada só na aba de Edição, e quem chegasse
+   primeiro nas Configurações via o Guardar falhar sem entender por quê. */
+$("ia_liberar").onclick = async () => {
+  try {
+    await pedirPasta();
+    IA_LIDA = false;
+    await lerIA();
+    desenhaCfgIA();
+    parado("ia_cfg_recado", "pasta liberada.");
+  } catch (e) {
+    parado("ia_cfg_recado", e.message || "a liberação foi cancelada");
+  }
+};
+
 async function lerUsoDaIA() {
   try {
     const f = await (await EDIT_RAIZ.getFileHandle("ia-uso.json")).getFile();
-    IA_USO = JSON.parse(await f.text());
+    const d = JSON.parse(await f.text());
+    const hoje = new Date().toISOString().slice(0, 10);
+    IA_USO = (d && d.dia === hoje) ? d : null;   // folha de ontem não conta como hoje
   } catch (e) { IA_USO = null; }
   desenhaUsoDaIA();
 }
@@ -9080,95 +9189,175 @@ async function lerUsoDaIA() {
 function desenhaUsoDaIA() {
   const u = IA_USO || {};
   const linha = (r, v) => `<div class="cfg-par"><span>${r}</span><b>${v}</b></div>`;
-  $("ia_uso_dia").textContent = u.dia ? "em " + u.dia.split("-").reverse().join("/") : "hoje";
+  $("ia_uso_dia").textContent = u.dia
+    ? "em " + u.dia.split("-").reverse().join("/") : "hoje";
   $("ia_uso").innerHTML =
     linha("frases pedidas", num(u.pedidos || 0))
-    + linha("recusadas por cota", num(u.sem_cota || 0))
+    + linha("recusadas por limite", num(u.sem_cota || 0))
     + linha("outros erros", num(u.erros || 0))
-    + linha("último atendimento", u.ultimo && u.ultimo.servico
-        ? nomeDoServico(u.ultimo.servico) : "nenhum ainda");
+    + linha("chaves que ainda respondem",
+            IA.chaves.length ? `${IA.chaves.filter(c => !estaEsgotada(c)).length} de ${IA.chaves.length}`
+                             : "nenhuma na fila");
 }
 
+function usoDaChave(c) { return ((IA_USO || {}).chaves || {})[c.id] || {}; }
+function estaEsgotada(c) { return !!usoDaChave(c).esgotada; }
+
+/* ------------------------------------------------ a fila desenhada */
+
 function desenhaCfgIA() {
-  const ficha = fichaDoServico(IA.servico), f2 = fichaDoServico(IA.reserva.servico);
-  pselNovo($("ia_servico"), IA_SERVICOS, IA.servico, v => {
-    IA.servico = v;
-    $("ia_modelo").placeholder = fichaDoServico(v).modelo;
-    $("ia_onde_pegar").innerHTML = "A chave gratuita do "
-      + `<b>${escapa(fichaDoServico(v).r)}</b> sai em <b>${escapa(fichaDoServico(v).onde)}</b>.`;
-  });
-  pselNovo($("ia_servico2"), IA_SERVICOS, IA.reserva.servico, v => {
-    IA.reserva.servico = v;
-    $("ia_modelo2").placeholder = fichaDoServico(v).modelo;
-  });
-  $("ia_chave").value = IA.chave || "";
-  $("ia_modelo").value = IA.modelo || "";
-  $("ia_modelo").placeholder = ficha.modelo;
-  $("ia_chave2").value = IA.reserva.chave || "";
-  $("ia_modelo2").value = IA.reserva.modelo || "";
-  $("ia_modelo2").placeholder = f2.modelo;
+  const fila = $("ia_fila");
+  $("ia_n_chaves").textContent = IA.chaves.length
+    ? IA.chaves.length + (IA.chaves.length === 1 ? " chave" : " chaves") : "nenhuma";
+  $("ia_selo_pasta").textContent = EDIT_RAIZ ? "pasta liberada" : "pasta não liberada";
+  $("ia_liberar").hidden = !!EDIT_RAIZ;
   $("ia_prompt").value = IA.prompt || IA_PROMPT_PADRAO;
-  $("ia_onde_pegar").innerHTML = "A chave gratuita do "
-    + `<b>${escapa(ficha.r)}</b> sai em <b>${escapa(ficha.onde)}</b>.`;
-  $("ia_selo").textContent = IA.chave ? "com chave" : "sem chave";
-  $("ia_selo2").textContent = IA.reserva.chave ? "com chave" : "vazia";
-  $("ia_estado_nome").textContent = IA.chave
-    ? "escrevendo com " + nomeDoServico(IA.servico)
-    : "nenhuma IA configurada";
+
+  if (!IA.chaves.length) {
+    fila.innerHTML = '<div class="ia-vazia"><b>A fila está vazia.</b><span class="nota">'
+      + 'Acrescente uma chave abaixo. A gratuita do Google Gemini sai em '
+      + '<b>aistudio.google.com</b>, a do Groq em <b>console.groq.com</b> e a do '
+      + 'OpenRouter em <b>openrouter.ai</b>.</span></div>';
+    $("ia_fila_diz").textContent = "";
+    desenhaUsoDaIA();
+    return;
+  }
+
+  fila.innerHTML = IA.chaves.map((c, i) => {
+    const u = usoDaChave(c), ficha = fichaDoServico(c.servico);
+    const selo = u.esgotada ? '<span class="ia-selo ruim">bateu o limite hoje</span>'
+      : u.pedidos ? '<span class="ia-selo boa">respondendo</span>'
+      : '<span class="ia-selo">ainda não usada</span>';
+    const conta = u.pedidos
+      ? `${num(u.pedidos)} ${u.pedidos === 1 ? "frase" : "frases"} hoje`
+        + (u.sem_cota ? `, ${num(u.sem_cota)} recusadas` : "")
+      : "sem uso hoje";
+    return `<div class="ia-chave" data-i="${i}">
+      <div class="ia-chave-n">${i + 1}</div>
+      <div class="ia-chave-campos">
+        <label class="cfg-campo"><span>serviço</span>
+          <div class="psel cfg-sel" data-psel="${i}"></div></label>
+        <label class="cfg-campo cresce"><span>chave da API</span>
+          <input type="password" data-campo="chave" autocomplete="off" spellcheck="false"
+                 value="${escapa(c.chave || "")}" placeholder="cole a chave aqui"></label>
+        <label class="cfg-campo cresce"><span>modelo</span>
+          <input data-campo="modelo" autocomplete="off" spellcheck="false"
+                 value="${escapa(c.modelo || "")}"
+                 placeholder="${escapa(ficha.modelo)}"></label>
+      </div>
+      <div class="ia-chave-pe">
+        ${selo}<span class="nota mini">${escapa(conta)}</span>
+        <span class="ia-chave-diz" data-diz="${i}"></span>
+        <span class="ia-chave-botoes">
+          <button class="acao mini" data-acao="provar" type="button">provar</button>
+          <button class="ia-mover" data-acao="sobe" type="button"
+                  aria-label="subir na fila"${i === 0 ? " disabled" : ""}>&uarr;</button>
+          <button class="ia-mover" data-acao="desce" type="button"
+                  aria-label="descer na fila"${i === IA.chaves.length - 1 ? " disabled" : ""}>&darr;</button>
+          <button class="ia-mover perigo" data-acao="tira" type="button"
+                  aria-label="tirar da fila">&times;</button>
+        </span>
+      </div>
+    </div>`;
+  }).join("");
+
+  // OS SELETORES SÃO OS DA CASA, e não os do navegador. Foi a bronca dele na fase 3:
+  // "você tem literalmente dentro do próprio estúdio referência de como montar".
+  IA.chaves.forEach((c, i) => {
+    pselNovo(fila.querySelector(`[data-psel="${i}"]`), IA_SERVICOS, c.servico, v => {
+      c.servico = v;
+      const campo = fila.querySelector(`.ia-chave[data-i="${i}"] [data-campo="modelo"]`);
+      if (campo) campo.placeholder = fichaDoServico(v).modelo;
+    });
+  });
+  const vivas = IA.chaves.filter(c => !estaEsgotada(c)).length;
+  $("ia_fila_diz").textContent = vivas === IA.chaves.length
+    ? "a fila inteira está de pé."
+    : `${vivas} de ${IA.chaves.length} ainda respondem hoje; as outras voltam quando o dia virar.`;
+  desenhaUsoDaIA();
 }
+
+/* O QUE ELE DIGITA VAI PARA A FILA NA HORA, e não só ao clicar em Guardar. Guardar é o
+   que grava no disco; sem esta linha, mexer numa chave e provar outra levaria o valor
+   antigo. */
+$("ia_fila").addEventListener("input", ev => {
+  const inp = ev.target.closest("input[data-campo]");
+  if (!inp) return;
+  const i = Number(inp.closest(".ia-chave").dataset.i);
+  if (IA.chaves[i]) IA.chaves[i][inp.dataset.campo] = inp.value.trim();
+});
+
+$("ia_fila").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-acao]");
+  if (!b) return;
+  const i = Number(b.closest(".ia-chave").dataset.i);
+  const acao = b.dataset.acao;
+  if (acao === "tira") { IA.chaves.splice(i, 1); desenhaCfgIA(); return; }
+  if (acao === "sobe" && i > 0) {
+    [IA.chaves[i - 1], IA.chaves[i]] = [IA.chaves[i], IA.chaves[i - 1]];
+    desenhaCfgIA(); return;
+  }
+  if (acao === "desce" && i < IA.chaves.length - 1) {
+    [IA.chaves[i], IA.chaves[i + 1]] = [IA.chaves[i + 1], IA.chaves[i]];
+    desenhaCfgIA(); return;
+  }
+  if (acao === "provar") await provarChave(i, b);
+});
+
+$("ia_add").onclick = () => {
+  IA.chaves.push({ id: novaChaveId(), servico: "gemini", chave: "", modelo: "" });
+  desenhaCfgIA();
+  const ultimo = $("ia_fila").querySelector(".ia-chave:last-child input[data-campo='chave']");
+  if (ultimo) ultimo.focus();
+};
 
 $("ia_prompt_padrao").onclick = () => { $("ia_prompt").value = IA_PROMPT_PADRAO; };
 
-function lerCamposDaIA() {
-  IA.chave = $("ia_chave").value.trim();
-  IA.modelo = $("ia_modelo").value.trim();
-  IA.prompt = $("ia_prompt").value.trim();
-  IA.reserva.chave = $("ia_chave2").value.trim();
-  IA.reserva.modelo = $("ia_modelo2").value.trim();
-}
-
 $("ia_guardar").onclick = async () => {
-  lerCamposDaIA();
+  IA.prompt = $("ia_prompt").value.trim();
+  const vazias = IA.chaves.filter(c => !c.chave).length;
   try {
-    await gravarIA();
+    const gravado = await gravarIA();
+    IA_LIDA = true;
     desenhaCfgIA();
-    parado("ia_cfg_recado", "guardado em Estudio\\ia.json");
+    // O RECADO DIZ O QUE FOI PARAR NO ARQUIVO, lido de volta dele. É a resposta à
+    // pergunta "salvar aqui vai impactar no back-end": foi para lá, e é isto que está lá.
+    const n = (gravado.chaves || []).length;
+    parado("ia_cfg_recado", `guardado em Estudio\\ia.json: `
+      + `${n} ${n === 1 ? "chave" : "chaves"} na fila e um prompt de `
+      + `${(gravado.prompt || "").length} caracteres. É deste arquivo que o programa lê.`
+      + (vazias ? ` (${vazias} sem chave preenchida, e essas ele ignora)` : ""));
   } catch (e) { parado("ia_cfg_recado", e.message); }
 };
 
 /* A PROVA, e ela sai DAQUI e não do programa local. É a única chamada que o navegador faz
-   a uma IA, e existe por um motivo só: resposta em segundos. Se ela fosse pelo caminho
-   normal, provar a chave custaria o minuto que o programa leva para passar na pasta, e
-   ninguém confere uma chave esperando um minuto por tentativa.
+   a uma IA, e existe por um motivo só: resposta em segundos. Pelo caminho normal, provar
+   uma chave custaria o minuto que o programa leva para passar na pasta, e ninguém confere
+   uma chave esperando um minuto por tentativa.
 
    E ELA PROVA O QUE IMPORTA, que é ler imagem. Um "responda PRONTO" diria que a chave
    existe e nada mais; o trabalho de verdade é olhar o card e reescrever a frase, então a
    prova desenha uma frase numa imagem e pede exatamente isso. */
-async function provarIA() {
-  const b = $("ia_provar");
-  b.disabled = true;
-  const antes = b.textContent;
-  b.textContent = "provando...";
-  parado("ia_prova_diz", "");
-  lerCamposDaIA();
+async function provarChave(i, botao) {
+  const c = IA.chaves[i];
+  if (!c) return;
+  const diz = $("ia_fila").querySelector(`[data-diz="${i}"]`);
+  botao.disabled = true;
+  const antes = botao.textContent;
+  botao.textContent = "provando...";
+  if (diz) { diz.textContent = ""; diz.className = "ia-chave-diz"; }
   try {
-    if (!IA.chave) throw new Error("preencha a chave primeiro");
+    if (!c.chave) throw new Error("preencha a chave primeiro");
     const frase = "Bolsa fecha em alta de 2% nesta terça, puxada pelos bancos";
-    const dito = await chamarIA(IA.servico, IA.chave, IA.modelo,
+    const dito = await chamarIA(c.servico, c.chave, c.modelo,
       IA_PROMPT_PADRAO.replace("{limite}", "70"), await imagemDeProva(frase));
-    $("ia_selo").textContent = "funcionando";
-    $("ia_estado_nome").textContent = "escrevendo com " + nomeDoServico(IA.servico);
-    $("ia_estado_desc").textContent = "a prova mandou uma frase de card e ela voltou "
-      + "reescrita, então a chave, o modelo e a leitura de imagem estão de pé.";
-    parado("ia_prova_diz", `deu certo. Da frase "${frase}" ela escreveu: "${dito}"`);
+    if (diz) { diz.className = "ia-chave-diz boa"; diz.textContent = "respondeu: " + dito; }
   } catch (e) {
-    $("ia_selo").textContent = "não respondeu";
-    parado("ia_prova_diz", "não deu: " + e.message);
+    if (diz) { diz.className = "ia-chave-diz ruim"; diz.textContent = e.message; }
   }
-  b.disabled = false;
-  b.textContent = antes;
+  botao.disabled = false;
+  botao.textContent = antes;
 }
-$("ia_provar").onclick = provarIA;
 
 /** Desenha a frase numa imagem, que é a forma como a IA vê o card de verdade. */
 async function imagemDeProva(frase) {
@@ -9177,9 +9366,8 @@ async function imagemDeProva(frase) {
   const x = c.getContext("2d");
   x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height);
   x.fillStyle = "#111111"; x.font = "bold 34px Arial, sans-serif";
-  const palavras = frase.split(" ");
   let linha = "", y = 70;
-  for (const p of palavras) {
+  for (const p of frase.split(" ")) {
     if (x.measureText(linha + " " + p).width > 660 && linha) {
       x.fillText(linha, 30, y); y += 46; linha = p;
     } else linha = linha ? linha + " " + p : p;
@@ -9192,7 +9380,8 @@ async function imagemDeProva(frase) {
 async function chamarIA(servico, chave, modelo, prompt, b64) {
   const ficha = fichaDoServico(servico);
   modelo = modelo || ficha.modelo;
-  let url, corpo, cabeca = { "Content-Type": "application/json" };
+  let url, corpo;
+  const cabeca = { "Content-Type": "application/json" };
   if (servico === "gemini") {
     url = "https://generativelanguage.googleapis.com/v1beta/models/"
       + encodeURIComponent(modelo) + ":generateContent?key=" + encodeURIComponent(chave);
@@ -9214,17 +9403,16 @@ async function chamarIA(servico, chave, modelo, prompt, b64) {
   try {
     r = await fetch(url, { method: "POST", headers: cabeca, body: JSON.stringify(corpo) });
   } catch (e) {
-    throw new Error("não consegui falar com o serviço daqui do navegador. "
-      + "A chave pode estar certa mesmo assim: quem chama de verdade é o programa "
-      + "deste computador.");
+    throw new Error("não consegui falar com o serviço daqui do navegador. A chave pode "
+      + "estar certa mesmo assim: quem chama de verdade é o programa deste computador.");
   }
   const txt = await r.text();
   if (!r.ok) {
-    if (r.status === 429 || r.status === 402) throw new Error("a cota deste serviço acabou");
+    if (r.status === 429 || r.status === 402) throw new Error("esta chave bateu o limite");
     if (r.status === 400 || r.status === 401 || r.status === 403) {
       throw new Error("o serviço recusou a chave ou o modelo (" + r.status + ")");
     }
-    throw new Error(r.status + ": " + txt.slice(0, 160));
+    throw new Error(r.status + ": " + txt.slice(0, 140));
   }
   let d;
   try { d = JSON.parse(txt); } catch (e) { throw new Error("resposta ilegível"); }
