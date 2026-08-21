@@ -782,7 +782,6 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
    Tudo aqui usa as variáveis de lá, para as duas telas envelhecerem juntas. */
 
 .corpo{max-width:1340px;margin:0 auto;padding:26px clamp(20px,3.2vw,56px) 80px}
-
 .aba[hidden]{display:none}
 /* Animação PRÓPRIA, e com nome próprio.
    Aqui morava `animation:subir`, emprestada do Social Tracker. Lá `subir` termina em
@@ -793,19 +792,16 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 @keyframes entra-aba{from{opacity:0;transform:translateY(10px)}
                      to{opacity:1;transform:none}}
 .aba{animation:entra-aba .34s cubic-bezier(.22,1,.36,1) both}
-
 .secao{margin-bottom:26px}
 .secao-cab{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
            margin-bottom:12px;flex-wrap:wrap}
 .secao-cab h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;
               color:var(--muted);font-weight:600;margin:0}
 .secao-cab .dir{display:flex;align-items:center;gap:10px}
-
 .caixa{background:var(--branco);border:1px solid var(--rule-solid);
        border-radius:var(--r-lg);padding:20px;box-shadow:var(--sombra)}
 .caixa h3{font-size:15.5px;font-weight:650;margin:0 0 5px;color:var(--ink)}
 .nota{color:var(--muted);font-size:13.5px;margin:0}
-
 .numeros{display:grid;gap:1px;background:var(--rule-solid);border:1px solid var(--rule-solid);
          border-radius:var(--r-lg);overflow:hidden}
 .numeros.quatro{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -813,7 +809,6 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 .num b{display:block;font-size:27px;font-weight:650;letter-spacing:-.02em;line-height:1.1;
        color:var(--ink);font-variant-numeric:tabular-nums}
 .num span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
-
 textarea{width:100%;min-height:104px;resize:vertical;margin-top:12px;
          font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
          background:var(--paper);color:var(--ink);border:1px solid var(--rule-solid);
@@ -822,11 +817,9 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent)}
 input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   font:14px ui-monospace,Consolas,monospace;background:var(--paper);color:var(--ink);
   border:1px solid var(--rule-solid);border-radius:var(--r-filtro);padding:0 13px}
-
 .linha{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:14px}
 .campo{flex:1;min-width:160px}
 .campo label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-
 /* O botão do sistema tem quatro filhos e vive no molde de lá. Aqui as ações são de
    comando, não de navegação, então usam a forma sóbria: retângulo, sem seta. */
 .acao{height:var(--h-filtro);padding:0 18px;border-radius:var(--r-filtro);cursor:pointer;
@@ -837,11 +830,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .acao.forte:hover{filter:brightness(1.07);color:#fff}
 .acao:disabled{opacity:.42;cursor:not-allowed}
 .acao:disabled:hover{border-color:var(--rule-solid);color:var(--ink)}
-
 .vazio{color:var(--muted);font-size:14px;padding:26px 0;text-align:center;
        background:var(--branco);border:1px solid var(--rule-solid);
        border-radius:var(--r-lg)}
-
 /* ---- as máquinas da rodada, uma pastilha cada ---- */
 .elos{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:7px;
       margin-top:16px}
@@ -855,7 +846,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
            font-weight:600}
 .elo.agora .luz{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
 .elo.falhou .luz{background:var(--vermelho)}
-
 /* ====================================================== O REGISTRO, EM FORMA DE CONSOLE
 
    Molde escolhido pelo Gabriel em 17/08: cartão fechado, com cabeça de identidade, três
@@ -871,7 +861,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    que é a verdade, e não uma onda inventada para a tela parecer viva. */
 .konsole{border:1px solid var(--rule-solid);border-radius:var(--r-lg);
          background:var(--branco);overflow:hidden;box-shadow:var(--sombra)}
-
 .kon-topo{display:flex;align-items:center;gap:14px;padding:18px 20px;flex-wrap:wrap}
 .kon-selo{flex:none;display:grid;place-items:center;width:34px;height:34px;
           border-radius:9px;background:var(--paper-2);border:1px solid var(--rule-solid);
@@ -894,7 +883,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .kon-vivo i{width:6px;height:6px;border-radius:50%;background:var(--soft);flex:none}
 .kon-vivo.ativa{color:var(--verde)}
 .kon-vivo.ativa i{background:var(--verde)}
-
 /* as três medidas, divididas por fio, como no molde */
 .kon-medidas{display:grid;grid-template-columns:repeat(3,1fr);
              border-top:1px solid var(--rule)}
@@ -914,21 +902,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .kon-medida.aviso .kon-traco path{stroke:var(--chart-3)}
 .kon-medida.evento .kon-traco path{stroke:var(--chart-2)}
 .kon-traco.parado path{opacity:.32}
-
 /* as máquinas só aparecem enquanto a rodada está no ar */
 .kon-maquinas{padding:0 20px 16px;border-top:1px solid var(--rule);padding-top:16px}
 .kon-maquinas[hidden]{display:none}
-
 /* Os filtros dentro do cartão, na linha logo abaixo das medidas. */
 .liv-filtros{display:flex;gap:10px;flex-wrap:wrap;padding:15px 20px;
              border-top:1px solid var(--rule)}
 .liv-filtros .ct-busca{flex:1 1 240px}
-
 @media(max-width:720px){
   .kon-medidas{grid-template-columns:1fr}
   .kon-medida + .kon-medida{border-left:0;border-top:1px solid var(--rule)}
 }
-
 /* ---- perfil: barra de avanço ---- */
 .perfil-linha{background:var(--branco);border:1px solid var(--rule-solid);
               border-radius:var(--r-lg);padding:16px 18px;margin-bottom:10px}
@@ -938,12 +922,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .barra{height:5px;background:var(--paper-2);border-radius:999px;overflow:hidden;margin-top:9px}
 .barra i{display:block;height:100%;background:var(--accent);border-radius:999px;
          transition:width .5s cubic-bezier(.22,1,.36,1)}
-
 .tag{font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--rule-solid);
      color:var(--muted);white-space:nowrap}
 .tag.ok{color:var(--verde);border-color:color-mix(in srgb,var(--verde) 40%,transparent)}
 .tag.trab{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
-
 /* ---- cartão de perfil pronto para baixar ---- */
 .pronto{background:var(--branco);border:1px solid var(--rule-solid);
         border-radius:var(--r-lg);padding:18px 20px;margin-bottom:12px;
@@ -958,7 +940,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .pronto-numeros b{display:block;font-size:19px;font-weight:650;color:var(--ink);
                   font-variant-numeric:tabular-nums;line-height:1.15}
 .pronto-numeros span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
-
 /* ---- aba que ainda não existe ---- */
 .por-vir{background:var(--branco);border:1px dashed var(--rule-solid);
          border-radius:var(--r-lg);padding:30px 28px;text-align:left}
@@ -970,20 +951,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             margin:0 0 6px;text-transform:none}
 .por-vir-lista{margin:16px 0 0 20px;color:var(--muted);font-size:14px}
 .por-vir-lista li{margin-bottom:8px;padding-left:4px}
-
 /* ---- o aviso de que o Drive ainda não foi autorizado ---- */
 .travado{display:flex;gap:12px;align-items:flex-start;background:var(--paper);
          border:1px solid color-mix(in srgb,var(--ambar) 35%,transparent);
          border-radius:var(--r-md);padding:13px 15px;margin-top:14px;font-size:13.5px;
          color:var(--muted)}
 .travado b{color:var(--ink)}
-
 @media(max-width:640px){
   .corpo{padding:18px 14px 60px}
   .caixa,.pronto{padding:16px}
   .por-vir{padding:22px 18px}
 }
-
 /* ================================================== A TABELA E OS FILTROS DE MINERADOS
 
    AQUI NÃO SE REESCREVE NADA QUE JÁ VEIO COPIADO, e isso é o conserto de 17/08.
@@ -1000,7 +978,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* `hidden` não vence sozinho quem tem `display` escrito. As duas caixas abaixo têm:
    `.pag` é `flex` e o painel precisa sumir quando a sub-aba troca. */
 .ct-painel[hidden],.pag[hidden]{display:none}
-
 /* O botão de comando desta tela dentro da linha da tabela. Lá a ação da linha é o
    botão de navegação do sistema, que tem seta e quatro filhos; aqui são comandos. */
 .tab-acao-in{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end}
@@ -1008,13 +985,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                 display:inline-flex;align-items:center;text-decoration:none}
 .tab-acao .acao.redonda{width:32px;padding:0;justify-content:center}
 .tab-acao .acao.redonda svg{width:15px;height:15px}
-
 /* A COBERTURA CARREGA O TOTAL DA CONTA EMBAIXO. O total era coluna própria, e sozinho
    ele empurrava a última coluna para fora da tela. Junto da porcentagem ele também lê
    melhor: 62% de 4.976 é uma frase, e duas colunas separadas eram duas metades dela. */
 .tab-dupla{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tab-dupla i{font-style:normal;font-size:11.5px;color:var(--muted)}
-
 /* ============================================================== SINAL DE CARREGAMENTO
 
    Traduzido do componente que o Gabriel mandou, que é React com Tailwind. Aqui não há
@@ -1039,7 +1014,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .pix-grade.orbita i{animation-duration:950ms}
 .pix-grade i.apagado{opacity:.07;animation:none}
 @keyframes pixel-on{0%,100%{opacity:.15}35%{opacity:1}}
-
 .pix-rotulo{font-size:13px;font-weight:500;color:transparent;
   background-image:linear-gradient(90deg,var(--muted) 35%,var(--ink) 50%,var(--muted) 65%);
   background-size:200% 100%;
@@ -1050,17 +1024,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @supports not ((background-clip:text) or (-webkit-background-clip:text)){
   .pix-rotulo{color:var(--muted);background-image:none;animation:none}
 }
-
 .pix-tempo{font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
            color:var(--muted);font-variant-numeric:tabular-nums}
-
 /* Movimento reduzido congela a grade no apagado, e o relógio continua andando: quem
    pediu menos movimento quer menos movimento, não menos informação. */
 @media (prefers-reduced-motion: reduce){
   .pix-grade i{animation:none}
   .pix-rotulo{animation:none;background-image:none;color:var(--muted)}
 }
-
 /* ============================================ OS CARTÕES DE PERFIL, DENTRO DO CONSOLE
 
    Um cartão por perfil, que abre e fecha. Molde escolhido pelo Gabriel em 17/08, no
@@ -1090,7 +1061,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
           transition:transform .2s cubic-bezier(.22,1,.36,1)}
 .liv-cartao.aberto .liv-seta{transform:rotate(90deg)}
-
 /* o painel do detalhe, recuado como no molde */
 .liv-corpo{display:none;padding:0 20px 18px 39px}
 .liv-cartao.aberto .liv-corpo{display:block}
@@ -1114,14 +1084,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                   border:1px solid var(--rule-solid);border-radius:5px;padding:1px 6px}
 .liv-ev .data{flex:none;font-size:11.5px;color:var(--soft);white-space:nowrap;
               font-variant-numeric:tabular-nums}
-
 .liv-mais{padding:14px 20px;border-top:1px solid var(--rule);
           display:flex;justify-content:center}
 /* a faixa some junto com o botão: vazia, ela ficava como um degrau no pé do cartão */
 .liv-mais:has(.acao[hidden]){display:none}
 .liv-mais .acao[hidden]{display:none}
 .liv-mais .acao{height:36px;padding:0 20px;font-size:13px}
-
 /* a folha de exportação, no molde de balão do sistema */
 .liv-export{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
             background:rgba(0,0,0,.45);padding:20px}
@@ -1157,7 +1125,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .liv-datas input:focus{outline:none;border-color:var(--accent)}
 .liv-datas input::-webkit-calendar-picker-indicator{opacity:.45;cursor:pointer}
 .liv-datas input:hover::-webkit-calendar-picker-indicator{opacity:.9}
-
 /* A escolha, com a marca desenhada aqui: o botão redondo do sistema operacional tem
    azul do Windows dentro dele e não obedece à paleta. */
 .liv-opcao input{appearance:none;-webkit-appearance:none;width:16px;height:16px;
@@ -1168,7 +1135,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:var(--accent)}
 .liv-opcao:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
 .liv-pe{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
-
 /* ------------------------------------------------------- os campos da folha de iniciar */
 .campo-bloco{margin-bottom:16px}
 .campo-rot{display:block;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:7px}
@@ -1178,7 +1144,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   color:var(--ink);padding:0 12px;width:100%}
 .campo-bloco input[type=number]:focus{outline:none;border-color:var(--accent)}
 .campo-bloco[hidden]{display:none}
-
 /* A ESCOLHA, E O NOME DELA NÃO É `marca`.
    Esta classe se chamava assim, e `marca` já é a LOGOMARCA no sistema copiado, com
    26 pixels de largura e altura fixos. O resultado foi das duas: a logomarca do
@@ -1203,21 +1168,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .escolha > span{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.4}
 .escolha small{display:block;font-size:11.5px;color:var(--muted);margin-top:4px;
                font-weight:400;line-height:1.5}
-
-
 /* as três réguas lado a lado; a do formato que saiu da escolha some junto */
 .cortes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .cortes label{font-size:11.5px;color:var(--muted)}
 .cortes label[hidden]{display:none}
 .cortes input{margin-top:5px}
 .liv-pe .nota{margin-right:auto;text-align:left}
-
 /* a linha do que está acontecendo neste segundo, no topo do histórico */
 .liv-ev.agora{background:var(--accent-tint)}
 .liv-ev.agora i{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
 .liv-ev.agora .oque > b{color:var(--accent)}
 .liv-vivo{color:var(--accent);font-weight:600}
-
 /* AS PÁGINAS DE UMA RODADA, recuadas sob o evento que as resume. Menores e mais
    apagadas de propósito: são o detalhe de quem quer conferir, e não a leitura principal
    de quem só quer saber como está o perfil. */
@@ -1225,7 +1186,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .liv-ev.passo .oque > b{font-weight:450;font-size:12px}
 .liv-ev.passo i{width:5px;height:5px;margin-top:6px}
 .liv-ev.passo .data{font-size:11px}
-
 /* ------------------------------------------------ A TABELA LARGA DE MINERADOS
 
    Treze colunas não cabem em tela nenhuma sem rolagem, e a rolagem existe: `.tab-rolo`
@@ -1246,18 +1206,15 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    estreita que esconde. Duas coisas seguraram o número: a marcação desceu de baixo do
    nome do perfil, e o botão "Marcar" saiu da ponta da linha. */
 #tab_minerados{min-width:1560px}
-
 .tab td.tab-acao, .tab th.tab-acao{position:sticky;right:0;z-index:2;
   background:var(--branco);box-shadow:-10px 0 12px -10px rgba(0,0,0,.45)}
 .tab thead th.tab-acao{background:var(--paper-2)}
 .tab tbody tr:hover td.tab-acao{background:var(--paper-2)}
-
 /* a rolagem passa a ser visível, discreta, para o olho saber que há mais à direita */
 .tab-rolo{scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
 .tab-rolo::-webkit-scrollbar{display:block;height:9px}
 .tab-rolo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
 .tab-rolo::-webkit-scrollbar-track{background:transparent}
-
 /* ------------------------------------------------------- MONTAR UM LOTE
    O comando de baixar já foi um botão por perfil, e ele prometia um recorte que não
    existia: quem baixa percorre a seleção inteira. Depois virou um botão só com um
@@ -1276,7 +1233,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    etiqueta, parecendo legenda do filtro em vez de resposta do cartão. */
 #recado_lote{margin-top:18px}
 #recado_filtros{margin-top:10px}
-
 /* ------------------------------ MERCADO, ETIQUETA E BAIXAR: AS TRÊS COLUNAS NOVAS
 
    A marcação já morou embaixo do nome do perfil, espremida em duas pastilhas, para não
@@ -1303,7 +1259,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tab-toque .sem{font-size:12px;color:var(--soft)}
 .tab-toque:hover .sem{color:var(--muted)}
 .tab-etqs{max-width:190px}
-
 /* A COLUNA DE BAIXAR: A PASTILHA E O NÚMERO NA MESMA LINHA.
    Ela já usou o par de linhas da coluna de cobertura, com o número embaixo. O Gabriel
    reprovou em 19/08 e a razão é de leitura: todas as outras células desta tabela têm uma
@@ -1318,13 +1273,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .pino.meio::before{background:var(--ambar)}
 .pino.indo::before{background:var(--chart-2);animation:bxpulso 1.4s ease-in-out infinite}
 @keyframes bxpulso{0%,100%{opacity:1}50%{opacity:.25}}
-
 /* AS COLUNAS DE NÚMERO APERTAM, e as de texto não. Com três colunas a mais a tabela
    passou de 1.080 para perto de 1.400 pixels: tirar quatro pixels de cada lado das oito
    colunas de número devolve sessenta e quatro sem espremer nada que se leia. */
 .tab td.tab-num,.tab th.tab-num{padding-left:10px;padding-right:10px}
 .tab-acao .acao + .acao{margin-left:6px}
-
 /* ------------------------------------------------- A FILEIRA DE PERFIS
    Um cartão por perfil que tem conteúdo esperando. Só a marca e, no rodapé, quanto há
    para baixar dali: quem quiser o detalhe abre a tabela de Minerados, que é onde ele
@@ -1344,7 +1297,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .fperfil-pe b{font-size:16px;font-weight:650;color:var(--ink);
            font-variant-numeric:tabular-nums}
 .fperfil-pe span{font-size:11.5px;color:var(--muted);margin-left:4px}
-
 /* MARCADO: borda de destaque e o certo no canto. A cor sozinha não basta, porque o
    cartão marcado e o cartão sob o cursor teriam o mesmo desenho. */
 .fperfil.marcado{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
@@ -1356,7 +1308,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                 stroke-linecap:round;stroke-linejoin:round}
 .fperfil{position:relative}
 .fperfil.marcado .fperfil-certo{display:flex}
-
 /* ==================================================== O TIRA-DÚVIDAS DA ABA DE BAIXAR
 
    UMA BOLHA NO CANTO E UMA FOLHA QUE ENTRA PELA DIREITA.
@@ -1383,18 +1334,15 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    três abas: a troca de aba mandava escondê-la, o atributo entrava, e o `inline-flex`
    daqui de cima passava por cima dele. O mesmo remendo já existe para `.ct-painel`. */
 .ajuda-bolha[hidden]{display:none}
-
 /* O celular perde o rótulo e vira só o círculo: ali a bolha disputa espaço com o
    polegar, e "Dúvidas" escrito não vale a largura. */
 @media (max-width:640px){
   .ajuda-bolha{right:16px;bottom:16px;width:48px;padding:0;justify-content:center}
   .ajuda-bolha-rot{display:none}
 }
-
 .ajuda-fundo{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.42);
   backdrop-filter:blur(2px);animation:ajudaEntra .18s ease both}
 .ajuda-fundo[hidden],.ajuda-folha[hidden]{display:none}
-
 .ajuda-folha{position:fixed;top:0;right:0;bottom:0;z-index:71;width:min(560px,100vw);
   display:flex;flex-direction:column;background:var(--branco);
   border-left:1px solid var(--rule-solid);box-shadow:-24px 0 60px rgba(0,0,0,.30);
@@ -1402,7 +1350,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @keyframes ajudaEntra{from{opacity:0}to{opacity:1}}
 @keyframes ajudaDesliza{from{transform:translateX(26px);opacity:0}
                         to{transform:none;opacity:1}}
-
 .ajuda-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
   padding:22px 24px 18px;border-bottom:1px solid var(--rule-solid);flex-shrink:0}
 .ajuda-cab h2{margin:0;font-size:19px;font-weight:700;letter-spacing:-.02em}
@@ -1412,12 +1359,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:transparent;color:var(--muted);cursor:pointer;transition:background .14s}
 .ajuda-fecha:hover{background:var(--paper-2);color:var(--ink)}
 .ajuda-fecha svg{width:16px;height:16px}
-
 .ajuda-corpo{flex:1;overflow-y:auto;padding:20px 24px 40px;
   scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
 .ajuda-corpo::-webkit-scrollbar{width:9px}
 .ajuda-corpo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
-
 /* O CAMINHO INTEIRO, ANTES DAS PERGUNTAS. Quem abre um tira-dúvidas sem saber a forma
    da coisa fica lendo resposta solta. Os quatro passos ficam em coluna, numerados, com
    uma linha ligando um ao outro: é uma esteira, e ela é lida de cima para baixo. */
@@ -1429,11 +1374,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ajuda-passo b{display:block;font-size:13px;font-weight:700;letter-spacing:-.01em}
 .ajuda-passo span{display:block;font-size:12.5px;color:var(--muted);line-height:1.5;
   margin-top:2px}
-
 .ajuda-grupo{margin:26px 0 10px;font-size:11.5px;font-weight:700;color:var(--muted);
   text-transform:uppercase;letter-spacing:.08em}
 .ajuda-grupo:first-child{margin-top:0}
-
 /* CADA PERGUNTA É UM `details`, e não um acordeão escrito à mão: o navegador já sabe
    abrir, fechar, responder ao teclado e ser lido por leitor de tela. */
 .ajuda-item{border:1px solid var(--rule-solid);border-radius:var(--r-md);
@@ -1457,7 +1400,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ajuda-lista li{margin-bottom:6px}
 .ajuda-lista li b{color:var(--ink);font-weight:650}
 .ajuda-lista li i{font-style:normal;color:var(--ink);font-weight:500}
-
 /* O caminho da pasta em fonte de largura fixa e caixa própria: é para ser copiado com
    o olho, e barra invertida no meio de prosa some. */
 .ajuda-caminho{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -1465,7 +1407,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
   word-break:break-all;line-height:1.5}
 .ajuda-caminho i{font-style:italic;color:var(--accent)!important}
-
 /* A LISTA SUSPENSA `psel`, TRAZIDA À MÃO DO SOCIAL TRACKER.
 
    Ela é o seletor que o catálogo de lá usa nos dois lugares, e não estava aqui: o
@@ -1498,7 +1439,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .psel-menu button.on{background:var(--accent-tint);color:var(--accent)}
 .psel-menu button i{display:none}
 .psel-menu button.on i{display:block;font-style:normal}
-
 /* ============================== O CATÁLOGO DE MERCADOS E ETIQUETAS
 
    COPIADO DA ABA DE CONFIGURAÇÕES DO SOCIAL TRACKER, item "Nichos e etiquetas", a
@@ -1517,7 +1457,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    440 pixels, que é a medida de um formulário curto; duas colunas de catálogo dentro
    disso viram duas colunas de trinta pixels. */
 .etq-larga{width:min(760px,100%)}
-
 /* AS PASTILHAS DE ETIQUETA, marcando e desmarcando ao clique. A não escolhida fica
    apagada e mantém o mesmo desenho: uma caixa de seleção ao lado de cada nome daria a
    mesma função e roubaria do olho a etiqueta, que é o que ele já reconhece nas outras
@@ -1528,7 +1467,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .etq-op:hover{opacity:.7;filter:grayscale(.3)}
 .etq-op.on{opacity:1;filter:none}
 .etq-op:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
 /* Criar e apagar são raros; marcar um perfil é o que se faz toda hora. Abertas por
    padrão, as duas listas empurrariam para baixo o botão de salvar, que é o que trouxe a
    pessoa até aqui. */
@@ -1542,7 +1480,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .etq-gerir[open] > summary::before{transform:rotate(45deg)}
 .etq-gerir > summary:hover{color:var(--ink)}
 .etq-gerir[open] > summary{margin-bottom:14px;color:var(--ink)}
-
 /* AS DUAS CAIXAS TERMINAM JUNTAS, com a linha de criar encostada no pé. Uma lista de
    dois mercados ao lado de uma de seis etiquetas deixaria as caixas com alturas
    diferentes e os dois campos de escrever em alturas diferentes. */
@@ -1553,7 +1490,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .cfg-topo h3{margin:0;font-size:14px;font-weight:700}
 .cfg-topo .dir{margin-left:auto;display:flex;align-items:center;gap:8px}
 .cfg-cat-conta{font-size:11.5px;color:var(--muted);white-space:nowrap}
-
 .cfg-cat{display:flex;flex-direction:column;gap:0}
 .cfg-cat-lista{flex:1;min-height:0}
 .cfg-cat-l{display:flex;align-items:center;gap:11px;padding:9px 0;min-height:44px;
@@ -1574,7 +1510,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                  color:var(--vermelho)}
 .cfg-cat-x svg{width:15px;height:15px}
 .cfg-cat-l.esperando{opacity:.5}
-
 /* O painel de mover abre dentro da própria linha, numa segunda fileira, e não numa caixa
    flutuante: quem está decidindo o destino precisa continuar vendo, logo acima, o nome
    que vai sumir. */
@@ -1588,7 +1523,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* APAGAR É VERMELHO: é a única ação desta folha que tira alguma coisa, e ela fica ao
    lado de um Cancelar. Sem cor, os dois botões pedem a mesma atenção. */
 .cfg-cat-btn.cfg-vermelho{background:var(--vermelho);color:#FFFFFF}
-
 .cfg-sel{flex:1;min-width:140px}
 .cfg-sel .psel-b{width:100%;height:32px;padding:0 10px;justify-content:space-between;
                  gap:8px;border:1px solid var(--rule-solid);border-radius:8px;
@@ -1601,7 +1535,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* O seletor de mercado do perfil é o mesmo componente, e ocupa a linha inteira. */
 #etq_merc{width:100%}
 #etq_merc .psel-b{height:38px}
-
 /* A linha de criar: o campo cresce, o botão não. */
 .cfg-cat-novo{display:flex;align-items:center;gap:8px;margin-top:14px;
               padding-top:14px;border-top:1px solid var(--rule-solid)}
@@ -1617,7 +1550,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .cfg-cat-btn:hover{opacity:.85}
 .cfg-cat-btn:disabled{opacity:.4;cursor:default}
 .cfg-cat-vazio{padding:18px 0;font-size:13px;color:var(--soft)}
-
 /* O CARREGANDO: roda, três pontinhos e cronômetro. Ele existe porque a espera é real: o
    pedido vai até a esteira do GitHub, que roda numa máquina alugada e leva de trinta
    segundos a um minuto. Uma tela parada nesse intervalo é indistinguível de uma travada. */
@@ -1638,9 +1570,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @keyframes cfg-pisca{0%,60%,100%{opacity:.25}30%{opacity:1}}
 .cfg-cronometro{margin-left:2px;font-variant-numeric:tabular-nums;font-weight:600}
 @media(prefers-reduced-motion:reduce){.cfg-girando,.cfg-pontos i{animation:none}}
-
 @media(max-width:700px){.cfg-duas{grid-template-columns:1fr}}
-
 /* O CAMINHO DA PASTA, NA ÚLTIMA LINHA DO REGISTRO.
 
    Ele é um link de verdade, mas não para `file://`: o navegador proíbe uma página `https`
@@ -1658,7 +1588,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             border-radius:99px;cursor:pointer;white-space:nowrap;vertical-align:1px;
             transition:color .14s,border-color .14s}
 .liv-copiar:hover{color:var(--ink);border-color:var(--ink)}
-
 /* A ETAPA 8 ENQUANTO ELA ACONTECE.
 
    Ela é a única do caminho que roda no computador do Gabriel e não na esteira, então é a
@@ -1673,7 +1602,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
              border-top-color:var(--accent);animation:cfg-gira .7s linear infinite;
              vertical-align:-2px}
 @media(prefers-reduced-motion:reduce){.liv-girando{animation:none}}
-
 /* ====================================================== A ABA DE EDIÇÃO
 
    TRÊS TELAS, uma de cada vez: a portaria, a escolha da leva e a oficina. A primeira
@@ -1681,7 +1609,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    ficava solta no meio do passo 1, junto do trilho e da galeria, e nada dizia por onde
    começar. Tela de começo tem de ser tela de começo. */
 #ed_portaria[hidden],#ed_escolha[hidden],#ed_oficina[hidden]{display:none}
-
 /* ---------------------------------------------------------- 1 · a portaria */
 .ed-porteira{min-height:calc(100vh - 210px);display:grid;place-items:center;
   padding:40px 0}
@@ -1689,7 +1616,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-porteira h1,.ed-escolha h1{margin:0 0 8px;font-size:30px;font-weight:800;
   letter-spacing:-.03em;line-height:1.15}
 .ed-porteira .nota,.ed-escolha .nota{margin-bottom:28px;font-size:14.5px;line-height:1.55}
-
 /* O COMEÇO É UM SÓ E APARECE COMO UM SÓ: caixa larga, ícone à esquerda, seta à direita.
    Botão do tamanho dos outros da tela ficaria à mesma altura da lista de rascunhos, e
    as duas coisas não têm o mesmo peso. */
@@ -1705,14 +1631,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-comeco-txt b{font-size:16px;font-weight:700;letter-spacing:-.01em}
 .ed-comeco-txt span{font-size:13px;color:var(--muted)}
 .ed-comeco-seta{width:18px;height:18px;flex:none;color:var(--accent)}
-
 .ed-rascunhos{margin-top:34px}
 .ed-rascunhos-cab{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
 .ed-rascunhos-cab h3{margin:0;font-size:12.5px;font-weight:700;color:var(--muted);
   text-transform:uppercase;letter-spacing:.08em}
 .ed-rascunhos-cab .nota{margin:0 0 0 auto;font-size:12px}
 .ed-vazio{padding:20px 0;font-size:13.5px;line-height:1.55;color:var(--soft)}
-
 .ed-rasc{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;
   border:1px solid var(--rule-solid);border-radius:var(--r-md);background:var(--branco);
   margin-bottom:7px;transition:border-color .14s}
@@ -1731,7 +1655,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-rasc-x:hover{background:color-mix(in srgb,var(--vermelho) 12%,transparent);
   color:var(--vermelho)}
 .ed-rasc-x svg{width:14px;height:14px}
-
 /* ---------------------------------------------------------- 2 · a escolha */
 .ed-escolha{min-height:calc(100vh - 210px);padding:40px 0}
 .ed-escolha-in{width:min(760px,100%);margin:0 auto}
@@ -1741,7 +1664,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-voltar:hover{color:var(--ink)}
 .ed-voltar svg{width:15px;height:15px}
 .ed-voltar.mini{margin-bottom:18px;font-size:12px}
-
 .ed-levas{display:flex;flex-direction:column;gap:10px}
 /* A LEVA COMO LINHA LARGA, e não como cartãozinho quadrado: o Gabriel achou a primeira
    versão feia, e ela era mesmo. Um cartão de duzentos pixels com quatro linhas de texto
@@ -1773,7 +1695,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-leva.longe{opacity:.5;cursor:not-allowed;box-shadow:none}
 .ed-leva.longe:hover{border-color:var(--rule-solid);transform:none;box-shadow:none}
 .ed-leva.longe .ed-leva-pe{color:var(--soft)}
-
 /* ---------------------------------------------------------- 3 · a oficina */
 .ed-tela{display:grid;grid-template-columns:266px 1fr;gap:34px;align-items:start}
 /* O TRILHO É TÃO ALTO QUANTO O VIDRO, e gruda enquanto a galeria rola por baixo.
@@ -1781,7 +1702,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    a ser a caixinha de canto que o Gabriel reprovou duas vezes. */
 .ed-trilho{position:sticky;top:88px;display:flex;flex-direction:column;
   height:calc(100vh - 150px);min-height:420px}
-
 /* O TRILHO É UMA ESPINHA QUE DESCE A TELA INTEIRA.
 
    Terceira tentativa, e é a do rabisco que o Gabriel mandou em 19/08/2026: uma linha
@@ -1801,7 +1721,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-ponto-n{margin:0 0 10px 24px;font-size:26px;font-weight:800;letter-spacing:-.03em;
   color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
 .ed-ponto-corpo{display:flex;gap:18px;flex:1;min-height:0}
-
 /* A BARRA: um trilho apagado e, por cima, o preenchido, cuja altura é a medida do
    avanço. Ela cresce com o passo, então numa tela alta ela fica longa mesmo. */
 .ed-barra{position:relative;flex:0 0 2px;width:2px;align-self:stretch;min-height:70px}
@@ -1812,7 +1731,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-ponto-txt{padding-bottom:20px}
 .ed-ponto-txt h3{margin:-4px 0 3px;font-size:16px;font-weight:700;letter-spacing:-.01em}
 .ed-ponto-txt p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
-
 /* A ENTRADA NA OFICINA: a linha DESENHA de cima para baixo, e os passos aparecem atrás
    dela. Não é enfeite, é o que separa "escolhi a leva" de "comecei a editar". */
 @keyframes ed-linha{from{transform:scaleY(0)}to{transform:scaleY(1)}}
@@ -1832,10 +1750,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .ed-trilho.entrou .ed-ponto,.ed-trilho.entrou .ed-barra i{animation:none}
   .ed-barra b{transition:none}
 }
-
 .ed-porvir{margin:6px 0 0 20px;padding-top:14px;border-top:1px dashed var(--rule-solid);
   font-size:11.5px;line-height:1.5;color:var(--soft)}
-
 .ed-cab{margin-bottom:20px}
 .ed-cab h2{margin:0 0 5px;font-size:22px;font-weight:700;letter-spacing:-.02em}
 .ed-pe{display:flex;align-items:center;gap:14px;margin-top:24px;padding-top:18px;
@@ -1845,7 +1761,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* `hidden` NÃO VENCE QUEM TEM `display` ESCRITO, e o pé do passo 1 tem: sem esta linha o
    botão de continuar aparecia antes de haver leva escolhida. */
 .ed-pe[hidden]{display:none}
-
 /* ------------------------------------------------------ a porta da pasta */
 .ed-porta{margin-bottom:20px}
 .ed-caminho+.nota.mini{margin-top:10px}
@@ -1853,7 +1768,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   monospace;font-size:12.5px;color:var(--ink);background:var(--paper-2);
   border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
   word-break:break-all}
-
 /* ------------------------------------------------------ a galeria de peças */
 .ed-carregando{padding:26px 0;font-size:13.5px;color:var(--muted)}
 .ed-galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));
@@ -1887,14 +1801,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-conta b{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
   line-height:1;font-variant-numeric:tabular-nums}
 .ed-conta span{font-size:14px;color:var(--muted)}
-
 @media(max-width:900px){
   .ed-tela{grid-template-columns:1fr}
   .ed-trilho{position:static;margin-bottom:24px}
   .ed-barra{min-height:44px}
   .ed-ponto-txt{padding-bottom:16px}
 }
-
 /* ================================================ O MODO FOCADO DA OFICINA
 
    ESCOLHIDA A LEVA, O SISTEMA SAI DE CENA. Pedido do Gabriel em 19/08/2026: editar
@@ -1911,18 +1823,15 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* O corpo perde a margem de leitura: aqui não se lê, se olha material. */
 .ed-focado .corpo{max-width:none;padding:0}
 .ed-focado{overflow-x:hidden}
-
 /* A oficina toma a altura toda e traz de volta o respiro pelas laterais, agora dela e
    não da página. */
 .ed-focado .ed-tela{min-height:100vh;padding:26px clamp(20px,3vw,44px) 60px;
   grid-template-columns:250px 1fr;gap:40px;position:relative}
-
 /* A ENTRADA: tudo sobe junto, e é isto que diz "começou". Sem ela a troca de tela é um
    pisca, e a oficina parece que já estava aberta o tempo todo. */
 @keyframes ed-entra{from{opacity:0;transform:translateY(20px)}
                     to{opacity:1;transform:none}}
 .ed-focado .ed-tela{animation:ed-entra .26s cubic-bezier(.16,1,.3,1) both}
-
 /* A SAÍDA FICA NO ALTO E À DIREITA, onde o botão de fechar mora em qualquer tela cheia.
    Com o cabeçalho fora, ela é o único caminho de volta desenhado. */
 .ed-sair{position:absolute;top:22px;right:clamp(20px,3vw,44px);z-index:5;
@@ -1934,7 +1843,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-sair svg{width:14px;height:14px}
 .ed-tela:not(.x) .ed-sair{opacity:.75}
 .ed-sair:hover{opacity:1}
-
 /* A GALERIA OCUPA A LARGURA QUE SOBRA, e é isso que o rabisco do Gabriel mostra: fileira
    cheia de peças, uma atrás da outra, descendo até acabarem. A versão anterior prendia
    tudo em 1.180 pixels e sobrava tela preta dos dois lados, que é o oposto de tela cheia.
@@ -1944,7 +1852,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-focado .ed-palco{width:100%;min-width:0}
 .ed-focado .ed-galeria{grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}
 .ed-focado .ed-cab{text-align:left}
-
 /* AS PEÇAS SOBEM UMA ATRÁS DA OUTRA. O atraso é calculado pela posição na grade, com um
    teto: numa leva de quarenta e uma, atraso crescente até o fim faria a última entrar
    dois segundos depois da primeira, e aí não é animação, é espera. */
@@ -1962,11 +1869,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-galeria.subindo .ed-peca:nth-child(9){animation-delay:.18s}
 .ed-galeria.subindo .ed-peca:nth-child(10){animation-delay:.20s}
 .ed-galeria.subindo .ed-peca:nth-child(n+11){animation-delay:.20s}
-
 /* O TRILHO GRUDA NO ALTO DA TELA, e não embaixo do cabeçalho que já não existe.
    E ganha a altura toda: sem cabeçalho sobram mais cem pixels de vidro. */
 .ed-focado .ed-trilho{top:26px;height:calc(100vh - 78px)}
-
 @media(prefers-reduced-motion:reduce){
   .ed-focado .ed-tela,.ed-galeria.subindo .ed-peca{animation:none}
   .nav-wrap{transition:none}
@@ -1975,7 +1880,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .ed-focado .ed-tela{grid-template-columns:1fr;padding-top:64px}
   .ed-sair{top:14px}
 }
-
 /* A TELA QUE SAI. Sem ela a troca é um corte seco: uma some e a outra aparece no mesmo
    quadro, e por mais bonita que seja a entrada da seguinte, o olho perde o fio. */
 .ed-porteira,.ed-escolha,.ed-tela{transition:opacity .13s ease,transform .13s ease}
@@ -1983,7 +1887,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @media(prefers-reduced-motion:reduce){
   .ed-porteira,.ed-escolha,.ed-tela{transition:none}
 }
-
 /* ==================================================================== O PASSO 2
 
    O TEMPLATE É O FUNDO, O VÍDEO VAI POR CIMA. Vale repetir aqui porque o estilo do
@@ -1993,7 +1896,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .acao.mini{height:30px;padding:0 12px;font-size:12.5px}
 .acao.mini.ativa{border-color:var(--accent);background:var(--accent-tint);
   color:var(--accent);font-weight:600}
-
 /* ---------------------------------------------------- os sub-passos no trilho
 
    ELES SÓ EXISTEM DENTRO DO PASSO 2. Fora dele o trilho volta a ser uma linha por
@@ -2011,12 +1913,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-sub li.agora{opacity:1;color:var(--accent);font-weight:600}
 .ed-sub li.agora i{background:var(--accent);border-color:var(--accent);
   transform:scale(1.25)}
-
 .ed-sub-tela[hidden]{display:none}
 @keyframes sub-entra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .ed-sub-tela{animation:sub-entra .24s cubic-bezier(.16,1,.3,1) both}
 @media(prefers-reduced-motion:reduce){.ed-sub-tela{animation:none}}
-
 /* ---------------------------------------------------- 2.1 · o acervo de templates */
 .tpl-abas{display:flex;gap:4px;padding:4px;background:var(--paper-2);
   border:1px solid var(--rule-solid);border-radius:var(--r-md);width:max-content;
@@ -2027,10 +1927,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tpl-aba.ativa{background:var(--branco);color:var(--ink);font-weight:600;
   box-shadow:var(--sombra)}
 .tpl-painel[hidden]{display:none}
-
 .tpl-filtros{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .tpl-filtros .cfg-sel{flex:0 0 200px;min-width:0}
-
 .tpl-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:14px}
 .tpl-cartao{border:1px solid var(--rule-solid);border-radius:var(--r-md);overflow:hidden;
   background:var(--branco);cursor:pointer;transition:border-color .16s,transform .16s,
@@ -2053,7 +1951,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tpl-cartao-x svg{width:13px;height:13px}
 .tpl-vazio{grid-column:1/-1;padding:34px;text-align:center;color:var(--muted);
   font-size:13.5px;border:1px dashed var(--rule-solid);border-radius:var(--r-lg)}
-
 /* ---------------------------------------------------- 2.1 · subir um novo */
 .tpl-subir{display:grid;grid-template-columns:260px 1fr;gap:22px;align-items:start}
 .tpl-solta{display:block;border:1.5px dashed var(--rule-solid);border-radius:var(--r-lg);
@@ -2068,7 +1965,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:var(--paper-2)}
 .tpl-solta-prev[hidden]{display:none}
 .tpl-solta.cheia .tpl-solta-vazio{display:none}
-
 .tpl-ficha{display:flex;flex-direction:column;gap:14px;max-width:420px}
 .tpl-campo{display:flex;flex-direction:column;gap:6px}
 .tpl-campo > span{font-size:12.5px;color:var(--muted);display:flex;align-items:baseline;
@@ -2076,7 +1972,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .tpl-campo > span i{font-size:10.5px;font-style:normal;color:var(--accent);
   text-transform:uppercase;letter-spacing:.05em}
 .tpl-campo .cfg-sel{flex:none;width:100%}
-
 /* ---------------------------------------------------- 2.2 · o vídeo de exemplo */
 .ex-linha{display:grid;grid-template-columns:260px 1fr;gap:26px;align-items:start}
 .ex-quadro{aspect-ratio:9/16;border-radius:var(--r-md);overflow:hidden;background:#000;
@@ -2093,7 +1988,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ex-mini:hover{border-color:var(--ink)}
 .ex-mini.ativo{border-color:var(--accent)}
 .ex-mini video{width:100%;height:100%;object-fit:cover;display:block}
-
 /* ---------------------------------------------------- 2.3 · o enquadramento
 
    DOIS LADOS: a origem e a peça. À esquerda o vídeo como ele veio, com o retângulo do
@@ -2131,22 +2025,18 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* O LADO DIREITO É A PEÇA DE REELS INTEIRA: fundo preto, B-roll no lugar dele. */
 .rec-corte{background:#000}
 .rec-corte video{inset:0;width:100%;height:100%;object-fit:contain}
-
 /* O QUE FICA DE FORA ESCURECE. Só o contorno não separa o que entra do que sai. */
 .rec-marca{position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,.66);
   border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
 .rec-marca[hidden]{display:none}
-
 .rec-lado{display:flex;flex-direction:column;gap:18px}
 .rec-bloco h4{margin:0 0 8px;font-size:11.5px;text-transform:uppercase;
   letter-spacing:.07em;color:var(--muted);font-weight:600}
 .rec-bloco .acao.mini{margin-top:9px;width:100%}
 .rec-medida{font:12px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
   margin-top:8px;text-align:center}
-
 @media(max-width:1180px){ .rec-dois{grid-template-columns:1fr 1fr} }
 @media(max-width:820px){ .rec-dois{grid-template-columns:1fr} }
-
 /* ------------------------------------------------------ 3 · o editor da peça
 
    TRÊS COLUNAS: ferramentas à esquerda, a peça no meio, as propriedades do que está
@@ -2169,7 +2059,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .acao.larga{width:100%;justify-content:center}
 .acao.perigo{color:#d9534f;border-color:rgba(217,83,79,.35)}
 .acao.perigo:hover{background:rgba(217,83,79,.08)}
-
 /* A TELA DA PEÇA. `container-type:size` liga a unidade `cqh`, e é ela que faz o tamanho
    da letra ser fração da ALTURA DA PEÇA aqui na tela, exatamente como o `oficina.py`
    calcula na hora de gravar. Sem isso o texto sairia de um tamanho na tela e de outro no
@@ -2195,7 +2084,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-el i[data-canto="se"]{right:-7px;bottom:-7px;cursor:nwse-resize}
 .ed-medida{margin:0;font:12px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
   text-align:center}
-
 /* ......... a pilha de camadas */
 .ed-camadas{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;
   gap:5px;max-height:216px;overflow:auto}
@@ -2209,18 +2097,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-cam-cad{flex:none;display:flex;color:var(--muted)}
 .ed-cam-cad svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
 .ed-camadas li:not(.sel) .ed-cam-cad{opacity:.65}
-
 /* ......... as propriedades */
 .ed-linha-prop{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:7px 0;border-bottom:1px solid var(--rule)}
 .ed-linha-prop:last-of-type{border-bottom:0}
 .ed-linha-prop>span{font-size:12px;color:var(--muted)}
-#ed_props_txt textarea,.ed-instr textarea{width:100%;background:var(--paper-2);
-  color:var(--ink);border:1px solid var(--rule-solid);border-radius:var(--r-sm);
-  padding:8px 10px;font:inherit;font-size:13px;line-height:1.45;resize:vertical}
-.ed-instr{display:block;margin-top:10px}
-.ed-instr>span{display:block;font-size:11.5px;color:var(--muted);margin-bottom:6px}
-
 /* O MENOS E O MAIS, no lugar da barra de arrastar do navegador. */
 .ed-passo{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--rule-solid);
   border-radius:var(--r-sm);background:var(--paper-2);overflow:hidden}
@@ -2229,7 +2110,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-passo button:hover{background:var(--paper);color:var(--ink)}
 .ed-passo b{min-width:46px;text-align:center;font:12px/1 ui-monospace,Consolas,monospace;
   color:var(--ink)}
-
 /* OS BOTÕES EM FILEIRA, para alinhamento e cadeado. */
 .ed-botoes{display:inline-flex;gap:2px;border:1px solid var(--rule-solid);
   border-radius:var(--r-sm);background:var(--paper-2);overflow:hidden}
@@ -2241,7 +2121,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-botoes button.on{background:var(--accent-tint);color:var(--accent)}
 .ed-botoes svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;
   stroke-linecap:round;stroke-linejoin:round}
-
 /* A PALETA, com a última casa abrindo o seletor do navegador só quando ele quer uma cor
    que não está aqui. */
 .ed-cores{display:flex;flex-wrap:wrap;gap:6px}
@@ -2252,7 +2131,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:var(--paper-2);color:var(--muted);font-size:15px;overflow:hidden}
 .ed-cor.outra input{position:absolute;inset:0;opacity:0;cursor:pointer;border:0;padding:0}
 .ed-cores.mini{margin-top:10px}
-
 /* ......... a área de soltar imagem */
 .ed-solta{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 14px;
   border:1px dashed var(--rule-solid);border-radius:var(--r-md);cursor:pointer;
@@ -2260,7 +2138,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-solta:hover{border-color:var(--accent);color:var(--ink)}
 .ed-solta svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round}
-
 /* O RODAPÉ DA FASE. Ele estava colado no elemento de cima, e o Gabriel apontou: "rodapé
    grudado com outro elemento, tá literalmente grudado um com o outro". A borda e a folga
    separam. */
@@ -2268,52 +2145,23 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   padding-top:20px;border-top:1px solid var(--rule)}
 .ed-pe-conta{flex:1;min-width:120px;font-size:13px;color:var(--muted)}
 .ed-pe-conta b{color:var(--ink)}
-
 /* ......... a fase da IA */
 .ia-topo{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px}
-.ia-campos{display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:220px}
-.ia-campo{padding:10px 14px;border-radius:var(--r-sm);background:var(--paper-2);
-  border:1px solid var(--rule-solid);min-width:190px}
-.ia-campo b{display:block;font-size:13px}
-.ia-lista{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow:auto;
-  padding-right:8px}
-.ia-linha{display:flex;gap:14px;align-items:flex-start;padding:10px;
-  border-radius:var(--r-sm);background:var(--paper-2);border:1px solid var(--rule-solid)}
 /* A FRASE DE ORIGEM AO LADO DA CAIXA. Sem ver a frase do card, não há como julgar se o
    que a IA escreveu tem a ver com o vídeo. */
 .ia-frase{flex:none;width:160px;border-radius:var(--r-sm);overflow:hidden;
   background:#000;font-size:11px;color:var(--muted);display:flex;align-items:center;
   justify-content:center;min-height:56px}
-.ia-frase img{width:100%;display:block}
-.ia-caixas{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
-.ia-caixas textarea{width:100%;background:var(--paper);color:var(--ink);
-  border:1px solid var(--rule-solid);border-radius:var(--r-sm);padding:8px 10px;
-  font:inherit;font-size:13px;resize:vertical}
 /* ......... a gaveta de configuração da IA */
 .ia-cab{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;
   padding-bottom:14px;border-bottom:1px solid var(--rule)}
-.ia-quem{flex:1;min-width:180px;font-size:13px;color:var(--muted)}
-.ia-quem b{color:var(--ink)}
-.ia-cfg{margin-bottom:20px;display:flex;flex-direction:column;gap:16px}
-.ia-cfg-linha{display:flex;gap:14px;flex-wrap:wrap}
-.ia-cfg-campo{display:flex;flex-direction:column;gap:6px;min-width:0}
 .ia-cfg-campo.cresce{flex:1;min-width:200px}
-.ia-cfg-campo>span{font-size:11.5px;color:var(--muted)}
-.ia-cfg-campo input,.ia-cfg-campo textarea{background:var(--paper-2);color:var(--ink);
-  border:1px solid var(--rule-solid);border-radius:var(--r-sm);padding:8px 10px;
-  font:inherit;font-size:13px;width:100%}
-.ia-cfg-campo textarea{font:12.5px/1.6 ui-monospace,Consolas,monospace;resize:vertical}
 .ia-cfg-campo .psel{align-self:flex-start;border:1px solid var(--rule-solid);
   border-radius:var(--r-sm);padding:5px 10px;background:var(--paper-2)}
-.ia-cfg-pe{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.ia-cfg-recado{flex:1;min-width:120px;font-size:12px;color:var(--muted)}
-
 .leg-vazio{max-width:560px;padding:20px 22px;border:1px dashed var(--rule-solid);
   border-radius:var(--r-md);background:var(--paper-2)}
-
 @media(max-width:1280px){ .ed-tres{grid-template-columns:210px minmax(0,1fr)} }
 @media(max-width:900px){ .ed-tres{grid-template-columns:1fr} }
-
 /* ------------------------------------------------------- 4 · a legenda */
 .leg-vazio{max-width:560px;padding:20px 22px;border:1px dashed var(--rule-solid);
   border-radius:var(--r-md);background:var(--paper-2)}
@@ -2324,43 +2172,21 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   line-height:1;font-variant-numeric:tabular-nums}
 .pos-n span{font-size:14px;color:var(--muted)}
 .pos-caixa .ed-caminho{margin:0 0 14px}
-
 .apl-feito{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .apl-feito[hidden]{display:none}
 .apl-feito .acao{text-decoration:none;display:inline-flex;align-items:center}
-
 /* ---------------------------------------------------- 2.4 · a quem se aplica */
 .apl-escolhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:12px}
-.apl-op{text-align:left;padding:16px 17px;border-radius:var(--r-md);cursor:pointer;
-  background:var(--branco);border:1px solid var(--rule-solid);font:inherit;
-  transition:border-color .16s,background .16s}
-.apl-op:hover{border-color:var(--ink)}
 .apl-op.ativa{border-color:var(--accent);background:var(--accent-tint)}
-.apl-op b{display:block;font-size:14.5px;font-weight:650;color:var(--ink)}
-.apl-op span{display:block;font-size:12.5px;color:var(--muted);margin-top:4px}
-.apl-op span i{font-style:normal;font-weight:600;color:var(--ink)}
-
-.apl-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:11px;
-  margin-top:18px}
-.apl-grade[hidden]{display:none}
-.apl-mini{position:relative;aspect-ratio:9/16;border-radius:9px;overflow:hidden;
-  background:#000;border:2px solid transparent;cursor:pointer;transition:border-color .16s}
-.apl-mini video{width:100%;height:100%;object-fit:cover;display:block;opacity:.42;
-  transition:opacity .16s}
 .apl-mini.marcado{border-color:var(--accent)}
 .apl-mini.marcado video{opacity:1}
-.apl-tique{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;
-  background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
 .apl-mini.marcado .apl-tique{background:var(--accent)}
-.apl-tique svg{width:12px;height:12px;color:#fff;opacity:0}
 .apl-mini.marcado .apl-tique svg{opacity:1}
-
 .apl-pe{display:flex;align-items:center;justify-content:space-between;gap:18px;
   margin-top:24px;padding-top:18px;border-top:1px solid var(--rule-solid);flex-wrap:wrap}
 .apl-resumo{font-size:13.5px;color:var(--muted)}
 .apl-resumo b{color:var(--ink);font-weight:650}
-
 .apl-obra{margin-top:20px}
 .apl-obra[hidden]{display:none}
 .apl-obra-topo{display:flex;align-items:center;gap:10px;font-size:14px;margin-bottom:11px}
@@ -2369,12 +2195,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .apl-barra{height:5px;border-radius:999px;background:var(--rule-solid);overflow:hidden}
 .apl-barra i{display:block;height:100%;width:0;background:var(--accent);
   border-radius:999px;transition:width .4s ease}
-
 @media(max-width:960px){
   .tpl-subir,.ex-linha,.enq-linha{grid-template-columns:1fr}
 }
-
-
 /* ==================================================================== ABA · CONFIGURAÇÕES
 
    O DESENHO É O DO SOCIAL TRACKER, e é cópia de propósito. O Gabriel mandou a chave da IA
@@ -2386,7 +2209,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .cfg-corpo{display:flex;gap:0;min-height:min(74vh,760px);
   border:1px solid var(--rule-solid);border-radius:16px;overflow:hidden;
   background:var(--paper)}
-
 .cfg-menu{width:260px;flex:0 0 260px;display:flex;flex-direction:column;padding:12px;
   border-right:1px solid var(--rule-solid);background:var(--paper-2)}
 .cfg-menu-topo{display:flex;align-items:center;gap:11px;padding:6px 8px 14px 6px;
@@ -2411,7 +2233,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .cfg-menu-pe{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;
   border-top:1px solid var(--rule-solid)}
 .cfg-menu-pe .nota{margin:0}
-
 .cfg-conteudo{flex:1;min-width:0;padding:26px 28px 32px;overflow:auto}
 .cfg-pagina{display:none}
 .cfg-pagina.cfg-ativa{display:block;animation:sub-entra .24s cubic-bezier(.16,1,.3,1) both}
@@ -2420,7 +2241,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .cfg-pagina-cab h2{margin:0 0 5px;font-size:21px;letter-spacing:-.3px}
 .cfg-pagina-cab p{margin:0;color:var(--muted);font-size:13.5px}
 .cfg-pagina .caixa{margin-bottom:16px}
-
 .cfg-linhas{display:flex;flex-direction:column;gap:2px}
 .cfg-linha{display:flex;align-items:center;justify-content:space-between;gap:18px;
   padding:12px 0;border-bottom:1px solid var(--rule-solid)}
@@ -2428,18 +2248,15 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .cfg-linha .dir{flex:0 0 auto;display:flex;align-items:center;gap:9px}
 .cfg-nome{font-size:14px;font-weight:600;margin-bottom:3px}
 .cfg-desc{font-size:12.5px;line-height:1.55;color:var(--muted);max-width:62ch}
-
 .cfg-pares{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:2px}
 .cfg-pares.cfg-uma{grid-template-columns:1fr}
 .cfg-par{display:flex;align-items:center;gap:10px;padding:10px 0;
   border-bottom:1px solid var(--rule-solid);font-size:13px;color:var(--muted)}
 .cfg-par:last-child{border-bottom:0}
 .cfg-par b{margin-left:auto;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
-
 .cfg-glossario{display:flex;flex-direction:column;gap:14px}
 .cfg-glo-t{display:flex;align-items:center;gap:8px;margin-bottom:3px;font-size:13.5px}
 .cfg-glo span{font-size:12.5px;line-height:1.55;color:var(--muted)}
-
 /* OS CAMPOS. Nada de widget cru do navegador aqui: a escolha de serviço usa o mesmo
    `psel` do resto do sistema, que foi exatamente a bronca do Gabriel na fase 3. */
 .cfg-campos{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
@@ -2452,10 +2269,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .cfg-pagina textarea{line-height:1.55;resize:vertical;min-height:120px;
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
 .cfg-campo input:focus,.cfg-pagina textarea:focus{border-color:var(--accent)}
+.cfg-campo .psel-b{height:40px;border-radius:9px}
 .cfg-pe{display:flex;align-items:center;gap:12px;padding-top:6px}
 .cfg-recado{font-size:12.5px;color:var(--muted)}
 .cfg-pe .acao.forte{margin-left:auto}
-
 /* A AMOSTRA DE CADA FONTE, escrita na própria fonte. Uma lista de nomes não diz nada:
    o que se escolhe aqui é o desenho da letra, então ele tem de estar na tela. */
 .cfg-mostra{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:2px}
@@ -2465,7 +2282,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   flex:0 0 auto;letter-spacing:.02em}
 .cfg-fonte b{font-size:19px;font-weight:700;line-height:1.1;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
-
 @media(max-width:880px){
   .cfg-corpo{flex-direction:column}
   .cfg-menu{width:auto;flex:1 1 auto;border-right:0;
@@ -2473,8 +2289,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .cfg-menu-rolo{flex-direction:row;flex-wrap:wrap;gap:8px}
   .cfg-conteudo{padding:20px 16px 26px}
 }
-
-
 /* ==================================================== FASE 3 · A IA, SÓ A ESPERA
 
    ELA NÃO PERGUNTA MAIS NADA. Antes era uma lista de 107 caixas de texto, uma por peça,
@@ -2486,8 +2300,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ia-pronta-txt b{font-size:14.5px}
 .ia-pronta-txt .nota{margin:0}
 .ia-pronta .acao{margin-left:auto;flex:0 0 auto}
-
-
 /* ============================================== FASE 4 · A GALERIA DAS PEÇAS PRONTAS
 
    O QUE ELE PEDIU, com estas palavras: "a tela mostrando como ficou, para no mais tardar
@@ -2497,7 +2309,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .gal-conta{font-size:13.5px;color:var(--muted)}
 .gal-conta b{color:var(--ink)}
 .gal-acoes{display:flex;align-items:center;gap:10px;margin-left:auto}
-
 .gal-grade{display:grid;gap:14px;
   grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
 .gal-peca{border:1px solid var(--rule-solid);border-radius:12px;overflow:hidden;
@@ -2505,7 +2316,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   transform .15s ease}
 .gal-peca:hover{border-color:var(--accent);transform:translateY(-2px)}
 .gal-peca.mexida{border-color:var(--accent)}
-
 /* A PEÇA EM MINIATURA. `container-type:size` faz o tamanho da letra ser fração da altura
    da peça, igual ao editor e igual ao que o `oficina.py` calcula na hora de gravar: é o
    que garante que a miniatura mostre a mesma proporção do arquivo. */
@@ -2522,7 +2332,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   white-space:nowrap}
 .gal-pe .gal-selo{margin-left:auto;flex:0 0 auto;font-size:10px;padding:2px 7px;
   border-radius:999px;background:var(--accent-tint);color:var(--accent)}
-
 /* A PEÇA ABERTA. Mexer aqui vale para esta peça e mais nenhuma. */
 .gal-fundo{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.62);
   backdrop-filter:blur(2px)}
@@ -2549,7 +2358,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .gal-lupa-lado{flex:1;min-width:230px;display:flex;flex-direction:column;gap:16px}
 .gal-lupa-vazio .nota{margin:0}
 .gal-lupa-lado .acao.larga{margin-top:auto}
-
 @media(max-width:760px){
   .gal-lupa-corpo{flex-direction:column}
   .gal-lupa-tela{height:auto;width:min(260px,70vw);align-self:center}
@@ -4148,10 +3956,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="cfg-par"><span>as mesmas 12, três por vez na placa</span><b>2 min 25 s</b></div>
             <div class="cfg-par"><span>diferença dentro da janela, de 255</span><b>1,96</b></div>
           </div>
-          <p class="nota mini">Três por vez é medição, não palpite: uma de cada vez dá 2
-            min 5 s de conversão, três dão 1 min 48 s e cinco dão 2 min 29 s. Acima de três
-            quem esgota é o bloco de vídeo da placa, e as peças passam a esperar umas
-            pelas outras.</p>
+          <p class="nota mini">Três por vez é medição, não palpite. As mesmas 12 peças, só
+            a conversão, na placa: uma de cada vez levou 2 min 5 s, três levaram 1 min 48 s
+            e quatro levaram 1 min 49 s. Acima de três quem esgota é o bloco de vídeo da
+            placa, e as peças passam a esperar umas pelas outras.</p>
         </div>
 
         <div class="caixa">
