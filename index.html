@@ -7127,7 +7127,7 @@ async function entrarNaOficina(passo, rasc) {
   // demora alguns milissegundos. Guardar o rascunho num canto e deixar o passo 2 pegá-lo
   // quando estiver pronto evita uma corrida entre as duas coisas.
   RETOMAR = rasc || null;
-  if (!rasc) esquecerPasso2();     // leva nova entra limpa, sem herdar a anterior
+  if (!rasc) esquecerOsPassos();     // leva nova entra limpa, sem herdar a anterior
   // RASCUNHO DA NUMERAÇÃO ANTIGA se desloca um passo para a frente: o que era template
   // virou 3, o que vinha depois virou 4, e o recorte tomou o 2.
   if (rasc && !rasc.v && passo >= 2) passo = passo + 1;
@@ -7139,21 +7139,22 @@ async function entrarNaOficina(passo, rasc) {
   if ((passo || 1) < 2) salvarRascunho();
 }
 
-/** Apaga o passo 2 da memória da tela. Leva nova não herda template da leva anterior. */
-function esquecerPasso2() {
+/** Esquece os passos 2, 3 e 4. Leva nova entra limpa, sem herdar nada da anterior. */
+function esquecerOsPassos() {
   MONTADO = null;
   RECORTADO = null;
   EDIT_RECORTES = [];
   REC_I = -1;
   REC_ACHADO = null;
-  desenhaFeito();
-  TPL_ESCOLHIDO = null;
+  TPL = null;
   TPL_SUB = 1;
-  EX_I = -1;
+  EL_SEL = null;
+  ED_BROLL_I = -1;
   APL_MODO = "todas";
   APL_MARCADAS.clear();
-  CAIXAS.clear();
-  ENQ_UMA = -1;
+  LEG.clear();
+  LEG_PRONTO = null;
+  desenhaFeito();
 }
 
 /* -------------------------------------------------------------- o trilho */
@@ -8461,6 +8462,10 @@ let APL_MODO = "todas";
 const APL_MARCADAS = new Set();
 let OBRA = null;
 let MONTADO = null;                // { pecas, pasta, link } da montagem cumprida
+
+const TIQUE = '<span class="apl-tique"><svg viewBox="0 0 24 24" fill="none" '
+  + 'stroke="currentColor" stroke-width="3" stroke-linecap="round" '
+  + 'stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>';
 
 /** Miniaturas de peças, abrindo o arquivo só quando entram na tela. */
 function povoarGrade(alvo, indices, classe) {
