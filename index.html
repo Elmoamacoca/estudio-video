@@ -2117,8 +2117,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* O LADO DIREITO É UMA JANELA, e não um vídeo redimensionado: o vídeo dentro dele é
    ampliado e deslocado para que sobre exatamente o retângulo do B-roll. É a mesma conta
    que o ffmpeg faz no `crop`, e por isso o que se vê aqui é o que sai no arquivo. */
-.rec-corte{background:#000;aspect-ratio:auto;max-width:100%}
-.rec-corte video{inset:auto;object-fit:fill}
+/* O LADO DIREITO É A PEÇA DE REELS INTEIRA: fundo preto, B-roll no lugar dele. */
+.rec-corte{background:#000}
+.rec-corte video{inset:0;width:100%;height:100%;object-fit:contain}
 
 /* O QUE FICA DE FORA ESCURECE. Só o contorno não separa o que entra do que sai. */
 .rec-marca{position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,.66);
@@ -7510,32 +7511,52 @@ function desenhaRecorteExemplo() {
   m.style.width = (b.w * 100) + "%";
   m.style.height = (b.h * 100) + "%";
 
-  const pw = Math.max(1, Math.round(b.w * lar)), ph = Math.max(1, Math.round(b.h * alt));
+  /* O LADO DIREITO É A PEÇA DE REELS INTEIRA, e não o retângulo recortado. O Gabriel
+     corrigiu isso em 20/08/2026: "era pra pegar o formato do reel e só jogar um fundo
+     preto". O B-roll fica onde está, do tamanho que está, e o resto do quadro é preto.
+     A tela mostrava o retângulo sozinho, que era o comportamento de uma versão anterior,
+     e por isso ela discordava do arquivo que o programa grava. */
   const saida = $("rec_saida"), c = $("rec_corte");
+  saida.style.width = "";
+  saida.style.height = "";
+  saida.style.aspectRatio = TELA.w + "/" + TELA.h;
+  c.style.width = "100%";
+  c.style.height = "100%";
+  c.style.left = "0";
+  c.style.top = "0";
+  // O RECORTE APARECE PELA FORMA DELE, e não por um retângulo: se a borda do card é
+  // arredondada, o canto sai arredondado aqui como sai no arquivo.
+  c.style.clipPath = recorteEmForma(b);
 
-  /* O TAMANHO DA CAIXA DA DIREITA É CONTA, E NÃO CSS, e a razão é que o recorte muda de
-     forma a cada vídeo: há B-roll deitado e há B-roll em pé. Com `aspect-ratio` mais
-     altura fixa, o navegador calcula a largura e ignora o `max-width` na hora de refazer
-     a altura, então um recorte largo estourava a coluna e a página inteira ganhava
-     rolagem horizontal. Medido aqui na tela antes de ir para o ar. */
-  const disp = saida.parentElement ? saida.parentElement.clientWidth : 0;
-  const altura = $("rec_fonte").getBoundingClientRect().height || 420;
-  let cw = altura * pw / ph, ch = altura;
-  if (disp && cw > disp) { cw = disp; ch = disp * ph / pw; }
-  saida.style.width = Math.round(cw) + "px";
-  saida.style.height = Math.round(ch) + "px";
-  saida.style.aspectRatio = "auto";
-  c.style.width = (100 / b.w) + "%";
-  c.style.height = (100 / b.h) + "%";
-  c.style.left = (-b.x / b.w * 100) + "%";
-  c.style.top = (-b.y / b.h * 100) + "%";
-
+  const cabe = Math.min(TELA.w / lar, TELA.h / alt);
   $("rec_med_a").textContent = "o reel tem " + lar + " por " + alt;
-  $("rec_med_b").textContent = "o recorte sai com " + pw + " por " + ph;
+  $("rec_med_b").textContent = "a peça sai em " + TELA.w + " por " + TELA.h
+    + (cabe === 1 ? "" : ", com o bruto ampliado " + cabe.toFixed(1) + " vez"
+       + (cabe >= 2 ? "es" : ""));
   $("rec_diz").innerHTML = b.modo === "card"
     ? "achei o card: o recorte pega <b>só a filmagem</b>, sem o arroba e sem a legenda."
     : "este reel <b>não tem card</b>: a filmagem ocupa o quadro inteiro, então é ele "
       + "inteiro que vai ser gravado.";
+}
+
+/** A forma do B-roll como recorte de CSS: desce pela borda esquerda e volta pela direita. */
+function recorteEmForma(b) {
+  const linhas = b.linhas;
+  if (!linhas || !linhas.length)
+    return "inset(" + (b.y * 100) + "% " + ((1 - b.x - b.w) * 100) + "% "
+      + ((1 - b.y - b.h) * 100) + "% " + (b.x * 100) + "%)";
+  // UM PONTO A CADA POUCAS LINHAS BASTA. O contorno tem uma linha por pixel da análise, e
+  // um `clip-path` com trezentos pares é peso à toa para uma curva que o olho lê igual.
+  const passo = Math.max(1, Math.round(linhas.length / 40));
+  const esq = [], dir = [];
+  for (let i = 0; i < linhas.length; i += passo) {
+    if (!linhas[i]) continue;
+    const y = ((b.y + b.h * (i + 0.5) / linhas.length) * 100).toFixed(2) + "%";
+    esq.push((linhas[i][0] * 100).toFixed(2) + "% " + y);
+    dir.push((linhas[i][1] * 100).toFixed(2) + "% " + y);
+  }
+  if (esq.length < 2) return "inset(0)";
+  return "polygon(" + esq.concat(dir.reverse()).join(",") + ")";
 }
 
 $("rec_sortear").onclick = () => verOutroReel();
@@ -7831,8 +7852,21 @@ async function acharBrollAqui(v) {
   [y0, y1] = trecho(pd, cy, 0.30, 0.10);
 
   if ((y1 - y0 + 1) * (x1 - x0 + 1) > 0.92 * ALT * LARG) return inteiro;
+
+  // A FORMA, e não só a caixa em volta dela. Linha por linha, dentro da caixa, o primeiro
+  // e o último ponto que não são fundo. É o mesmo cálculo do `oficina.py`, e serve para a
+  // tela mostrar o recorte com a borda que ele vai ter de verdade: canto arredondado sai
+  // arredondado aqui também, e não um retângulo que mente sobre o arquivo.
+  const linhas = [];
+  const larg = x1 - x0 + 1;
+  for (let y = y0; y <= y1; y++) {
+    let a = -1, b = -1;
+    for (let x = x0; x <= x1; x++) if (janela[y * LARG + x]) { if (a < 0) a = x; b = x; }
+    linhas.push(a < 0 || (b - a + 1) < Math.max(3, larg * 0.10)
+      ? null : [a / LARG, (b + 1) / LARG]);
+  }
   return { x: x0 / LARG, y: y0 / ALT, w: (x1 - x0 + 1) / LARG,
-           h: (y1 - y0 + 1) / ALT, modo: "card" };
+           h: (y1 - y0 + 1) / ALT, modo: "card", linhas };
 }
 
 /* ==================================================================== O PASSO 3
