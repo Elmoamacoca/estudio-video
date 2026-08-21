@@ -2278,6 +2278,25 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ia-caixas textarea{width:100%;background:var(--paper);color:var(--ink);
   border:1px solid var(--rule-solid);border-radius:var(--r-sm);padding:8px 10px;
   font:inherit;font-size:13px;resize:vertical}
+/* ......... a gaveta de configuração da IA */
+.ia-cab{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;
+  padding-bottom:14px;border-bottom:1px solid var(--rule)}
+.ia-quem{flex:1;min-width:180px;font-size:13px;color:var(--muted)}
+.ia-quem b{color:var(--ink)}
+.ia-cfg{margin-bottom:20px;display:flex;flex-direction:column;gap:16px}
+.ia-cfg-linha{display:flex;gap:14px;flex-wrap:wrap}
+.ia-cfg-campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ia-cfg-campo.cresce{flex:1;min-width:200px}
+.ia-cfg-campo>span{font-size:11.5px;color:var(--muted)}
+.ia-cfg-campo input,.ia-cfg-campo textarea{background:var(--paper-2);color:var(--ink);
+  border:1px solid var(--rule-solid);border-radius:var(--r-sm);padding:8px 10px;
+  font:inherit;font-size:13px;width:100%}
+.ia-cfg-campo textarea{font:12.5px/1.6 ui-monospace,Consolas,monospace;resize:vertical}
+.ia-cfg-campo .psel{align-self:flex-start;border:1px solid var(--rule-solid);
+  border-radius:var(--r-sm);padding:5px 10px;background:var(--paper-2)}
+.ia-cfg-pe{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ia-cfg-recado{flex:1;min-width:120px;font-size:12px;color:var(--muted)}
+
 .leg-vazio{max-width:560px;padding:20px 22px;border:1px dashed var(--rule-solid);
   border-radius:var(--r-md);background:var(--paper-2)}
 
@@ -3592,12 +3611,91 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           </div>
 
           <div id="ia_corpo" hidden>
+          <!-- A IA SE CONFIGURA AQUI, e não num arquivo escondido. O Gabriel perguntou as
+               três coisas de uma vez: "que IA está escrevendo? É via API? Já existe uma
+               tela para poder configurar, caso tenha limite essa IA, para poder
+               substituir por outra? Tem um prompt para ela específico?". As três moram
+               nesta gaveta: o serviço e a chave, a reserva para quando a cota acabar, e o
+               prompt inteiro, editável. -->
+          <div class="ia-cab">
+            <div class="ia-quem" id="ia_quem">nenhuma IA configurada</div>
+            <button class="acao mini" id="ia_abrir_cfg" type="button">
+              configurar a IA</button>
+          </div>
+
+          <div class="caixa ia-cfg" id="ia_cfg" hidden>
+            <div class="ia-cfg-linha">
+              <div class="ia-cfg-campo">
+                <span>serviço</span>
+                <div class="psel" id="ia_servico"></div>
+              </div>
+              <div class="ia-cfg-campo cresce">
+                <span>chave da API</span>
+                <input id="ia_chave" type="password" placeholder="cole a chave aqui"
+                       autocomplete="off" spellcheck="false">
+              </div>
+              <div class="ia-cfg-campo cresce">
+                <span>modelo</span>
+                <input id="ia_modelo" placeholder="deixe vazio para o padrão"
+                       autocomplete="off" spellcheck="false">
+              </div>
+            </div>
+
+            <!-- A RESERVA. "Caso tenha limite essa IA, para poder substituir por outra."
+                 Ela entra sozinha quando a primeira recusa por cota, no meio da leva. -->
+            <div class="ia-cfg-linha">
+              <div class="ia-cfg-campo">
+                <span>reserva, quando a cota acabar</span>
+                <div class="psel" id="ia_servico2"></div>
+              </div>
+              <div class="ia-cfg-campo cresce">
+                <span>chave da reserva</span>
+                <input id="ia_chave2" type="password" placeholder="opcional"
+                       autocomplete="off" spellcheck="false">
+              </div>
+              <div class="ia-cfg-campo cresce">
+                <span>modelo da reserva</span>
+                <input id="ia_modelo2" placeholder="deixe vazio para o padrão"
+                       autocomplete="off" spellcheck="false">
+              </div>
+            </div>
+
+            <div class="ia-cfg-campo">
+              <span>o prompt, que vale para todas as peças</span>
+              <textarea id="ia_prompt" rows="9" spellcheck="false"></textarea>
+              <p class="nota mini">Onde estiver <b>{limite}</b> entra o número de
+                caracteres que cabe na caixa. A instrução que você escreveu em cada caixa
+                aberta é acrescentada no fim.</p>
+            </div>
+
+            <div class="ia-cfg-pe">
+              <button class="acao mini" id="ia_prompt_padrao" type="button">
+                voltar ao prompt padrão</button>
+              <span class="ia-cfg-recado" id="ia_cfg_recado"></span>
+              <button class="acao mini" id="ia_testar" type="button">testar numa peça</button>
+              <button class="acao forte" id="ia_guardar" type="button">Guardar</button>
+            </div>
+            <p class="nota mini">A chave fica num arquivo dentro da pasta do Estúdio, no
+              seu computador, e não sai dele. Quem chama a IA é o programa que roda aqui.</p>
+          </div>
+
             <div class="ia-topo">
               <div class="ia-campos" id="ia_campos"></div>
               <button class="acao forte" id="ia_escrever" type="button">
                 Escrever nas <i id="ia_n">0</i> peças</button>
             </div>
             <p class="nota mini" id="ia_recado"></p>
+
+            <div class="caixa apl-obra" id="ia_obra" hidden>
+              <div class="apl-obra-topo">
+                <span class="cfg-girando"></span>
+                <b id="ia_obra_txt">escrevendo</b>
+                <span class="dir" id="ia_obra_tempo"></span>
+              </div>
+              <div class="apl-barra"><i id="ia_barra"></i></div>
+              <p class="nota" id="ia_obra_nota"></p>
+            </div>
+
             <div class="ia-lista" id="ia_lista"></div>
           </div>
 
@@ -8470,6 +8568,8 @@ let ESCRITO = new Map();           // arquivo -> { idDaCaixa: texto }
 const abertas = () => soTexto().filter(e => !e.trava);
 
 async function entrarNaIA() {
+  if (!IA.chave && EDIT_RAIZ) await lerIA();
+  desenhaIACab();
   const campos = abertas();
   $("ia_sem_campo").hidden = !!campos.length;
   $("ia_corpo").hidden = !campos.length;
@@ -8543,12 +8643,212 @@ function contaEscrito() {
     + (alvos.length === 1 ? "peça escrita" : "peças escritas");
 }
 
-/* O BOTÃO EXISTE E DIZ O QUE FALTA. Botão que não faz nada é pior do que botão que
-   explica por que não faz. */
-$("ia_escrever").onclick = () => {
-  parado("ia_recado", "falta a chave da IA nesta máquina. Me diga qual serviço gratuito "
-    + "você quer usar e eu ligo este botão; até lá, dá para escrever aqui na mão.");
+/* ---------------------------------------------------- a IA que escreve
+
+   QUAL IA, VIA API, COM TELA DE CONFIGURAÇÃO E COM PROMPT. O Gabriel perguntou as quatro
+   coisas de uma vez em 20/08/2026, e a resposta honesta na hora era "nenhuma, ainda". Ela
+   agora existe: três serviços gratuitos que leem imagem, chave dele, reserva para quando
+   a cota acabar, e o prompt inteiro visível e editável.
+
+   A CHAVE NÃO MORA NO NAVEGADOR. Ela vai para `Estudio/ia.json`, no computador dele, e
+   quem chama o serviço é o `oficina.py`. O navegador nunca faz a chamada: as 107 imagens
+   estão no disco, e uma leva não pode depender de a aba ficar aberta. */
+
+const IA_SERVICOS = [
+  { v: "gemini", r: "Google Gemini", modelo: "gemini-2.0-flash",
+    onde: "aistudio.google.com" },
+  { v: "groq", r: "Groq", modelo: "meta-llama/llama-4-scout-17b-16e-instruct",
+    onde: "console.groq.com" },
+  { v: "openrouter", r: "OpenRouter",
+    modelo: "meta-llama/llama-3.2-11b-vision-instruct:free", onde: "openrouter.ai" },
+];
+
+const IA_PROMPT_PADRAO =
+  "Voce le a frase de um card de noticia e escreve OUTRA frase equivalente, para um "
+  + "perfil diferente publicar.\nREGRAS:\n"
+  + "1. Mesma noticia, mesmo sentido, palavras diferentes.\n"
+  + "2. Uma linha so, no maximo {limite} caracteres.\n"
+  + "3. Portugues do Brasil, direto, sem aspas, sem emoji, sem hashtag.\n"
+  + "4. Nao invente numero, nome nem data que nao esteja na imagem.\n"
+  + "5. Se a imagem nao tiver frase legivel, responda exatamente: SEM FRASE.\n"
+  + "Responda SO com a frase.";
+
+let IA = { servico: "gemini", chave: "", modelo: "", prompt: "",
+           reserva: { servico: "groq", chave: "", modelo: "" } };
+let IA_OBRA = null;
+
+async function lerIA() {
+  try {
+    const p = await pastaDo("", false) || EDIT_RAIZ;
+    const f = await (await p.getFileHandle("ia.json")).getFile();
+    const d = JSON.parse(await f.text());
+    IA = Object.assign(IA, d);
+    IA.reserva = Object.assign({ servico: "groq", chave: "", modelo: "" }, d.reserva || {});
+  } catch (e) { /* ainda não há ficha; vale o padrão */ }
+  desenhaIACab();
+}
+
+async function gravarIA() {
+  if (!EDIT_RAIZ) throw new Error("a pasta do Estúdio não está liberada");
+  const h = await EDIT_RAIZ.getFileHandle("ia.json", { create: true });
+  const w = await h.createWritable();
+  await w.write(JSON.stringify(IA, null, 1));
+  await w.close();
+}
+
+function nomeDoServico(v) {
+  const s = IA_SERVICOS.find(x => x.v === v);
+  return s ? s.r : v || "nenhum";
+}
+
+function desenhaIACab() {
+  const tem = !!IA.chave;
+  const rez = IA.reserva && IA.reserva.chave;
+  $("ia_quem").innerHTML = tem
+    ? `escrevendo com <b>${escapa(nomeDoServico(IA.servico))}</b>`
+      + (rez ? `, reserva em <b>${escapa(nomeDoServico(IA.reserva.servico))}</b>` : "")
+    : "nenhuma IA configurada";
+  $("ia_escrever").disabled = !tem;
+}
+
+function abrirCfgIA() {
+  const cfg = $("ia_cfg");
+  cfg.hidden = !cfg.hidden;
+  if (cfg.hidden) return;
+  pselNovo($("ia_servico"), IA_SERVICOS, IA.servico, v => {
+    IA.servico = v;
+    $("ia_modelo").placeholder = (IA_SERVICOS.find(x => x.v === v) || {}).modelo || "";
+  });
+  pselNovo($("ia_servico2"), IA_SERVICOS, IA.reserva.servico, v => {
+    IA.reserva.servico = v;
+    $("ia_modelo2").placeholder = (IA_SERVICOS.find(x => x.v === v) || {}).modelo || "";
+  });
+  $("ia_chave").value = IA.chave || "";
+  $("ia_modelo").value = IA.modelo || "";
+  $("ia_modelo").placeholder = (IA_SERVICOS.find(x => x.v === IA.servico) || {}).modelo || "";
+  $("ia_chave2").value = IA.reserva.chave || "";
+  $("ia_modelo2").value = IA.reserva.modelo || "";
+  $("ia_modelo2").placeholder =
+    (IA_SERVICOS.find(x => x.v === IA.reserva.servico) || {}).modelo || "";
+  $("ia_prompt").value = IA.prompt || IA_PROMPT_PADRAO;
+}
+
+$("ia_abrir_cfg").onclick = abrirCfgIA;
+$("ia_prompt_padrao").onclick = () => { $("ia_prompt").value = IA_PROMPT_PADRAO; };
+
+async function guardarIA() {
+  if ($("ia_cfg").hidden) return;         // gaveta fechada: nao ha' campo para ler
+  IA.chave = $("ia_chave").value.trim();
+  IA.modelo = $("ia_modelo").value.trim();
+  IA.prompt = $("ia_prompt").value.trim();
+  IA.reserva.chave = $("ia_chave2").value.trim();
+  IA.reserva.modelo = $("ia_modelo2").value.trim();
+  await gravarIA();
+  desenhaIACab();
+}
+
+$("ia_guardar").onclick = async () => {
+  try {
+    await guardarIA();
+    parado("ia_cfg_recado", "guardado em Estudio\\ia.json");
+  } catch (e) { parado("ia_cfg_recado", e.message); }
 };
+
+/* TESTAR NUMA PEÇA SÓ, antes de soltar nas cento e sete. Chave errada, modelo que não
+   existe e cota estourada aparecem todos aqui, em oito segundos, em vez de aparecerem no
+   meio de uma leva. */
+$("ia_testar").onclick = () => pedirEscrita(true);
+$("ia_escrever").onclick = () => pedirEscrita(false);
+
+async function pedirEscrita(soUma) {
+  if (IA_OBRA) return;
+  const campos = abertas();
+  if (!campos.length) return;
+  const alvos = alvosDaMontagem();
+  if (!alvos.length) return;
+  const lista = soUma ? alvos.slice(0, 1) : alvos;
+  try {
+    await guardarIA();
+    const pedidos = await pastaDo("pedidos", true);
+    if (!pedidos) throw new Error("a pasta do Estúdio não está liberada");
+    const id = "e" + Date.now();
+    const pedido = {
+      id, tipo: "escrever", leva: EDIT_LEVA.numero,
+      pasta: `leva-${EDIT_LEVA.numero}`,
+      // CADA CAIXA ABERTA LEVA O SEU LIMITE E A SUA INSTRUÇÃO. O limite sai da largura e
+      // do tamanho da letra que ele escolheu: é quanto texto cabe ali sem encolher nada.
+      campos: campos.map(c => ({ id: c.id, instrucao: c.instrucao || "",
+                                 limite: cabemAqui(c) })),
+      pecas: lista.map(i => ({ arquivo: pecas3()[i].nome }))
+    };
+    const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
+    const w = await h.createWritable();
+    await w.write(JSON.stringify(pedido, null, 1));
+    await w.close();
+
+    IA_OBRA = { id, desde: Date.now(), total: lista.length, relogio: null };
+    $("ia_obra").hidden = false;
+    document.querySelector("#ia_obra .cfg-girando").style.display = "";
+    $("ia_obra_txt").textContent = "pedido deixado";
+    $("ia_obra_nota").textContent = "a escrita começa em até um minuto, que é o passo do "
+      + "programa que fala com a IA aqui do computador.";
+    IA_OBRA.relogio = setInterval(olharAEscrita, 3000);
+    olharAEscrita();
+  } catch (e) {
+    parado("ia_recado", e.message);
+  }
+}
+
+/** Quantos caracteres cabem na caixa, com a fonte e o tamanho que ele escolheu. */
+function cabemAqui(campo) {
+  const c = document.createElement("canvas").getContext("2d");
+  c.font = `${campo.peso} ${Math.round(campo.tamanho * TELA.h)}px ${fonteCss(campo.fonte)}`;
+  const larguraDeUm = c.measureText("n").width || 10;
+  const porLinha = (campo.w * TELA.w) / larguraDeUm;
+  return Math.max(20, Math.round(porLinha * 2.6));    // duas linhas e meia de folga
+}
+
+async function olharAEscrita() {
+  if (!IA_OBRA) return;
+  const seg = Math.round((Date.now() - IA_OBRA.desde) / 1000);
+  $("ia_obra_tempo").textContent = seg < 60 ? seg + "s"
+    : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
+  const p = await pastaDo("pedidos", false);
+  if (!p) return;
+  let d = null;
+  try {
+    const f = await (await p.getFileHandle(`${IA_OBRA.id}.andamento.json`)).getFile();
+    d = JSON.parse(await f.text());
+  } catch (e) { return; }
+  if (!d) return;
+
+  if (d.erro) {
+    clearInterval(IA_OBRA.relogio);
+    IA_OBRA = null;
+    document.querySelector("#ia_obra .cfg-girando").style.display = "none";
+    $("ia_obra_txt").textContent = "não deu: " + d.erro;
+    return;
+  }
+  const feitos = d.feitos || 0, total = d.total || IA_OBRA.total;
+  $("ia_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
+  if (!d.fim) {
+    $("ia_obra_txt").textContent = `escrevendo ${feitos + 1} de ${total}`;
+    $("ia_obra_nota").textContent = d.atual ? `agora: ${d.atual}` : "";
+    return;
+  }
+  clearInterval(IA_OBRA.relogio);
+  IA_OBRA = null;
+  document.querySelector("#ia_obra .cfg-girando").style.display = "none";
+  $("ia_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça escrita" : "peças escritas"}`
+    + (d.falhas ? `, ${d.falhas} falharam` : "");
+  const ruim = (d.diario || []).find(x => x.erro);
+  $("ia_obra_nota").textContent = ruim ? ruim.erro : "";
+  // O QUE ELA ESCREVEU VOLTA PARA AS CAIXAS DA TELA, para ele ler antes de montar.
+  for (const [arq, textos] of Object.entries(d.textos || {})) {
+    ESCRITO.set(arq, Object.assign(ESCRITO.get(arq) || {}, textos));
+  }
+  await entrarNaIA();
+}
 
 /* ------------------------------------------------- 3.4 · os ajustes
 
