@@ -2335,6 +2335,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* A PEÇA ABERTA. Mexer aqui vale para esta peça e mais nenhuma. */
 .gal-fundo{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.62);
   backdrop-filter:blur(2px)}
+.gal-lupa[hidden]{display:none}
 .gal-lupa{position:fixed;z-index:71;inset:50% auto auto 50%;
   transform:translate(-50%,-50%);width:min(940px,94vw);max-height:92vh;
   display:flex;flex-direction:column;overflow:hidden;
@@ -2440,6 +2441,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    acrescentar abria uma linha vazia com três campos espremidos no meio da lista. */
 .pop-fundo{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.62);
   backdrop-filter:blur(2px)}
+.pop[hidden]{display:none}
 .pop{position:fixed;z-index:81;inset:50% auto auto 50%;transform:translate(-50%,-50%);
   width:min(520px,94vw);max-height:92vh;display:flex;flex-direction:column;
   border:1px solid var(--rule-solid);border-radius:16px;background:var(--paper);
