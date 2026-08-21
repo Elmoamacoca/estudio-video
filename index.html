@@ -2138,87 +2138,156 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
 /* ------------------------------------------------------ 3 · o editor da peça
 
-   TRÊS COLUNAS: ferramentas, a peça, as propriedades do que está selecionado. É o desenho
-   de qualquer editor visual, e foi o pedido do Gabriel: "eu preciso de um sistema de
-   edição aqui muito semelhante ao Canva". */
-.ed-tres{display:grid;grid-template-columns:220px 1fr 250px;gap:22px;align-items:start}
-.ed-ferramentas,.ed-props{display:flex;flex-direction:column;gap:18px}
-.ed-tela-peca{display:flex;flex-direction:column;align-items:center}
+   TRÊS COLUNAS: ferramentas à esquerda, a peça no meio, as propriedades do que está
+   selecionado à direita. É o desenho de qualquer editor visual.
+
+   E AS PEÇAS DE TELA SÃO AS DA CASA, não as do navegador. O Gabriel reprovou a primeira
+   versão por isso: "tem vários aqui padrão Windows... você tem literalmente dentro do
+   próprio estúdio referência de como montar uma estrutura de widget de seleção e tu opta
+   por escolher o padrão feio". Aqui não há select, range nem color solto: o suspenso é o
+   `psel` da Mineração, o número é um menos-mais, e a cor é uma paleta. */
+.ed-tres{display:grid;grid-template-columns:230px minmax(0,1fr) 262px;gap:26px;
+  align-items:start}
+.ed-lado{display:flex;flex-direction:column;gap:20px;min-width:0}
+.ed-meio{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0}
+.ed-bloco{min-width:0}
+.ed-bloco h4{margin:0 0 10px;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);font-weight:600}
+.ed-nada{margin:0;padding:14px 16px;border:1px dashed var(--rule-solid);
+  border-radius:var(--r-md);background:var(--paper-2)}
+.acao.larga{width:100%;justify-content:center}
+.acao.perigo{color:#d9534f;border-color:rgba(217,83,79,.35)}
+.acao.perigo:hover{background:rgba(217,83,79,.08)}
 
 /* A TELA DA PEÇA. `container-type:size` liga a unidade `cqh`, e é ela que faz o tamanho
    da letra ser fração da ALTURA DA PEÇA aqui na tela, exatamente como o `oficina.py`
    calcula na hora de gravar. Sem isso o texto sairia de um tamanho na tela e de outro no
    arquivo, e o editor deixaria de valer como conferência. */
-.ed-canvas{position:relative;height:min(62vh,620px);aspect-ratio:9/16;overflow:hidden;
-  border-radius:var(--r-md);border:1px solid var(--rule-solid);background:#101418;
+.ed-canvas{position:relative;height:min(60vh,600px);aspect-ratio:9/16;overflow:hidden;
+  border-radius:var(--r-md);border:1px solid var(--rule-solid);background:#000;
   container-type:size;touch-action:none;user-select:none}
 .ed-canvas video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
   display:block}
 .ed-camada{position:absolute;inset:0}
 .ed-el{position:absolute;cursor:grab;outline:1px dashed transparent;white-space:pre-wrap;
   word-break:break-word;background-repeat:no-repeat}
-.ed-el:hover{outline-color:rgba(255,255,255,.35)}
+.ed-el:hover{outline-color:rgba(255,255,255,.32)}
 .ed-el.sel{outline:1.5px solid var(--accent);cursor:move}
-/* A CAIXA ABERTA GANHA UMA MARCA DISCRETA. É a que a IA vai escrever, e ele precisa
+/* A CAIXA ABERTA GANHA UMA MARCA DISCRETA: é a que a IA vai escrever, e ele precisa
    distinguir de relance qual texto é dele e qual é dela. */
-.ed-el.aberto{outline-color:rgba(186,90,24,.55);outline-style:dashed}
+.ed-el.aberto{outline-color:rgba(186,90,24,.5);outline-style:dashed}
 .ed-el i{position:absolute;width:13px;height:13px;border-radius:3px;background:var(--accent);
   border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .ed-el i[data-canto="nw"]{left:-7px;top:-7px;cursor:nwse-resize}
 .ed-el i[data-canto="ne"]{right:-7px;top:-7px;cursor:nesw-resize}
 .ed-el i[data-canto="sw"]{left:-7px;bottom:-7px;cursor:nesw-resize}
 .ed-el i[data-canto="se"]{right:-7px;bottom:-7px;cursor:nwse-resize}
+.ed-medida{margin:0;font:12px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
+  text-align:center}
 
-.ed-camadas{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;
-  max-height:210px;overflow:auto}
-.ed-camadas li{padding:6px 9px;border-radius:var(--r-sm);background:var(--paper-2);
-  border:1px solid var(--rule-solid);font-size:12.5px;cursor:pointer;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ......... a pilha de camadas */
+.ed-camadas{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;
+  gap:5px;max-height:216px;overflow:auto}
+.ed-camadas li{display:flex;align-items:center;gap:8px;padding:7px 10px;
+  border-radius:var(--r-sm);background:var(--paper-2);border:1px solid var(--rule-solid);
+  font-size:12.5px;cursor:pointer;min-width:0}
 .ed-camadas li.sel{border-color:var(--accent);color:var(--ink)}
+.ed-camadas li.ed-cam-vazio{justify-content:center;color:var(--muted);cursor:default;
+  border-style:dashed;font-size:12px}
+.ed-cam-nome{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed-cam-cad{flex:none;display:flex;color:var(--muted)}
+.ed-cam-cad svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
+.ed-camadas li:not(.sel) .ed-cam-cad{opacity:.65}
 
-.ed-props label{display:block;font-size:11.5px;color:var(--muted);margin-top:8px}
-.ed-props input[type=range]{width:100%}
-.ed-props textarea,.ed-props select,.ed-props input[type=text]{width:100%;
-  background:var(--paper-2);color:var(--ink);border:1px solid var(--rule-solid);
-  border-radius:var(--r-sm);padding:7px 9px;font:inherit;font-size:13px}
-.ed-linha-min{display:flex;gap:10px}
-.ed-linha-min label{flex:1}
-.ed-nome-tpl{font-size:11.5px;color:var(--muted)}
-.ed-nome-tpl input{margin-left:8px;background:var(--paper-2);color:var(--ink);
-  border:1px solid var(--rule-solid);border-radius:var(--r-sm);padding:6px 9px;font:inherit}
-.acao.perigo{color:#d9534f;border-color:rgba(217,83,79,.4)}
+/* ......... as propriedades */
+.ed-linha-prop{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:7px 0;border-bottom:1px solid var(--rule)}
+.ed-linha-prop:last-of-type{border-bottom:0}
+.ed-linha-prop>span{font-size:12px;color:var(--muted)}
+#ed_props_txt textarea,.ed-instr textarea{width:100%;background:var(--paper-2);
+  color:var(--ink);border:1px solid var(--rule-solid);border-radius:var(--r-sm);
+  padding:8px 10px;font:inherit;font-size:13px;line-height:1.45;resize:vertical}
+.ed-instr{display:block;margin-top:10px}
+.ed-instr>span{display:block;font-size:11.5px;color:var(--muted);margin-bottom:6px}
 
-.tpl-cor{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted)}
-.tpl-cor input[type=color]{width:38px;height:26px;padding:0;border:1px solid var(--rule-solid);
-  border-radius:var(--r-sm);background:none;cursor:pointer}
-.tpl-arq{display:block;margin-top:8px;padding:8px 10px;border:1px dashed var(--rule-solid);
-  border-radius:var(--r-sm);text-align:center;font-size:12.5px;color:var(--muted);
-  cursor:pointer}
-.tpl-arq:hover{border-color:var(--accent);color:var(--ink)}
-.tpl-novo{max-width:520px}
-.tpl-capa{display:block;width:100%;aspect-ratio:9/16;border-radius:var(--r-sm);
-  background-size:100% 100%;background-position:center}
-.tpl-rot{font-size:11px;color:var(--muted)}
+/* O MENOS E O MAIS, no lugar da barra de arrastar do navegador. */
+.ed-passo{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--rule-solid);
+  border-radius:var(--r-sm);background:var(--paper-2);overflow:hidden}
+.ed-passo button{border:0;background:none;color:var(--muted);cursor:pointer;
+  width:26px;height:26px;font-size:15px;line-height:1}
+.ed-passo button:hover{background:var(--paper);color:var(--ink)}
+.ed-passo b{min-width:46px;text-align:center;font:12px/1 ui-monospace,Consolas,monospace;
+  color:var(--ink)}
 
-@media(max-width:1240px){ .ed-tres{grid-template-columns:200px 1fr} }
+/* OS BOTÕES EM FILEIRA, para alinhamento e cadeado. */
+.ed-botoes{display:inline-flex;gap:2px;border:1px solid var(--rule-solid);
+  border-radius:var(--r-sm);background:var(--paper-2);overflow:hidden}
+.ed-botoes.largo{display:flex;width:100%}
+.ed-botoes button{flex:1;display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;border:0;background:none;color:var(--muted);cursor:pointer;padding:7px 9px;
+  font:inherit;font-size:12px}
+.ed-botoes button:hover{background:var(--paper);color:var(--ink)}
+.ed-botoes button.on{background:var(--accent-tint);color:var(--accent)}
+.ed-botoes svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* A PALETA, com a última casa abrindo o seletor do navegador só quando ele quer uma cor
+   que não está aqui. */
+.ed-cores{display:flex;flex-wrap:wrap;gap:6px}
+.ed-cor{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--rule-solid);
+  cursor:pointer;padding:0;position:relative}
+.ed-cor.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-tint)}
+.ed-cor.outra{display:flex;align-items:center;justify-content:center;
+  background:var(--paper-2);color:var(--muted);font-size:15px;overflow:hidden}
+.ed-cor.outra input{position:absolute;inset:0;opacity:0;cursor:pointer;border:0;padding:0}
+.ed-cores.mini{margin-top:10px}
+
+/* ......... a área de soltar imagem */
+.ed-solta{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 14px;
+  border:1px dashed var(--rule-solid);border-radius:var(--r-md);cursor:pointer;
+  color:var(--muted);font-size:12.5px;text-align:center}
+.ed-solta:hover{border-color:var(--accent);color:var(--ink)}
+.ed-solta svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* O RODAPÉ DA FASE. Ele estava colado no elemento de cima, e o Gabriel apontou: "rodapé
+   grudado com outro elemento, tá literalmente grudado um com o outro". A borda e a folga
+   separam. */
+.ed-pe{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:30px;
+  padding-top:20px;border-top:1px solid var(--rule)}
+.ed-pe-conta{flex:1;min-width:120px;font-size:13px;color:var(--muted)}
+.ed-pe-conta b{color:var(--ink)}
+
+/* ......... a fase da IA */
+.ia-topo{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.ia-campos{display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:220px}
+.ia-campo{padding:10px 14px;border-radius:var(--r-sm);background:var(--paper-2);
+  border:1px solid var(--rule-solid);min-width:190px}
+.ia-campo b{display:block;font-size:13px}
+.ia-lista{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow:auto;
+  padding-right:8px}
+.ia-linha{display:flex;gap:14px;align-items:flex-start;padding:10px;
+  border-radius:var(--r-sm);background:var(--paper-2);border:1px solid var(--rule-solid)}
+/* A FRASE DE ORIGEM AO LADO DA CAIXA. Sem ver a frase do card, não há como julgar se o
+   que a IA escreveu tem a ver com o vídeo. */
+.ia-frase{flex:none;width:160px;border-radius:var(--r-sm);overflow:hidden;
+  background:#000;font-size:11px;color:var(--muted);display:flex;align-items:center;
+  justify-content:center;min-height:56px}
+.ia-frase img{width:100%;display:block}
+.ia-caixas{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.ia-caixas textarea{width:100%;background:var(--paper);color:var(--ink);
+  border:1px solid var(--rule-solid);border-radius:var(--r-sm);padding:8px 10px;
+  font:inherit;font-size:13px;resize:vertical}
+.leg-vazio{max-width:560px;padding:20px 22px;border:1px dashed var(--rule-solid);
+  border-radius:var(--r-md);background:var(--paper-2)}
+
+@media(max-width:1280px){ .ed-tres{grid-template-columns:210px minmax(0,1fr)} }
 @media(max-width:900px){ .ed-tres{grid-template-columns:1fr} }
 
 /* ------------------------------------------------------- 4 · a legenda */
 .leg-vazio{max-width:560px;padding:20px 22px;border:1px dashed var(--rule-solid);
   border-radius:var(--r-md);background:var(--paper-2)}
-.leg-campos{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-.leg-campo{padding:10px 14px;border-radius:var(--r-sm);background:var(--paper-2);
-  border:1px solid var(--rule-solid);min-width:200px}
 .leg-campo b{display:block;font-size:13px}
-.leg-lista{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto;
-  padding-right:6px}
-.leg-linha{display:flex;gap:10px;align-items:flex-start}
-.leg-n{width:34px;flex:none;text-align:right;font:12px/2.2 ui-monospace,Consolas,monospace;
-  color:var(--muted)}
-.leg-linha textarea{flex:1;background:var(--paper-2);color:var(--ink);
-  border:1px solid var(--rule-solid);border-radius:var(--r-sm);padding:7px 9px;
-  font:inherit;font-size:13px;resize:vertical}
-
 .pos-caixa{max-width:520px}
 .pos-n{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
 .pos-n b{font-size:30px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
@@ -3122,9 +3191,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <h3>O template</h3>
             <p id="ed_r3">nenhum escolhido</p>
             <ol class="ed-sub" id="ed_sub3">
-              <li data-sub="1"><i></i>de onde vem</li>
-              <li data-sub="2"><i></i>o editor</li>
-              <li data-sub="3"><i></i>a quem se aplica</li>
+              <li data-sub="1"><i></i>o texto</li>
+              <li data-sub="2"><i></i>as imagens</li>
+              <li data-sub="3"><i></i>a IA escreve</li>
+              <li data-sub="4"><i></i>os ajustes</li>
             </ol>
           </div>
         </div>
@@ -3304,217 +3374,248 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
       </div>
 
-      <!-- ---------------------------------------- PASSO 3 · O TEMPLATE
+      <!-- ---------------------------------------- PASSO 3 · O TEMPLATE, EM QUATRO FASES
 
-           O TEMPLATE DEIXOU DE SER UM ARQUIVO E VIROU UMA PEÇA QUE SE MONTA AQUI.
-           Decisão do Gabriel em 20/08/2026: "a ideia é que eu monte um template na hora",
-           com cor de fundo, imagens que ele sobe e caixas de texto. Subir um PNG pronto
-           continua valendo, só que agora ele entra como imagem de fundo.
+           O TEMPLATE NÃO É MAIS UM ARQUIVO QUE SE ESCOLHE, e nem uma tela só. O Gabriel
+           desenhou as quatro fases em 20/08/2026, nesta ordem:
 
-           E A ORDEM SE INVERTEU. Antes o template trazia uma moldura e o vídeo era
-           recortado para caber nela: "o template tinha que encaixar o B-roll". Agora o
-           B-roll já vem pronto do passo 2, na posição e no tamanho originais, e o
-           template é construído EM VOLTA dele. "O que vai ditar como o template vai ser
-           trabalhado agora é o B-roll."
+             1. o texto      onde ele fica, com que letra, e o cadeado
+             2. as imagens   logo e PNG, com cadeado de posição
+             3. a IA escreve lê a frase do card e escreve uma nova para cada peça
+             4. os ajustes   a IA acerta tamanho e posição peça a peça, e monta
 
-           POR ISSO SUMIU O ENQUADRAMENTO. Não há mais moldura para encaixar nem
-           proporção para obedecer, então não há mais o que enquadrar. -->
+           A TELA DE SUBIR TEMPLATE PRONTO SAIU. "Eu falei que não tinha mais isso e ainda
+           tá aparecendo. Então remove aquela tela." O que chega do passo 2 é B-roll sobre
+           preto, e o template nasce daí. -->
       <div class="ed-etapa" data-passo="3" hidden>
 
-        <!-- ................................................ 3.1 · DE ONDE VEM -->
+        <!-- ................................................ 3.1 · O TEXTO -->
         <div class="ed-sub-tela" data-sub="1">
           <div class="ed-cab">
-            <h2>O template</h2>
-            <p class="nota">Comece do zero, pegue um que você já salvou, ou suba uma
-              imagem pronta para usar de fundo.</p>
-          </div>
-
-          <div class="tpl-abas">
-            <button class="tpl-aba ativa" data-tab="acervo" type="button">o acervo</button>
-            <button class="tpl-aba" data-tab="novo" type="button">começar do zero</button>
-            <button class="tpl-aba" data-tab="subir" type="button">subir imagem</button>
-          </div>
-
-          <div class="tpl-painel" data-tab="acervo">
-            <div class="tpl-filtros">
-              <label>mercado
-                <select id="tpl_f_mercado"><option value="">todos</option></select></label>
-              <label>etiqueta
-                <select id="tpl_f_etiqueta"><option value="">todas</option></select></label>
-            </div>
-            <div class="tpl-grade" id="tpl_grade"></div>
-            <div class="ed-vazio" id="tpl_vazio" hidden>Nenhum template salvo ainda.</div>
-          </div>
-
-          <div class="tpl-painel" data-tab="novo" hidden>
-            <div class="caixa tpl-novo">
-              <p class="nota">Uma tela de reels vazia, 1080 por 1920, com fundo de uma cor
-                só. Você monta o resto no editor.</p>
-              <div class="linha">
-                <label class="tpl-cor">cor do fundo
-                  <input type="color" id="tpl_nova_cor" value="#101418"></label>
-                <button class="acao forte" id="tpl_novo" type="button">Abrir o editor</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- OS RÓTULOS SÃO OBRIGATÓRIOS NA SUBIDA, e é o mesmo critério do catálogo da
-               Mineração: acervo sem rótulo vira um monte de arquivo sem nome em duas
-               semanas. -->
-          <div class="tpl-painel" data-tab="subir" hidden>
-            <div class="caixa tpl-subir">
-              <label class="tpl-arq">
-                <input type="file" id="tpl_arquivo" accept="image/png,image/jpeg" hidden>
-                <span id="tpl_arq_nome">escolher a imagem</span>
-              </label>
-              <div class="linha">
-                <label>mercado <input id="tpl_mercado" placeholder="ex: luxo"></label>
-                <label>etiqueta <input id="tpl_etiqueta" placeholder="ex: loja"></label>
-              </div>
-              <button class="acao forte" id="tpl_subir" type="button" disabled>
-                Subir e abrir o editor</button>
-              <p class="nota mini" id="tpl_recado"></p>
-            </div>
-          </div>
-        </div>
-
-        <!-- ................................................ 3.2 · O EDITOR -->
-        <div class="ed-sub-tela" data-sub="2" hidden>
-          <div class="ed-cab">
-            <h2>O editor</h2>
-            <p class="nota">Monte a peça em volta do B-roll. O que você põe aqui fica por
-              cima do vídeo.</p>
+            <h2>O texto</h2>
+            <p class="nota">Onde a escrita fica na peça, com que letra, e o que a IA pode
+              mexer.</p>
           </div>
 
           <div class="ed-tres">
-            <!-- ......... ferramentas e camadas -->
-            <div class="ed-ferramentas">
-              <div class="rec-bloco">
-                <h4>Fundo</h4>
-                <label class="tpl-cor">cor
-                  <input type="color" id="ed_fundo_cor" value="#101418"></label>
-                <label class="tpl-arq mini">
-                  <input type="file" id="ed_fundo_img" accept="image/png,image/jpeg" hidden>
-                  <span>trocar por uma imagem</span>
-                </label>
-                <button class="acao mini" id="ed_fundo_tira" type="button" hidden>
-                  tirar a imagem</button>
-              </div>
+            <aside class="ed-lado">
+              <section class="ed-bloco">
+                <h4>Fundo da peça</h4>
+                <div class="ed-cores" id="ed_cores"></div>
+              </section>
 
-              <div class="rec-bloco">
-                <h4>Acrescentar</h4>
-                <button class="acao mini" id="ed_add_texto" type="button">texto</button>
-                <label class="tpl-arq mini">
-                  <input type="file" id="ed_add_img" accept="image/png,image/jpeg" hidden>
-                  <span>imagem</span>
-                </label>
-              </div>
+              <section class="ed-bloco">
+                <h4>Texto</h4>
+                <button class="acao mini larga" id="ed_add_texto" type="button">
+                  acrescentar uma caixa</button>
+                <ul class="ed-camadas" id="ed_camadas_txt"></ul>
+              </section>
 
-              <div class="rec-bloco">
-                <h4>Camadas</h4>
-                <ul class="ed-camadas" id="ed_camadas"></ul>
-              </div>
-
-              <div class="rec-bloco">
+              <section class="ed-bloco">
                 <h4>Conferir com</h4>
-                <button class="acao mini" id="ed_outro_broll" type="button">
+                <p class="nota mini" id="ed_broll_diz">nenhum recorte carregado</p>
+                <button class="acao mini larga" id="ed_outro_broll" type="button">
                   outro B-roll</button>
-                <p class="nota mini" id="ed_broll_diz"></p>
-              </div>
-            </div>
+              </section>
+            </aside>
 
-            <!-- ......... a tela -->
-            <div class="ed-tela-peca">
+            <div class="ed-meio">
               <div class="ed-canvas" id="ed_canvas">
                 <video id="ed_broll" preload="metadata" muted playsinline loop></video>
                 <div class="ed-camada" id="ed_camada"></div>
               </div>
-              <div class="rec-medida" id="ed_medida">1080 por 1920</div>
+              <p class="ed-medida" id="ed_medida">1080 por 1920</p>
             </div>
 
-            <!-- ......... as propriedades -->
-            <div class="ed-props" id="ed_props">
-              <p class="nota mini" id="ed_sem_sel">Clique num elemento da peça para
-                mexer nele.</p>
+            <aside class="ed-lado" id="ed_props_txt">
+              <p class="nota mini ed-nada" id="ed_sem_txt">Clique numa caixa de texto da
+                peça para mexer nela.</p>
 
               <div id="ed_prop_texto" hidden>
-                <div class="rec-bloco">
-                  <h4>Texto</h4>
+                <section class="ed-bloco">
+                  <h4>O que está escrito</h4>
                   <textarea id="p_texto" rows="3"></textarea>
-                </div>
-                <div class="rec-bloco">
+                </section>
+
+                <section class="ed-bloco">
                   <h4>Letra</h4>
-                  <label>fonte <select id="p_fonte">
-                    <option value="segoe">Segoe UI</option>
-                    <option value="arial">Arial</option>
-                    <option value="arialn">Arial Narrow</option>
-                    <option value="impact">Impact</option>
-                    <option value="georgia">Georgia</option>
-                    <option value="izmir">Izmir</option>
-                    <option value="garamond">Apple Garamond</option>
-                  </select></label>
-                  <label>tamanho <input type="range" id="p_tamanho" min="10" max="120"></label>
-                  <div class="ed-linha-min">
-                    <label>cor <input type="color" id="p_cor" value="#FFFFFF"></label>
-                    <label>peso <select id="p_peso">
-                      <option value="400">normal</option>
-                      <option value="700">negrito</option>
-                    </select></label>
+                  <div class="ed-linha-prop">
+                    <span>fonte</span>
+                    <div class="psel" id="p_fonte"></div>
                   </div>
-                  <label>alinhar <select id="p_alinha">
-                    <option value="esquerda">à esquerda</option>
-                    <option value="centro">no centro</option>
-                    <option value="direita">à direita</option>
-                  </select></label>
-                </div>
+                  <div class="ed-linha-prop">
+                    <span>peso</span>
+                    <div class="psel" id="p_peso"></div>
+                  </div>
+                  <div class="ed-linha-prop">
+                    <span>tamanho</span>
+                    <div class="ed-passo" id="p_tamanho"></div>
+                  </div>
+                  <div class="ed-linha-prop">
+                    <span>alinhar</span>
+                    <div class="ed-botoes" id="p_alinha">
+                      <button type="button" data-a="esquerda" title="à esquerda">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+                      </button>
+                      <button type="button" data-a="centro" title="no centro">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M6 18h12"/></svg>
+                      </button>
+                      <button type="button" data-a="direita" title="à direita">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M10 12h10M7 18h13"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="ed-cores mini" id="p_cores"></div>
+                </section>
 
-                <!-- O CADEADO. Pedido do Gabriel: "alguns textos eu posso colocar um
-                     cadeado, que é um texto que a IA não vai escrever. E alguns textos eu
-                     deixo em aberto: IA, quando você for escrever, escreve aqui". -->
-                <div class="rec-bloco">
+                <!-- O CADEADO. "Alguns textos eu posso colocar um cadeado, que é um texto
+                     que a IA não vai escrever. E alguns textos eu deixo em aberto: IA,
+                     quando você for escrever, escreve aqui, com essa fonte." -->
+                <section class="ed-bloco">
                   <h4>A IA pode escrever aqui?</h4>
-                  <div class="enq-botoes">
-                    <button class="acao mini" data-trava="1" type="button">
-                      não, cadeado</button>
-                    <button class="acao mini" data-trava="0" type="button">
-                      sim, aberto</button>
+                  <div class="ed-botoes largo" id="p_trava">
+                    <button type="button" data-trava="1">
+                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
+                        rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                      <span>não, travado</span></button>
+                    <button type="button" data-trava="0">
+                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
+                        rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>
+                      <span>sim, aberto</span></button>
                   </div>
-                  <label id="p_instr_caixa" hidden>o que ela deve escrever
+                  <label class="ed-instr" id="p_instr_caixa" hidden>
+                    <span>o que ela deve escrever aqui</span>
                     <textarea id="p_instrucao" rows="2"
-                      placeholder="ex: resuma a notícia em uma frase curta"></textarea>
+                      placeholder="ex: uma manchete curta sobre a notícia"></textarea>
                   </label>
-                </div>
-              </div>
+                </section>
 
-              <div id="ed_prop_img" hidden>
-                <div class="rec-bloco">
-                  <h4>Imagem</h4>
-                  <p class="nota mini" id="p_img_nome"></p>
-                  <label>largura <input type="range" id="p_larg" min="2" max="100"></label>
-                </div>
+                <button class="acao mini larga perigo" id="ed_apagar_txt" type="button">
+                  apagar esta caixa</button>
               </div>
-
-              <button class="acao mini perigo" id="ed_apagar_el" type="button" hidden>
-                apagar este elemento</button>
-            </div>
+            </aside>
           </div>
 
-          <div class="apl-pe">
-            <div class="apl-resumo" id="ed_resumo"></div>
-            <label class="ed-nome-tpl">nome
-              <input id="ed_nome_tpl" placeholder="ex: Borusa escuro"></label>
-            <button class="acao" id="ed_salvar_tpl" type="button">Salvar no acervo</button>
-            <button class="acao forte" id="ed_segue_aplicar" type="button">
-              Ir para aplicar</button>
+          <div class="ed-pe">
+            <div class="ed-pe-conta" id="ed_conta_txt"></div>
+            <button class="acao forte" id="ed_vai_imagens" type="button">
+              Seguir para as imagens</button>
           </div>
         </div>
 
-        <!-- ................................................ 3.3 · A QUEM SE APLICA -->
+        <!-- ................................................ 3.2 · AS IMAGENS -->
+        <div class="ed-sub-tela" data-sub="2" hidden>
+          <div class="ed-cab">
+            <h2>As imagens</h2>
+            <p class="nota">Logo, selo, qualquer PNG. Travar aqui é travar a posição, e
+              não o conteúdo.</p>
+          </div>
+
+          <div class="ed-tres">
+            <aside class="ed-lado">
+              <section class="ed-bloco">
+                <h4>Acrescentar</h4>
+                <label class="ed-solta" id="ed_solta">
+                  <input type="file" id="ed_add_img" accept="image/png,image/jpeg" hidden>
+                  <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/>
+                    <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                  <span>escolher uma imagem</span>
+                </label>
+                <ul class="ed-camadas" id="ed_camadas_img"></ul>
+              </section>
+
+              <section class="ed-bloco">
+                <h4>Conferir com</h4>
+                <p class="nota mini" id="ed_broll_diz2">nenhum recorte carregado</p>
+                <button class="acao mini larga" id="ed_outro_broll2" type="button">
+                  outro B-roll</button>
+              </section>
+            </aside>
+
+            <!-- A TELA DA PEÇA É A MESMA NAS DUAS FASES, e ela é movida para cá em vez
+                 de duplicada. Duas telas seriam dois vídeos tocando, dois desenhos para
+                 manter em dia e uma chance a mais de discordarem entre si. -->
+            <div class="ed-meio" id="ed_meio2"></div>
+
+            <aside class="ed-lado">
+              <p class="nota mini ed-nada" id="ed_sem_img">Clique numa imagem da peça para
+                mexer nela.</p>
+              <div id="ed_prop_img" hidden>
+                <section class="ed-bloco">
+                  <h4>Imagem</h4>
+                  <p class="ed-medida" id="p_img_nome"></p>
+                  <div class="ed-linha-prop">
+                    <span>largura</span>
+                    <div class="ed-passo" id="p_larg"></div>
+                  </div>
+                </section>
+                <section class="ed-bloco">
+                  <h4>A IA pode mover?</h4>
+                  <div class="ed-botoes largo" id="p_trava_img">
+                    <button type="button" data-travai="1">
+                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
+                        rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                      <span>não, cravada</span></button>
+                    <button type="button" data-travai="0">
+                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
+                        rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>
+                      <span>sim, pode</span></button>
+                  </div>
+                </section>
+                <button class="acao mini larga perigo" id="ed_apagar_img" type="button">
+                  apagar esta imagem</button>
+              </div>
+            </aside>
+          </div>
+
+          <div class="ed-pe">
+            <button class="acao" id="ed_volta_texto" type="button">Voltar ao texto</button>
+            <div class="ed-pe-conta" id="ed_conta_img"></div>
+            <button class="acao" id="ed_salvar_tpl" type="button">Salvar no acervo</button>
+            <button class="acao forte" id="ed_vai_ia" type="button">
+              Seguir para a IA escrever</button>
+          </div>
+        </div>
+
+        <!-- ................................................ 3.3 · A IA ESCREVE -->
         <div class="ed-sub-tela" data-sub="3" hidden>
           <div class="ed-cab">
-            <h2>A quem se aplica</h2>
-            <p class="nota">O template que você montou vale para as peças que escolher
-              aqui.</p>
+            <h2>A IA escreve</h2>
+            <p class="nota">Ela lê a frase do card original de cada reel e escreve uma
+              equivalente, nas caixas que você deixou abertas.</p>
+          </div>
+
+          <div class="leg-vazio" id="ia_sem_campo" hidden>
+            <b>Nenhuma caixa aberta no template.</b>
+            <p class="nota">Volte à fase do texto, selecione uma caixa e marque
+              <i>sim, aberto</i>. Só essas a IA escreve.</p>
+          </div>
+
+          <div id="ia_corpo" hidden>
+            <div class="ia-topo">
+              <div class="ia-campos" id="ia_campos"></div>
+              <button class="acao forte" id="ia_escrever" type="button">
+                Escrever nas <i id="ia_n">0</i> peças</button>
+            </div>
+            <p class="nota mini" id="ia_recado"></p>
+            <div class="ia-lista" id="ia_lista"></div>
+          </div>
+
+          <div class="ed-pe">
+            <button class="acao" id="ed_volta_imagens" type="button">
+              Voltar às imagens</button>
+            <div class="ed-pe-conta" id="ed_conta_ia"></div>
+            <button class="acao forte" id="ed_vai_ajuste" type="button">
+              Seguir para os ajustes</button>
+          </div>
+        </div>
+
+        <!-- ................................................ 3.4 · OS AJUSTES -->
+        <div class="ed-sub-tela" data-sub="4" hidden>
+          <div class="ed-cab">
+            <h2>Os ajustes</h2>
+            <p class="nota">Título longo não cabe onde o curto cabia. Aqui o tamanho e a
+              posição são acertados peça a peça, sem tocar no que está travado.</p>
           </div>
 
           <div class="apl-escolhas">
@@ -3530,15 +3631,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
           <div class="apl-grade" id="apl_grade" hidden></div>
 
-          <div class="apl-pe">
+          <div class="ed-pe">
+            <button class="acao" id="ed_volta_ia" type="button">Voltar à IA</button>
             <div class="apl-resumo" id="apl_resumo"></div>
-            <button class="acao forte" id="apl_montar" type="button">Montar</button>
-            <!-- DEPOIS DE MONTAR NÃO SE OFERECE MONTAR DE NOVO. Decisão do Gabriel em
-                 20/08/2026: "eu já apliquei uma vez, por que vai ser aplicado novamente?
-                 não faz sentido". O botão some e no lugar dele vêm os dois que importam:
-                 abrir a pasta e seguir para o passo 4. Ele deixou registrado que um dia
-                 talvez o botão volte; por isso ele não foi apagado, só fica escondido
-                 enquanto houver montagem cumprida desta leva. -->
+            <button class="acao" id="ajs_acertar" type="button">
+              Acertar as disposições</button>
+            <button class="acao forte" id="apl_montar" type="button">Montar as peças</button>
             <div class="apl-feito" id="apl_feito" hidden>
               <a class="acao" id="apl_pasta" href="#">Abrir a pasta das peças</a>
               <button class="acao forte" id="apl_segue" type="button">
@@ -3546,9 +3644,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             </div>
           </div>
 
-          <!-- O ANDAMENTO DA MONTAGEM. Quem monta é um programa deste computador, não a
-               esteira: ele lê o pedido de dentro da pasta do Estúdio e escreve aqui o que
-               está fazendo, peça por peça. -->
           <div class="caixa apl-obra" id="apl_obra" hidden>
             <div class="apl-obra-topo">
               <span class="cfg-girando"></span>
@@ -3564,60 +3659,28 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
       <!-- ---------------------------------------- PASSO 4 · A LEGENDA
 
-           A LEGENDA É O TEXTO QUE ENTRA DENTRO DO VÍDEO, e não a legenda do post.
-           Gabriel, 20/08/2026: "a legenda é o que vai entrar dentro do vídeo".
-
-           E SÓ AS CAIXAS ABERTAS ENTRAM AQUI. As que ele fechou com cadeado no passo 3 a
-           IA nem enxerga: "quando for um texto que eu não quero que altere, deixa aquele
-           cadeado". -->
+           ELE EXISTE E ESTÁ VAZIO POR ORA. A escrita da IA mudou de lugar em 20/08/2026:
+           virou a fase 3 do template, onde ela lê a frase do card e escreve a nova. O
+           Gabriel manteve o passo assim mesmo: "o passo quatro você deixa lá só pra ter
+           esse passo, mas agora a IA vai fazendo essa etapa, que é a fase três". -->
       <div class="ed-etapa" data-passo="4" hidden>
         <div class="ed-cab">
           <h2>A legenda</h2>
-          <p class="nota">O texto que entra dentro do vídeo, nas caixas que você deixou
-            abertas no template.</p>
+          <p class="nota">As peças estão prontas no seu computador.</p>
         </div>
-
-        <div class="leg-vazio" id="leg_sem_campo" hidden>
-          <b>Este template não tem caixa aberta.</b>
-          <p class="nota">Volte ao passo 3, selecione uma caixa de texto e marque
-            <i>sim, aberto</i>. Só essas a IA escreve.</p>
+        <div class="caixa pos-caixa">
+          <div class="pos-n"><b id="pos_n">0</b><span>peças montadas</span></div>
+          <p class="ed-caminho" id="pos_pasta"></p>
+          <div class="linha">
+            <a class="acao forte" id="pos_abrir" href="#">Abrir a pasta</a>
+          </div>
+          <p class="nota">Os recortes continuam onde estavam, intactos.</p>
         </div>
-
-        <div id="leg_corpo" hidden>
-          <div class="leg-campos" id="leg_campos"></div>
-
-          <div class="leg-lista" id="leg_lista"></div>
-
-          <div class="apl-pe">
-            <div class="apl-resumo" id="leg_resumo"></div>
-            <button class="acao" id="leg_todas" type="button">
-              repetir o primeiro em todas</button>
-            <button class="acao forte" id="leg_gerar" type="button">
-              Gerar as peças com a legenda</button>
-            <div class="apl-feito" id="leg_feito" hidden>
-              <a class="acao" id="leg_pasta" href="#">Abrir a pasta das peças</a>
-            </div>
-          </div>
-
-          <div class="caixa apl-obra" id="leg_obra" hidden>
-            <div class="apl-obra-topo">
-              <span class="cfg-girando"></span>
-              <b id="leg_obra_txt">gerando</b>
-              <span class="dir" id="leg_obra_tempo"></span>
-            </div>
-            <div class="apl-barra"><i id="leg_barra"></i></div>
-            <p class="nota" id="leg_obra_nota"></p>
-          </div>
-
-          <!-- A IA AINDA NÃO ESTÁ LIGADA, e o que falta são duas decisões dele, não
-               código. Dizer isso na tela é melhor do que um botão que não faz nada. -->
-          <div class="por-vir">
-            <div class="por-vir-selo">esperando duas definições suas</div>
-            <h2>A IA que escreve</h2>
-            <p class="nota">Falta cravar duas coisas: <b>qual IA gratuita</b> vai
-              escrever, e <b>o que ela lê</b> de cada vídeo para saber sobre o que
-              escrever. Diga as duas e eu ligo o botão aqui.</p>
-          </div>
+        <div class="por-vir">
+          <div class="por-vir-selo">esperando a sua definição</div>
+          <h2>O que vem depois</h2>
+          <p class="nota">A escrita da IA passou para a fase 3 do template. Este passo
+            está aqui, vazio, esperando você dizer o que ele faz.</p>
         </div>
       </div>
     </div>
@@ -7649,6 +7712,7 @@ $("rec_aplicar").onclick = async () => {
 
     REC_OBRA = { id, desde: Date.now(), total: EDIT_PECAS.length, relogio: null };
     $("rec_obra").hidden = false;
+    document.querySelector("#rec_obra .cfg-girando").style.display = "";
     $("rec_obra_txt").textContent = "pedido deixado";
     $("rec_obra_nota").textContent = "o recorte começa em até um minuto, que é o passo do "
       + "programa que faz esse trabalho aqui no computador.";
@@ -7687,6 +7751,11 @@ async function olharORecorte() {
   }
   clearInterval(REC_OBRA.relogio);
   REC_OBRA = null;
+  // O GIRO PARA QUANDO ACABA. Ele continuava rodando com os 107 recortes prontos na
+  // pasta, e um símbolo de carregando em cima de um trabalho terminado diz que ainda
+  // falta alguma coisa. Terminou, é aviso parado.
+  document.querySelector("#rec_obra .cfg-girando").style.display = "none";
+  $("rec_barra").style.width = "100%";
   const cards = d.cards || 0;
   $("rec_obra_txt").textContent = feitos
     + (feitos === 1 ? " recorte pronto" : " recortes prontos")
@@ -7862,37 +7931,52 @@ async function acharBrollAqui(v) {
   for (let y = y0; y <= y1; y++) {
     let a = -1, b = -1;
     for (let x = x0; x <= x1; x++) if (janela[y * LARG + x]) { if (a < 0) a = x; b = x; }
-    linhas.push(a < 0 || (b - a + 1) < Math.max(3, larg * 0.10)
-      ? null : [a / LARG, (b + 1) / LARG]);
+    linhas.push(a < 0 || (b - a + 1) < Math.max(2, larg * 0.03) ? null : [a, b + 1]);
   }
+  /* O MIOLO É RETO POR CONSTRUÇÃO, e as pontas só estreitam. Num card a janela é uma
+     faixa de largura fixa que curva nos quatro cantos. Sem isto, filmagem escura perto
+     da borda fazia a linha perder o limite e o contorno entrava na imagem: a máscara
+     saía com dentes na lateral. É o mesmo cálculo do `oficina.py`. */
+  const cheios = [];
+  for (let i = 0; i < linhas.length; i++) if (linhas[i]) cheios.push(i);
+  if (cheios.length) {
+    const corte = Math.max(1, Math.floor(cheios.length / 5));
+    const corpo = cheios.slice(corte, cheios.length - corte);
+    const miolo = corpo.length ? corpo : cheios;
+    let fe = Infinity, fd = -Infinity;
+    for (const i of miolo) { fe = Math.min(fe, linhas[i][0]); fd = Math.max(fd, linhas[i][1]); }
+    for (const i of miolo) { linhas[i][0] = fe; linhas[i][1] = fd; }
+    for (const i of cheios) {
+      linhas[i][0] = Math.max(linhas[i][0], fe);
+      linhas[i][1] = Math.min(linhas[i][1], fd);
+    }
+  }
+  for (const i of cheios) { linhas[i] = [linhas[i][0] / LARG, linhas[i][1] / LARG]; }
   return { x: x0 / LARG, y: y0 / ALT, w: (x1 - x0 + 1) / LARG,
            h: (y1 - y0 + 1) / ALT, modo: "card", linhas };
 }
 
 /* ==================================================================== O PASSO 3
 
-   O TEMPLATE VIROU UMA PEÇA QUE SE MONTA AQUI, e não mais um arquivo que se escolhe.
-   Decisão do Gabriel em 20/08/2026: "a ideia é que eu monte um template na hora". Cor de
-   fundo, imagens que ele sobe, caixas de texto, e daquilo ele salva um template.
+   O TEMPLATE EM QUATRO FASES, na ordem que o Gabriel desenhou em 20/08/2026:
 
-   E A ORDEM SE INVERTEU. Antes o template trazia uma moldura e o vídeo era recortado para
-   caber nela. Agora o B-roll já vem pronto do passo 2, na posição e no tamanho originais,
-   e o template é construído EM VOLTA dele: "o que vai ditar como o template vai ser
-   trabalhado agora é o B-roll". Por isso o enquadramento sumiu: não há moldura para
-   encaixar nem proporção para obedecer.
+     1. o texto      onde ele fica, com que letra, e o cadeado
+     2. as imagens   logo e PNG, com cadeado de posição
+     3. a IA escreve lê a frase do card e escreve uma nova para cada peça
+     4. os ajustes   a IA acerta tamanho e posição peça a peça, e monta
 
-   AS COORDENADAS SÃO FRAÇÃO DA TELA, e não pixel. Assim o mesmo template serve para
-   qualquer tamanho de peça, e a tela do editor pode ter a largura que couber. */
+   A ORDEM ESTÁ INVERTIDA EM RELAÇÃO À PRIMEIRA VERSÃO. Antes o template trazia uma
+   moldura e o vídeo era recortado para caber nela. Agora o B-roll já chega pronto do
+   passo 2, na posição e no tamanho originais, e o template é construído EM VOLTA dele:
+   "o que vai ditar como o template vai ser trabalhado agora é o B-roll".
+
+   AS COORDENADAS SÃO FRAÇÃO DA TELA, e não pixel, para o mesmo template servir a
+   qualquer tamanho de peça e a tela do editor ter a largura que couber. */
 
 let TPL_SUB = 1;
-let TPL_ARQUIVO = null;            // o File escolhido para subir
-let TPL_F_M = "", TPL_F_E = "";    // os filtros do acervo
 const ACERVO = { itens: [] };
 
-/* A COMPOSIÇÃO QUE ESTÁ NA BANCADA. `elementos` é a pilha, de baixo para cima, e todos
-   ficam POR CIMA do B-roll: foi assim que ele pediu, "a legenda é o que vai entrar
-   dentro do vídeo". */
-let TPL = null;
+let TPL = null;                    // a composição que está na bancada
 let EL_SEL = null;                 // id do elemento selecionado
 let ED_IMGS = new Map();           // arquivo -> blob URL, para desenhar sem reler o disco
 let ED_BROLL_I = -1;               // qual recorte está servindo de conferência
@@ -7900,10 +7984,103 @@ let ED_BROLL_I = -1;               // qual recorte está servindo de conferênci
 const TELA = { w: 1080, h: 1920 };
 const novoId = () => "e" + Math.random().toString(36).slice(2, 8);
 
-function tplVazio(cor) {
+/* AS CORES SÃO UMA PALETA, e não um seletor do sistema. O Gabriel reclamou com todas as
+   letras dos widgets crus: "tem vários aqui padrão Windows... você tem literalmente
+   dentro do próprio estúdio referência de como montar". A última casa abre o seletor do
+   navegador só quando ele quer uma cor que não está aqui. */
+const PALETA = ["#000000", "#101418", "#1C1C1E", "#F5F3EF", "#FFFFFF",
+                "#BA5A18", "#E8A33D", "#2F5D50", "#1E3A5F", "#8A1C1C"];
+
+const FONTES = [
+  { v: "segoe", r: "Segoe UI" }, { v: "arial", r: "Arial" },
+  { v: "arialn", r: "Arial Narrow" }, { v: "impact", r: "Impact" },
+  { v: "georgia", r: "Georgia" }, { v: "izmir", r: "Izmir" },
+  { v: "garamond", r: "Apple Garamond" },
+];
+const PESOS = [{ v: "400", r: "normal" }, { v: "700", r: "negrito" }];
+
+function tplVazio() {
   return { id: "c" + Date.now(), tipo: "composicao", nome: "", mercado: "", etiqueta: "",
            w: TELA.w, h: TELA.h, criado: Date.now(),
-           fundoCor: cor || "#101418", fundoImagem: null, elementos: [] };
+           fundoCor: "#000000", fundoImagem: null, elementos: [] };
+}
+
+/* ------------------------------------------------------ as peças de tela
+
+   SÃO AS MESMAS DO RESTO DO SISTEMA, e não widgets do navegador. O `psel` já existe na
+   Mineração e em Baixar; aqui ele ganha uma função que o monta em qualquer lugar. */
+
+function pselNovo(alvo, opcoes, valor, aoEscolher) {
+  const atual = opcoes.find(o => o.v === String(valor)) || opcoes[0];
+  alvo.innerHTML = '<button type="button" class="psel-b" aria-haspopup="listbox" '
+    + `aria-expanded="false"><span>${escapa(atual ? atual.r : "")}</span>`
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" '
+    + 'stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'
+    + '</button><div class="psel-menu" role="listbox">'
+    + opcoes.map(o => `<button type="button" role="option" data-v="${escapa(o.v)}"${
+        atual && o.v === atual.v ? ' class="on"' : ""}>${escapa(o.r)}<i>✓</i></button>`).join("")
+    + "</div>";
+  const b = alvo.querySelector(".psel-b"), m = alvo.querySelector(".psel-menu");
+  b.onclick = e => {
+    e.stopPropagation();
+    const abre = !m.classList.contains("aberto");
+    fecharPseis();
+    m.classList.toggle("aberto", abre);
+    b.setAttribute("aria-expanded", abre ? "true" : "false");
+  };
+  m.onclick = e => {
+    const x = e.target.closest("button[data-v]");
+    if (!x) return;
+    b.querySelector("span").textContent = x.textContent.replace("✓", "");
+    m.querySelectorAll("button").forEach(y => y.classList.toggle("on", y === x));
+    m.classList.remove("aberto");
+    b.setAttribute("aria-expanded", "false");
+    aoEscolher(x.dataset.v);
+  };
+}
+
+function fecharPseis() {
+  document.querySelectorAll(".psel-menu.aberto").forEach(m => {
+    m.classList.remove("aberto");
+    const b = m.parentElement.querySelector(".psel-b");
+    if (b) b.setAttribute("aria-expanded", "false");
+  });
+}
+document.addEventListener("click", fecharPseis);
+
+/** Menos, valor, mais. Substitui a barra de arrastar do navegador. */
+function passoNovo(alvo, min, max, salto, valor, rotulo, aoMudar) {
+  alvo.innerHTML = '<button type="button" data-d="-1">−</button>'
+    + `<b>${rotulo(valor)}</b><button type="button" data-d="1">+</button>`;
+  alvo.onclick = e => {
+    const b = e.target.closest("button[data-d]");
+    if (!b) return;
+    const novo = Math.min(max, Math.max(min, valor + salto * Number(b.dataset.d)));
+    if (novo === valor) return;
+    valor = novo;
+    alvo.querySelector("b").textContent = rotulo(valor);
+    aoMudar(valor);
+  };
+}
+
+/** A fileira de cores, com a última abrindo o seletor do navegador. */
+function coresNovo(alvo, valor, aoEscolher) {
+  alvo.innerHTML = PALETA.map(c =>
+    `<button type="button" class="ed-cor${c.toLowerCase() === String(valor).toLowerCase()
+      ? " on" : ""}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join("")
+    + '<label class="ed-cor outra" title="outra cor">'
+    + `<input type="color" value="${escapa(valor || "#000000")}"><span>+</span></label>`;
+  alvo.onclick = e => {
+    const b = e.target.closest("button[data-c]");
+    if (!b) return;
+    alvo.querySelectorAll(".ed-cor").forEach(x => x.classList.toggle("on", x === b));
+    aoEscolher(b.dataset.c);
+  };
+  const inp = alvo.querySelector('input[type="color"]');
+  inp.oninput = e => {
+    alvo.querySelectorAll(".ed-cor").forEach(x => x.classList.remove("on"));
+    aoEscolher(e.target.value);
+  };
 }
 
 /* ---------------------------------------------------------- o acervo */
@@ -7935,7 +8112,6 @@ async function arquivoDoAcervo(nome) {
   catch (e) { return null; }
 }
 
-/** Grava um arquivo dentro da pasta de templates e devolve o nome dele. */
 async function guardarNoAcervo(nome, dado) {
   const p = await pastaDo("templates", true);
   if (!p) throw new Error("a pasta do Estúdio não está liberada");
@@ -7946,7 +8122,6 @@ async function guardarNoAcervo(nome, dado) {
   return nome;
 }
 
-/** O endereço para mostrar na tela uma imagem que mora no acervo. */
 async function enderecoDo(nome) {
   if (!nome) return null;
   if (ED_IMGS.has(nome)) return ED_IMGS.get(nome);
@@ -7957,228 +8132,44 @@ async function enderecoDo(nome) {
   return u;
 }
 
-/* TEMPLATE ANTIGO CONTINUA ABRINDO. Os do acervo velho eram um PNG só, com um retângulo
-   marcado dentro dizendo onde o vídeo entrava. Aqui ele vira uma composição com aquele
-   PNG de fundo e nenhum elemento: a moldura não faz mais falta, porque quem manda na
-   posição agora é o B-roll. O id ganha forma nova para não misturar os dois formatos. */
-async function comoComposicao(item) {
-  if (item.id && !/\.(png|jpe?g)$/i.test(item.id)) {
-    const f = await arquivoDoAcervo(item.id + ".json");
-    if (f) {
-      const t = JSON.parse(await f.text());
-      t.id = item.id;
-      t.elementos = t.elementos || [];
-      return t;
-    }
-  }
-  const t = tplVazio(item.fundoCor || "#000000");
-  t.nome = item.nome || "sem nome";
-  t.mercado = item.mercado || "";
-  t.etiqueta = item.etiqueta || "";
-  t.fundoImagem = item.fundoImagem || (/\.(png|jpe?g)$/i.test(item.id || "") ? item.id : null);
-  return t;
+/* ---------------------------------------------------------- a peça na tela */
+
+const soTexto = () => (TPL ? TPL.elementos.filter(e => e.tipo === "texto") : []);
+const soImagem = () => (TPL ? TPL.elementos.filter(e => e.tipo === "imagem") : []);
+const elSel = () => (TPL ? TPL.elementos.find(x => x.id === EL_SEL) : null);
+
+function fonteCss(n) {
+  return ({ segoe: "'Segoe UI',sans-serif", arial: "Arial,sans-serif",
+            arialn: "'Arial Narrow',Arial,sans-serif", impact: "Impact,sans-serif",
+            georgia: "Georgia,serif", izmir: "Izmir,'Segoe UI',sans-serif",
+            garamond: "'Apple Garamond',Georgia,serif" })[n] || "'Segoe UI',sans-serif";
 }
-
-function nomesCat(campo) {
-  return [...new Set(ACERVO.itens.map(x => x[campo]).filter(Boolean))].sort();
-}
-
-function peneirados() {
-  return ACERVO.itens.filter(x =>
-    (!TPL_F_M || x.mercado === TPL_F_M) && (!TPL_F_E || x.etiqueta === TPL_F_E));
-}
-
-function encherFiltros() {
-  for (const [id, campo, valor] of [["tpl_f_mercado", "mercado", TPL_F_M],
-                                    ["tpl_f_etiqueta", "etiqueta", TPL_F_E]]) {
-    const s = $(id);
-    const antes = s.value;
-    s.innerHTML = `<option value="">${campo === "mercado" ? "todos" : "todas"}</option>`
-      + nomesCat(campo).map(n => `<option>${escapa(n)}</option>`).join("");
-    s.value = valor || antes || "";
-  }
-}
-
-async function desenhaAcervo() {
-  const g = $("tpl_grade"), itens = peneirados();
-  $("tpl_vazio").hidden = !!itens.length;
-  $("tpl_vazio").textContent = ACERVO.itens.length
-    ? "Nenhum template com esses rótulos." : "Nenhum template salvo ainda.";
-  g.innerHTML = itens.map(x => `
-    <button class="tpl-cartao" data-id="${escapa(x.id)}" type="button">
-      <span class="tpl-capa" style="background:${escapa(x.fundoCor || "#111")}"></span>
-      <b>${escapa(x.nome || "sem nome")}</b>
-      <span class="tpl-rot">${escapa(x.mercado || "")} · ${escapa(x.etiqueta || "")}</span>
-    </button>`).join("");
-  for (const c of g.querySelectorAll(".tpl-cartao")) {
-    const x = ACERVO.itens.find(i => i.id === c.dataset.id);
-    const img = x && (x.fundoImagem
-      || (/\.(png|jpe?g)$/i.test(x.id || "") ? x.id : null));
-    if (!img) continue;
-    const u = await enderecoDo(img);
-    if (u) c.querySelector(".tpl-capa").style.backgroundImage = `url(${u})`;
-  }
-}
-
-$("tpl_f_mercado").onchange = e => { TPL_F_M = e.target.value; desenhaAcervo(); };
-$("tpl_f_etiqueta").onchange = e => { TPL_F_E = e.target.value; desenhaAcervo(); };
-
-$("tpl_grade").addEventListener("click", async ev => {
-  const c = ev.target.closest(".tpl-cartao");
-  if (!c) return;
-  const item = ACERVO.itens.find(x => x.id === c.dataset.id);
-  if (!item) return;
-  TPL = await comoComposicao(item);
-  await abrirEditor();
-});
-
-/* ---------------------------------------------------------- de onde vem */
-
-document.querySelectorAll(".tpl-aba").forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll(".tpl-aba").forEach(x => x.classList.toggle("ativa", x === b));
-    document.querySelectorAll(".tpl-painel").forEach(p =>
-      p.hidden = p.dataset.tab !== b.dataset.tab);
-  };
-});
-
-$("tpl_novo").onclick = async () => {
-  TPL = tplVazio($("tpl_nova_cor").value);
-  await abrirEditor();
-};
-
-$("tpl_arquivo").addEventListener("change", ev => {
-  TPL_ARQUIVO = ev.target.files[0] || null;
-  $("tpl_arq_nome").textContent = TPL_ARQUIVO ? TPL_ARQUIVO.name : "escolher a imagem";
-  conferirSubida();
-});
-$("tpl_mercado").addEventListener("input", conferirSubida);
-$("tpl_etiqueta").addEventListener("input", conferirSubida);
-
-/* OS RÓTULOS SÃO OBRIGATÓRIOS, e é o mesmo critério do catálogo da Mineração: acervo sem
-   rótulo vira um monte de arquivo sem nome em duas semanas. */
-function conferirSubida() {
-  $("tpl_subir").disabled = !(TPL_ARQUIVO && $("tpl_mercado").value.trim()
-                              && $("tpl_etiqueta").value.trim());
-}
-
-$("tpl_subir").onclick = async () => {
-  if (!TPL_ARQUIVO) return;
-  $("tpl_subir").disabled = true;
-  try {
-    const ext = (TPL_ARQUIVO.name.match(/\.(png|jpe?g)$/i) || [".png"])[0].toLowerCase();
-    TPL = tplVazio("#000000");
-    TPL.mercado = $("tpl_mercado").value.trim();
-    TPL.etiqueta = $("tpl_etiqueta").value.trim();
-    TPL.nome = TPL_ARQUIVO.name.replace(/\.[^.]+$/, "");
-    // A IMAGEM PRONTA ENTRA COMO FUNDO, e não como moldura. Ela não marca mais onde o
-    // B-roll vai: "o template não vai mais carregar onde vai ficar a questão do B-roll".
-    TPL.fundoImagem = await guardarNoAcervo(TPL.id + "_fundo" + ext,
-                                            await TPL_ARQUIVO.arrayBuffer());
-    await abrirEditor();
-  } catch (e) {
-    parado("tpl_recado", e.message);
-    $("tpl_subir").disabled = false;
-  }
-};
-
-/* ---------------------------------------------------------- o editor */
-
-async function abrirEditor() {
-  if (!TPL) return;
-  EL_SEL = null;
-  $("ed_fundo_cor").value = TPL.fundoCor || "#101418";
-  $("ed_nome_tpl").value = TPL.nome || "";
-  $("ed_medida").textContent = `${TELA.w} por ${TELA.h}`;
-  await trocarBroll(ED_BROLL_I >= 0 ? ED_BROLL_I : sortearBroll());
-  desenhaEditor();
-  irParaSub(2);
-}
-
-function sortearBroll() {
-  const n = EDIT_RECORTES.length;
-  if (!n) return -1;
-  let i = Math.floor(Math.random() * n);
-  if (n > 1) while (i === ED_BROLL_I) i = Math.floor(Math.random() * n);
-  return i;
-}
-
-/* O B-ROLL DE VERDADE ENQUANTO ELE MONTA, e não um retângulo cinza fazendo as vezes. Cada
-   vídeo põe a filmagem numa altura diferente, então só vendo o de verdade dá para saber
-   se o texto do rodapé vai encostar nela. A máscara do passo 2 é usada como recorte de
-   CSS: sem ela, o preto que envolve o B-roll taparia o fundo do template. */
-async function trocarBroll(i) {
-  const v = $("ed_broll");
-  if (i < 0 || !EDIT_RECORTES[i]) {
-    $("ed_broll_diz").textContent = "recorte o B-roll no passo 2 para conferir aqui.";
-    v.removeAttribute("src");
-    return;
-  }
-  ED_BROLL_I = i;
-  const item = EDIT_RECORTES[i];
-  try {
-    const f = await item.h.getFile();
-    if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
-    const u = URL.createObjectURL(f);
-    v.dataset.url = u;
-    v.src = u;
-    v.play().catch(() => {});
-  } catch (e) { return; }
-
-  let m = null;
-  try {
-    const raiz = await pastaDo("recortes", false);
-    const pasta = await raiz.getDirectoryHandle("leva-" + EDIT_LEVA.numero);
-    const mp = await pasta.getDirectoryHandle("_mascaras");
-    const mf = await (await mp.getFileHandle(item.nome.replace(/\.mp4$/i, ".png"))).getFile();
-    m = URL.createObjectURL(mf);
-  } catch (e) { m = null; }
-  if (v.dataset.masc) URL.revokeObjectURL(v.dataset.masc);
-  v.dataset.masc = m || "";
-  v.style.maskImage = v.style.webkitMaskImage = m ? `url(${m})` : "none";
-  v.style.maskSize = v.style.webkitMaskSize = "100% 100%";
-  $("ed_broll_diz").textContent = `conferindo com a peça ${i + 1} de ${EDIT_RECORTES.length}`;
-}
-
-$("ed_outro_broll").onclick = () => trocarBroll(sortearBroll());
-
-/* ---------------------------------------------------------- desenhar a peça */
 
 async function desenhaEditor() {
   if (!TPL) return;
   const c = $("ed_canvas");
-  c.style.background = TPL.fundoCor || "#101418";
-  let fundo = "";
-  if (TPL.fundoImagem) {
-    const u = await enderecoDo(TPL.fundoImagem);
-    if (u) fundo = `url(${u})`;
-  }
-  c.style.backgroundImage = fundo;
-  c.style.backgroundSize = "100% 100%";
-  $("ed_fundo_tira").hidden = !TPL.fundoImagem;
-
+  c.style.background = TPL.fundoCor || "#000000";
   const camada = $("ed_camada");
   camada.innerHTML = "";
   for (const el of TPL.elementos) {
     const d = document.createElement("div");
-    d.className = "ed-el" + (el.id === EL_SEL ? " sel" : "");
+    d.className = "ed-el" + (el.id === EL_SEL ? " sel" : "")
+      + (el.trava ? "" : " aberto");
     d.dataset.id = el.id;
     d.style.left = (el.x * 100) + "%";
     d.style.top = (el.y * 100) + "%";
     d.style.width = (el.w * 100) + "%";
     if (el.tipo === "texto") {
-      d.style.height = "auto";
       d.style.color = el.cor;
       d.style.fontFamily = fonteCss(el.fonte);
       d.style.fontWeight = el.peso;
       d.style.textAlign = el.alinha === "centro" ? "center"
         : el.alinha === "direita" ? "right" : "left";
       // O TAMANHO DA LETRA É FRAÇÃO DA ALTURA DA PEÇA, exatamente como o `oficina.py`
-      // calcula na hora de gravar. Assim o que se vê aqui é o que sai no arquivo.
+      // calcula na hora de gravar. Por isso o que se vê aqui é o que sai no arquivo.
       d.style.fontSize = (el.tamanho * 100) + "cqh";
       d.style.lineHeight = "1.22";
       d.textContent = el.texto || " ";
-      if (!el.trava) d.classList.add("aberto");
     } else {
       d.style.height = (el.h * 100) + "%";
       const u = await enderecoDo(el.arquivo);
@@ -8196,39 +8187,120 @@ async function desenhaEditor() {
   }
   desenhaCamadas();
   desenhaProps();
-  $("ed_resumo").innerHTML = `<b>${TPL.elementos.length}</b> `
-    + (TPL.elementos.length === 1 ? "elemento" : "elementos");
-}
-
-function fonteCss(n) {
-  return ({ segoe: "'Segoe UI',sans-serif", arial: "Arial,sans-serif",
-            arialn: "'Arial Narrow',Arial,sans-serif", impact: "Impact,sans-serif",
-            georgia: "Georgia,serif", izmir: "Izmir,'Segoe UI',sans-serif",
-            garamond: "'Apple Garamond',Georgia,serif" })[n] || "'Segoe UI',sans-serif";
 }
 
 function desenhaCamadas() {
-  const u = $("ed_camadas");
-  u.innerHTML = TPL.elementos.map(el => `
-    <li data-id="${el.id}" class="${el.id === EL_SEL ? "sel" : ""}">
-      <span>${el.tipo === "texto"
-        ? (el.trava ? "🔒 " : "✎ ") + escapa((el.texto || "texto").slice(0, 22))
-        : "imagem"}</span>
-    </li>`).reverse().join("");
+  const pinta = (alvo, lista, vazio) => {
+    if (!alvo) return;
+    alvo.innerHTML = lista.length ? lista.map(el => `
+      <li data-id="${el.id}" class="${el.id === EL_SEL ? "sel" : ""}">
+        <span class="ed-cam-cad">${el.trava ? CADEADO_FECHADO : CADEADO_ABERTO}</span>
+        <span class="ed-cam-nome">${escapa(el.tipo === "texto"
+          ? (el.texto || "caixa vazia").slice(0, 26) : (el.arquivo || "").slice(-22))}</span>
+      </li>`).reverse().join("") : `<li class="ed-cam-vazio">${vazio}</li>`;
+  };
+  pinta($("ed_camadas_txt"), soTexto(), "nenhuma caixa ainda");
+  pinta($("ed_camadas_img"), soImagem(), "nenhuma imagem ainda");
+  const t = soTexto().length, i = soImagem().length;
+  const abertas = soTexto().filter(x => !x.trava).length;
+  $("ed_conta_txt").innerHTML = `<b>${t}</b> ${t === 1 ? "caixa" : "caixas"}`
+    + (abertas ? `, <b>${abertas}</b> para a IA escrever` : ", nenhuma aberta para a IA");
+  $("ed_conta_img").innerHTML = `<b>${i}</b> ${i === 1 ? "imagem" : "imagens"}`;
 }
 
-$("ed_camadas").addEventListener("click", ev => {
-  const li = ev.target.closest("li");
-  if (!li) return;
-  EL_SEL = li.dataset.id;
-  desenhaEditor();
+const CADEADO_FECHADO = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"'
+  + ' rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const CADEADO_ABERTO = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"'
+  + ' rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>';
+
+document.querySelectorAll(".ed-camadas").forEach(u => {
+  u.addEventListener("click", ev => {
+    const li = ev.target.closest("li[data-id]");
+    if (!li) return;
+    EL_SEL = li.dataset.id;
+    desenhaEditor();
+  });
 });
 
-/* ---------------------------------------------------------- acrescentar */
+
+/* ---------------------------------------------------------- as propriedades */
+
+function desenhaProps() {
+  const el = elSel();
+  const eTexto = !!(el && el.tipo === "texto");
+  const eImagem = !!(el && el.tipo === "imagem");
+  $("ed_sem_txt").hidden = eTexto;
+  $("ed_prop_texto").hidden = !eTexto;
+  $("ed_sem_img").hidden = eImagem;
+  $("ed_prop_img").hidden = !eImagem;
+
+  if (eTexto) {
+    $("p_texto").value = el.texto || "";
+    pselNovo($("p_fonte"), FONTES, el.fonte, v => mexeNoSel(x => x.fonte = v));
+    pselNovo($("p_peso"), PESOS, String(el.peso), v => mexeNoSel(x => x.peso = Number(v)));
+    passoNovo($("p_tamanho"), 10, 140, 2, Math.round(el.tamanho * 1000),
+              v => (v / 10).toFixed(1) + "%", v => mexeNoSel(x => x.tamanho = v / 1000));
+    coresNovo($("p_cores"), el.cor, c => mexeNoSel(x => x.cor = c));
+    $("p_alinha").querySelectorAll("button").forEach(b =>
+      b.classList.toggle("on", b.dataset.a === el.alinha));
+    $("p_trava").querySelectorAll("button").forEach(b =>
+      b.classList.toggle("on", (b.dataset.trava === "1") === !!el.trava));
+    $("p_instr_caixa").hidden = !!el.trava;
+    $("p_instrucao").value = el.instrucao || "";
+  }
+  if (eImagem) {
+    $("p_img_nome").textContent = (el.arquivo || "").slice(-26);
+    passoNovo($("p_larg"), 3, 100, 2, Math.round(el.w * 100), v => v + "%",
+              v => mexeNoSel(x => {
+                const antes = x.w;
+                x.w = v / 100;
+                x.h = x.h * (x.w / Math.max(0.0001, antes));
+              }));
+    $("p_trava_img").querySelectorAll("button").forEach(b =>
+      b.classList.toggle("on", (b.dataset.travai === "1") === !!el.trava));
+  }
+}
+
+/* MEXE E REDESENHA. Quando a mudança é de texto puro, redesenhar a peça inteira
+   recarregaria as imagens do disco a cada tecla, então o texto tem caminho curto. */
+function mexeNoSel(f, leve) {
+  const el = elSel();
+  if (!el) return;
+  f(el);
+  if (leve) {
+    const d = $("ed_camada").querySelector(`.ed-el[data-id="${el.id}"]`);
+    if (d) d.textContent = el.texto || " ";
+    desenhaCamadas();
+    return;
+  }
+  desenhaEditor();
+}
+
+$("p_texto").oninput = e => mexeNoSel(el => el.texto = e.target.value, true);
+$("p_instrucao").oninput = e => mexeNoSel(el => el.instrucao = e.target.value, true);
+$("p_alinha").onclick = e => {
+  const b = e.target.closest("button[data-a]");
+  if (b) mexeNoSel(el => el.alinha = b.dataset.a);
+};
+
+/* O CADEADO. "Alguns textos eu posso colocar um cadeado, que é um texto que a IA não vai
+   escrever. E alguns textos eu deixo em aberto." Na imagem o sentido é outro e está
+   escrito na tela: travar imagem é travar a POSIÇÃO dela. */
+$("p_trava").onclick = e => {
+  const b = e.target.closest("button[data-trava]");
+  if (b) mexeNoSel(el => el.trava = b.dataset.trava === "1");
+};
+$("p_trava_img").onclick = e => {
+  const b = e.target.closest("button[data-travai]");
+  if (b) mexeNoSel(el => el.trava = b.dataset.travai === "1");
+};
+
+/* ---------------------------------------------------------- acrescentar e apagar */
 
 $("ed_add_texto").onclick = () => {
+  if (!TPL) TPL = tplVazio();
   TPL.elementos.push({ id: novoId(), tipo: "texto", texto: "escreva aqui",
-    x: 0.08, y: 0.08, w: 0.84, tamanho: 0.032, cor: "#FFFFFF", fonte: "segoe",
+    x: 0.08, y: 0.08, w: 0.84, tamanho: 0.038, cor: "#FFFFFF", fonte: "arialn",
     peso: 700, alinha: "centro", trava: true, instrucao: "" });
   EL_SEL = TPL.elementos[TPL.elementos.length - 1].id;
   desenhaEditor();
@@ -8237,36 +8309,27 @@ $("ed_add_texto").onclick = () => {
 $("ed_add_img").addEventListener("change", async ev => {
   const f = ev.target.files[0];
   ev.target.value = "";
-  if (!f || !TPL) return;
+  if (!f) return;
+  if (!TPL) TPL = tplVazio();
   const ext = (f.name.match(/\.(png|jpe?g)$/i) || [".png"])[0].toLowerCase();
   const nome = TPL.id + "_" + novoId() + ext;
   await guardarNoAcervo(nome, await f.arrayBuffer());
   const m = await medirImagem(f);
   const larg = 0.3;
   TPL.elementos.push({ id: novoId(), tipo: "imagem", arquivo: nome,
-    x: 0.35, y: 0.8, w: larg, h: larg * (m.h / m.w) * (TELA.w / TELA.h) });
+    x: 0.35, y: 0.82, w: larg, h: larg * (m.h / m.w) * (TELA.w / TELA.h), trava: true });
   EL_SEL = TPL.elementos[TPL.elementos.length - 1].id;
   desenhaEditor();
 });
 
-$("ed_fundo_cor").oninput = e => { TPL.fundoCor = e.target.value; desenhaEditor(); };
-
-$("ed_fundo_img").addEventListener("change", async ev => {
-  const f = ev.target.files[0];
-  ev.target.value = "";
-  if (!f || !TPL) return;
-  const ext = (f.name.match(/\.(png|jpe?g)$/i) || [".png"])[0].toLowerCase();
-  TPL.fundoImagem = await guardarNoAcervo(TPL.id + "_fundo" + ext, await f.arrayBuffer());
-  desenhaEditor();
-});
-
-$("ed_fundo_tira").onclick = () => { TPL.fundoImagem = null; desenhaEditor(); };
-
-$("ed_apagar_el").onclick = () => {
+function apagarSel() {
+  if (!TPL) return;
   TPL.elementos = TPL.elementos.filter(x => x.id !== EL_SEL);
   EL_SEL = null;
   desenhaEditor();
-};
+}
+$("ed_apagar_txt").onclick = apagarSel;
+$("ed_apagar_img").onclick = apagarSel;
 
 function medirImagem(file) {
   return new Promise(ok => {
@@ -8277,62 +8340,7 @@ function medirImagem(file) {
   });
 }
 
-/* ---------------------------------------------------------- as propriedades */
-
-function elSel() { return TPL ? TPL.elementos.find(x => x.id === EL_SEL) : null; }
-
-function desenhaProps() {
-  const el = elSel();
-  $("ed_sem_sel").hidden = !!el;
-  $("ed_apagar_el").hidden = !el;
-  $("ed_prop_texto").hidden = !(el && el.tipo === "texto");
-  $("ed_prop_img").hidden = !(el && el.tipo === "imagem");
-  if (!el) return;
-  if (el.tipo === "texto") {
-    $("p_texto").value = el.texto || "";
-    $("p_fonte").value = el.fonte;
-    $("p_tamanho").value = Math.round(el.tamanho * 1000);
-    $("p_cor").value = el.cor;
-    $("p_peso").value = String(el.peso);
-    $("p_alinha").value = el.alinha;
-    $("p_instrucao").value = el.instrucao || "";
-    $("p_instr_caixa").hidden = !!el.trava;
-    document.querySelectorAll("[data-trava]").forEach(b =>
-      b.classList.toggle("ativa", (b.dataset.trava === "1") === !!el.trava));
-  } else {
-    $("p_img_nome").textContent = el.arquivo;
-    $("p_larg").value = Math.round(el.w * 100);
-  }
-}
-
-function mexeNoSel(f) {
-  const el = elSel();
-  if (!el) return;
-  f(el);
-  desenhaEditor();
-}
-
-$("p_texto").oninput = e => mexeNoSel(el => el.texto = e.target.value);
-$("p_fonte").onchange = e => mexeNoSel(el => el.fonte = e.target.value);
-$("p_tamanho").oninput = e => mexeNoSel(el => el.tamanho = Number(e.target.value) / 1000);
-$("p_cor").oninput = e => mexeNoSel(el => el.cor = e.target.value);
-$("p_peso").onchange = e => mexeNoSel(el => el.peso = Number(e.target.value));
-$("p_alinha").onchange = e => mexeNoSel(el => el.alinha = e.target.value);
-$("p_instrucao").oninput = e => mexeNoSel(el => el.instrucao = e.target.value);
-$("p_larg").oninput = e => mexeNoSel(el => {
-  const antes = el.w;
-  el.w = Number(e.target.value) / 100;
-  el.h = el.h * (el.w / Math.max(0.0001, antes));   // a proporção da imagem não muda
-});
-
-/* O CADEADO. "Alguns textos eu posso colocar um cadeado, que é um texto que a IA não vai
-   escrever. E alguns textos eu deixo em aberto: IA, quando você for escrever, escreve
-   aqui, com essa fonte." */
-document.querySelectorAll("[data-trava]").forEach(b => {
-  b.onclick = () => mexeNoSel(el => el.trava = b.dataset.trava === "1");
-});
-
-/* ---------------------------------------------------------- arrastar na tela */
+/* ---------------------------------------------------------- arrastar na peça */
 
 $("ed_camada").addEventListener("pointerdown", ev => {
   const alvo = ev.target.closest(".ed-el");
@@ -8348,22 +8356,20 @@ $("ed_camada").addEventListener("pointerdown", ev => {
   ev.preventDefault();
   const camada = $("ed_camada");
   camada.setPointerCapture(ev.pointerId);
-
-  const mover = e => desenhaLeve(el, canto, de,
+  const mover = e => arrastarLeve(el, canto, de,
     (e.clientX - de.px) / caixa.width, (e.clientY - de.py) / caixa.height);
   const soltar = () => {
     camada.removeEventListener("pointermove", mover);
     camada.removeEventListener("pointerup", soltar);
-    desenhaEditor();
+    desenhaProps();
   };
   camada.addEventListener("pointermove", mover);
   camada.addEventListener("pointerup", soltar);
 });
 
 /* MEXE NO ELEMENTO E REDESENHA SÓ ELE. Redesenhar a peça inteira a cada movimento do
-   ponteiro recarregaria as imagens do disco dezenas de vezes por segundo, e o arrasto
-   engasgaria. A peça toda só se redesenha quando a mão solta. */
-function desenhaLeve(el, canto, de, dx, dy) {
+   ponteiro recarregaria as imagens do disco dezenas de vezes por segundo. */
+function arrastarLeve(el, canto, de, dx, dy) {
   if (!canto) {
     el.x = de.x0 + dx;
     el.y = de.y0 + dy;
@@ -8378,7 +8384,7 @@ function desenhaLeve(el, canto, de, dx, dy) {
     if (canto.includes("w")) el.x = de.x0 + (de.w0 - larg);
     el.w = larg;
   }
-  const d = $("ed_camada").querySelector('.ed-el[data-id="' + el.id + '"]');
+  const d = $("ed_camada").querySelector(`.ed-el[data-id="${el.id}"]`);
   if (!d) return;
   d.style.left = (el.x * 100) + "%";
   d.style.top = (el.y * 100) + "%";
@@ -8386,41 +8392,227 @@ function desenhaLeve(el, canto, de, dx, dy) {
   if (el.tipo === "imagem") d.style.height = (el.h * 100) + "%";
 }
 
-/* ---------------------------------------------------------- salvar */
+/* ---------------------------------------------------------- o B-roll de conferência
 
-$("ed_nome_tpl").oninput = e => { if (TPL) TPL.nome = e.target.value; };
+   O B-ROLL DE VERDADE ENQUANTO ELE MONTA, e não um retângulo cinza fazendo as vezes.
+   Cada vídeo põe a filmagem numa altura diferente, então só vendo o de verdade dá para
+   saber se o rodapé vai encostar nela. */
+
+function sortearBroll() {
+  const n = EDIT_RECORTES.length;
+  if (!n) return -1;
+  let i = Math.floor(Math.random() * n);
+  if (n > 1) while (i === ED_BROLL_I) i = Math.floor(Math.random() * n);
+  return i;
+}
+
+async function trocarBroll(i) {
+  const v = $("ed_broll");
+  const diz = t => { $("ed_broll_diz").textContent = t; $("ed_broll_diz2").textContent = t; };
+  if (i < 0 || !EDIT_RECORTES[i]) {
+    diz("recorte o B-roll no passo 2 para conferir aqui.");
+    v.removeAttribute("src");
+    return;
+  }
+  ED_BROLL_I = i;
+  try {
+    const f = await EDIT_RECORTES[i].h.getFile();
+    if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
+    const u = URL.createObjectURL(f);
+    v.dataset.url = u;
+    v.src = u;
+    v.play().catch(() => {});
+  } catch (e) { return; }
+  diz(`peça ${i + 1} de ${EDIT_RECORTES.length}`);
+}
+
+$("ed_outro_broll").onclick = () => trocarBroll(sortearBroll());
+$("ed_outro_broll2").onclick = () => trocarBroll(sortearBroll());
+
+/* ---------------------------------------------------------- guardar no acervo */
 
 $("ed_salvar_tpl").onclick = async () => {
   if (!TPL) return;
   const b = $("ed_salvar_tpl");
   b.disabled = true;
+  const antes = b.textContent;
   try {
-    TPL.nome = ($("ed_nome_tpl").value || "").trim() || "sem nome";
+    TPL.nome = TPL.nome || ("template de " + new Date().toLocaleDateString("pt-BR"));
     TPL.w = TELA.w; TPL.h = TELA.h;
-    await guardarNoAcervo(TPL.id + ".json",
-                          JSON.stringify(TPL, null, 1));
+    await guardarNoAcervo(TPL.id + ".json", JSON.stringify(TPL, null, 1));
     const ficha = { id: TPL.id, tipo: "composicao", nome: TPL.nome,
                     mercado: TPL.mercado || "", etiqueta: TPL.etiqueta || "",
                     w: TPL.w, h: TPL.h, criado: TPL.criado || Date.now(),
-                    fundoCor: TPL.fundoCor, fundoImagem: TPL.fundoImagem };
+                    fundoCor: TPL.fundoCor };
     const i = ACERVO.itens.findIndex(x => x.id === TPL.id);
     if (i >= 0) ACERVO.itens[i] = ficha; else ACERVO.itens.push(ficha);
     await gravarAcervo();
-    encherFiltros();
     b.textContent = "salvo";
-    setTimeout(() => { b.textContent = "Salvar no acervo"; b.disabled = false; }, 1400);
   } catch (e) {
     b.textContent = "não deu: " + e.message;
-    b.disabled = false;
   }
+  setTimeout(() => { b.textContent = antes; b.disabled = false; }, 1600);
 };
 
-$("ed_segue_aplicar").onclick = () => irParaSub(3);
 
-/* ---------------------------------------------------------- os sub-passos */
+/* ------------------------------------------------- 3.3 · a IA escreve
+
+   ELA LÊ A FRASE DO CARD ORIGINAL. O passo 2 guarda essa faixa como imagem antes de o
+   preto cobrir o quadro, porque é o único momento em que ela ainda existe. Gabriel,
+   20/08/2026: "o vídeo sempre tem uma frasezinha. Pega essa frase, interpreta a frase,
+   cria algo equivalente ou parecido".
+
+   O QUE FALTA PARA ELA RODAR SOZINHA é uma credencial, e não código: nenhuma chave de IA
+   gratuita está guardada nesta máquina. Enquanto ela não vem, o texto pode ser escrito
+   aqui na mão e o resto do caminho funciona igual. */
+
+let ESCRITO = new Map();           // arquivo -> { idDaCaixa: texto }
+const abertas = () => soTexto().filter(e => !e.trava);
+
+async function entrarNaIA() {
+  const campos = abertas();
+  $("ia_sem_campo").hidden = !!campos.length;
+  $("ia_corpo").hidden = !campos.length;
+  if (!campos.length) return;
+
+  $("ia_campos").innerHTML = campos.map(c => `
+    <div class="ia-campo">
+      <b>${escapa((c.texto || "caixa aberta").slice(0, 34))}</b>
+      <span class="nota mini">${escapa(c.instrucao || "sem instrução")}</span>
+    </div>`).join("");
+
+  const alvos = alvosDaMontagem();
+  $("ia_n").textContent = alvos.length;
+  $("ia_lista").innerHTML = alvos.map(i => {
+    const p = pecas3()[i];
+    if (!p) return "";
+    const g = ESCRITO.get(p.nome) || {};
+    return `<div class="ia-linha" data-arq="${escapa(p.nome)}">
+      <div class="ia-frase" data-frase="${escapa(p.nome)}"></div>
+      <div class="ia-caixas">${campos.map(c => `<textarea rows="2" data-campo="${c.id}"
+        placeholder="${escapa(c.instrucao || "o texto desta peça")}"
+        >${escapa(g[c.id] || "")}</textarea>`).join("")}</div>
+    </div>`;
+  }).join("");
+  await mostrarFrases();
+  contaEscrito();
+}
+
+/* A FRASE DO CARD APARECE AO LADO DA CAIXA, e não só no arquivo. Sem ver a frase de
+   origem, não há como julgar se o que a IA escreveu tem a ver com o vídeo. */
+async function mostrarFrases() {
+  let pasta = null;
+  try {
+    const raiz = await pastaDo("recortes", false);
+    pasta = await (await raiz.getDirectoryHandle("leva-" + EDIT_LEVA.numero))
+      .getDirectoryHandle("_frases");
+  } catch (e) { return; }
+  for (const d of $("ia_lista").querySelectorAll(".ia-frase")) {
+    const nome = d.dataset.frase.replace(/\.mp4$/i, ".png");
+    try {
+      const f = await (await pasta.getFileHandle(nome)).getFile();
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(f);
+      d.appendChild(img);
+    } catch (e) {
+      d.textContent = "sem card";
+    }
+  }
+}
+
+$("ia_lista").addEventListener("input", ev => {
+  const t = ev.target;
+  if (t.tagName !== "TEXTAREA") return;
+  const arq = t.closest(".ia-linha").dataset.arq;
+  const atual = ESCRITO.get(arq) || {};
+  atual[t.dataset.campo] = t.value;
+  ESCRITO.set(arq, atual);
+  contaEscrito();
+});
+
+function contaEscrito() {
+  const campos = abertas(), alvos = alvosDaMontagem();
+  let cheias = 0;
+  for (const i of alvos) {
+    const p = pecas3()[i];
+    if (!p) continue;
+    const g = ESCRITO.get(p.nome) || {};
+    if (campos.every(c => (g[c.id] || "").trim())) cheias++;
+  }
+  $("ed_conta_ia").innerHTML = `<b>${cheias}</b> de ${alvos.length} `
+    + (alvos.length === 1 ? "peça escrita" : "peças escritas");
+}
+
+/* O BOTÃO EXISTE E DIZ O QUE FALTA. Botão que não faz nada é pior do que botão que
+   explica por que não faz. */
+$("ia_escrever").onclick = () => {
+  parado("ia_recado", "falta a chave da IA nesta máquina. Me diga qual serviço gratuito "
+    + "você quer usar e eu ligo este botão; até lá, dá para escrever aqui na mão.");
+};
+
+/* ------------------------------------------------- 3.4 · os ajustes
+
+   TÍTULO LONGO NÃO CABE ONDE O CURTO CABIA. Esta fase acerta tamanho e posição peça a
+   peça, e o que está travado não é tocado. Sem a IA, o acerto é o de cabimento: a caixa
+   encolhe a letra até o texto caber na largura que ela tem, que é a conta que a IA
+   também teria de fazer no fim. */
+
+let AJUSTES = new Map();           // arquivo -> { idDaCaixa: { tamanho } }
+
+$("ajs_acertar").onclick = () => {
+  const campos = abertas();
+  if (!campos.length) return parado("apl_resumo", "nenhuma caixa aberta para acertar.");
+  AJUSTES.clear();
+  const alvos = alvosDaMontagem();
+  let mexidas = 0;
+  for (const i of alvos) {
+    const p = pecas3()[i];
+    if (!p) continue;
+    const g = ESCRITO.get(p.nome) || {};
+    const desta = {};
+    for (const c of campos) {
+      const texto = (g[c.id] || c.texto || "").trim();
+      if (!texto) continue;
+      const cabe = tamanhoQueCabe(c, texto);
+      if (Math.abs(cabe - c.tamanho) > 0.0005) {
+        desta[c.id] = { tamanho: cabe };
+        mexidas++;
+      }
+    }
+    if (Object.keys(desta).length) AJUSTES.set(p.nome, desta);
+  }
+  resumoDeAplicar();
+  parado("apl_resumo", mexidas
+    ? `${mexidas} ${mexidas === 1 ? "caixa acertada" : "caixas acertadas"} para o texto caber.`
+    : "todos os textos já cabem do jeito que estão.");
+};
+
+/* QUANTO A LETRA PRECISA ENCOLHER para o texto caber em três linhas dentro da caixa. A
+   medida sai do próprio navegador, com a fonte e o peso reais, então bate com o que o
+   `oficina.py` vai desenhar. */
+function tamanhoQueCabe(campo, texto) {
+  const c = document.createElement("canvas").getContext("2d");
+  const larguraPx = campo.w * TELA.w;
+  const LINHAS = 3;
+  let t = campo.tamanho;
+  for (let volta = 0; volta < 40; volta++) {
+    c.font = `${campo.peso} ${Math.round(t * TELA.h)}px ${fonteCss(campo.fonte)}`;
+    let linhas = 1, larg = 0;
+    for (const palavra of String(texto).split(/\s+/)) {
+      const m = c.measureText((larg ? " " : "") + palavra).width;
+      if (larg + m > larguraPx && larg) { linhas++; larg = c.measureText(palavra).width; }
+      else larg += m;
+    }
+    if (linhas <= LINHAS) return t;
+    t *= 0.94;
+  }
+  return t;
+}
+
+/* ------------------------------------------------- as fases */
 
 function podeIrAoSub(n) {
-  if (n >= 2 && !TPL) return false;
+  if (n >= 3 && !soTexto().length) return false;   // sem texto não há o que a IA escreva
   return true;
 }
 
@@ -8429,7 +8621,16 @@ function irParaSub(n) {
   TPL_SUB = n;
   document.querySelectorAll('.ed-etapa[data-passo="3"] .ed-sub-tela').forEach(t =>
     t.hidden = Number(t.dataset.sub) !== n);
-  if (n === 3) desenhaAplicar();
+  // A TELA DA PEÇA É UMA SÓ e viaja entre as duas primeiras fases.
+  const meio = $("ed_canvas").parentElement;
+  const destino = n === 2 ? $("ed_meio2") : document.querySelector(
+    '.ed-sub-tela[data-sub="1"] .ed-meio');
+  if (destino && meio !== destino) {
+    destino.appendChild($("ed_canvas"));
+    if (n !== 2) destino.appendChild($("ed_medida"));
+  }
+  if (n === 3) entrarNaIA();
+  if (n === 4) desenhaAplicar();
   desenhaSubTrilho();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -8440,57 +8641,40 @@ function desenhaSubTrilho() {
     li.classList.toggle("agora", q === TPL_SUB);
     li.classList.toggle("feito", q < TPL_SUB);
   });
-  $("ed_r3").textContent = TPL ? (TPL.nome || "sem nome") : "nenhum escolhido";
+  const t = soTexto().length, i = soImagem().length;
+  $("ed_r3").textContent = t || i
+    ? `${t} ${t === 1 ? "texto" : "textos"}, ${i} ${i === 1 ? "imagem" : "imagens"}`
+    : "a montar";
   const b = document.querySelector('#ed_trilho .ed-ponto[data-passo="3"] .ed-barra b');
-  if (b && EDIT_PASSO === 3) b.style.height = ((TPL_SUB - 1) / 2 * 100) + "%";
+  if (b && EDIT_PASSO === 3) b.style.height = ((TPL_SUB - 1) / 3 * 100) + "%";
 }
 
 document.querySelectorAll("#ed_sub3 li").forEach(li => {
   li.onclick = () => irParaSub(Number(li.dataset.sub));
 });
-
-/* RETOMAR UM RASCUNHO. O que se recupera é onde ele estava e qual template estava na
-   bancada; o resto vem do disco, que é onde ele de fato mora. Enquanto as peças não
-   chegam, o pedido de retomada fica pendurado: a permissão da pasta só é dada depois de
-   um clique, e sem pasta não há recorte nem acervo para abrir. Foi exatamente esse o
-   sintoma que travou o rascunho no primeiro sub-passo. */
-let RETOMAR = null;
-
-async function tentarRetomar() {
-  if (!RETOMAR) return;
-  if (!EDIT_PECAS.length) return;         // espera a pasta ser liberada
-  const r = RETOMAR;
-  RETOMAR = null;
-  APL_MODO = r.modo || "todas";
-  APL_MARCADAS.clear();
-  for (const i of (r.marcadas || [])) APL_MARCADAS.add(i);
-  if (!ACERVO.itens.length) await lerAcervo();
-  if (r.template) {
-    const item = ACERVO.itens.find(x => x.id === r.template);
-    if (item) {
-      const arq = await arquivoDoAcervo(item.id + ".json");
-      TPL = arq ? JSON.parse(await arq.text()) : { ...item, elementos: [] };
-      TPL.id = item.id;
-    }
-  }
-  if (TPL) {
-    await abrirEditor();
-    const alvo = Math.min(3, Math.max(1, r.sub || 1));
-    if (alvo > 2) irParaSub(alvo);
-  }
-  salvarRascunho();
-}
+$("ed_vai_imagens").onclick = () => irParaSub(2);
+$("ed_volta_texto").onclick = () => irParaSub(1);
+$("ed_vai_ia").onclick = () => irParaSub(3);
+$("ed_volta_imagens").onclick = () => irParaSub(2);
+$("ed_vai_ajuste").onclick = () => irParaSub(4);
+$("ed_volta_ia").onclick = () => irParaSub(3);
 
 async function entrarNoTemplate() {
   if (!EDIT_RECORTES.length) await procurarRecortes();
-  await lerAcervo();
-  encherFiltros();
-  await desenhaAcervo();
-  irParaSub(TPL ? TPL_SUB : 1);
+  if (!ACERVO.itens.length) await lerAcervo();
+  if (!TPL) TPL = tplVazio();
+  coresNovo($("ed_cores"), TPL.fundoCor, c => {
+    TPL.fundoCor = c;
+    desenhaEditor();
+  });
+  $("ed_medida").textContent = `${TELA.w} por ${TELA.h}`;
+  if (ED_BROLL_I < 0) await trocarBroll(sortearBroll());
+  await desenhaEditor();
+  irParaSub(TPL_SUB || 1);
 }
 
 
-/* ---------------------------------------------------- 3.3 · a quem se aplica */
+/* ---------------------------------------------------- 3.4 · a quem se aplica */
 
 let APL_MODO = "todas";
 const APL_MARCADAS = new Set();
@@ -8552,16 +8736,12 @@ function resumoDeAplicar() {
   $("apl_montar").disabled = !n || !TPL || !!OBRA;
   if (MONTADO) return desenhaFeito();
   $("apl_resumo").innerHTML = TPL
-    ? `<b>${n}</b> ${n === 1 ? "peça" : "peças"} com o template `
-      + `<b>${escapa(TPL.nome || "sem nome")}</b>, em ${TELA.w} por ${TELA.h}.`
-    : "monte um template no sub-passo 2.";
+    ? `<b>${n}</b> ${n === 1 ? "peça" : "peças"}, em ${TELA.w} por ${TELA.h}.`
+    : "monte o template nas fases anteriores.";
 }
 
 document.querySelectorAll(".apl-op").forEach(b => {
-  b.onclick = () => {
-    APL_MODO = b.dataset.modo;
-    desenhaAplicar();
-  };
+  b.onclick = () => { APL_MODO = b.dataset.modo; desenhaAplicar(); };
 });
 
 $("apl_grade").addEventListener("click", ev => {
@@ -8577,8 +8757,8 @@ $("apl_grade").addEventListener("click", ev => {
 
    A TELA NÃO MONTA NADA: ela escreve o pedido e passa a olhar o andamento. Quem monta é
    o `oficina.py`, que roda neste computador de minuto em minuto. Por isso a primeira
-   frase que aparece é sobre a espera: sem ela, o minuto entre o clique e o primeiro sinal
-   de vida é indistinguível de tela travada. */
+   frase que aparece é sobre a espera: sem ela, o minuto entre o clique e o primeiro
+   sinal de vida é indistinguível de tela travada. */
 async function nomeLivre(edicoes, base) {
   for (let i = 1; i < 60; i++) {
     const nome = i === 1 ? base : `${base} (${i})`;
@@ -8593,14 +8773,13 @@ $("apl_montar").onclick = async () => {
   const alvos = alvosDaMontagem();
   if (!alvos.length) return;
   $("apl_montar").disabled = true;
-
   try {
     const pedidos = await pastaDo("pedidos", true);
     const edicoes = await pastaDo("edicoes", true);
     if (!pedidos || !edicoes) throw new Error("a pasta do Estúdio não está liberada");
     // O TEMPLATE DA BANCADA VAI PARA O ACERVO ANTES DE MONTAR, porque quem monta lê do
-    // disco. Sem esta gravação, montar um template que ele acabou de mexer usaria a
-    // versão anterior e a peça sairia diferente do que ele viu na tela.
+    // disco. Sem esta gravação, montar um template recém-mexido usaria a versão anterior
+    // e a peça sairia diferente do que ele viu na tela.
     await guardarNoAcervo(TPL.id + ".json", JSON.stringify(TPL, null, 1));
     const { nome: destino, n: qual } = await nomeLivre(edicoes, `leva-${EDIT_LEVA.numero}`);
 
@@ -8609,10 +8788,16 @@ $("apl_montar").onclick = async () => {
       id, leva: EDIT_LEVA.numero,
       pasta: `leva-${EDIT_LEVA.numero}`, destino,
       template: TPL.id + ".json", tela: { w: TELA.w, h: TELA.h },
-      // OS TEXTOS ABERTOS FICAM VAZIOS AQUI. Eles são o trabalho do passo 4: enquanto a
-      // IA não escreve, vale o que está escrito na caixa. As caixas com cadeado não
-      // entram nesta lista nem quando a IA rodar.
-      pecas: alvos.map(i => ({ arquivo: pecas3()[i].nome, textos: {} }))
+      // CADA PEÇA LEVA O SEU TEXTO E O SEU ACERTO. `textos` é o que foi escrito nas
+      // caixas abertas; `ajustes` é o tamanho de letra que faz aquele texto caber.
+      // Caixa travada não aparece em nenhum dos dois, e por isso nunca muda.
+      pecas: alvos.map(i => {
+        const nome = pecas3()[i].nome;
+        const p = { arquivo: nome, textos: ESCRITO.get(nome) || {} };
+        const a = AJUSTES.get(nome);
+        if (a) p.ajustes = a;
+        return p;
+      })
     };
     const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
     const w = await h.createWritable();
@@ -8621,6 +8806,7 @@ $("apl_montar").onclick = async () => {
 
     OBRA = { id, desde: Date.now(), total: alvos.length, qual, relogio: null };
     $("apl_obra").hidden = false;
+    document.querySelector("#apl_obra .cfg-girando").style.display = "";
     $("apl_obra_txt").textContent = "pedido deixado";
     $("apl_obra_nota").textContent = "a montagem começa em até um minuto, que é o passo "
       + "do programa que faz esse trabalho aqui no computador.";
@@ -8673,24 +8859,19 @@ async function olharAObra() {
   irParaPasso(4);
 }
 
-/* DEPOIS DE MONTAR NÃO SE OFERECE MONTAR DE NOVO.
-
-   Decisão do Gabriel em 20/08/2026, e a frase dele encerra o assunto: "eu já apliquei uma
-   vez, por que vai ser aplicado novamente? não faz sentido". O botão de montar sai de
-   cena e no lugar vêm os dois que importam: abrir a pasta com as peças prontas e seguir
-   para o passo 4.
-
-   ELE DEIXOU RESSALVA de que um dia o botão talvez volte, então ele não foi apagado: fica
-   escondido enquanto houver montagem cumprida desta leva. */
+/* DEPOIS DE MONTAR NÃO SE OFERECE MONTAR DE NOVO. "Eu já apliquei uma vez, por que vai
+   ser aplicado novamente? não faz sentido." O botão fica escondido enquanto houver
+   montagem cumprida desta leva, e não apagado, pela ressalva dele de que um dia talvez
+   volte. */
 function desenhaFeito() {
   const tem = !!MONTADO;
   $("apl_montar").hidden = tem;
+  $("ajs_acertar").hidden = tem;
   $("apl_feito").hidden = !tem;
   if (!tem) return;
   $("apl_pasta").href = MONTADO.link;
   $("apl_resumo").innerHTML = `<b>${num(MONTADO.pecas)}</b> `
-    + (MONTADO.pecas === 1 ? "peça montada" : "peças montadas")
-    + ` com o template <b>${escapa(TPL ? (TPL.nome || "sem nome") : "")}</b>.`;
+    + (MONTADO.pecas === 1 ? "peça montada" : "peças montadas") + ".";
 }
 
 $("apl_segue").onclick = () => irParaPasso(4);
@@ -8703,172 +8884,19 @@ function pararDeOlhar() {
   resumoDeAplicar();
 }
 
+
 /* ==================================================================== O PASSO 4
 
-   A LEGENDA É O TEXTO QUE ENTRA DENTRO DO VÍDEO, e não a legenda do post. Gabriel,
-   20/08/2026: "a legenda é o que vai entrar dentro do vídeo".
-
-   E SÓ AS CAIXAS ABERTAS ENTRAM AQUI. As que ele fechou com cadeado no passo 3 nem
-   aparecem: "quando for um texto que eu não quero que altere, deixa aquele cadeado".
-
-   O QUE FALTA PARA A IA ESCREVER SOZINHA são duas decisões dele, e não código: qual IA
-   gratuita, e o que ela lê de cada vídeo para saber sobre o que escrever. Enquanto isso
-   não vem, a estrutura já existe inteira: os textos são guardados por peça e viajam no
-   pedido, e o `oficina.py` já sabe pintar cada peça com o texto dela. */
-
-let LEG = new Map();               // arquivo -> { idDoCampo: texto }
-let LEG_OBRA = null;
-let LEG_PRONTO = null;
-
-function camposAbertos() {
-  if (!TPL) return [];
-  return TPL.elementos.filter(e => e.tipo === "texto" && !e.trava);
-}
+   ELE EXISTE E ESTÁ VAZIO POR ORA. A escrita da IA mudou de lugar em 20/08/2026: virou a
+   fase 3 do template, onde ela lê a frase do card e escreve a nova. O Gabriel manteve o
+   passo assim mesmo: "o passo quatro você deixa lá só pra ter esse passo, mas agora a IA
+   vai fazendo essa etapa, que é a fase três". */
 
 function entrarNaLegenda() {
-  const campos = camposAbertos();
-  $("leg_sem_campo").hidden = !!campos.length;
-  $("leg_corpo").hidden = !campos.length;
-  if (!campos.length) return;
-
-  $("leg_campos").innerHTML = campos.map(c => `
-    <div class="leg-campo">
-      <b>${escapa((c.texto || "caixa aberta").slice(0, 40))}</b>
-      <span class="nota mini">${escapa(c.instrucao || "sem instrução para a IA")}</span>
-    </div>`).join("");
-
-  const alvos = alvosDaMontagem();
-  $("leg_lista").innerHTML = alvos.map(i => {
-    const nome = pecas3()[i] ? pecas3()[i].nome : "";
-    const guardado = LEG.get(nome) || {};
-    return `<div class="leg-linha" data-arq="${escapa(nome)}">
-      <span class="leg-n">${i + 1}</span>
-      ${campos.map(c => `<textarea rows="2" data-campo="${c.id}"
-        placeholder="${escapa(c.instrucao || "o texto desta peça")}"
-        >${escapa(guardado[c.id] || "")}</textarea>`).join("")}
-    </div>`;
-  }).join("");
-  resumoDaLegenda();
-}
-
-$("leg_lista").addEventListener("input", ev => {
-  const t = ev.target;
-  if (t.tagName !== "TEXTAREA") return;
-  const linha = t.closest(".leg-linha");
-  const arq = linha.dataset.arq;
-  const atual = LEG.get(arq) || {};
-  atual[t.dataset.campo] = t.value;
-  LEG.set(arq, atual);
-  resumoDaLegenda();
-});
-
-/* REPETIR O PRIMEIRO EM TODAS. Cento e sete caixas iguais na mão não é trabalho, é
-   castigo; e enquanto a IA não escreve, boa parte das legendas é a mesma frase. */
-$("leg_todas").onclick = () => {
-  const linhas = [...$("leg_lista").querySelectorAll(".leg-linha")];
-  if (!linhas.length) return;
-  const modelo = LEG.get(linhas[0].dataset.arq) || {};
-  for (const l of linhas.slice(1)) {
-    LEG.set(l.dataset.arq, { ...modelo });
-    l.querySelectorAll("textarea").forEach(t => t.value = modelo[t.dataset.campo] || "");
-  }
-  resumoDaLegenda();
-};
-
-function resumoDaLegenda() {
-  const alvos = alvosDaMontagem();
-  const campos = camposAbertos();
-  let cheias = 0;
-  for (const i of alvos) {
-    const nome = pecas3()[i] ? pecas3()[i].nome : "";
-    const g = LEG.get(nome) || {};
-    if (campos.every(c => (g[c.id] || "").trim())) cheias++;
-  }
-  $("leg_resumo").innerHTML = `<b>${cheias}</b> de ${alvos.length} `
-    + (alvos.length === 1 ? "peça escrita" : "peças escritas");
-  $("leg_gerar").disabled = !cheias || !!LEG_OBRA;
-  $("leg_feito").hidden = !LEG_PRONTO;
-  if (LEG_PRONTO) $("leg_pasta").href = LEG_PRONTO.link;
-}
-
-$("leg_gerar").onclick = async () => {
-  if (!TPL || LEG_OBRA) return;
-  const alvos = alvosDaMontagem();
-  if (!alvos.length) return;
-  $("leg_gerar").disabled = true;
-  try {
-    const pedidos = await pastaDo("pedidos", true);
-    const edicoes = await pastaDo("edicoes", true);
-    if (!pedidos || !edicoes) throw new Error("a pasta do Estúdio não está liberada");
-    await guardarNoAcervo(TPL.id + ".json", JSON.stringify(TPL, null, 1));
-    const { nome: destino, n: qual } = await nomeLivre(edicoes, `leva-${EDIT_LEVA.numero}`);
-    const id = "l" + Date.now();
-    const pedido = {
-      id, leva: EDIT_LEVA.numero,
-      pasta: `leva-${EDIT_LEVA.numero}`, destino,
-      template: TPL.id + ".json", tela: { w: TELA.w, h: TELA.h },
-      pecas: alvos.map(i => {
-        const nome = pecas3()[i].nome;
-        return { arquivo: nome, textos: LEG.get(nome) || {} };
-      })
-    };
-    const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
-    const w = await h.createWritable();
-    await w.write(JSON.stringify(pedido, null, 1));
-    await w.close();
-
-    LEG_OBRA = { id, desde: Date.now(), total: alvos.length, qual, relogio: null };
-    $("leg_obra").hidden = false;
-    $("leg_obra_txt").textContent = "pedido deixado";
-    $("leg_obra_nota").textContent = "a geração começa em até um minuto, que é o passo do "
-      + "programa que faz esse trabalho aqui no computador.";
-    LEG_OBRA.relogio = setInterval(olharALegenda, 3000);
-    olharALegenda();
-  } catch (e) {
-    $("leg_gerar").disabled = false;
-    $("leg_obra").hidden = false;
-    $("leg_obra_txt").textContent = "não deu para deixar o pedido";
-    $("leg_obra_nota").textContent = e.message;
-  }
-};
-
-async function olharALegenda() {
-  if (!LEG_OBRA) return;
-  const seg = Math.round((Date.now() - LEG_OBRA.desde) / 1000);
-  $("leg_obra_tempo").textContent = seg < 60 ? seg + "s"
-    : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
-  const p = await pastaDo("pedidos", false);
-  if (!p) return;
-  let d = null;
-  try {
-    const f = await (await p.getFileHandle(`${LEG_OBRA.id}.andamento.json`)).getFile();
-    d = JSON.parse(await f.text());
-  } catch (e) { return; }
-  if (!d) return;
-  if (d.erro) {
-    clearInterval(LEG_OBRA.relogio);
-    LEG_OBRA = null;
-    $("leg_obra_txt").textContent = "não deu: " + d.erro;
-    $("leg_gerar").disabled = false;
-    return;
-  }
-  const feitos = d.feitos || 0, total = d.total || LEG_OBRA.total;
-  $("leg_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
-  if (!d.fim) {
-    $("leg_obra_txt").textContent = `gerando ${feitos + 1} de ${total}`;
-    $("leg_obra_nota").textContent = d.atual ? `agora: ${d.atual}` : "";
-    return;
-  }
-  const link = `estudio://edicao/${EDIT_LEVA.numero}`
-    + (LEG_OBRA.qual > 1 ? `-${LEG_OBRA.qual}` : "");
-  clearInterval(LEG_OBRA.relogio);
-  LEG_OBRA = null;
-  LEG_PRONTO = { pecas: feitos, pasta: d.pasta || "", link };
-  document.querySelector("#leg_obra .cfg-girando").style.display = "none";
-  $("leg_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça pronta" : "peças prontas"}`
-    + (d.falhas ? `, ${d.falhas} falharam` : "");
-  $("leg_obra_nota").innerHTML = `estão em <a href="${link}">${escapa(d.pasta || "")}</a>.`;
-  resumoDaLegenda();
+  if (!MONTADO) return;
+  $("pos_n").textContent = num(MONTADO.pecas);
+  $("pos_pasta").textContent = MONTADO.pasta;
+  $("pos_abrir").href = MONTADO.link;
 }
 
 </script>
