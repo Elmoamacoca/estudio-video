@@ -9235,7 +9235,9 @@ function nomeDoServico(v) { return fichaDoServico(v).r; }
 
 async function lerIA() {
   if (IA_LIDA) return;
-  if (!EDIT_RAIZ) { desenhaCfgIA(); return; }
+  // SEM A PASTA LIBERADA A TELA AINDA PRECISA SE PINTAR, com o padrão e com a conta
+  // zerada. Caixa vazia sem explicação parece tela quebrada.
+  if (!EDIT_RAIZ) { desenhaCfgIA(); desenhaUsoDaIA(); return; }
   try {
     const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
     const d = JSON.parse(await f.text());
