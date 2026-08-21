@@ -88,6 +88,92 @@ def main() -> int:
             primeira = [l for l in (r.stderr or "").splitlines() if "Error" in l]
             erros.append(f"tela.js: {primeira[0] if primeira else 'sintaxe invalida'}")
 
+    # O NOME PERDIDO DA TELA, que a sintaxe nao pega.
+    #
+    # E' o mesmo defeito do bloco de cima, do outro lado: em 20/08/2026 tres reescritas
+    # seguidas do passo 3 apagaram estado que outra funcao ainda citava (`CAIXAS`,
+    # `TIQUE`, `LEG`, `RETOMAR`). O `node --check` passou nas quatro, porque a gramatica
+    # estava certa, e o erro so' apareceu quando o Gabriel abriu uma leva: a oficina
+    # entrava sem galeria e sem o cartao de liberar a pasta.
+    if tela.exists():
+        try:
+            import nomes
+            perdidos = nomes.soltos(tela)
+            if perdidos:
+                erros.append("tela.js: nome usado e nunca declarado: "
+                             + ", ".join(perdidos))
+        except ImportError:
+            pass          # ganho, e nao exigencia: sem o `nomes.py` a trava so' nao roda
+        except Exception as e:
+            erros.append(f"nomes.py: {type(e).__name__}: {e}")
+
+    # E OS ELEMENTOS QUE A TELA PEDE E A PAGINA NAO TEM. `$("x")` de um id que nao existe
+    # devolve nulo, e a linha seguinte estoura do mesmo jeito.
+    indice = pathlib.Path(__file__).parent / "index.html"
+    if tela.exists() and indice.exists():
+        import re
+        ids = set(re.findall(r'id="([^"]+)"', indice.read_text(encoding="utf-8")))
+        js = tela.read_text(encoding="utf-8")
+        faltam = sorted({p for p in re.findall(r'\$\("([A-Za-z0-9_]+)"\)', js)
+                         if p not in ids})
+        if faltam:
+            erros.append("tela.js pede id que a pagina nao tem: " + ", ".join(faltam))
+
+    # E O `hidden` QUE NAO ESCONDE, que e' o erro mais caro dos tres.
+    #
+    # O QUE ACONTECEU EM 21/08/2026: a janela da chave nascia aberta na tela do Gabriel e
+    # nao fechava com nada. Clicar no X punha `hidden` no elemento, e `hidden` nao fazia
+    # efeito, porque `.pop{display:flex}` e' regra do autor e vence `[hidden]{display:none}`
+    # do navegador POR ORIGEM, e nao por especificidade. O painel estava sempre la', e nao
+    # havia como fechar o que nunca tinha aberto.
+    #
+    # A CASA JA' SABIA DISSO: ha' vinte regras `.alguma-coisa[hidden]{display:none}` nesta
+    # folha, escritas exatamente por este motivo. O que faltava era alguem conferindo, em
+    # vez de cada um lembrar.
+    #
+    # POR QUE A MINHA PROVA NAO PEGOU: eu li o ATRIBUTO (`el.hidden`), que mudava certinho,
+    # e nunca li o `display` que a tela aplica de verdade. Conferir a intencao em vez do
+    # resultado e' o mesmo que nao conferir.
+    folha = pathlib.Path(__file__).parent / "estilo.css"
+    if indice.exists() and folha.exists():
+        import re
+        pagina = indice.read_text(encoding="utf-8")
+        css = folha.read_text(encoding="utf-8")
+        # A CONTA E' POR ELEMENTO, E NAO POR CLASSE SOLTA, e isto e' conserto de um
+        # alarme falso da primeira versao desta trava. Um elemento costuma ter mais de uma
+        # classe: `<div class="caixa apl-obra" hidden>` esconde direito, porque
+        # `.apl-obra[hidden]` existe, mesmo que `.caixa` mande em `display` e nao tenha
+        # regra propria. So' e' defeito quando NENHUM dos nomes do elemento, classe ou id,
+        # devolve o comando ao `hidden`.
+        # SO' A REGRA SIMPLES CONTA, quer dizer, aquela cujo seletor e' o proprio nome e
+        # mais nada. `.cfg-duas > .caixa{display:flex}` tambem venceria o `hidden`, mas so'
+        # dentro daquele pai; contar essas encheria a conferencia de alarme falso, e
+        # conferencia que grita a toa e' conferencia que ninguem le'.
+        def manda_em_display(nome):
+            return re.search(r"(?:^|[};])\s*%s\s*\{[^{}]*display\s*:"
+                             % re.escape(nome), css, re.M)
+
+        def devolve_ao_hidden(nome):
+            return re.search(r"%s(?![\w-])\[hidden\]" % re.escape(nome), css)
+
+        # `aria-hidden` NAO E' `hidden`, e confundir os dois foi o primeiro alarme falso
+        # desta trava: ela acusou tres svg de enfeite que nunca estiveram escondidos.
+        cegas = []
+        for tag in re.findall(r"<[a-zA-Z][^>]*(?<![-\w])hidden(?=[\s>=/])[^>]*>", pagina):
+            mc = re.search(r'class="([^"]*)"', tag)
+            mi = re.search(r'id="([^"]*)"', tag)
+            nomes_css = ["." + c for c in (mc.group(1).split() if mc else [])]
+            if mi:
+                nomes_css.append("#" + mi.group(1))
+            if not nomes_css or any(devolve_ao_hidden(n) for n in nomes_css):
+                continue                      # alguem ja' desliga: o elemento esconde
+            culpadas = [n for n in nomes_css if manda_em_display(n)]
+            if culpadas and culpadas[0] not in cegas:
+                cegas.append(culpadas[0])
+        if cegas:
+            erros.append("regra de `display` sem `[hidden]` para desligar, entao o "
+                         "elemento nunca esconde: " + ", ".join(cegas))
+
     for e in erros:
         print("  FALHA:", e)
     print("conferencia:", "tudo passou" if not erros else f"{len(erros)} problema(s)")
