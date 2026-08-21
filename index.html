@@ -4775,6 +4775,7 @@ const DONO = "Elmoamacoca", REPO = "estudio-video";
 const CRU = `https://raw.githubusercontent.com/${DONO}/${REPO}/main`;
 const PONTE = "https://estudio-ponte.gabrieltorres.workers.dev";
 const $ = id => document.getElementById(id);
+let PRONTA = false;                // o arquivo terminou de ser lido?
 const num = n => (n || 0).toLocaleString("pt-BR");
 
 /* ---------------------------------------------------------------- troca de aba
@@ -4802,7 +4803,7 @@ function irPara(chave, empurrar) {
   if (chave !== "editar") document.body.classList.remove("ed-focado");
   // A ABA DE CONFIGURACOES SE PINTA AO SER ABERTA, e nao no carregamento da pagina: ela
   // depende da pasta do Estudio, que so' e' liberada na aba de Edicao.
-  if (chave === "config") { lerIA(); desenhaCfgIA(); }
+  if (chave === "config" && PRONTA) { lerIA(); desenhaCfgIA(); }
   const folha = document.getElementById("faq_folha");
   if (folha && !folha.hidden) {
     folha.hidden = true;
@@ -10069,6 +10070,14 @@ function entrarNaLegenda() {
   $("pos_pasta").textContent = MONTADO.pasta;
   $("pos_abrir").href = MONTADO.link;
 }
+
+/* ---------------------------------------------------------------- o fim da leitura
+
+   DAQUI PARA BAIXO NAO HA' MAIS DECLARACAO NENHUMA, entao a partir desta linha qualquer
+   parte da tela pode ser pintada com seguranca. A aba que ja' estava aberta no endereco
+   se pinta agora, e nao la' no comeco, quando metade do estado ainda nao existia. */
+PRONTA = true;
+if ((location.hash || "").slice(1) === "config") { lerIA(); desenhaCfgIA(); }
 
 </script>
 </body>
