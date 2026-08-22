@@ -13,8 +13,26 @@ import builtins
 import pathlib
 import sys
 
-# QUEM DECIDE CAMINHO E' O `caminhos`, e mais ninguem. Trava do CLAUDE.md da raiz.
-import caminhos
+# ESTE ARQUIVO VIVE EM DOIS MUNDOS, e por isso ele e' a unica excecao a' trava do
+# `caminhos`. Aqui na bancada ele roda dentro de `motor/`, com o `caminhos` ao lado. No
+# acervo ele roda na raiz de um repositorio plano, onde o `caminhos` nao existe e nao deve
+# existir: os seis fluxos do GitHub rodam `python rodada.py` da raiz, e mover programa para
+# subpasta la' quebraria os seis de uma vez.
+#
+# ISTO JA' QUEBROU UMA VEZ, em 22/08/2026, e durou uma publicacao: a arrumacao das pastas
+# poz um `import caminhos` aqui, o arquivo subiu assim, e a esteira passou a estourar em
+# `python conferir.py` antes de varrer qualquer perfil. Se voce mexer neste topo, lembre que
+# metade das vezes que este arquivo abre, ele esta' sozinho.
+try:
+    import caminhos
+    ONDE_ESTA_A_TELA = caminhos.TELA
+    ONDE_ESTA_O_PROGRAMA = caminhos.MOLDE_PROGRAMA
+    ONDE_ESTA_A_FOLHA = caminhos.MOLDE_ESTILO
+except ImportError:
+    AQUI = pathlib.Path(__file__).resolve().parent
+    ONDE_ESTA_A_TELA = AQUI / "index.html"
+    ONDE_ESTA_O_PROGRAMA = AQUI / "tela.js"
+    ONDE_ESTA_A_FOLHA = AQUI / "estilo.css"
 
 PROGRAMAS = ["minerar.py", "rodada.py", "selecionar.py", "atividade.py",
              "baixar.py", "limpar.py", "registro.py", "etiquetar.py",
@@ -83,7 +101,7 @@ def main() -> int:
     # nao uma exigencia de ambiente.
     import shutil
     import subprocess
-    tela = caminhos.MOLDE_PROGRAMA
+    tela = ONDE_ESTA_O_PROGRAMA
     if shutil.which("node") and tela.exists():
         r = subprocess.run(["node", "--check", str(tela)], capture_output=True,
                            text=True, encoding="utf-8", errors="replace")
@@ -112,7 +130,7 @@ def main() -> int:
 
     # E OS ELEMENTOS QUE A TELA PEDE E A PAGINA NAO TEM. `$("x")` de um id que nao existe
     # devolve nulo, e a linha seguinte estoura do mesmo jeito.
-    indice = caminhos.TELA
+    indice = ONDE_ESTA_A_TELA
     if tela.exists() and indice.exists():
         import re
         ids = set(re.findall(r'id="([^"]+)"', indice.read_text(encoding="utf-8")))
@@ -137,7 +155,7 @@ def main() -> int:
     # POR QUE A MINHA PROVA NAO PEGOU: eu li o ATRIBUTO (`el.hidden`), que mudava certinho,
     # e nunca li o `display` que a tela aplica de verdade. Conferir a intencao em vez do
     # resultado e' o mesmo que nao conferir.
-    folha = caminhos.MOLDE_ESTILO
+    folha = ONDE_ESTA_A_FOLHA
     if indice.exists() and folha.exists():
         import re
         pagina = indice.read_text(encoding="utf-8")
