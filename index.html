@@ -9959,7 +9959,7 @@ function abrirJanelaDaChave(i) {
   CH_QUAL = i;
   const c = i >= 0 ? IA.chaves[i] : { servico: "gemini", chave: "", modelo: "" };
   CH_RASCUNHO = { servico: c.servico, chave: c.chave, modelo: c.modelo };
-  $("ch_titulo").textContent = i >= 0 ? `Chave ${i + 1} da fila` : "Acrescentar uma chave";
+  $("ch_titulo").textContent = i >= 0 ? `Chave ${i + 1} da fila` : "Nova chave";
   // SALVAR, E NAO "ACRESCENTAR". "Acrescentar" descreve o que acontece com a lista da
   // tela, e foi por isso que ele clicou dez vezes achando que tinha salvado. O botao tem
   // de dizer o que ele quer que aconteca, que e' a chave ficar guardada.
