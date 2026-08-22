@@ -2363,8 +2363,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .gal-lupa-corpo{flex-direction:column}
   .gal-lupa-tela{height:auto;width:min(260px,70vw);align-self:center}
 }
-
-
 /* ================================================= O AR DA ABA DE CONFIGURAÇÕES
 
    "TEM MUITO TEXTO QUE ESTÁ GRUDADO UM COM O OUTRO." Ele estava certo, e a causa era uma
@@ -2388,8 +2386,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 #aba-config .cfg-campos{gap:16px}
 #aba-config textarea+.nota.mini{margin-top:12px}
 #aba-config .cfg-pe{padding-top:4px;padding-bottom:8px}
-
-
 /* ===================================================== A FILA DE CHAVES DA IA
 
    UMA LINHA POR CHAVE, na ordem em que elas atendem. O número à esquerda é a vez dela; as
@@ -2412,7 +2408,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ia-mover:hover:not(:disabled){color:var(--ink);border-color:var(--ink)}
 .ia-mover:disabled{opacity:.35;cursor:default}
 .ia-mover.perigo:hover{color:#e0574b;border-color:#e0574b}
-
 .ia-selo{flex:0 0 auto;font-size:10.5px;padding:3px 9px;border-radius:999px;
   background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--muted)}
 .ia-selo.boa{background:var(--accent-tint);color:var(--accent)}
@@ -2421,20 +2416,16 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   color:var(--muted)}
 .ia-chave-diz.boa{color:var(--accent)}
 .ia-chave-diz.ruim{color:#e0574b}
-
 .ia-vazia{display:flex;flex-direction:column;gap:7px;padding:20px;border-radius:12px;
   border:1px dashed var(--rule-solid);text-align:center}
 .ia-vazia b{font-size:14px}
 .ia-vazia .nota{margin:0;font-size:12.5px;line-height:1.55}
 .ia-fila-pe{display:flex;align-items:center;gap:12px;margin-top:14px}
 .ia-fila-pe .nota{margin:0}
-
 @media(max-width:760px){
   .ia-chave{flex-wrap:wrap}
   .ia-chave-botoes{margin-left:0}
 }
-
-
 /* ==================================================== A JANELA DA CHAVE DA IA
 
    "NA HORA DE CLICAR EM ACRESCENTAR UMA CHAVE, deve aparecer uma opção de pop-up." Antes,
@@ -2461,7 +2452,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .pop-diz.boa{color:var(--accent)}
 .pop-diz.ruim{color:#e0574b}
 .pop-diz i{font-style:italic}
-
 /* A LINHA DA FILA VIRA RESUMO. Ela mostra o que existe; mexer abre a janela. */
 .ia-chave-corpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
 .ia-chave-topo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -2473,12 +2463,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ia-chave-diz{font-size:12px;line-height:1.5;color:var(--muted);margin-top:2px}
 .ia-chave-botoes{flex:0 0 auto;display:flex;align-items:center;gap:6px;
   align-self:flex-start}
-
 .ch-quantos{font-style:normal;font-weight:400;opacity:.6;margin-left:6px}
 .ch-carregando{display:block;padding:9px 11px;font-size:12.5px;color:var(--muted);
   border:1px solid var(--rule-solid);border-radius:9px;background:var(--paper-2)}
 #ia_back_diz i{font-style:italic}
-
 /* A BARRA DE ROLAGEM DO SELETOR, no desenho que o resto da tela já usa (a mesma da tabela
    e da folha de ajuda). Sem isto, a lista de modelos aparecia com a barra crua do Windows,
    cinza e larga, do lado de um menu escuro. */
@@ -2489,25 +2477,30 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .psel-menu::-webkit-scrollbar-thumb:hover{background:var(--muted)}
 /* E ela quase não precisa aparecer: com o crivo da tarefa a lista fica curta. */
 .cfg-sel .psel-menu{max-height:280px;padding:5px}
-
+/* O GASTO POR EMPRESA. Número grande na frente, barra embaixo, detalhe em cinza. */
+.gasto{display:flex;flex-direction:column;gap:20px}
+.gasto-linha.parada{opacity:.55}
+.gasto-topo{display:flex;align-items:baseline;gap:9px;margin-bottom:9px}
+.gasto-topo b{font-size:14px;flex:0 0 auto}
+.gasto-n{margin-left:auto;font-size:22px;font-weight:700;letter-spacing:-.5px;
+  font-variant-numeric:tabular-nums;line-height:1}
+.gasto-un{font-size:12px;color:var(--muted)}
+.gasto-barra{height:8px;border-radius:99px;background:var(--paper-2);overflow:hidden;
+  border:1px solid var(--rule-solid)}
+.gasto-barra i{display:block;height:100%;border-radius:99px;background:var(--accent);
+  transition:width .35s cubic-bezier(.16,1,.3,1)}
+.gasto-pe{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;font-size:12px;
+  color:var(--muted)}
+.gasto-saldo{margin-left:auto}
+.gasto-saldo i{font-style:italic;opacity:.8}
+@media(max-width:620px){.gasto-saldo{margin-left:0}}
 /* O ESTADO DAS CHAVES, lado a lado. Colunas fixas para dar para comparar de relance, que
    e' o motivo do card existir. */
 .est-cab,.est-linha{display:grid;gap:12px;align-items:center;
   grid-template-columns:22px 130px 150px 84px 96px 1fr}
-.est-cab{padding:0 0 9px;font-size:10.5px;font-weight:700;letter-spacing:.05em;
-  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule-solid)}
-.est-linha{padding:12px 0;border-bottom:1px solid var(--rule-solid);font-size:13px}
-.est-linha:last-child{border-bottom:0}
-.est-n{width:22px;height:22px;display:flex;align-items:center;justify-content:center;
-  border-radius:50%;background:var(--paper-2);border:1px solid var(--rule-solid);
-  font-size:11px;font-weight:700;color:var(--muted)}
-.est-nome{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.est-conta,.est-saldo{color:var(--muted);font-size:12.5px}
-.est-saldo i{font-style:italic;opacity:.75}
 .ia-selo.meio{background:color-mix(in srgb,#e8a33d 18%,transparent);color:#e8a33d}
 @media(max-width:880px){
   .est-cab{display:none}
-  .est-linha{grid-template-columns:22px 1fr;row-gap:6px}
 }
 
 </style>
@@ -4008,25 +4001,25 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <p class="nota mini" id="ia_back_diz"></p>
         </div>
 
-        <!-- O ESTADO DE CADA CHAVE, LADO A LADO, e ele fica ACIMA da fila porque a
-             pergunta que ele traz vem antes de mexer em nada: "opa, o Google Gemini ja'
-             bateu o teto?". Vendo isso, ele decide se precisa acrescentar mais uma chave
-             gratuita, que foi o motivo do pedido. -->
+        <!-- O GASTO, SEPARADO POR EMPRESA. Foi o pedido, com as palavras dele:
+             "controle de gastos, visual, para saber o quanto aquela API já gastou,
+             separado por empresa". Uma faixa por empresa, com o número na frente e a
+             barra comparando uma com a outra, para bater o olho e ver quem está pesando.
+
+             CUIDADO COM FALSO POSITIVO, que ele também pediu: a barra compara as empresas
+             ENTRE SI, e não com um teto. Nenhum dos três publica o saldo por programa, e
+             desenhar uma barra "de quanto falta" seria inventar um número. Quando o
+             serviço manda o saldo na resposta, e o Groq manda, ele aparece escrito ao
+             lado, com o número que veio de lá. -->
         <div class="caixa">
           <div class="cfg-topo">
-            <h3>O estado de cada chave</h3>
+            <h3>Quanto cada empresa já gastou</h3>
             <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia2">Hoje</span></div>
           </div>
-          <div class="est-cab">
-            <span class="est-n"></span><span class="est-nome">Serviço</span>
-            <span>Estado</span><span class="est-conta">Frases</span>
-            <span class="est-conta">Recusas</span><span class="est-saldo">Saldo</span>
-          </div>
-          <div class="est-tabela" id="ia_estado"></div>
-          <p class="nota mini">O estado só muda quando o serviço respondeu de verdade, e o
-            saldo só aparece quando é o próprio serviço que manda o número na resposta. O
-            Groq manda; o Google Gemini não manda. Onde não há número, está escrito que não
-            há, em vez de uma barra estimada que daria segurança falsa.</p>
+          <div class="gasto" id="ia_gasto"></div>
+          <p class="nota mini">A conta é das frases que saíram deste computador hoje, e
+            zera quando o dia vira. A barra compara as empresas entre si; ela não mede
+            quanto falta para o teto, porque nenhum dos serviços publica esse número.</p>
         </div>
 
         <!-- A FILA. "Eu preciso ter um sistema de rotacionamento, caso alguma chave,
@@ -9464,73 +9457,67 @@ function desenhaUsoDaIA() {
 function usoDaChave(c) { return ((IA_USO || {}).chaves || {})[c.id] || {}; }
 function estaEsgotada(c) { return !!usoDaChave(c).esgotada; }
 
-/* O ESTADO DE CADA CHAVE, LADO A LADO.
+/* O GASTO, SEPARADO POR EMPRESA.
 
-   O PEDIDO: "eu conseguir ver qual é o estado que está cada chave, quanto falta ali para
-   bater, porque aí eu já posso colocar mais chaves gratuitas". E junto veio o aviso que
-   manda neste bloco inteiro: "muito cuidado com os falsos positivos".
+   O PEDIDO, com as palavras dele: "controle de gastos, visual, para saber o quanto aquela
+   API já gastou, separado por empresa". E o aviso que manda neste bloco: "muito cuidado
+   com os falsos positivos".
 
-   ENTÃO AQUI NADA É ESTIMADO. O estado só muda quando o serviço respondeu alguma coisa:
-   escreveu, ou recusou por limite. O saldo só aparece quando o próprio serviço mandou o
-   número na resposta, e o Groq manda e o Gemini não. Onde não há número, está escrito que
-   não há, em vez de uma barra inventada que dá segurança falsa.
+   ENTÃO NADA AQUI É ESTIMADO. Cada número é uma frase que saiu deste computador e voltou.
+   A barra compara as empresas ENTRE SI, e não com um teto: nenhum dos três publica quanto
+   resta por programa, e desenhar "quanto falta" seria inventar. Onde o serviço manda o
+   saldo na própria resposta, e o Groq manda, ele aparece com o número que veio de lá. */
 
-   E "NÃO SEI AINDA" NÃO É "NÃO EXISTE". Na primeira versão deste card, chave nunca usada
-   já aparecia com "este serviço não informa o saldo", inclusive a do Groq, que informa.
-   Antes do primeiro pedido não há resposta nenhuma para ler, e dizer que o serviço não
-   informa seria exatamente o falso positivo que ele mandou evitar. */
-function estadoDaChave(c) {
-  const u = usoDaChave(c);
-  if (u.esgotada) return { v: "ruim", r: "Bateu o limite hoje" };
-  if (u.sem_cota && u.recusas_seguidas) return { v: "meio", r: "Foi recusada, descansando" };
-  if (u.pedidos && u.erros && !u.ultimo_acerto) return { v: "ruim", r: "Deu erro" };
-  if (u.ultimo_acerto) return { v: "boa", r: "Respondendo" };
-  if (u.pedidos) return { v: "meio", r: "Usada, sem acerto ainda" };
-  return { v: "", r: "Ainda não usada" };
-}
+function usoDaChave(c) { return ((IA_USO || {}).chaves || {})[c.id] || {}; }
+function estaEsgotada(c) { return !!usoDaChave(c).esgotada; }
 
 function saldoDaChave(c) {
   const l = (usoDaChave(c).limites) || {};
   if (l.restam_pedidos && l.teto_pedidos) {
-    return `${num(Number(l.restam_pedidos))} de ${num(Number(l.teto_pedidos))} pedidos`
-      + (l.zera_pedidos ? `, zera em ${l.zera_pedidos}` : "");
+    return `${num(Number(l.restam_pedidos))} de ${num(Number(l.teto_pedidos))} restando`;
   }
-  if (l.restam_pedidos) return `${num(Number(l.restam_pedidos))} pedidos restando`;
+  if (l.restam_pedidos) return `${num(Number(l.restam_pedidos))} restando`;
   return null;
 }
 
-function desenhaEstadoDasChaves() {
-  const alvo = $("ia_estado");
+function desenhaGastoPorEmpresa() {
+  const alvo = $("ia_gasto");
   if (!IA.chaves.length) {
     alvo.innerHTML = '<p class="nota mini">Nenhuma chave na fila ainda.</p>';
     return;
   }
-  alvo.innerHTML = IA.chaves.map((c, i) => {
-    const u = usoDaChave(c), e = estadoDaChave(c), saldo = saldoDaChave(c);
-    return `<div class="est-linha">
-      <span class="est-n">${i + 1}</span>
-      <span class="est-nome">${escapa(nomeDoServico(c.servico))}</span>
-      <span class="ia-selo ${e.v}">${escapa(e.r)}</span>
-      <span class="est-conta">${u.pedidos ? num(u.pedidos) + " hoje" : "—"}</span>
-      <span class="est-conta">${u.sem_cota ? num(u.sem_cota) + " recusadas" : "—"}</span>
-      <span class="est-saldo">${saldo ? escapa(saldo)
-        : u.pedidos ? '<i>este serviço não informa o saldo</i>'
-        : '<i>ainda não dá para saber</i>'}</span>
+  // junta as chaves da mesma empresa
+  const porEmpresa = new Map();
+  for (const c of IA.chaves) {
+    const u = usoDaChave(c);
+    const e = porEmpresa.get(c.servico) || { frases: 0, recusas: 0, chaves: [], dePe: 0 };
+    e.frases += Number(u.pedidos || 0) - Number(u.sem_cota || 0) - Number(u.erros || 0);
+    e.recusas += Number(u.sem_cota || 0);
+    e.chaves.push(c);
+    if (!estaEsgotada(c)) e.dePe++;
+    porEmpresa.set(c.servico, e);
+  }
+  const maior = Math.max(1, ...[...porEmpresa.values()].map(e => e.frases));
+
+  alvo.innerHTML = [...porEmpresa.entries()].map(([servico, e]) => {
+    const largura = Math.round(Math.max(e.frases > 0 ? 4 : 0, e.frases / maior * 100));
+    const saldos = e.chaves.map(saldoDaChave).filter(Boolean);
+    return `<div class="gasto-linha${e.dePe ? "" : " parada"}">
+      <div class="gasto-topo">
+        <b>${escapa(nomeDoServico(servico))}</b>
+        <span class="gasto-n">${num(Math.max(0, e.frases))}</span>
+        <span class="gasto-un">${e.frases === 1 ? "frase" : "frases"}</span>
+      </div>
+      <div class="gasto-barra"><i style="width:${largura}%"></i></div>
+      <div class="gasto-pe">
+        <span>${e.chaves.length} ${e.chaves.length === 1 ? "chave" : "chaves"}, `
+      + `${e.dePe} de pé</span>
+        <span>${e.recusas ? num(e.recusas) + " recusadas por limite" : "nenhuma recusa"}</span>
+        <span class="gasto-saldo">${saldos.length ? escapa(saldos.join(" · "))
+          : "<i>este serviço não publica o saldo</i>"}</span>
+      </div>
     </div>`;
   }).join("");
-}
-
-/* ------------------------------------------------ a fila desenhada
-
-   CADA LINHA AQUI SÓ MOSTRA. Antes ela carregava três campos soltos dentro dela, serviço,
-   chave e modelo, e ficava apertada: "está tudo minúsculo, tudo esquisito, tudo bugado.
-   Na hora de clicar em acrescentar uma chave, deve aparecer uma opção de pop-up". Então a
-   linha virou o resumo do que existe, e mexer numa chave abre a janela. */
-
-function pontinhos(chave) {
-  const c = String(chave || "");
-  if (c.length <= 10) return "•".repeat(Math.max(4, c.length));
-  return c.slice(0, 4) + "••••••" + c.slice(-4);
 }
 
 function desenhaCfgIA() {
@@ -9547,7 +9534,7 @@ function desenhaCfgIA() {
       + '<b>aistudio.google.com</b>, a do Groq em <b>console.groq.com</b> e a do '
       + 'OpenRouter em <b>openrouter.ai</b>.</span></div>';
     $("ia_fila_diz").textContent = "";
-    desenhaEstadoDasChaves();
+    desenhaGastoPorEmpresa();
     desenhaUsoDaIA();
     return;
   }
@@ -9583,7 +9570,7 @@ function desenhaCfgIA() {
     </div>`;
   }).join("");
 
-  desenhaEstadoDasChaves();
+  desenhaGastoPorEmpresa();
   const vivas = IA.chaves.filter(c => !estaEsgotada(c)).length;
   $("ia_fila_diz").textContent = vivas === IA.chaves.length
     ? "A fila inteira está de pé."
@@ -9866,39 +9853,33 @@ async function imagemDeProva(frase) {
 }
 
 /** Uma chamada à IA, no formato que cada serviço pede. É o mesmo do `oficina.py`. */
-/* ORÇAMENTO DE FICHAS, E POR QUE ELE MUDOU.
+/* O TETO DE FICHAS, e nada mais que isso.
 
-   O QUE ACONTECEU: o Gabriel provou a chave e recebeu "o serviço respondeu sem texto
-   (motivo: MAX_TOKENS)". A chave estava boa e o modelo estava vivo. O que faltou foi
-   orçamento: os modelos Gemini de hoje PENSAM antes de responder, e esse pensamento gasta
-   as mesmas fichas da resposta. Com o teto em 200, ele pensava, batia no teto e devolvia o
-   quadro vazio, sem nunca chegar a escrever a frase.
+   ELE ERA 200, e por isso o Gabriel recebia "sem texto (motivo: MAX_TOKENS)": o modelo não
+   cabia dentro do orçamento e devolvia o quadro vazio. Subir o teto não muda como a IA
+   trabalha, muda só o quanto ela pode escrever antes de ser cortada.
 
-   DUAS COISAS CONSERTAM: `thinkingBudget: 0` desliga o pensamento, que aqui não serve para
-   nada (reescrever uma manchete de uma linha não pede raciocínio longo), e o teto sobe
-   para 2048, que é folga de sobra para uma frase. Se ainda assim voltar sem texto, há uma
-   segunda tentativa sem o `thinkingConfig` e com o teto maior, porque modelo antigo não
-   entende esse campo. */
-const TETO_DE_FICHAS = 2048;
+   E NADA ALÉM DISSO. Eu tinha acrescentado um campo que desligava o raciocínio do modelo,
+   e ele cortou na hora: "deixa a IA gratuita funcionar normal". Estava certo: mexer no
+   funcionamento dela para caber num teto meu é consertar o lado errado. O teto é meu, o
+   jeito de trabalhar é dela. */
+const TETO_DE_FICHAS = 4096;
 
-function corpoDoPedido(servico, modelo, prompt, b64, semPensar) {
+function corpoDoPedido(servico, modelo, prompt, b64) {
   if (servico === "gemini") {
     const partes = [{ text: prompt }];
     if (b64) partes.push({ inline_data: { mime_type: "image/png", data: b64 } });
-    const cfg = { temperature: 0.9, maxOutputTokens: semPensar ? TETO_DE_FICHAS
-                                                               : TETO_DE_FICHAS * 2 };
-    if (semPensar) cfg.thinkingConfig = { thinkingBudget: 0 };
-    return { contents: [{ parts: partes }], generationConfig: cfg };
+    return { contents: [{ parts: partes }],
+             generationConfig: { temperature: 0.9, maxOutputTokens: TETO_DE_FICHAS } };
   }
   const conteudo = [{ type: "text", text: prompt }];
   if (b64) conteudo.push({ type: "image_url",
                            image_url: { url: "data:image/png;base64," + b64 } });
-  return { model: modelo, temperature: 0.9,
-           max_tokens: semPensar ? TETO_DE_FICHAS : TETO_DE_FICHAS * 2,
+  return { model: modelo, temperature: 0.9, max_tokens: TETO_DE_FICHAS,
            messages: [{ role: "user", content: conteudo }] };
 }
 
-async function chamarIA(servico, chave, modelo, prompt, b64, semPensar = true) {
+async function chamarIA(servico, chave, modelo, prompt, b64) {
   const ficha = fichaDoServico(servico);
   modelo = modelo || ficha.modelo;
   let url;
@@ -9911,7 +9892,7 @@ async function chamarIA(servico, chave, modelo, prompt, b64, semPensar = true) {
                              : "https://openrouter.ai/api/v1/chat/completions";
     cabeca.Authorization = "Bearer " + chave;
   }
-  const corpo = corpoDoPedido(servico, modelo, prompt, b64, semPensar);
+  const corpo = corpoDoPedido(servico, modelo, prompt, b64);
   let r;
   try {
     r = await fetch(url, { method: "POST", headers: cabeca, body: JSON.stringify(corpo) });
@@ -9930,9 +9911,6 @@ async function chamarIA(servico, chave, modelo, prompt, b64, semPensar = true) {
       const d = JSON.parse(txt);
       dito = (d.error && (d.error.message || d.error.code)) || d.message || "";
     } catch (e) { dito = txt.slice(0, 200); }
-    if (semPensar && /thinking|thought/i.test(dito)) {
-      return chamarIA(servico, chave, modelo, prompt, b64, false);
-    }
     if (r.status === 429 || r.status === 402) {
       throw new Error("Esta chave bateu o limite. O serviço disse: " + dito);
     }
@@ -9946,10 +9924,6 @@ async function chamarIA(servico, chave, modelo, prompt, b64, semPensar = true) {
   if (!dito) {
     const razao = String(d.candidates?.[0]?.finishReason
                          || d.choices?.[0]?.finish_reason || "");
-    // SEGUNDA E ÚLTIMA TENTATIVA, sem o campo de desligar o pensamento e com o dobro do
-    // teto. Modelo antigo não entende `thinkingConfig` e simplesmente o ignora, e aí a
-    // única saída é dar orçamento suficiente para pensar E escrever.
-    if (semPensar) return chamarIA(servico, chave, modelo, prompt, b64, false);
     throw new Error("O serviço respondeu sem texto"
       + (razao ? ` (motivo: ${razao})` : "") + ". Tente outro modelo da lista.");
   }
