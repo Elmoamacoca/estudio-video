@@ -9636,6 +9636,7 @@ $("ia_guardar").onclick = async () => {
 
 let CH_QUAL = -1;
 let CH_RASCUNHO = null;
+let CH_DE_RESERVA = true;
 
 function abrirJanelaDaChave(i) {
   CH_QUAL = i;
@@ -9672,7 +9673,11 @@ function desenhaOndePegar() {
 async function encherModelos() {
   const alvo = $("ch_modelo");
   alvo.innerHTML = '<span class="ch-carregando">Buscando os modelos...</span>';
-  const lista = await modelosDe(CH_RASCUNHO.servico, $("ch_chave").value.trim());
+  const chave = $("ch_chave").value.trim();
+  const lista = await modelosDe(CH_RASCUNHO.servico, chave);
+  // A LISTA DE RESERVA É PALPITE MEU; a do catálogo é a verdade daquela chave. Guardar
+  // qual delas está na tela permite conferir antes de gravar.
+  CH_DE_RESERVA = !MODELOS_JA_BUSCADOS.has(CH_RASCUNHO.servico + "|" + chave);
   const atual = lista.some(m => m.v === CH_RASCUNHO.modelo)
     ? CH_RASCUNHO.modelo : lista[0].v;
   CH_RASCUNHO.modelo = atual;
@@ -9706,12 +9711,22 @@ const leJanela = () => ({
   modelo: CH_RASCUNHO.modelo || "",
 });
 
-$("ch_ok").onclick = () => {
+$("ch_ok").onclick = async () => {
   const d = leJanela();
   if (!d.chave) {
     $("ch_diz").className = "pop-diz ruim";
     $("ch_diz").textContent = "Falta colar a chave.";
     return;
+  }
+  // COLOU E CLICOU NO MESMO SEGUNDO: a lista ainda era a de reserva, e ele gravaria um
+  // modelo que eu escrevi em vez de um que a chave dele tem. Busca o catálogo antes.
+  if (CH_DE_RESERVA) {
+    $("ch_diz").className = "pop-diz";
+    $("ch_diz").textContent = "Conferindo os modelos desta chave...";
+    clearTimeout(CH_ESPERA);
+    await encherModelos();
+    d.modelo = CH_RASCUNHO.modelo || "";
+    $("ch_diz").textContent = "";
   }
   if (CH_QUAL >= 0) Object.assign(IA.chaves[CH_QUAL], d);
   else IA.chaves.push(Object.assign({ id: novaChaveId() }, d));
