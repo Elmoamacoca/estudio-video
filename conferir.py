@@ -28,11 +28,16 @@ try:
     ONDE_ESTA_A_TELA = caminhos.TELA
     ONDE_ESTA_O_PROGRAMA = caminhos.MOLDE_PROGRAMA
     ONDE_ESTA_A_FOLHA = caminhos.MOLDE_ESTILO
+    # AS PECAS DE QUE A TELA NASCE. So' existem na bancada: no acervo o `index.html` ja'
+    # chega montado, e comparar data la' nao quer dizer nada.
+    PECAS_DA_TELA = [caminhos.MOLDE_PROGRAMA, caminhos.MOLDE_CORPO,
+                     caminhos.MOLDE_ESTILO] + sorted(caminhos.PECAS.glob("*"))
 except ImportError:
     AQUI = pathlib.Path(__file__).resolve().parent
     ONDE_ESTA_A_TELA = AQUI / "index.html"
     ONDE_ESTA_O_PROGRAMA = AQUI / "tela.js"
     ONDE_ESTA_A_FOLHA = AQUI / "estilo.css"
+    PECAS_DA_TELA = []
 
 PROGRAMAS = ["minerar.py", "rodada.py", "selecionar.py", "atividade.py",
              "baixar.py", "limpar.py", "registro.py", "etiquetar.py",
@@ -194,6 +199,21 @@ def main() -> int:
         if cegas:
             erros.append("regra de `display` sem `[hidden]` para desligar, entao o "
                          "elemento nunca esconde: " + ", ".join(cegas))
+
+    # A TELA MONTADA TEM DE SER MAIS NOVA QUE AS PECAS DELA. Trava 4 do CLAUDE.md.
+    #
+    # POR QUE ESTA CONFERENCIA GANHOU ISTO. A trava ja' era vigiada em tres lugares: o
+    # posto avisa, o `ver.py` se recusa a fotografar e o `provar.py` reprova. Faltava
+    # justamente o caminho da PUBLICACAO: o `publicar.py` chama esta conferencia e mais
+    # nada, entao mexer no `tela.js` e publicar sem montar subia a tela da semana passada
+    # com tudo verde. E' o pior tipo de erro daqui, porque nada reclama.
+    if PECAS_DA_TELA and ONDE_ESTA_A_TELA.exists():
+        montada = ONDE_ESTA_A_TELA.stat().st_mtime
+        velhas = [p.name for p in PECAS_DA_TELA
+                  if p.is_file() and p.stat().st_mtime > montada]
+        if velhas:
+            erros.append("a tela montada e' mais velha que " + ", ".join(velhas)
+                         + ". Rode `python montar.py` antes de publicar.")
 
     for e in erros:
         print("  FALHA:", e)
