@@ -778,6 +778,9 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 .pf-retrato .pcard-avatar{width:100%;height:100%;font-size:22px;border-width:2px}
 
 .pf-gal-cab .sel-gatilho{height:30px;border-radius:8px;padding:0 10px;font-size:12.5px}
+/* Botão escondido é botão escondido, e `.acao` pinta display por conta própria. */
+#ia_liberar[hidden]{display:none}
+
 /* A BARRA DO ENDERECO ERRADO. Ela empurra a pagina para baixo em vez de flutuar por
    cima: barra flutuante tapa o cabecalho, e o que ela tem a dizer nao e' urgente a ponto
    de valer esconder o menu. */
@@ -9736,7 +9739,10 @@ function desenhaCfgIA() {
   // toa exatamente na tela em que ele já brigou três vezes.
   $("ia_selo_pasta").textContent = POSTO_DE_PE ? "Gravando no disco"
     : EDIT_RAIZ ? "Pasta liberada" : "Posto fora do ar";
-  $("ia_liberar").hidden = !!EDIT_RAIZ;
+  // BOTAO QUE NAO TEM O QUE FAZER SAI DA TELA. Com o posto de pé não há pasta a liberar, e
+  // um botão inútil ao lado do texto que diz "não há pasta a liberar" é convite a pensar
+  // que faltou clicar nele. Sobrou clique a menos, e não a mais, nesta tela.
+  $("ia_liberar").hidden = !!POSTO_DE_PE || !!EDIT_RAIZ;
   $("ia_prompt").value = IA.prompt || IA_PROMPT_PADRAO;
 
   if (!IA.chaves.length) {
