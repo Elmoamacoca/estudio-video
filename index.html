@@ -8003,6 +8003,10 @@ async function mostrarPecas() {
     // `recortes/leva-N` já existe com a ficha dentro, esta leva foi recortada, e isso
     // vale mesmo que a página tenha sido fechada e reaberta no dia seguinte.
     await procurarRecortes();
+    // E SE ESTA LEVA JA' FOI MONTADA, o disco e' quem sabe. Sem isto o `MONTADO`
+    // nascia nulo depois de um F5, e o passo 4 ficava trancado com as 107 pecas
+    // montadas na pasta ao lado. Ver a nota em `procurarMontagem`.
+    await procurarMontagem();
     desenhaPecas();
     // AS PEÇAS CHEGARAM: se havia rascunho esperando por elas, agora ele pode abrir.
     await tentarRetomar();
@@ -8442,11 +8446,22 @@ async function procurarRecortes() {
    abrir a pasta e seguir para o template. */
 function desenhaRecortado() {
   const tem = !!RECORTADO;
+  /* RECORTE PELA METADE NAO E' RECORTE PRONTO.
+
+     O botao de recortar sumia assim que existisse UM recorte na pasta. Se doze das 107
+     tivessem falhado, a tela dizia "95 recortes prontos", escondia o botao, e nao havia
+     mais como pedir as doze que faltaram: as pecas iam para a montagem sem elas, e ele
+     so' descobriria contando os arquivos no fim. */
+  const faltam = tem ? Math.max(0, EDIT_PECAS.length - RECORTADO.pecas) : 0;
   const r2 = $("ed_r2");
   if (r2) r2.textContent = tem
     ? num(RECORTADO.pecas) + (RECORTADO.pecas === 1 ? " recorte pronto" : " recortes prontos")
+      + (faltam ? `, ${num(faltam)} sem recorte` : "")
     : "o B-roll de cada vídeo";
-  $("rec_aplicar").hidden = tem;
+  $("rec_aplicar").hidden = tem && !faltam;
+  if (faltam) {
+    $("rec_aplicar").textContent = `Recortar as ${num(faltam)} que faltaram`;
+  }
   $("rec_feito").hidden = !tem;
   if (!tem) return;
   $("rec_resumo").innerHTML = "<b>" + num(RECORTADO.pecas) + "</b> "
@@ -8530,14 +8545,35 @@ async function olharORecorte() {
   $("rec_obra_tempo").textContent = seg < 60 ? seg + "s"
     : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
 
+  /* A RODA NAO PODE GIRAR PARA SEMPRE. E' a terceira e ultima copia desta nota; as
+     outras duas estao em `olharAEscrita` e `olharAObra`, e valem igual aqui: quem
+     recorta e' o `oficina.py`, entao perder o contato nao quer dizer que parou. Avisa,
+     segue tentando, e desiste depois de tres minutos mudos. */
+  const semContato = (porque) => {
+    REC_OBRA.mudo = (REC_OBRA.mudo || 0) + 1;
+    if (REC_OBRA.mudo * 3 < 25) return;
+    if (REC_OBRA.mudo * 3 >= 180) {
+      const viu = REC_OBRA.jaViu;
+      return pararORecorte(viu
+        ? "perdi o contato com o programa no meio do recorte. Recarregue a página (F5): o que ele já recortou está na pasta."
+        : "o programa deste computador não pegou o pedido em três minutos. Confira se a tarefa Estúdio - montar edições está ligada.");
+    }
+    $("rec_obra_txt").textContent = "sem contato com o programa";
+    $("rec_obra_nota").textContent = porque + " Continuo tentando; o recorte pode estar acontecendo mesmo assim.";
+  };
+
   const p = await pastaDo("pedidos", false);
-  if (!p) return;
+  if (!p) return semContato("A pasta do Estúdio não está liberada nesta aba.");
   let d = null;
   try {
     const f = await (await p.getFileHandle(REC_OBRA.id + ".andamento.json")).getFile();
     d = JSON.parse(await f.text());
-  } catch (e) { return; }
-  if (!d) return;
+  } catch (e) {
+    return semContato("Não consegui ler o andamento: " + (e.message || e) + ".");
+  }
+  if (!d) return semContato("O programa ainda não pegou o pedido.");
+  REC_OBRA.mudo = 0;
+  REC_OBRA.jaViu = true;
 
   if (d.erro) return pararORecorte("não deu: " + d.erro);
   const feitos = d.feitos || 0, total = d.total || REC_OBRA.total;
@@ -8558,8 +8594,13 @@ async function olharORecorte() {
   $("rec_obra_txt").textContent = feitos
     + (feitos === 1 ? " recorte pronto" : " recortes prontos")
     + (d.falhas ? ", " + d.falhas + " falharam" : "");
+  // A CONTA TEM DE FECHAR, E "NAO CONSEGUI OLHAR" NAO E' "TELA CHEIA". O programa passou
+  // a separar os dois; aqui a tela mostra os tres, para o numero do meio parar de
+  // engordar com peca que ninguem conseguiu medir.
+  const cegas = Number(d.cegas || 0);
   $("rec_mistura").innerHTML = "<b>" + cards + "</b> com card, <b>"
-    + Math.max(0, feitos - cards) + "</b> de tela cheia.";
+    + Math.max(0, feitos - cards - cegas) + "</b> de tela cheia"
+    + (cegas ? ", <b>" + cegas + "</b> que não consegui medir" : "") + ".";
   await procurarRecortes();
   desenhaRecortado();
   const link = RECORTADO ? RECORTADO.link : "#";
@@ -11534,8 +11575,44 @@ function pararDeOlhar(cheia) {
    passo assim mesmo: "o passo quatro você deixa lá só pra ter esse passo, mas agora a IA
    vai fazendo essa etapa, que é a fase três". */
 
-function entrarNaLegenda() {
-  if (!MONTADO) return;
+/* PROCURA NO DISCO SE ESTA LEVA JA' FOI MONTADA, e e' o disco quem responde.
+
+   O `MONTADO` so' existia na memoria desta aba: recarregar a pagina depois de montar
+   107 pecas trazia o passo 4 dizendo "0 pecas montadas", com as 107 na pasta ao lado.
+   Zero e' um numero, e numero na tela e' medido, nao deduzido. Trava 2 do CLAUDE.md. */
+async function procurarMontagem() {
+  if (!EDIT_LEVA || !EDIT_RAIZ) return;
+  const raiz = await pastaDo("edicoes", false);
+  if (!raiz) return;
+  // O MESMO FORMATO DO `nomeLivre` E DO `abrir.py`: leva-N, leva-N (2), leva-N (3).
+  const base = `leva-${EDIT_LEVA.numero}`;
+  let achada = null;
+  for (let n = 1; n <= 99; n++) {
+    const nome = n === 1 ? base : `${base} (${n})`;
+    let pasta = null;
+    try { pasta = await raiz.getDirectoryHandle(nome); }
+    catch (e) { break; }                 // acabou a sequencia
+    let quantas = 0;
+    for await (const [x, h] of pasta.entries()) {
+      if (h.kind === "file" && x.toLowerCase().endsWith(".mp4")) quantas++;
+    }
+    if (quantas) achada = { pecas: quantas, pasta: nome, n };
+  }
+  if (!achada) return;
+  MONTADO = { pecas: achada.pecas, pasta: achada.pasta,
+              link: `estudio://edicao/${EDIT_LEVA.numero}`
+                    + (achada.n > 1 ? `-${achada.n}` : "") };
+}
+
+async function entrarNaLegenda() {
+  if (!MONTADO) await procurarMontagem();
+  if (!MONTADO) {
+    // NAO SEI NAO E' ZERO. Ver a nota em `procurarMontagem`.
+    $("pos_n").textContent = "—";
+    $("pos_pasta").textContent = "Não achei nenhuma montagem desta leva na pasta de edições. Se você montou, confira se a pasta do Estúdio está liberada nesta aba.";
+    $("pos_abrir").href = "#";
+    return;
+  }
   $("pos_n").textContent = num(MONTADO.pecas);
   $("pos_pasta").textContent = MONTADO.pasta;
   $("pos_abrir").href = MONTADO.link;
