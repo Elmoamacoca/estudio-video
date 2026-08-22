@@ -128,6 +128,18 @@ def main() -> int:
             if perdidos:
                 erros.append("tela.js: nome usado e nunca declarado: "
                              + ", ".join(perdidos))
+            # E A FUNCAO CHAMADA QUE NINGUEM ESCREVEU, que e' a metade que faltava.
+            #
+            # ISTO CUSTOU A FERRAMENTA INTEIRA, e em silencio. So' o nome em MAIUSCULA era
+            # vigiado, porque a regra da casa diz que e' la' que mora o estado da tela. O
+            # botao Montar, que e' o ultimo passo do sistema, chamava `nomeLivre(...)`, uma
+            # funcao que nunca foi escrita: nome minusculo, passou por aqui todas as vezes.
+            # Toda montagem estourava na primeira linha. O disco contava: 292 recortes
+            # prontos e a pasta `edicoes` vazia, sem um unico arquivo.
+            sem_dono = nomes.funcoes_soltas(tela)
+            if sem_dono:
+                erros.append("tela.js: funcao chamada e nunca escrita: "
+                             + ", ".join(sem_dono))
         except ImportError:
             pass          # ganho, e nao exigencia: sem o `nomes.py` a trava so' nao roda
         except Exception as e:
