@@ -9866,28 +9866,52 @@ async function imagemDeProva(frase) {
 }
 
 /** Uma chamada à IA, no formato que cada serviço pede. É o mesmo do `oficina.py`. */
-async function chamarIA(servico, chave, modelo, prompt, b64) {
+/* ORÇAMENTO DE FICHAS, E POR QUE ELE MUDOU.
+
+   O QUE ACONTECEU: o Gabriel provou a chave e recebeu "o serviço respondeu sem texto
+   (motivo: MAX_TOKENS)". A chave estava boa e o modelo estava vivo. O que faltou foi
+   orçamento: os modelos Gemini de hoje PENSAM antes de responder, e esse pensamento gasta
+   as mesmas fichas da resposta. Com o teto em 200, ele pensava, batia no teto e devolvia o
+   quadro vazio, sem nunca chegar a escrever a frase.
+
+   DUAS COISAS CONSERTAM: `thinkingBudget: 0` desliga o pensamento, que aqui não serve para
+   nada (reescrever uma manchete de uma linha não pede raciocínio longo), e o teto sobe
+   para 2048, que é folga de sobra para uma frase. Se ainda assim voltar sem texto, há uma
+   segunda tentativa sem o `thinkingConfig` e com o teto maior, porque modelo antigo não
+   entende esse campo. */
+const TETO_DE_FICHAS = 2048;
+
+function corpoDoPedido(servico, modelo, prompt, b64, semPensar) {
+  if (servico === "gemini") {
+    const partes = [{ text: prompt }];
+    if (b64) partes.push({ inline_data: { mime_type: "image/png", data: b64 } });
+    const cfg = { temperature: 0.9, maxOutputTokens: semPensar ? TETO_DE_FICHAS
+                                                               : TETO_DE_FICHAS * 2 };
+    if (semPensar) cfg.thinkingConfig = { thinkingBudget: 0 };
+    return { contents: [{ parts: partes }], generationConfig: cfg };
+  }
+  const conteudo = [{ type: "text", text: prompt }];
+  if (b64) conteudo.push({ type: "image_url",
+                           image_url: { url: "data:image/png;base64," + b64 } });
+  return { model: modelo, temperature: 0.9,
+           max_tokens: semPensar ? TETO_DE_FICHAS : TETO_DE_FICHAS * 2,
+           messages: [{ role: "user", content: conteudo }] };
+}
+
+async function chamarIA(servico, chave, modelo, prompt, b64, semPensar = true) {
   const ficha = fichaDoServico(servico);
   modelo = modelo || ficha.modelo;
-  let url, corpo;
+  let url;
   const cabeca = { "Content-Type": "application/json" };
   if (servico === "gemini") {
     url = "https://generativelanguage.googleapis.com/v1beta/models/"
       + encodeURIComponent(modelo) + ":generateContent?key=" + encodeURIComponent(chave);
-    const partes = [{ text: prompt }];
-    if (b64) partes.push({ inline_data: { mime_type: "image/png", data: b64 } });
-    corpo = { contents: [{ parts: partes }],
-              generationConfig: { temperature: 0.9, maxOutputTokens: 200 } };
   } else {
     url = servico === "groq" ? "https://api.groq.com/openai/v1/chat/completions"
                              : "https://openrouter.ai/api/v1/chat/completions";
-    const conteudo = [{ type: "text", text: prompt }];
-    if (b64) conteudo.push({ type: "image_url",
-                             image_url: { url: "data:image/png;base64," + b64 } });
-    corpo = { model: modelo, temperature: 0.9, max_tokens: 200,
-              messages: [{ role: "user", content: conteudo }] };
     cabeca.Authorization = "Bearer " + chave;
   }
+  const corpo = corpoDoPedido(servico, modelo, prompt, b64, semPensar);
   let r;
   try {
     r = await fetch(url, { method: "POST", headers: cabeca, body: JSON.stringify(corpo) });
@@ -9906,6 +9930,9 @@ async function chamarIA(servico, chave, modelo, prompt, b64) {
       const d = JSON.parse(txt);
       dito = (d.error && (d.error.message || d.error.code)) || d.message || "";
     } catch (e) { dito = txt.slice(0, 200); }
+    if (semPensar && /thinking|thought/i.test(dito)) {
+      return chamarIA(servico, chave, modelo, prompt, b64, false);
+    }
     if (r.status === 429 || r.status === 402) {
       throw new Error("Esta chave bateu o limite. O serviço disse: " + dito);
     }
@@ -9917,7 +9944,12 @@ async function chamarIA(servico, chave, modelo, prompt, b64) {
     ? d.candidates?.[0]?.content?.parts?.[0]?.text
     : d.choices?.[0]?.message?.content;
   if (!dito) {
-    const razao = d.candidates?.[0]?.finishReason || d.choices?.[0]?.finish_reason || "";
+    const razao = String(d.candidates?.[0]?.finishReason
+                         || d.choices?.[0]?.finish_reason || "");
+    // SEGUNDA E ÚLTIMA TENTATIVA, sem o campo de desligar o pensamento e com o dobro do
+    // teto. Modelo antigo não entende `thinkingConfig` e simplesmente o ignora, e aí a
+    // única saída é dar orçamento suficiente para pensar E escrever.
+    if (semPensar) return chamarIA(servico, chave, modelo, prompt, b64, false);
     throw new Error("O serviço respondeu sem texto"
       + (razao ? ` (motivo: ${razao})` : "") + ". Tente outro modelo da lista.");
   }
