@@ -10014,7 +10014,21 @@ function corpoDoPedido(servico, modelo, prompt, b64) {
            messages: [{ role: "user", content: conteudo }] };
 }
 
-async function chamarIA(servico, chave, modelo, prompt, b64) {
+/* SERVIÇO OCUPADO NÃO É CHAVE RUIM.
+
+   O QUE ELE VIU: "O serviço respondeu 503: This model is currently experiencing high
+   demand. Spikes in demand are usually temporary. Please try again later." A chave estava
+   boa, o modelo estava vivo, e mesmo assim a linha ficou vermelha como se ele tivesse
+   errado alguma coisa. Não errou: os servidores do Google estavam cheios naquele minuto.
+
+   ENTÃO ELE MESMO TENTA DE NOVO, duas vezes, esperando dois e depois seis segundos, que é
+   o tempo em que um pico desses costuma passar. Só se as três tentativas caírem é que o
+   recado aparece, e ele diz o que de fato aconteceu em vez de um número solto. */
+const OCUPADO = /high demand|overload|unavailable|try again later|capacity|busy|temporarily/i;
+const ESPERAS_DO_OCUPADO = [2000, 6000];
+const dormir = ms => new Promise(r => setTimeout(r, ms));
+
+async function chamarIA(servico, chave, modelo, prompt, b64, tentativa = 0) {
   const ficha = fichaDoServico(servico);
   modelo = modelo || ficha.modelo;
   let url;
@@ -10048,6 +10062,14 @@ async function chamarIA(servico, chave, modelo, prompt, b64) {
     } catch (e) { dito = txt.slice(0, 200); }
     if (r.status === 429 || r.status === 402) {
       throw new Error("Esta chave bateu o limite. O serviço disse: " + dito);
+    }
+    if (r.status >= 500 || OCUPADO.test(dito)) {
+      if (tentativa < ESPERAS_DO_OCUPADO.length) {
+        await dormir(ESPERAS_DO_OCUPADO[tentativa]);
+        return chamarIA(servico, chave, modelo, prompt, b64, tentativa + 1);
+      }
+      throw new Error(`O ${nomeDoServico(servico)} está ocupado agora, e isso não é `
+        + `problema da sua chave. Tentei três vezes. Costuma passar em alguns minutos.`);
     }
     throw new Error(`O serviço respondeu ${r.status}: ${dito}`);
   }
