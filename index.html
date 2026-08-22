@@ -9471,7 +9471,12 @@ function estaEsgotada(c) { return !!usoDaChave(c).esgotada; }
    ENTÃO AQUI NADA É ESTIMADO. O estado só muda quando o serviço respondeu alguma coisa:
    escreveu, ou recusou por limite. O saldo só aparece quando o próprio serviço mandou o
    número na resposta, e o Groq manda e o Gemini não. Onde não há número, está escrito que
-   não há, em vez de uma barra inventada que dá segurança falsa. */
+   não há, em vez de uma barra inventada que dá segurança falsa.
+
+   E "NÃO SEI AINDA" NÃO É "NÃO EXISTE". Na primeira versão deste card, chave nunca usada
+   já aparecia com "este serviço não informa o saldo", inclusive a do Groq, que informa.
+   Antes do primeiro pedido não há resposta nenhuma para ler, e dizer que o serviço não
+   informa seria exatamente o falso positivo que ele mandou evitar. */
 function estadoDaChave(c) {
   const u = usoDaChave(c);
   if (u.esgotada) return { v: "ruim", r: "Bateu o limite hoje" };
@@ -9507,7 +9512,8 @@ function desenhaEstadoDasChaves() {
       <span class="est-conta">${u.pedidos ? num(u.pedidos) + " hoje" : "—"}</span>
       <span class="est-conta">${u.sem_cota ? num(u.sem_cota) + " recusadas" : "—"}</span>
       <span class="est-saldo">${saldo ? escapa(saldo)
-        : '<i>este serviço não informa o saldo</i>'}</span>
+        : u.pedidos ? '<i>este serviço não informa o saldo</i>'
+        : '<i>ainda não dá para saber</i>'}</span>
     </div>`;
   }).join("");
 }
