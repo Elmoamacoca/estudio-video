@@ -786,8 +786,13 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 .fora[hidden]{display:none}
 .fora b{font-weight:700}
 .fora span{flex:1 1 380px}
-.fora .acao{flex:0 0 auto;background:#fff;color:var(--accent);border-color:#fff}
-.fora .acao:hover{background:#fff;opacity:.88}
+/* O BOTAO PRECISA DE UM PONTO A MAIS DE FORCA, e nao e' capricho: `.acao.forte` pinta
+   fundo com a cor de destaque, que aqui e' a cor da propria barra, e o botao sumia dentro
+   dela. E como isto e' um link e nao um botao, ele ainda vinha sublinhado e em bloco. */
+.fora .acao.forte{flex:0 0 auto;display:inline-flex;align-items:center;
+  background:#fff;color:var(--accent);border-color:#fff;text-decoration:none;
+  white-space:nowrap}
+.fora .acao.forte:hover{background:#fff;color:var(--accent);filter:none;opacity:.88}
 
 /* O que é desta tela e não veio do Social Tracker.
    Tudo aqui usa as variáveis de lá, para as duas telas envelhecerem juntas. */
