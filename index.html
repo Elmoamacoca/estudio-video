@@ -4866,6 +4866,11 @@ function irPara(chave, empurrar) {
   // A ABA DE CONFIGURACOES SE PINTA AO SER ABERTA, e nao no carregamento da pagina: ela
   // depende da pasta do Estudio, que so' e' liberada na aba de Edicao.
   if (chave === "config" && PRONTA) { retomarPastaEler(); }
+  // A FAIXA DE "ABERTO PELA INTERNET" DEPENDE DA ABA, e trocar de aba aqui usa
+  // `replaceState`, que NAO dispara `hashchange`. Sem esta linha a faixa ficaria
+  // congelada na decisao da primeira aba aberta. O `PRONTA` segura a chamada ate' o
+  // arquivo terminar de ser lido: `EM_CASA` so' nasce la' embaixo.
+  if (PRONTA) cuidarDaFaixaDeFora();
   const folha = document.getElementById("faq_folha");
   if (folha && !folha.hidden) {
     folha.hidden = true;
@@ -7570,10 +7575,35 @@ async function salvarRascunho() {
      dia seguinte voltou para o começo, com tudo perdido. A frase foi certeira: "assim o
      rascunho nem tem serventia, nem faz sentido existir".
 
-     O QUE NÃO PRECISA MAIS SER GUARDADO AQUI: o recorte e o template, porque os dois
-     moram em disco. O recorte é a pasta `recortes/leva-N`, o template é o arquivo dele no
-     acervo. Guardar cópia na memória do navegador seria arriscar duas versões da mesma
-     coisa discordando. */
+     O RECORTE NÃO PRECISA SER GUARDADO AQUI, porque ele mora em disco, na pasta
+     `recortes/leva-N`.
+
+     O DESENHO DO TEMPLATE PRECISA, e até 22/08/2026 não era. O comentário que ficava
+     aqui dizia que o template morava em disco e que guardar cópia seria arriscar duas
+     versões discordando. Só que ele SÓ chega ao disco quando o Gabriel clica em
+     "Guardar no acervo" ou em "Montar": até lá a cor de fundo e as caixas de texto
+     existem apenas na memória desta aba. Ele escolheu a cor, escreveu as caixas, deu F5
+     e voltou para um template preto e vazio. A frase dele, em 22/08/2026: "eu avancei
+     ali da etapa de escolher a cor, de colocar texto. Dou um F5, aquilo não fica salvo".
+
+     AS DUAS VERSÕES CONTINUAM PODENDO DISCORDAR, e por isso vai junto a hora da última
+     mexida na bancada. Quem retoma compara essa hora com a data do arquivo no acervo e
+     fica com a mais nova, em vez de escolher no chute.
+
+     A IMAGEM NÃO ENTRA AQUI, só o nome dela: o arquivo em si já foi para o acervo no
+     instante em que ele a soltou na tela. */
+  /* O DESENHO DA BANCADA SÓ É SUBSTITUÍDO POR OUTRO DESENHO DE VERDADE.
+
+     Enquanto a pasta do Estúdio não é liberada, entrar no passo do template cria uma
+     composição vazia, com identificador novo. Sem esta guarda, essa composição vazia
+     gravaria por cima do desenho que ele tinha feito, e o F5 continuaria apagando tudo,
+     agora por outro caminho. */
+  let desenho = EDIT_RASCUNHO ? (EDIT_RASCUNHO.desenho || null) : null;
+  let desenhoEm = EDIT_RASCUNHO ? (EDIT_RASCUNHO.desenhoEm || 0) : 0;
+  if (TPL && ((TPL.elementos || []).length || !desenho || desenho.id === TPL.id)) {
+    desenho = JSON.parse(JSON.stringify(TPL));
+    desenhoEm = Date.now();
+  }
   const r = {
     id: EDIT_RASCUNHO ? EDIT_RASCUNHO.id : `e${Date.now()}`,
     leva: EDIT_LEVA.numero,
@@ -7590,15 +7620,17 @@ async function salvarRascunho() {
        pedidos de uma cota que tem teto por dia. Perder trabalho é ruim; perder trabalho que
        custa cota é pior, porque não dá para simplesmente refazer na hora.
 
-       SÃO OS DOIS QUE NÃO MORAM NO DISCO. O recorte é arquivo, o template é arquivo, o
-       vídeo é arquivo. Estes dois só existiam na memória desta aba. */
+       O TEMPLATE PASSOU A ENTRAR AQUI TAMBÉM, logo abaixo, pelo mesmo motivo: ele só vai
+       para o disco quando ele manda, e antes disso mora só na memória desta aba. */
     escrito: Object.fromEntries(ESCRITO),
     ajustes: Object.fromEntries(AJUSTES),
     contas: EDIT_LEVA.contas || [],
     pecas: EDIT_PECAS.length,
     passo: EDIT_PASSO,
     sub: TPL_SUB,
-    template: TPL ? TPL.id : null,
+    /* O DESENHO INTEIRO, e não só o nome dele. Ver o comentário lá em cima. */
+    desenho, desenhoEm,
+    template: desenho ? desenho.id : (TPL ? TPL.id : null),
     mexido: Math.floor(Date.now() / 1000),
   };
   if (!EDIT_RASCUNHO) r.aberto = r.mexido;
@@ -8128,7 +8160,13 @@ document.addEventListener("click", async ev => {
   if (!cracha) return;                    // nunca apontou: o cartão pede, não o clique
   JA_PEDIU_A_PASTA = true;
   const h = await pastaValendo(cracha, true);
-  if (h) { EDIT_PASTA = h; if (EDIT_LEVA) await mostrarPecas(); }
+  if (!h) return;
+  // A RAIZ, QUANDO DER. Com o cracha novo isto poe `EDIT_RAIZ` na mao e os passos 2 a 5
+  // passam a funcionar sem mais um clique. Com o cracha velho so' ha' `levas`, e ai' o
+  // passo 1 anda e os outros pedem a pasta certa quando chegar a vez.
+  const { raiz, levas } = await abrirRaiz(h);
+  if (raiz) { EDIT_RAIZ = raiz; EDIT_PASTA = levas; } else { EDIT_PASTA = h; }
+  if (EDIT_LEVA) await mostrarPecas();
 });
 
 desenhaRascunhos();
@@ -8349,8 +8387,24 @@ $("rec_aplicar").onclick = async () => {
   if (!EDIT_LEVA || REC_OBRA || !EDIT_PECAS.length) return;
   $("rec_aplicar").disabled = true;
   try {
-    const pedidos = await pastaDo("pedidos", true);
-    if (!pedidos) throw new Error("a pasta do Estúdio não está liberada");
+    /* SEM SAIDA NAO PODE, e este era um beco.
+
+       O CRACHA VELHO aponta para `Estudio\\levas`, de uma versao em que a tela so' lia
+       video. Com ele, os videos da leva aparecem certinho e o passo 1 inteiro funciona,
+       mas a raiz do Estudio nunca entra na mao e este passo falha sempre com "a pasta
+       nao esta' liberada". O botao de apontar a pasta mora no cartao do passo 1, que a
+       essa altura ja' saiu da tela: ele lia que faltava liberar a pasta, com a pasta
+       liberada e sem nada para clicar. Foi uma tarde dele.
+
+       `pedirPasta` E' QUEM SABE DESFAZER ISSO: ela reconhece o cracha velho e abre a
+       janela de arquivos na pasta certa. Chamada de dentro do clique, ainda tem o gesto
+       do usuario na mao, que e' o que o navegador exige para abrir essa janela. */
+    let pedidos = await pastaDo("pedidos", true);
+    if (!pedidos) {
+      await pedirPasta();
+      pedidos = await pastaDo("pedidos", true);
+    }
+    if (!pedidos) throw new Error("a pasta do Estúdio ainda não está liberada. Aponte a pasta Estudio, a que tem levas, recortes e pedidos dentro.");
     await pastaDo("recortes", true);
     const id = "r" + Date.now();
     const pedido = {
@@ -8896,6 +8950,14 @@ async function desenhaEditor() {
   }
   desenhaCamadas();
   desenhaProps();
+  /* TODA MEXIDA NO TEMPLATE VAI PARA O RASCUNHO, e até 22/08/2026 nenhuma ia.
+
+     Este é o único ponto por onde passam todas elas: trocar a cor de fundo,
+     acrescentar caixa, escrever dentro dela, arrastar, redimensionar e apagar todas
+     terminam aqui. Pendurar a gravação em cada botão daria a mesma coisa com trinta
+     chances de esquecer um. A gravação é adiada em 600 ms, então desenhar dez vezes
+     seguidas durante um arrasto custa uma gravação só. */
+  anotarMexida();
 }
 
 function desenhaCamadas() {
@@ -9277,7 +9339,10 @@ async function pedirEscrita() {
       await w.close();
     }
 
-    IA_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null };
+    IA_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null,
+                // HA' QUANTO TEMPO NAO CONSIGO OLHAR, e se ja' vi andar alguma vez.
+                // Ver a nota dentro de `olharAEscrita`.
+                mudo: 0, jaViu: false };
     $("ia_escrever").disabled = true;
     $("ia_obra").hidden = false;
     $("ia_barra").style.width = "0%";
@@ -9302,11 +9367,44 @@ function cabemAqui(campo) {
   return Math.max(20, Math.round(porLinha * 2.6));    // duas linhas e meia de folga
 }
 
+/* A BOLINHA NAO PODE GIRAR PARA SEMPRE.
+
+   CADA CAMINHO DE ERRO AQUI TERMINAVA EM `return` CALADO: o posto fora do ar, a pasta
+   revogada, o arquivo de andamento ilegivel. O relogio continuava batendo de tres em
+   tres segundos e a tela seguia dizendo que estava escrevendo, sem nunca ter conseguido
+   olhar uma vez sequer. E' a mesma familia do selo verde que nao gravava nada.
+
+   E NAO PODE DESISTIR DEPRESSA TAMBEM. O programa passa na pasta de minuto em minuto,
+   entao os primeiros segundos sem noticia sao normais, e mesmo depois disso o trabalho
+   continua acontecendo do lado de la' ainda que esta tela nao esteja conseguindo olhar:
+   quem escreve e' o `oficina.py`, e nao o navegador. Por isso ela avisa que perdeu o
+   contato, segue tentando, e so' para de girar depois de tres minutos mudos. */
 async function olharAEscrita() {
   if (!IA_OBRA) return;
   const seg = Math.round((Date.now() - IA_OBRA.desde) / 1000);
   $("ia_obra_tempo").textContent = seg < 60 ? seg + "s"
     : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
+
+  const semContato = (porque) => {
+    IA_OBRA.mudo++;
+    if (IA_OBRA.mudo * 3 < 25) return;          // ainda dentro do normal
+    if (IA_OBRA.mudo * 3 >= 180) {
+      clearInterval(IA_OBRA.relogio);
+      const viu = IA_OBRA.jaViu;
+      IA_OBRA = null;
+      document.querySelector("#ia_obra .cfg-girando").style.display = "none";
+      $("ia_escrever").disabled = false;
+      $("ia_obra_txt").textContent = "Perdi o contato com o programa";
+      $("ia_obra_nota").textContent = (viu
+        ? "Ele estava escrevendo e parei de conseguir olhar. O que ele já tinha escrito está guardado. "
+        : "Não consegui olhar nenhuma vez em três minutos. ")
+        + "Recarregue a página (F5): se o trabalho terminou, o texto aparece; se não, peça de novo, que só as peças sem texto são pedidas.";
+      return;
+    }
+    $("ia_obra_txt").textContent = "Sem contato com o programa";
+    $("ia_obra_nota").textContent = porque + " Continuo tentando; o trabalho pode estar acontecendo mesmo assim, porque quem escreve é o programa e não esta tela.";
+  };
+
   let d = null;
   try {
     if (await postoDePe()) {
@@ -9314,12 +9412,18 @@ async function olharAEscrita() {
       d = r.tem ? r.d : null;
     } else {
       const p = await pastaDo("pedidos", false);
-      if (!p) return;
+      if (!p) return semContato("O posto do Estúdio não atende e a pasta não está liberada nesta aba.");
       const f = await (await p.getFileHandle(`${IA_OBRA.id}.andamento.json`)).getFile();
       d = JSON.parse(await f.text());
     }
-  } catch (e) { return; }
-  if (!d) return;
+  } catch (e) {
+    return semContato("Não consegui ler o andamento: " + (e.message || e) + ".");
+  }
+  // ARQUIVO QUE AINDA NAO EXISTE E' O PROGRAMA QUE AINDA NAO PEGOU O PEDIDO, e isso e'
+  // esperado no primeiro minuto. Passa a contar como silencio depois disso.
+  if (!d) return semContato("O programa ainda não pegou o pedido.");
+  IA_OBRA.mudo = 0;
+  IA_OBRA.jaViu = true;
 
   const parar = () => {
     clearInterval(IA_OBRA.relogio);
@@ -9498,6 +9602,14 @@ const IA_PROMPT_PADRAO =
 let IA = { chaves: [], prompt: "" };
 let IA_OBRA = null;
 let IA_USO = null;
+/* TRES ESTADOS TAMBEM AQUI, e nao dois. E' a mesma licao da trava 3 do CLAUDE.md, na
+   conta do dia: "li", "li e nao tinha nada" e "NAO CONSEGUI LER".
+
+   O QUE ACONTECIA ATE' 22/08/2026: quando a leitura falhava, `IA_USO` virava nulo,
+   ninguem aparecia esgotado, e o rodape afirmava "A fila inteira esta' de pe'". Uma
+   afirmacao construida a partir da AUSENCIA de dado, que e' exatamente o falso positivo
+   que ele mandou vigiar: "muito cuidado com os falsos positivos". */
+let USO_LIDO = false;             // false = nao sei o que aconteceu hoje
 let IA_LIDA = false;
 
 function fichaDoServico(v) { return IA_SERVICOS.find(x => x.v === v) || IA_SERVICOS[0]; }
@@ -9681,10 +9793,30 @@ async function lerIA() {
     desenhaUsoDaIA();
     return;
   }
+  /* AQUI TAMBEM SAO TRES ESTADOS, e este caminho ainda tratava dois.
+
+     O `catch` engolia tudo igual: arquivo que nao existe (fila vazia de verdade) e
+     arquivo que nao deu para ler (nao sei o que tem la'). No segundo caso a tela
+     desenhava a fila vazia, marcava que tinha lido, e a proxima gravacao apagava as
+     chaves do disco. E' o mesmo defeito que apagou tres chaves numa auditoria, e que a
+     trava 3 do CLAUDE.md descreve: ele so' estava consertado do lado do posto. */
   try {
     const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
     IA = viraFila(JSON.parse(await f.text()) || {});
-  } catch (e) { /* ainda não há ficha; a fila nasce vazia */ }
+    LEITURA_FALHOU = "";
+  } catch (e) {
+    if (!(e && e.name === "NotFoundError")) {
+      LEITURA_FALHOU = "Não consegui ler o ia.json da pasta liberada: "
+        + (e.message || String(e));
+      IA_LIDA = false;
+      desenhaCfgIA();
+      recadoDaIA("NÃO CONSEGUI LER as chaves que já estão no disco. Não acrescente nem "
+        + "remova nada agora, porque salvar apagaria o que está lá. " + LEITURA_FALHOU,
+        "ruim");
+      return;
+    }
+    LEITURA_FALHOU = "";        // não existe ainda: a fila nasce vazia, e isso se sabe
+  }
   IA_LIDA = true;
   await lerUsoDaIA();
   desenhaCfgIA();
@@ -9705,16 +9837,45 @@ async function gravarIA() {
     // A PROVA VEM DO DISCO. O posto grava, lê de volta o arquivo que o programa vai ler, e
     // devolve o que encontrou lá. "Não pode ser front-end só bonitinho": o que aparece na
     // tela é o conteúdo do arquivo, e não o que ela tinha na mão um instante antes.
-    const d = await noPosto("/ia", IA);
-    return viraFila(d.d || {});
+    /* UMA SEGUNDA TENTATIVA, e uma so'.
+
+       O POSTO E' LEVANTADO DE CINCO EM CINCO MINUTOS por uma tarefa do Windows, e ele
+       tambem cai e volta sozinho. A resposta sobre estar de pe' vale quinze segundos,
+       entao existe uma fresta: perguntar, ouvir que sim, e a gravacao chegar no exato
+       instante em que ele reiniciou. Era uma chave perdida por um piscar de olhos.
+
+       GRAVAR DUAS VEZES NAO FAZ MAL: o posto escreve o arquivo inteiro de uma vez, num
+       arquivo ao lado que so' depois toma o lugar do bom. A segunda gravacao escreve o
+       mesmo conteudo da primeira.
+
+       E NAO CAI PARA O CAMINHO DA PASTA AQUI, de proposito. A pasta que ele liberou no
+       navegador pode nao ser a que o programa le', e daqui nao ha' como saber (ver a nota
+       em `gravarIA`, no fim). Gravar la' diria "guardado" com o programa continuando sem
+       ver a chave, que e' exatamente o falso positivo que custou a noite dele. */
+    try {
+      const d = await noPosto("/ia", IA);
+      return viraFila(d.d || {});
+    } catch (e) {
+      POSTO_DE_PE = null;
+      if (!(await postoDePe())) throw e;    // caiu de vez: o recado dele ja' esta' certo
+      const d = await noPosto("/ia", IA);
+      return viraFila(d.d || {});
+    }
   }
   if (!EDIT_RAIZ) throw new Error(SEM_POSTO);
   const h = await EDIT_RAIZ.getFileHandle("ia.json", { create: true });
   const w = await h.createWritable();
   await w.write(JSON.stringify(IA, null, 1));
   await w.close();
-  // A PROVA DE QUE CHEGOU: lê de volta o arquivo que o programa vai ler, e devolve o que
-  // ele encontrou lá. Sem isso, "guardado" é só uma palavra na tela.
+  /* A PROVA DE QUE CHEGOU: le' de volta o arquivo e devolve o que encontrou la'. Sem
+     isso, "guardado" e' so' uma palavra na tela.
+
+     O QUE ESTA PROVA NAO PROVA, e o comentario antigo prometia que provava: que esta e'
+     a pasta que o PROGRAMA le'. Quem aponta a pasta e' ele, no seletor do navegador, e
+     daqui nao ha' como saber o caminho dela em disco: o navegador nao conta. Se ele
+     apontar a pasta errada, a gravacao da' certo e o programa continua sem ver a chave.
+     Quem sabe o caminho de verdade e' o posto, e por isso este caminho aqui e' o de
+     emergencia, usado so' quando ele esta' fora do ar. */
   const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
   return JSON.parse(await f.text());
 }
@@ -9746,6 +9907,7 @@ async function lerUsoDaIA() {
       const d = await noPosto("/uso");
       const hoje = new Date().toISOString().slice(0, 10);
       IA_USO = (d.tem && d.d && d.d.dia === hoje) ? d.d : null;
+      USO_LIDO = true;            // o posto respondeu: folha vazia tambem e' resposta
       desenhaUsoDaIA();
       return;
     } catch (e) { /* segue pela pasta */ }
@@ -9755,7 +9917,13 @@ async function lerUsoDaIA() {
     const d = JSON.parse(await f.text());
     const hoje = new Date().toISOString().slice(0, 10);
     IA_USO = (d && d.dia === hoje) ? d : null;   // folha de ontem não conta como hoje
-  } catch (e) { IA_USO = null; }
+    USO_LIDO = true;
+  } catch (e) {
+    // ARQUIVO QUE AINDA NAO EXISTE E' UM DIA SEM USO, e isso se sabe. Qualquer outro
+    // erro e' nao saber, e nao saber nao pode virar "esta' tudo de pe'".
+    IA_USO = null;
+    USO_LIDO = (e && e.name === "NotFoundError");
+  }
   desenhaUsoDaIA();
 }
 
@@ -9765,17 +9933,18 @@ function desenhaUsoDaIA() {
   const quando = u.dia ? "Em " + u.dia.split("-").reverse().join("/") : "Hoje";
   $("ia_uso_dia").textContent = quando;
   $("ia_uso_dia2").textContent = quando;
+  // ZERO E "NAO SEI" SAO COISAS DIFERENTES, e mostrar zero para as duas e' inventar.
+  const naoSei = "<i>não consegui ler</i>";
   $("ia_uso").innerHTML =
-    linha("Frases pedidas", num(u.pedidos || 0))
-    + linha("Recusadas por limite", num(u.sem_cota || 0))
-    + linha("Outros erros", num(u.erros || 0))
+    linha("Frases pedidas", USO_LIDO ? num(u.pedidos || 0) : naoSei)
+    + linha("Recusadas por limite", USO_LIDO ? num(u.sem_cota || 0) : naoSei)
+    + linha("Outros erros", USO_LIDO ? num(u.erros || 0) : naoSei)
     + linha("Chaves que ainda respondem",
-            IA.chaves.length ? `${IA.chaves.filter(c => !estaEsgotada(c)).length} de ${IA.chaves.length}`
-                             : "Nenhuma na fila");
+            !USO_LIDO ? naoSei
+            : IA.chaves.length
+              ? `${IA.chaves.filter(c => !estaEsgotada(c)).length} de ${IA.chaves.length}`
+              : "Nenhuma na fila");
 }
-
-function usoDaChave(c) { return ((IA_USO || {}).chaves || {})[c.id] || {}; }
-function estaEsgotada(c) { return !!usoDaChave(c).esgotada; }
 
 /* O GASTO, SEPARADO POR EMPRESA.
 
@@ -9922,8 +10091,11 @@ function desenhaCfgIA() {
   }).join("");
 
   desenhaGastoPorEmpresa();
+  // SO' AFIRMA O QUE FOI LIDO. Ver `USO_LIDO`, la' em cima, e a trava 2 do CLAUDE.md.
   const vivas = IA.chaves.filter(c => !estaEsgotada(c)).length;
-  $("ia_fila_diz").textContent = vivas === IA.chaves.length
+  $("ia_fila_diz").textContent = !USO_LIDO
+    ? "Não consegui ler a conta do dia, então não sei quais chaves ainda respondem."
+    : vivas === IA.chaves.length
     ? "A fila inteira está de pé."
     : `${vivas} de ${IA.chaves.length} ainda respondem hoje; as outras voltam quando o dia virar.`;
   desenhaUsoDaIA();
@@ -10144,16 +10316,29 @@ async function encherModelos() {
   const alvo = $("ch_modelo");
   alvo.innerHTML = '<span class="ch-carregando">Buscando os modelos...</span>';
   const chave = $("ch_chave").value.trim();
-  const lista = await modelosDe(CH_RASCUNHO.servico, chave);
+  let lista = await modelosDe(CH_RASCUNHO.servico, chave);
   // A LISTA DE RESERVA É PALPITE MEU; a do catálogo é a verdade daquela chave. Guardar
   // qual delas está na tela permite conferir antes de gravar.
   CH_DE_RESERVA = !MODELOS_JA_BUSCADOS.has(CH_RASCUNHO.servico + "|" + chave);
+  /* O MODELO QUE ELE JA' ESCOLHEU NAO SE PERDE PORQUE O SERVICO NAO ATENDEU AGORA.
+
+     O QUE ACONTECIA ATE' 22/08/2026: abrir "Editar" so' para conferir a chave, com o
+     servico fora do ar, caia na lista de reserva; o modelo guardado nao estava nela, e
+     a tela escolhia o primeiro da reserva calada. Bastava clicar em Salvar e a chave
+     passava a trabalhar com um modelo que ele nunca escolheu.
+
+     AGORA ELE ENTRA NA LISTA, marcado como o que ja' estava guardado. */
+  if (CH_RASCUNHO.modelo && !lista.some(m => m.v === CH_RASCUNHO.modelo)) {
+    lista = [{ v: CH_RASCUNHO.modelo, r: CH_RASCUNHO.modelo + " (o que já estava)" }]
+      .concat(lista);
+  }
   const atual = lista.some(m => m.v === CH_RASCUNHO.modelo)
     ? CH_RASCUNHO.modelo : lista[0].v;
   CH_RASCUNHO.modelo = atual;
   pselNovo(alvo, lista, atual, v => { CH_RASCUNHO.modelo = v; });
-  $("ch_quantos").textContent = lista.length === 1
-    ? "1 modelo" : `${lista.length} modelos`;
+  $("ch_quantos").textContent = (lista.length === 1
+    ? "1 modelo" : `${lista.length} modelos`)
+    + (CH_DE_RESERVA ? ", sem resposta do serviço agora" : "");
 }
 
 /* TROCOU A CHAVE, TROCA O CATÁLOGO. Espera ele parar de digitar para não pedir a lista a
@@ -10164,13 +10349,42 @@ $("ch_chave").oninput = () => {
   CH_ESPERA = setTimeout(encherModelos, 600);
 };
 
-function fecharJanelaDaChave() {
+/* FECHAR NAO PODE JOGAR A CHAVE FORA CALADO.
+
+   O CAMINHO QUE EXISTIA ATE' 22/08/2026: ele colava a chave, clicava em Provar, lia
+   "Funcionou" em verde, e fechava a janela satisfeito. Nada tinha sido gravado: Provar
+   fala com o servico, Salvar e' que escreve no disco. O verde dizia a verdade sobre a
+   chave e mentia sobre o destino dela. Ele passou uma noite inteira nesse tipo de
+   engano, e a licao ja' esta' na trava 1 do CLAUDE.md: nao vale conferir a intencao.
+
+   O AVISO E' UM SEGUNDO CLIQUE, e nao uma janela nova. Fechar com coisa por salvar diz
+   o que vai se perder; fechar de novo descarta. */
+let CH_DESCARTE_PEDIDO = false;
+
+function chavePorSalvar() {
+  const agora = $("ch_chave").value.trim();
+  if (!agora) return false;
+  const antes = CH_QUAL >= 0 ? (IA.chaves[CH_QUAL] || {}) : null;
+  if (!antes) return true;                        // chave nova, nunca gravada
+  return agora !== (antes.chave || "")
+      || CH_RASCUNHO.servico !== antes.servico
+      || (CH_RASCUNHO.modelo || "") !== (antes.modelo || "");
+}
+
+function fecharJanelaDaChave(forcar) {
+  if (forcar !== true && !CH_DESCARTE_PEDIDO && chavePorSalvar()) {
+    CH_DESCARTE_PEDIDO = true;
+    $("ch_diz").className = "pop-diz ruim";
+    $("ch_diz").textContent = "Esta chave ainda NÃO foi guardada no disco. Provar só fala com o serviço; quem grava é o Salvar. Feche de novo para descartar mesmo.";
+    return;
+  }
+  CH_DESCARTE_PEDIDO = false;
   CH_QUAL = -1;
   $("ch_fundo").hidden = true;
   $("ch_pop").hidden = true;
 }
-$("ch_fechar").onclick = fecharJanelaDaChave;
-$("ch_fundo").onclick = fecharJanelaDaChave;
+$("ch_fechar").onclick = () => fecharJanelaDaChave();
+$("ch_fundo").onclick = () => fecharJanelaDaChave();
 document.addEventListener("keydown", ev => {
   if (ev.key === "Escape" && !$("ch_pop").hidden) fecharJanelaDaChave();
 });
@@ -10182,10 +10396,19 @@ const leJanela = () => ({
 });
 
 $("ch_ok").onclick = async () => {
+  /* O BOTAO TRANCA NA PRIMEIRA LINHA, e nao depois da busca do catalogo.
+
+     ENTRE O CLIQUE E A TRANCA HAVIA UMA ESPERA INTEIRA: quando a lista ainda era a de
+     reserva, o codigo ia buscar o catalogo do servico antes de trancar o botao, e nesses
+     segundos um segundo clique entrava. Os dois seguiam adiante e a mesma chave era
+     acrescentada duas vezes na fila. */
+  if ($("ch_ok").disabled) return;
+  $("ch_ok").disabled = true;
   const d = leJanela();
   if (!d.chave) {
     $("ch_diz").className = "pop-diz ruim";
     $("ch_diz").textContent = "Falta colar a chave.";
+    $("ch_ok").disabled = false;
     return;
   }
   // COLOU E CLICOU NO MESMO SEGUNDO: a lista ainda era a de reserva, e ele gravaria um
@@ -10204,7 +10427,6 @@ $("ch_ok").onclick = async () => {
 
   // GRAVA ANTES DE FECHAR A JANELA, para o erro, se houver, aparecer aqui dentro, onde os
   // olhos dele estão. Só fecha depois de o disco ter confirmado.
-  $("ch_ok").disabled = true;
   $("ch_diz").className = "pop-diz";
   $("ch_diz").textContent = "Salvando...";
   const deu = await salvarFila(editando ? "Chave alterada." : "Chave salva.");
@@ -10221,7 +10443,7 @@ $("ch_ok").onclick = async () => {
   // na hora joga a confirmacao para o alto de uma pagina onde ele nem estava olhando.
   $("ch_diz").className = "pop-diz boa";
   $("ch_diz").textContent = "Salva em ia.json, na pasta do Estúdio.";
-  setTimeout(fecharJanelaDaChave, 1100);
+  setTimeout(() => fecharJanelaDaChave(true), 1100);   // gravou: pode fechar direto
 };
 
 /* PROVAR DENTRO DA JANELA, antes de a chave entrar na fila. Chave errada, modelo que não
@@ -10240,8 +10462,14 @@ $("ch_provar").onclick = async () => {
     const dito = await chamarIA(d.servico, d.chave, d.modelo,
       IA_PROMPT_PADRAO.replace("{limite}", "70"), await imagemDeProva(frase));
     diz.className = "pop-diz boa";
+    // O VERDE DIZ O QUE FOI PROVADO, E TAMBEM O QUE NAO FOI. Provar fala com o servico;
+    // quem escreve no disco e' o Salvar, e sem essa frase o verde parecia dizer as duas
+    // coisas. Ver a nota em `fecharJanelaDaChave`.
     diz.innerHTML = `Funcionou. Da frase <i>${escapa(frase)}</i> ela escreveu: `
-      + `<b>${escapa(dito)}</b>`;
+      + `<b>${escapa(dito)}</b>`
+      + (chavePorSalvar()
+         ? ' <span class="nota">Ela ainda não está guardada: clique em '
+           + '<b>Salvar</b>.</span>' : "");
   } catch (e) {
     diz.className = "pop-diz ruim";
     diz.textContent = e.message;
@@ -10960,14 +11188,32 @@ async function tentarRetomar() {
   const r = RETOMAR;
   RETOMAR = null;
   if (!ACERVO.itens.length) await lerAcervo();
+  /* DE ONDE VEM O DESENHO DO TEMPLATE: do rascunho ou do acervo, o que for mais novo.
+
+     O acervo só recebe o template quando ele clica em "Guardar no acervo" ou em
+     "Montar". O rascunho recebe a cada mexida. Na esmagadora maioria das vezes o
+     rascunho é o mais novo, e é ele que traz de volta a cor de fundo e as caixas de
+     texto que ele acabou de fazer. O arquivo ainda ganha quando for mais recente, o que
+     acontece se a mesma composição tiver sido gravada por fora depois da última
+     mexida aqui. Comparar as duas horas é o único jeito honesto de escolher.
+
+     ATÉ 22/08/2026 SÓ O ARQUIVO EXISTIA AQUI, e por isso quem tinha desenhado sem
+     clicar em guardar voltava para um template preto e vazio. */
   if (r.template) {
+    let doArquivo = null, arquivoEm = 0;
     const arq = await arquivoDoAcervo(r.template + ".json");
     if (arq) {
       try {
-        TPL = JSON.parse(await arq.text());
-        TPL.id = r.template;
-        TPL.elementos = TPL.elementos || [];
-      } catch (e) { TPL = null; }
+        doArquivo = JSON.parse(await arq.text());
+        arquivoEm = arq.lastModified || 0;
+      } catch (e) { doArquivo = null; }
+    }
+    const doRascunho = (r.desenho && r.desenho.id === r.template) ? r.desenho : null;
+    TPL = (doRascunho && (!doArquivo || (r.desenhoEm || 0) >= arquivoEm))
+      ? doRascunho : doArquivo;
+    if (TPL) {
+      TPL.id = r.template;
+      TPL.elementos = TPL.elementos || [];
     }
   }
   // O TRABALHO VOLTA ANTES DA TELA SE DESENHAR, senão a galeria pinta as peças vazias e
@@ -11025,9 +11271,16 @@ $("apl_montar").onclick = async () => {
   if (!alvos.length) return;
   $("apl_montar").disabled = true;
   try {
-    const pedidos = await pastaDo("pedidos", true);
-    const edicoes = await pastaDo("edicoes", true);
-    if (!pedidos || !edicoes) throw new Error("a pasta do Estúdio não está liberada");
+    // O MESMO BECO DO PASSO 2, e a mesma saida. Ver a nota em `rec_aplicar`.
+    let pedidos = await pastaDo("pedidos", true);
+    let edicoes = await pastaDo("edicoes", true);
+    if (!pedidos || !edicoes) {
+      await pedirPasta();
+      pedidos = await pastaDo("pedidos", true);
+      edicoes = await pastaDo("edicoes", true);
+    }
+    if (!pedidos || !edicoes) throw new Error("a pasta do Estúdio ainda não está "
+      + "liberada. Aponte a pasta Estudio, a que tem levas, recortes e pedidos dentro.");
     // O TEMPLATE DA BANCADA VAI PARA O ACERVO ANTES DE MONTAR, porque quem monta lê do
     // disco. Sem esta gravação, montar um template recém-mexido usaria a versão anterior
     // e a peça sairia diferente do que ele viu na tela.
@@ -11155,13 +11408,49 @@ function entrarNaLegenda() {
    DAQUI PARA BAIXO NAO HA' MAIS DECLARACAO NENHUMA, entao a partir desta linha qualquer
    parte da tela pode ser pintada com seguranca. A aba que ja' estava aberta no endereco
    se pinta agora, e nao la' no comeco, quando metade do estado ainda nao existia. */
-/* A BARRA SOBE ANTES DE QUALQUER OUTRA COISA, e em toda aba. Ela não pergunta se o
-   posto está de pé: a pergunta em si é o que o navegador recusa quando a tela vem da
-   internet, e é justamente por isso que o endereço está errado. */
-if (!EM_CASA && $("fora_de_casa")) {
+/* A BARRA NAO PERGUNTA SE O POSTO ESTA' DE PE': a pergunta em si e' o que o navegador
+   recusa quando a tela vem da internet, e e' justamente por isso que o endereco esta'
+   errado. O endereco basta como resposta.
+
+   MAS SO' NAS ABAS QUE PRECISAM DO DISCO, e nao em todas. Mineracao e Baixar funcionam
+   perfeitamente pela internet: elas leem o acervo e falam com a ponte, e nada ali toca
+   nesta maquina. A faixa aparecia nas quatro, avisando de um problema que aquelas duas
+   nao tem, e alarme que soa onde nao ha' fogo e' alarme que se aprende a ignorar. */
+const ABAS_QUE_PRECISAM_DO_DISCO = ["editar", "config"];
+function cuidarDaFaixaDeFora() {
+  if (EM_CASA || !$("fora_de_casa")) return;
+  const aba = (location.hash || "#minerar").slice(1);
   $("fora_ir").href = CASA_DO_ESTUDIO + "/" + (location.hash || "");
-  $("fora_de_casa").hidden = false;
+  $("fora_de_casa").hidden = !ABAS_QUE_PRECISAM_DO_DISCO.includes(aba);
 }
+cuidarDaFaixaDeFora();
+window.addEventListener("hashchange", cuidarDaFaixaDeFora);
+
+/* O SELO DA ABA DE CONFIGURACOES NAO PODE ENVELHECER NA TELA PARADA.
+
+   A RESPOSTA SOBRE O POSTO VALE QUINZE SEGUNDOS, e quem a renova e' um clique dele. Com
+   a aba aberta e a mao longe do mouse, o posto podia cair e o selo continuar dizendo
+   "Gravando no disco" pelo tempo que fosse. E' um selo verde afirmando algo que deixou
+   de ser verdade, que e' o erro que ele mandou vigiar: "muito cuidado com os falsos
+   positivos". Trava 2 do CLAUDE.md.
+
+   SO' NA ABA QUE MOSTRA O SELO, e so' com a janela na frente: perguntar de quinze em
+   quinze segundos numa aba escondida seria bater na porta do posto a' toa o dia inteiro.
+
+   E NAO MEXE COM COISA POR SALVAR NA TELA. Se o disco recusou algo que ainda esta' na
+   mao dele, redesenhar aqui apagaria o recado vermelho que explica o que houve. */
+setInterval(async () => {
+  if (document.hidden) return;
+  if ((location.hash || "").slice(1) !== "config") return;
+  if (MUDANCA_PENDENTE) return;
+  const antes = POSTO_DE_PE;
+  POSTO_DE_PE = null;                       // a resposta guardada vence agora
+  const agora = await postoDePe();
+  if (agora === antes) return;
+  // VOLTOU DEPOIS DE UMA LEITURA QUE FALHOU: le' de novo, e o vermelho sai sozinho.
+  if (agora && !IA_LIDA) await lerIA();
+  desenhaCfgIA();
+}, 15000);
 
 PRONTA = true;
 if ((location.hash || "").slice(1) === "config") retomarPastaEler();
