@@ -7202,7 +7202,13 @@ async function catPedir(caixa, texto, pronto, aoFim) {
       // perfis passaram para luxo" e, na linha de baixo, "luxo, sem uso".
       aoFim();
       desenhaFolha();
-      encherFiltros();                // o passo 3 lê o mesmo catálogo
+      // OS FILTROS DE BAIXAR LEEM O MESMO CATÁLOGO, e quem os enche é o `desenhaProntos`.
+      //
+      // AQUI ESTAVA ESCRITO `encherFiltros()`, que era o nome antigo desta mesma tarefa e
+      // não existe mais em lugar nenhum. A linha estourava, e a de baixo, que redesenha a
+      // tabela da Mineração, nunca chegava a rodar: ele mudava o mercado de um perfil, a
+      // folha dizia "gravado", e a tabela continuava mostrando o valor de antes.
+      desenhaProntos(MINERADOS);
       // a tabela e os filtros de Baixar leem daqui, então mudam junto
       return desenhaMinerados();
     }
@@ -7554,6 +7560,40 @@ async function pastaDo(nome, criar) {
   if (!EDIT_RAIZ) return null;
   try { return await EDIT_RAIZ.getDirectoryHandle(nome, { create: !!criar }); }
   catch (e) { return null; }
+}
+
+/* UM NOME DE PASTA QUE AINDA NÃO EXISTE, para montar de novo não apagar o que já estava.
+
+   ESTA FUNÇÃO NÃO EXISTIA, e a falta dela custou a ferramenta inteira. O botão Montar,
+   que é o último passo do sistema e o que entrega a peça pronta, chamava `nomeLivre(...)`
+   na primeira linha, e nenhum lugar deste arquivo declarava esse nome. Toda montagem
+   estourava ali, antes mesmo de deixar o pedido, e o recado que aparecia era o erro cru
+   do navegador, em inglês, dentro da caixinha de "não deu para deixar o pedido". O disco
+   conta o resto: 292 recortes prontos e a pasta `edicoes` completamente vazia.
+
+   NADA PEGAVA. O `node --check` só olha gramática, e a gramática estava certa. O
+   `conferir.py` e o `nomes.py` só vigiavam nome em MAIÚSCULA, porque a regra da casa diz
+   que é lá que mora o estado da tela; nome de função é minúsculo e passava batido. E o
+   `provar.py` não chegava a apertar esse botão. O `nomes.py` foi consertado junto com
+   isto, e hoje ele acusa função chamada que ninguém escreveu.
+
+   O FORMATO TEM DE BATER COM O `abrir.py`, que é quem abre essas pastas quando ele clica
+   no link da tela: `leva-N` na primeira vez, e `leva-N (2)`, `leva-N (3)` nas seguintes.
+   Mudar o formato aqui sem mudar lá faz o clique abrir a janela errada. */
+async function nomeLivre(pasta, base) {
+  for (let n = 1; n <= 99; n++) {
+    const nome = n === 1 ? base : `${base} (${n})`;
+    try {
+      await pasta.getDirectoryHandle(nome);      // existe: tenta o próximo
+    } catch (e) {
+      // SÓ "NÃO EXISTE" LIBERA O NOME. Qualquer outro erro é o disco falando, e tratar
+      // ele como pasta livre faria a montagem seguir para gravar onde não pode.
+      if (e && e.name === "NotFoundError") return { nome, n };
+      throw e;
+    }
+  }
+  throw new Error(`já existem 99 montagens da ${base} na pasta de edições. `
+    + `Apague as que não servem antes de montar de novo.`);
 }
 
 /* -------------------------------------------------------------- os rascunhos */
