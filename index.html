@@ -7581,7 +7581,19 @@ async function salvarRascunho() {
     // empurrou template para 3 e legenda para 4. Rascunho gravado antes disso guarda um
     // "2" que quer dizer template, e abriria no recorte: com a marca aqui, o restaurador
     // sabe deslocar. Sem ela o rascunho velho abriria no passo errado em silêncio.
-    v: 2,
+    v: 3,
+    /* O QUE A IA ESCREVEU E O QUE ELE AJUSTOU ENTRAM AQUI, e antes não entravam.
+
+       ELE PERGUNTOU POR QUE O RASCUNHO NÃO GUARDAVA O TEXTO NEM A IMAGEM, e a resposta era
+       feia: o rascunho guardava só ONDE ele tinha parado, e nada do que ele tinha feito.
+       Um F5 depois de a IA escrever 107 frases jogava fora as 107, e refazê-las custa 107
+       pedidos de uma cota que tem teto por dia. Perder trabalho é ruim; perder trabalho que
+       custa cota é pior, porque não dá para simplesmente refazer na hora.
+
+       SÃO OS DOIS QUE NÃO MORAM NO DISCO. O recorte é arquivo, o template é arquivo, o
+       vídeo é arquivo. Estes dois só existiam na memória desta aba. */
+    escrito: Object.fromEntries(ESCRITO),
+    ajustes: Object.fromEntries(AJUSTES),
     contas: EDIT_LEVA.contas || [],
     pecas: EDIT_PECAS.length,
     passo: EDIT_PASSO,
@@ -9198,7 +9210,10 @@ async function entrarNaIA() {
     + (vivas.length > 1
        ? `. Se ela bater o limite, as outras ${vivas.length - 1} da fila assumem sozinhas.`
        : ". É a única chave da fila hoje.");
-  $("ia_escrever").disabled = !!IA_OBRA || !n;
+  const faltam = faltamEscrever().length;
+  $("ia_escrever").disabled = !!IA_OBRA || !faltam;
+  $("ia_escrever").textContent = !faltam ? "Todas escritas"
+    : faltam === n ? "Escrever" : `Escrever as ${faltam} que faltam`;
 }
 
 function contaEscrito() {
@@ -9216,14 +9231,31 @@ function contaEscrito() {
    recorte. Quem chama é o `oficina.py`, e por um motivo que não é de gosto: as imagens
    das frases dos cards estão no disco, e uma leva de 107 não pode depender de esta aba
    continuar aberta. */
+/** As peças que ainda não têm texto em TODAS as caixas abertas. */
+function faltamEscrever() {
+  const campos = abertas();
+  if (!campos.length) return [];
+  return pecas3().filter(p => {
+    const g = ESCRITO.get(p.nome) || {};
+    return !campos.every(c => (g[c.id] || "").trim());
+  });
+}
+
 async function pedirEscrita() {
   if (IA_OBRA) return;
   const campos = abertas();
-  const alvos = pecas3();
+  /* SÓ O QUE FALTA, E NUNCA O QUE JÁ ESTÁ ESCRITO.
+
+     ELE PERGUNTOU O QUE ACONTECE COM OS VÍDEOS QUE FICARAM SEM TEXTO QUANDO A COTA ACABA, e
+     a resposta era ruim: nada. Ficavam sem texto, e mandar escrever de novo recomeçava as
+     107 do zero, gastando de novo a cota nas que já estavam prontas. Numa conta com teto
+     por dia, isso é não terminar nunca.
+
+     Agora o pedido leva só as que faltam. Acabou a cota no meio? Amanhã, ou com outra
+     chave, ele clica de novo e continua de onde parou. */
+  const alvos = faltamEscrever();
   if (!campos.length || !alvos.length) return;
   try {
-    const pedidos = await pastaDo("pedidos", true);
-    if (!pedidos) throw new Error("a pasta do Estúdio não está liberada");
     const id = "e" + Date.now();
     const pedido = {
       id, tipo: "escrever", leva: EDIT_LEVA.numero,
@@ -9233,10 +9265,17 @@ async function pedirEscrita() {
       campos: campos.map(c => ({ id: c.id, limite: cabemAqui(c) })),
       pecas: alvos.map(p => ({ arquivo: p.nome })),
     };
-    const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
-    const w = await h.createWritable();
-    await w.write(JSON.stringify(pedido, null, 1));
-    await w.close();
+    // PELO POSTO, QUE É COMO ELE USA A FERRAMENTA. A pasta liberada fica de plano B.
+    if (await postoDePe()) {
+      await noPosto("/pedido", pedido);
+    } else {
+      const pedidos = await pastaDo("pedidos", true);
+      if (!pedidos) throw new Error(SEM_POSTO);
+      const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
+      const w = await h.createWritable();
+      await w.write(JSON.stringify(pedido, null, 1));
+      await w.close();
+    }
 
     IA_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null };
     $("ia_escrever").disabled = true;
@@ -9268,12 +9307,17 @@ async function olharAEscrita() {
   const seg = Math.round((Date.now() - IA_OBRA.desde) / 1000);
   $("ia_obra_tempo").textContent = seg < 60 ? seg + "s"
     : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
-  const p = await pastaDo("pedidos", false);
-  if (!p) return;
   let d = null;
   try {
-    const f = await (await p.getFileHandle(`${IA_OBRA.id}.andamento.json`)).getFile();
-    d = JSON.parse(await f.text());
+    if (await postoDePe()) {
+      const r = await noPosto("/pedido?id=" + encodeURIComponent(IA_OBRA.id));
+      d = r.tem ? r.d : null;
+    } else {
+      const p = await pastaDo("pedidos", false);
+      if (!p) return;
+      const f = await (await p.getFileHandle(`${IA_OBRA.id}.andamento.json`)).getFile();
+      d = JSON.parse(await f.text());
+    }
   } catch (e) { return; }
   if (!d) return;
 
@@ -9298,12 +9342,20 @@ async function olharAEscrita() {
   parar();
   $("ia_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça escrita" : "peças escritas"}`
     + (d.falhas ? `, ${d.falhas} falharam` : "");
+  // O RECADO DE QUANDO A COTA ACABA TEM DE DIZER O QUE FAZER, e não só que deu erro. O
+  // programa avisa quantas ficaram, e daqui ele volta amanhã e clica de novo no mesmo botão.
   const ruim = (d.diario || []).find(x => x.erro);
-  $("ia_obra_nota").textContent = ruim ? ruim.erro : "";
+  $("ia_obra_nota").textContent = d.parou_por
+    ? `${d.parou_por} Faltam ${d.restantes} de ${d.total}. Clique em Escrever de novo `
+      + "quando tiver cota: ele continua de onde parou, sem refazer as que já estão prontas."
+    : (ruim ? ruim.erro : "");
   // O QUE ELA ESCREVEU VOLTA PARA AS CAIXAS, e daí para a galeria da fase 4.
   for (const [arq, textos] of Object.entries(d.textos || {})) {
     ESCRITO.set(arq, Object.assign(ESCRITO.get(arq) || {}, textos));
   }
+  // GRAVA NA HORA, e não daqui a pouco. O que acabou de chegar custou cota; um F5 antes da
+  // próxima gravação jogaria fora frases que não dá para refazer de graça.
+  salvarRascunho();
   contaEscrito();
   await lerUsoDaIA();
   if (feitos) irParaSub(4);          // terminou de escrever: mostra as peças prontas
@@ -10750,6 +10802,7 @@ function desenhaLupaProps() {
     a[el.id] = Object.assign({}, a[el.id], { [chave]: valor });
     AJUSTES.set(nome, a);
     redesenhaLupa();
+    anotarMexida();      // seiscentos milissegundos depois de a mão parar, vai para o cofre
   };
   if (el.tipo === "texto") {
     passoNovo($("gl_tamanho"), 10, 140, 2, Math.round(m.tamanho * 1000),
@@ -10768,6 +10821,7 @@ $("gal_lupa_zerar").onclick = () => {
   if (!p) return;
   AJUSTES.delete(p.nome);
   redesenhaLupa();
+  anotarMexida();
 };
 
 $("gl_para_todas").onclick = () => {
@@ -10779,6 +10833,7 @@ $("gl_para_todas").onclick = () => {
   }
   parado("apl_resumo", "Os ajustes desta peça passaram para todas.");
   redesenhaLupa();
+  anotarMexida();
 };
 
 /* ------------------------------------------------ o acerto de cabimento, em bloco
@@ -10906,6 +10961,12 @@ async function tentarRetomar() {
       } catch (e) { TPL = null; }
     }
   }
+  // O TRABALHO VOLTA ANTES DA TELA SE DESENHAR, senão a galeria pinta as peças vazias e
+  // só depois descobre que havia texto: ele veria tudo em branco por um instante.
+  ESCRITO.clear();
+  for (const [k, v] of Object.entries(r.escrito || {})) ESCRITO.set(k, v);
+  AJUSTES.clear();
+  for (const [k, v] of Object.entries(r.ajustes || {})) AJUSTES.set(k, v);
   if (TPL) {
     await entrarNoTemplate();
     const alvo = Math.min(4, Math.max(1, r.sub || 1));
