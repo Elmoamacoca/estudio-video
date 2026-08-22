@@ -7457,6 +7457,10 @@ let RECORTADO = null;              // { pecas, pasta, link } do recorte cumprido
    e assim nada quebra numa leva que ainda não passou pelo passo 2. */
 function pecas3() { return EDIT_RECORTES.length ? EDIT_RECORTES : EDIT_PECAS; }
 let EDIT_RASCUNHO = null;          // o rascunho aberto, se veio de um
+/* O RASCUNHO QUE AINDA VAI SER RESTAURADO, e a declaracao mora aqui em cima de
+   proposito: o `salvarRascunho`, logo abaixo, precisa consultar ele, e uma declaracao
+   la' no fim do arquivo deixaria essa consulta na zona morta durante o carregamento. */
+let RETOMAR = null;
 
 const TEM_PORTA = typeof window.showDirectoryPicker === "function";
 
@@ -7601,6 +7605,20 @@ const listarRascunhos = () => noCofre(COFRE.rascunhos, false, s => s.getAll());
 
 async function salvarRascunho() {
   if (!EDIT_LEVA) return;
+  /* ENQUANTO A RESTAURACAO NAO ACONTECEU, ESTA TELA NAO TEM O QUE GRAVAR.
+
+     ABRIR UM RASCUNHO ANTES DE LIBERAR A PASTA APAGAVA O RASCUNHO. O `entrarNaOficina`
+     pendura o que deve ser restaurado em `RETOMAR` e, na mesma volta, grava. So' que
+     nesse instante `ESCRITO` e `AJUSTES` ainda estao vazios e `TPL` ainda e' nulo: a
+     restauracao so' acontece depois que as pecas chegam, e as pecas so' chegam depois da
+     permissao da pasta. Resultado: ele clicava no cartao do rascunho, o navegador ainda
+     nao tinha liberado nada, e a gravacao passava por cima com o vazio. As frases da IA
+     iam junto, e refazer 107 frases custa 107 pedidos de uma cota que tem teto por dia.
+
+     QUEM DESTRAVA E' O PROPRIO `tentarRetomar`: ele zera o `RETOMAR` antes de trabalhar
+     e grava no fim. Se a restauracao nunca acontecer, o rascunho fica intocado no disco,
+     que e' exatamente o certo. */
+  if (RETOMAR) return;
   // UM RASCUNHO POR LEVA, e não um por vez que ele abre a leva. Sem esta busca, entrar
   // duas vezes na leva 28 criava dois rascunhos idênticos, e a portaria virava uma
   // lista de repetições que ele tinha de apagar na mão.
@@ -7869,6 +7887,16 @@ async function entrarNaOficina(passo, rasc) {
   // demora alguns milissegundos. Guardar o rascunho num canto e deixar o passo 2 pegá-lo
   // quando estiver pronto evita uma corrida entre as duas coisas.
   RETOMAR = rasc || null;
+  /* A MONTAGEM DE UMA LEVA NAO PODE APARECER DENTRO DE OUTRA.
+
+     O `esquecerOsPassos` so' rodava para leva NOVA. Entrando por um rascunho, o
+     `MONTADO` da leva anterior continuava pendurado na memoria da aba: a leva 29 abria
+     ja' dizendo "41 pecas montadas", com o botao de montar escondido, porque a 28 tinha
+     sido montada minutos antes. O rascunho tem passo e template proprios, mas nao tem
+     montagem: ela mora no disco, na pasta `edicoes`.
+
+     ENTAO ZERA SEMPRE, e quem sabe se ja' houve montagem desta leva e' o disco. */
+  MONTADO = null;
   if (!rasc) esquecerOsPassos();     // leva nova entra limpa, sem herdar a anterior
   // RASCUNHO DA NUMERAÇÃO ANTIGA se desloca um passo para a frente: o que era template
   // virou 3, o que vinha depois virou 4, e o recorte tomou o 2.
@@ -8376,13 +8404,32 @@ async function procurarRecortes() {
   let pasta = null;
   try { pasta = await raiz.getDirectoryHandle(nome); } catch (e) { return; }
   const arquivos = [];
-  let ficha = false;
+  let ficha = null;
   for await (const [n, h] of pasta.entries()) {
     if (h.kind !== "file") continue;
-    if (n === "_origem.json") ficha = true;
+    if (n === "_origem.json") ficha = h;
     else if (n.toLowerCase().endsWith(".mp4")) arquivos.push({ nome: n, h });
   }
   if (!ficha || !arquivos.length) return;
+  /* QUAIS PECAS TEM FRASE PARA A IA LER, e a resposta vem da ficha que o recorte
+     escreveu, e nao de palpite. So' a peca que era um card de noticia tem a faixa de
+     frase guardada; a que veio em tela cheia nao tem frase nenhuma.
+
+     SEM ISTO A TELA MANDAVA TODAS PARA A IA, e cada peca sem frase gastava um pedido da
+     cota do dia para a IA responder do nada: ou inventando uma manchete, ou dizendo SEM
+     FRASE. Na leva 29 sao 15 de 107, e elas voltavam a gastar todo dia, porque o botao
+     so' olhava se a caixa estava vazia.
+
+     FICHA ILEGIVEL NAO E' FICHA SEM FRASE. Nesse caso `SEM_FRASE` fica nulo e ninguem e'
+     pulado: e' melhor gastar cota do que deixar de escrever uma leva inteira por causa
+     de um arquivo que nao deu para ler. */
+  SEM_FRASE = null;
+  try {
+    const d = JSON.parse(await (await ficha.getFile()).text());
+    const sem = new Set();
+    for (const x of (d.pecas || [])) if (!x.frase) sem.add(x.arquivo);
+    SEM_FRASE = sem;
+  } catch (e) { SEM_FRASE = null; }
   arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
   EDIT_RECORTES = arquivos;
   RECORTADO = { pecas: arquivos.length, pasta: nome,
@@ -8724,6 +8771,9 @@ async function acharBrollAqui(v) {
    AS COORDENADAS SÃO FRAÇÃO DA TELA, e não pixel, para o mesmo template servir a
    qualquer tamanho de peça e a tela do editor ter a largura que couber. */
 
+// AS PECAS QUE NAO TEM FRASE PARA A IA LER. Nulo quer dizer "nao sei", e nesse caso
+// ninguem e' pulado. Ver a nota em `procurarRecortes`.
+let SEM_FRASE = null;
 let TPL_SUB = 1;
 const ACERVO = { itens: [] };
 
@@ -9338,9 +9388,18 @@ function faltamEscrever() {
   const campos = abertas();
   if (!campos.length) return [];
   return pecas3().filter(p => {
+    // PECA SEM FRASE NAO VAI PARA A IA: nao ha' o que ela leia, e o pedido gastaria um
+    // da cota do dia para receber "SEM FRASE" de volta. Ver `procurarRecortes`.
+    if (SEM_FRASE && SEM_FRASE.has(p.nome)) return false;
     const g = ESCRITO.get(p.nome) || {};
     return !campos.every(c => (g[c.id] || "").trim());
   });
+}
+
+/** Quantas peças desta leva não têm frase para a IA ler. */
+function quantasSemFrase() {
+  if (!SEM_FRASE) return 0;
+  return pecas3().filter(p => SEM_FRASE.has(p.nome)).length;
 }
 
 async function pedirEscrita() {
@@ -9484,8 +9543,11 @@ async function olharAEscrita() {
     return;
   }
   parar();
+  const semFrase = Number(d.sem_frase || 0) || quantasSemFrase();
   $("ia_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça escrita" : "peças escritas"}`
-    + (d.falhas ? `, ${d.falhas} falharam` : "");
+    + (d.falhas ? `, ${d.falhas} falharam` : "")
+    // A CONTA TEM DE FECHAR. Sem esta parcela, 92 escritas de 107 pareciam 15 sumidas.
+    + (semFrase ? `, ${semFrase} sem frase para ler` : "");
   // O RECADO DE QUANDO A COTA ACABA TEM DE DIZER O QUE FAZER, e não só que deu erro. O
   // programa avisa quantas ficaram, e daqui ele volta amanhã e clica de novo no mesmo botão.
   const ruim = (d.diario || []).find(x => x.erro);
@@ -11138,6 +11200,10 @@ $("ajs_acertar").onclick = () => {
     }
   }
   desenhaGaleria();
+  // E VAI PARA O RASCUNHO, como toda outra mexida da galeria. Este botao pode mexer nas
+  // 107 pecas de uma vez e era o unico da fase que nao gravava nada: bastava um F5 para
+  // o acerto inteiro sumir e ele ter de clicar de novo.
+  if (mexidas) anotarMexida();
   parado("apl_resumo", mexidas
     ? `${mexidas} ${mexidas === 1 ? "caixa encolhida" : "caixas encolhidas"} para o texto caber.`
     : "Todos os textos já cabem do jeito que estão.");
@@ -11219,8 +11285,8 @@ $("ed_volta_ia").onclick = () => irParaSub(3);
    bancada; o resto vem do disco, que é onde ele de fato mora. Enquanto as peças não
    chegam, o pedido de retomada fica pendurado: a permissão da pasta só é dada depois de
    um clique, e sem pasta não há recorte nem acervo para abrir. Foi exatamente esse o
-   sintoma que travou o rascunho no primeiro sub-passo. */
-let RETOMAR = null;
+   sintoma que travou o rascunho no primeiro sub-passo. A declaracao de `RETOMAR` mora
+   la' em cima, junto do `EDIT_RASCUNHO`, porque o `salvarRascunho` consulta ela. */
 
 async function tentarRetomar() {
   if (!RETOMAR) return;
@@ -11370,17 +11436,44 @@ async function olharAObra() {
   $("apl_obra_tempo").textContent = seg < 60 ? seg + "s"
     : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
 
+  /* A RODA NAO PODE GIRAR PARA SEMPRE, e aqui todos os caminhos de erro terminavam num
+     `return` calado: a pasta revogada, o arquivo ainda inexistente, o arquivo ilegivel.
+     A mesma nota esta' em `olharAEscrita`, e vale igual: quem monta e' o `oficina.py`, e
+     nao esta tela, entao perder o contato nao quer dizer que o trabalho parou. Ela avisa,
+     segue tentando, e so' desiste depois de tres minutos mudos. */
+  const semContato = (porque) => {
+    OBRA.mudo = (OBRA.mudo || 0) + 1;
+    if (OBRA.mudo * 3 < 25) return;
+    if (OBRA.mudo * 3 >= 180) {
+      const viu = OBRA.jaViu;
+      pararDeOlhar(false);
+      $("apl_montar").disabled = false;
+      $("apl_obra_txt").textContent = "perdi o contato com o programa";
+      $("apl_obra_nota").textContent = (viu
+        ? "ele estava montando e parei de conseguir olhar. "
+        : "não consegui olhar nenhuma vez em três minutos. ")
+        + "Recarregue a página (F5) e confira a pasta de edições: se as peças estão lá, a montagem terminou.";
+      return;
+    }
+    $("apl_obra_txt").textContent = "sem contato com o programa";
+    $("apl_obra_nota").textContent = porque + " Continuo tentando; a montagem pode estar acontecendo mesmo assim.";
+  };
+
   const p = await pastaDo("pedidos", false);
-  if (!p) return;
+  if (!p) return semContato("A pasta do Estúdio não está liberada nesta aba.");
   let d = null;
   try {
     const f = await (await p.getFileHandle(`${OBRA.id}.andamento.json`)).getFile();
     d = JSON.parse(await f.text());
-  } catch (e) { return; }
-  if (!d) return;
+  } catch (e) {
+    return semContato("Não consegui ler o andamento: " + (e.message || e) + ".");
+  }
+  if (!d) return semContato("O programa ainda não pegou o pedido.");
+  OBRA.mudo = 0;
+  OBRA.jaViu = true;
 
   if (d.erro) {
-    pararDeOlhar();
+    pararDeOlhar(false);          // a barra fica onde parou: ver a nota em pararDeOlhar
     $("apl_obra_txt").textContent = "não deu: " + d.erro;
     return;
   }
@@ -11394,7 +11487,7 @@ async function olharAObra() {
   const link = `estudio://edicao/${EDIT_LEVA.numero}`
     + (OBRA.qual > 1 ? `-${OBRA.qual}` : "");
   MONTADO = { pecas: feitos, pasta: d.pasta || "", link };
-  pararDeOlhar();
+  pararDeOlhar(true);
   $("apl_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça montada" : "peças montadas"}`
     + (d.falhas ? `, ${d.falhas} falharam` : "");
   $("apl_obra_nota").innerHTML = `estão em <a href="${link}">${escapa(d.pasta || "")}</a>`
@@ -11420,10 +11513,15 @@ function desenhaFeito() {
 
 $("apl_segue").onclick = () => irParaPasso(4);
 
-function pararDeOlhar() {
+/* A BARRA CHEIA E' UM FIM FELIZ, e por isso ela saiu daqui.
+
+   ESTA FUNCAO E' CHAMADA NOS DOIS FINAIS, o bom e o ruim, e ela enchia a barra nos dois.
+   A montagem estourava na peca 12 de 107, a barra pulava para cheia, e ao lado dela o
+   texto dizia "nao deu". Quem olhasse de longe veria uma barra cheia e iria embora. */
+function pararDeOlhar(cheia) {
   if (OBRA && OBRA.relogio) clearInterval(OBRA.relogio);
   OBRA = null;
-  $("apl_barra").style.width = "100%";
+  if (cheia) $("apl_barra").style.width = "100%";
   document.querySelector("#apl_obra .cfg-girando").style.display = "none";
   resumoDeAplicar();
 }
