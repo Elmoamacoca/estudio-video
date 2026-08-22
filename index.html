@@ -9486,9 +9486,19 @@ async function noPosto(rota, corpo) {
   return d;
 }
 
-const SEM_POSTO = "O posto do Estúdio não está de pé neste computador, e é ele que grava "
-  + "no disco. Ele sobe junto com o Windows; se a máquina acabou de ligar, espere um "
-  + "minuto e recarregue a página.";
+/* O RECADO DE QUANDO O POSTO NÃO ATENDE, e ele precisa dizer o endereço certo.
+
+   POR QUE O ENDEREÇO IMPORTA: aberto pela internet, o Chrome não deixa esta página falar
+   com um programa da própria máquina, e diz isso em inglês no console, onde ele nunca vai
+   olhar. Aberto em 127.0.0.1, a página já está dentro da máquina e não há fronteira
+   nenhuma. É a mesma tela; muda só a porta por onde ela entra. */
+const CASA_DO_ESTUDIO = "http://127.0.0.1:8787";
+const SEM_POSTO = location.hostname === "127.0.0.1" || location.hostname === "localhost"
+  ? "O posto do Estúdio não está atendendo. Ele sobe junto com o Windows e se levanta "
+    + "sozinho a cada cinco minutos; espere um pouco e recarregue a página."
+  : "Aberto por este endereço, o navegador não deixa a tela gravar no disco. Abra o "
+    + "Estúdio em " + CASA_DO_ESTUDIO + ", que é o mesmo programa rodando na sua máquina, "
+    + "e as chaves passam a ficar guardadas.";
 
 async function retomarPastaEler() {
   // COM O POSTO DE PÉ NÃO HÁ PASTA A PEDIR, e nem aviso a dar: ele lê do disco e pronto.
