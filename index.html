@@ -9710,7 +9710,12 @@ $("ia_guardar").onclick = async () => {
       + `${(gravado.prompt || "").length} caracteres. É deste arquivo que o programa lê.`,
       "boa");
   } catch (e) {
-    recadoDaIA("Não deu para guardar: " + e.message, "ruim");
+    // FECHAR A JANELA DE PASTAS NAO E' ERRO, e o recado tem de dizer o que falta fazer em
+    // vez de repetir a palavra que o navegador usou.
+    recadoDaIA(e && e.name === "AbortError"
+      ? "A janela de pastas foi fechada sem escolher. O navegador só grava no disco "
+        + "depois que você aponta a pasta Estudio uma vez."
+      : "Não deu para guardar: " + e.message, "ruim");
   }
   b.disabled = false;
 };
@@ -10712,7 +10717,7 @@ function entrarNaLegenda() {
    parte da tela pode ser pintada com seguranca. A aba que ja' estava aberta no endereco
    se pinta agora, e nao la' no comeco, quando metade do estado ainda nao existia. */
 PRONTA = true;
-if ((location.hash || "").slice(1) === "config") { lerIA(); desenhaCfgIA(); }
+if ((location.hash || "").slice(1) === "config") retomarPastaEler();
 
 </script>
 </body>
