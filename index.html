@@ -9520,6 +9520,13 @@ function desenhaGastoPorEmpresa() {
   }).join("");
 }
 
+/** A chave escondida no meio, para dar para reconhecer sem expor. */
+function pontinhos(chave) {
+  const c = String(chave || "");
+  if (c.length <= 10) return "•".repeat(Math.max(4, c.length));
+  return c.slice(0, 4) + "••••••" + c.slice(-4);
+}
+
 function desenhaCfgIA() {
   const fila = $("ia_fila");
   $("ia_n_chaves").textContent = IA.chaves.length
