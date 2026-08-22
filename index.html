@@ -2490,6 +2490,26 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* E ela quase não precisa aparecer: com o crivo da tarefa a lista fica curta. */
 .cfg-sel .psel-menu{max-height:280px;padding:5px}
 
+/* O ESTADO DAS CHAVES, lado a lado. Colunas fixas para dar para comparar de relance, que
+   e' o motivo do card existir. */
+.est-cab,.est-linha{display:grid;gap:12px;align-items:center;
+  grid-template-columns:22px 130px 150px 84px 96px 1fr}
+.est-cab{padding:0 0 9px;font-size:10.5px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule-solid)}
+.est-linha{padding:12px 0;border-bottom:1px solid var(--rule-solid);font-size:13px}
+.est-linha:last-child{border-bottom:0}
+.est-n{width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:var(--paper-2);border:1px solid var(--rule-solid);
+  font-size:11px;font-weight:700;color:var(--muted)}
+.est-nome{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.est-conta,.est-saldo{color:var(--muted);font-size:12.5px}
+.est-saldo i{font-style:italic;opacity:.75}
+.ia-selo.meio{background:color-mix(in srgb,#e8a33d 18%,transparent);color:#e8a33d}
+@media(max-width:880px){
+  .est-cab{display:none}
+  .est-linha{grid-template-columns:22px 1fr;row-gap:6px}
+}
+
 </style>
 </head>
 <body>
@@ -3986,6 +4006,27 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             </div>
           </div>
           <p class="nota mini" id="ia_back_diz"></p>
+        </div>
+
+        <!-- O ESTADO DE CADA CHAVE, LADO A LADO, e ele fica ACIMA da fila porque a
+             pergunta que ele traz vem antes de mexer em nada: "opa, o Google Gemini ja'
+             bateu o teto?". Vendo isso, ele decide se precisa acrescentar mais uma chave
+             gratuita, que foi o motivo do pedido. -->
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>O estado de cada chave</h3>
+            <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia2">Hoje</span></div>
+          </div>
+          <div class="est-cab">
+            <span class="est-n"></span><span class="est-nome">Serviço</span>
+            <span>Estado</span><span class="est-conta">Frases</span>
+            <span class="est-conta">Recusas</span><span class="est-saldo">Saldo</span>
+          </div>
+          <div class="est-tabela" id="ia_estado"></div>
+          <p class="nota mini">O estado só muda quando o serviço respondeu de verdade, e o
+            saldo só aparece quando é o próprio serviço que manda o número na resposta. O
+            Groq manda; o Google Gemini não manda. Onde não há número, está escrito que não
+            há, em vez de uma barra estimada que daria segurança falsa.</p>
         </div>
 
         <!-- A FILA. "Eu preciso ter um sistema de rotacionamento, caso alguma chave,
@@ -9406,8 +9447,9 @@ async function lerUsoDaIA() {
 function desenhaUsoDaIA() {
   const u = IA_USO || {};
   const linha = (r, v) => `<div class="cfg-par"><span>${r}</span><b>${v}</b></div>`;
-  $("ia_uso_dia").textContent = u.dia
-    ? "Em " + u.dia.split("-").reverse().join("/") : "Hoje";
+  const quando = u.dia ? "Em " + u.dia.split("-").reverse().join("/") : "Hoje";
+  $("ia_uso_dia").textContent = quando;
+  $("ia_uso_dia2").textContent = quando;
   $("ia_uso").innerHTML =
     linha("Frases pedidas", num(u.pedidos || 0))
     + linha("Recusadas por limite", num(u.sem_cota || 0))
@@ -9419,6 +9461,56 @@ function desenhaUsoDaIA() {
 
 function usoDaChave(c) { return ((IA_USO || {}).chaves || {})[c.id] || {}; }
 function estaEsgotada(c) { return !!usoDaChave(c).esgotada; }
+
+/* O ESTADO DE CADA CHAVE, LADO A LADO.
+
+   O PEDIDO: "eu conseguir ver qual é o estado que está cada chave, quanto falta ali para
+   bater, porque aí eu já posso colocar mais chaves gratuitas". E junto veio o aviso que
+   manda neste bloco inteiro: "muito cuidado com os falsos positivos".
+
+   ENTÃO AQUI NADA É ESTIMADO. O estado só muda quando o serviço respondeu alguma coisa:
+   escreveu, ou recusou por limite. O saldo só aparece quando o próprio serviço mandou o
+   número na resposta, e o Groq manda e o Gemini não. Onde não há número, está escrito que
+   não há, em vez de uma barra inventada que dá segurança falsa. */
+function estadoDaChave(c) {
+  const u = usoDaChave(c);
+  if (u.esgotada) return { v: "ruim", r: "Bateu o limite hoje" };
+  if (u.sem_cota && u.recusas_seguidas) return { v: "meio", r: "Foi recusada, descansando" };
+  if (u.pedidos && u.erros && !u.ultimo_acerto) return { v: "ruim", r: "Deu erro" };
+  if (u.ultimo_acerto) return { v: "boa", r: "Respondendo" };
+  if (u.pedidos) return { v: "meio", r: "Usada, sem acerto ainda" };
+  return { v: "", r: "Ainda não usada" };
+}
+
+function saldoDaChave(c) {
+  const l = (usoDaChave(c).limites) || {};
+  if (l.restam_pedidos && l.teto_pedidos) {
+    return `${num(Number(l.restam_pedidos))} de ${num(Number(l.teto_pedidos))} pedidos`
+      + (l.zera_pedidos ? `, zera em ${l.zera_pedidos}` : "");
+  }
+  if (l.restam_pedidos) return `${num(Number(l.restam_pedidos))} pedidos restando`;
+  return null;
+}
+
+function desenhaEstadoDasChaves() {
+  const alvo = $("ia_estado");
+  if (!IA.chaves.length) {
+    alvo.innerHTML = '<p class="nota mini">Nenhuma chave na fila ainda.</p>';
+    return;
+  }
+  alvo.innerHTML = IA.chaves.map((c, i) => {
+    const u = usoDaChave(c), e = estadoDaChave(c), saldo = saldoDaChave(c);
+    return `<div class="est-linha">
+      <span class="est-n">${i + 1}</span>
+      <span class="est-nome">${escapa(nomeDoServico(c.servico))}</span>
+      <span class="ia-selo ${e.v}">${escapa(e.r)}</span>
+      <span class="est-conta">${u.pedidos ? num(u.pedidos) + " hoje" : "—"}</span>
+      <span class="est-conta">${u.sem_cota ? num(u.sem_cota) + " recusadas" : "—"}</span>
+      <span class="est-saldo">${saldo ? escapa(saldo)
+        : '<i>este serviço não informa o saldo</i>'}</span>
+    </div>`;
+  }).join("");
+}
 
 /* ------------------------------------------------ a fila desenhada
 
@@ -9447,6 +9539,7 @@ function desenhaCfgIA() {
       + '<b>aistudio.google.com</b>, a do Groq em <b>console.groq.com</b> e a do '
       + 'OpenRouter em <b>openrouter.ai</b>.</span></div>';
     $("ia_fila_diz").textContent = "";
+    desenhaEstadoDasChaves();
     desenhaUsoDaIA();
     return;
   }
@@ -9482,6 +9575,7 @@ function desenhaCfgIA() {
     </div>`;
   }).join("");
 
+  desenhaEstadoDasChaves();
   const vivas = IA.chaves.filter(c => !estaEsgotada(c)).length;
   $("ia_fila_diz").textContent = vivas === IA.chaves.length
     ? "A fila inteira está de pé."
@@ -9780,18 +9874,30 @@ async function chamarIA(servico, chave, modelo, prompt, b64) {
   }
   const txt = await r.text();
   if (!r.ok) {
-    if (r.status === 429 || r.status === 402) throw new Error("esta chave bateu o limite");
-    if (r.status === 400 || r.status === 401 || r.status === 403) {
-      throw new Error("o serviço recusou a chave ou o modelo (" + r.status + ")");
+    // O RECADO É O DO SERVIÇO, e não o meu. Antes eu resumia tudo a "o serviço recusou a
+    // chave ou o modelo (400)", e o Gabriel testou as duas chaves e recebeu isso nas
+    // duas: "já deu erro, nem sei que erro é esse". Resumo que esconde a causa não é
+    // resumo, é apagar a única informação útil que veio de volta.
+    let dito = "";
+    try {
+      const d = JSON.parse(txt);
+      dito = (d.error && (d.error.message || d.error.code)) || d.message || "";
+    } catch (e) { dito = txt.slice(0, 200); }
+    if (r.status === 429 || r.status === 402) {
+      throw new Error("Esta chave bateu o limite. O serviço disse: " + dito);
     }
-    throw new Error(r.status + ": " + txt.slice(0, 140));
+    throw new Error(`O serviço respondeu ${r.status}: ${dito}`);
   }
   let d;
   try { d = JSON.parse(txt); } catch (e) { throw new Error("resposta ilegível"); }
   const dito = servico === "gemini"
     ? d.candidates?.[0]?.content?.parts?.[0]?.text
     : d.choices?.[0]?.message?.content;
-  if (!dito) throw new Error("o serviço respondeu sem texto");
+  if (!dito) {
+    const razao = d.candidates?.[0]?.finishReason || d.choices?.[0]?.finish_reason || "";
+    throw new Error("O serviço respondeu sem texto"
+      + (razao ? ` (motivo: ${razao})` : "") + ". Tente outro modelo da lista.");
+  }
   return dito.trim().replace(/^"|"$/g, "");
 }
 
