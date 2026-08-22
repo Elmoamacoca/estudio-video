@@ -4087,14 +4087,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <button class="acao" id="ia_add" type="button">Acrescentar uma chave</button>
             <span class="nota mini" id="ia_fila_diz"></span>
           </div>
-          <p class="nota mini"><b>Não existe botão de salvar aqui.</b> Acrescentar, mudar,
-            remover ou reordenar uma chave grava na hora em <b>Estudio\ia.json</b>, que é o
-            arquivo que o programa deste computador lê. O que estiver nesta lista está no
-            arquivo.</p>
-          <p class="nota mini">A primeira da fila que estiver de pé atende, e continua
-            atendendo enquanto der certo: trocar de serviço no meio da leva trocaria também
-            o jeito de escrever. Quando ela é recusada por limite, descansa 90 segundos e a
-            próxima assume. Três recusas seguidas e ela sai da fila até o dia virar.</p>
         </div>
 
         <div class="caixa">
@@ -4124,8 +4116,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
         <div class="cfg-pe">
           <span class="cfg-recado" id="ia_cfg_recado"></span>
-          <button class="acao forte" id="ia_guardar" type="button">Guardar o
-            prompt</button>
+          <button class="acao forte" id="ia_guardar" type="button">Salvar</button>
         </div>
       </div>
 
@@ -9584,6 +9575,14 @@ async function lerIA() {
 }
 
 async function gravarIA() {
+  /* TELA QUE NAO LEU O DISCO NAO ESCREVE POR CIMA DELE.
+     Sem esta trava, uma aba que abriu antes de o posto responder tem a fila vazia na mao,
+     e o primeiro salvamento dela apaga as chaves que ja' estavam gravadas. E' o tipo de
+     perda que ele so' descobriria na leva seguinte, sem nenhum erro na tela. */
+  if (!IA_LIDA && !(IA.chaves || []).length) {
+    throw new Error("Esta tela ainda não leu o arquivo, então salvar agora apagaria o que "
+      + "está lá. Recarregue a página e tente de novo.");
+  }
   if (await postoDePe()) {
     // A PROVA VEM DO DISCO. O posto grava, lê de volta o arquivo que o programa vai ler, e
     // devolve o que encontrou lá. "Não pode ser front-end só bonitinho": o que aparece na
@@ -9821,7 +9820,7 @@ async function salvarFila(oQueMudou) {
     // caracteres" com o texto inteiro à vista logo abaixo. O programa se vira com o padrão
     // quando o campo está vazio, então nada quebrava; parecia quebrado, que é pior.
     const campo = $("ia_prompt");
-    if (campo && campo.value.trim()) IA.prompt = campo.value.trim();
+    IA.prompt = (campo && campo.value.trim()) || IA.prompt || IA_PROMPT_PADRAO;
     const g = await gravarIA();
     IA_LIDA = true;
     desenhaCfgIA();
@@ -9961,7 +9960,10 @@ function abrirJanelaDaChave(i) {
   const c = i >= 0 ? IA.chaves[i] : { servico: "gemini", chave: "", modelo: "" };
   CH_RASCUNHO = { servico: c.servico, chave: c.chave, modelo: c.modelo };
   $("ch_titulo").textContent = i >= 0 ? `Chave ${i + 1} da fila` : "Acrescentar uma chave";
-  $("ch_ok").textContent = i >= 0 ? "Salvar" : "Acrescentar";
+  // SALVAR, E NAO "ACRESCENTAR". "Acrescentar" descreve o que acontece com a lista da
+  // tela, e foi por isso que ele clicou dez vezes achando que tinha salvado. O botao tem
+  // de dizer o que ele quer que aconteca, que e' a chave ficar guardada.
+  $("ch_ok").textContent = "Salvar";
   $("ch_chave").value = c.chave || "";
   $("ch_diz").textContent = "";
   $("ch_diz").className = "pop-diz";
@@ -10052,16 +10054,22 @@ $("ch_ok").onclick = async () => {
 
   // GRAVA ANTES DE FECHAR A JANELA, para o erro, se houver, aparecer aqui dentro, onde os
   // olhos dele estão. Só fecha depois de o disco ter confirmado.
+  $("ch_ok").disabled = true;
   $("ch_diz").className = "pop-diz";
-  $("ch_diz").textContent = "Guardando no disco...";
-  const deu = await salvarFila(editando ? "Chave alterada." : "Chave guardada.");
+  $("ch_diz").textContent = "Salvando...";
+  const deu = await salvarFila(editando ? "Chave alterada." : "Chave salva.");
+  $("ch_ok").disabled = false;
   if (!deu) {
     $("ch_diz").className = "pop-diz ruim";
-    $("ch_diz").textContent = "Não deu para gravar no disco. O recado inteiro está no "
-      + "alto da página, atrás desta janela.";
+    $("ch_diz").textContent = "Não deu para salvar. O motivo está no alto da página, "
+      + "atrás desta janela. A chave continua aqui, não se perdeu.";
     return;
   }
-  fecharJanelaDaChave();
+  // A RESPOSTA APARECE AQUI DENTRO, e a janela espera um instante antes de fechar. Fechar
+  // na hora joga a confirmacao para o alto de uma pagina onde ele nem estava olhando.
+  $("ch_diz").className = "pop-diz boa";
+  $("ch_diz").textContent = "Salva em ia.json, na pasta do Estúdio.";
+  setTimeout(fecharJanelaDaChave, 1100);
 };
 
 /* PROVAR DENTRO DA JANELA, antes de a chave entrar na fila. Chave errada, modelo que não
