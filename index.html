@@ -4084,6 +4084,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <button class="acao" id="ia_add" type="button">Acrescentar uma chave</button>
             <span class="nota mini" id="ia_fila_diz"></span>
           </div>
+          <p class="nota mini"><b>Não existe botão de salvar aqui.</b> Acrescentar, mudar,
+            remover ou reordenar uma chave grava na hora em <b>Estudio\ia.json</b>, que é o
+            arquivo que o programa deste computador lê. O que estiver nesta lista está no
+            arquivo.</p>
           <p class="nota mini">A primeira da fila que estiver de pé atende, e continua
             atendendo enquanto der certo: trocar de serviço no meio da leva trocaria também
             o jeito de escrever. Quando ela é recusada por limite, descansa 90 segundos e a
@@ -4117,7 +4121,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
         <div class="cfg-pe">
           <span class="cfg-recado" id="ia_cfg_recado"></span>
-          <button class="acao forte" id="ia_guardar" type="button">Guardar</button>
+          <button class="acao forte" id="ia_guardar" type="button">Guardar o
+            prompt</button>
         </div>
       </div>
 
@@ -9789,26 +9794,82 @@ function desenhaCfgIA() {
   desenhaUsoDaIA();
 }
 
+/* MEXEU, GRAVOU. E esta é a linha que faltava, seis rodadas atrás.
+
+   O QUE O REGISTRO DO POSTO MOSTROU, e é prova e não palpite: em 22/08 ele abriu a tela
+   local às 15:01 e às 15:09, e nas duas o programa serviu a página e leu o arquivo. Não
+   chegou UM pedido de gravação. Nenhum. A tela nunca tentou escrever.
+
+   POR QUE: acrescentar uma chave punha ela na lista da TELA, e gravar no disco era outro
+   botão, no pé da página, atrás de uma linha de texto miúda dizendo "clique em Guardar".
+   Dois passos onde a cabeça dele tinha um: clicou em Acrescentar, viu a chave na fila,
+   entendeu, com toda a razão, que estava guardada. Dava F5 e sumia.
+
+   O CONSERTO NÃO É AVISAR MELHOR, é tirar o segundo passo. Acrescentar grava. Remover
+   grava. Mudar a ordem grava. Mexer no prompt grava ao sair do campo. O que estiver na
+   tela é o que está no arquivo, sempre, sem ninguém ter de lembrar de nada. */
+async function salvarFila(oQueMudou) {
+  try {
+    // O QUE ESTÁ NA TELA VAI JUNTO, e o prompt é parte disso. Sem esta linha, acrescentar
+    // uma chave gravava o arquivo com o prompt vazio, e o recado dizia "um prompt de 0
+    // caracteres" com o texto inteiro à vista logo abaixo. O programa se vira com o padrão
+    // quando o campo está vazio, então nada quebrava; parecia quebrado, que é pior.
+    const campo = $("ia_prompt");
+    if (campo && campo.value.trim()) IA.prompt = campo.value.trim();
+    const g = await gravarIA();
+    IA_LIDA = true;
+    desenhaCfgIA();
+    const n = (g.chaves || []).length;
+    recadoDaIA(`${oQueMudou} Estudio\\ia.json tem agora `
+      + `${n} ${n === 1 ? "chave" : "chaves"} e um prompt de `
+      + `${(g.prompt || "").length} caracteres. É deste arquivo que o programa lê.`, "boa");
+    return true;
+  } catch (e) {
+    // O QUE ESTÁ NA TELA NÃO SE APAGA quando o disco recusa: ele acabou de digitar isso.
+    // Some o "guardado", fica o vermelho, e a chave continua onde ele a pôs.
+    desenhaCfgIA();
+    recadoDaIA("NÃO FOI GUARDADO NO DISCO. " + (e.message || e), "ruim");
+    return false;
+  }
+}
+
 $("ia_fila").addEventListener("click", async ev => {
   const b = ev.target.closest("[data-acao]");
   if (!b) return;
   const i = Number(b.closest(".ia-chave").dataset.i);
   const acao = b.dataset.acao;
-  if (acao === "tira") { IA.chaves.splice(i, 1); desenhaCfgIA(); return; }
+  if (acao === "tira") {
+    IA.chaves.splice(i, 1);
+    await salvarFila("Chave removida.");
+    return;
+  }
   if (acao === "editar") { abrirJanelaDaChave(i); return; }
   if (acao === "sobe" && i > 0) {
     [IA.chaves[i - 1], IA.chaves[i]] = [IA.chaves[i], IA.chaves[i - 1]];
-    desenhaCfgIA(); return;
+    await salvarFila("Ordem da fila mudada.");
+    return;
   }
   if (acao === "desce" && i < IA.chaves.length - 1) {
     [IA.chaves[i], IA.chaves[i + 1]] = [IA.chaves[i + 1], IA.chaves[i]];
-    desenhaCfgIA(); return;
+    await salvarFila("Ordem da fila mudada.");
+    return;
   }
   if (acao === "provar") await provarChave(i, b);
 });
 
 $("ia_add").onclick = () => abrirJanelaDaChave(-1);
-$("ia_prompt_padrao").onclick = () => { $("ia_prompt").value = IA_PROMPT_PADRAO; };
+
+/* O PROMPT TAMBÉM GRAVA SOZINHO, ao sair do campo. `change` num campo de texto só dispara
+   quando o texto mudou E o cursor saiu dele, então não grava a cada letra digitada. */
+$("ia_prompt").onchange = async () => {
+  IA.prompt = $("ia_prompt").value.trim();
+  await salvarFila("Prompt guardado.");
+};
+$("ia_prompt_padrao").onclick = async () => {
+  $("ia_prompt").value = IA_PROMPT_PADRAO;
+  IA.prompt = IA_PROMPT_PADRAO;
+  await salvarFila("Prompt de volta ao padrão.");
+};
 
 $("ia_guardar").onclick = async () => {
   IA.prompt = $("ia_prompt").value.trim();
@@ -9854,6 +9915,9 @@ function recadoDaIA(txt, tom) {
   alto.className = "ia-alerta " + (tom || "");
   alto.hidden = !txt;
   parado("ia_cfg_recado", txt);
+  // RECADO QUE ELE NÃO VÊ NÃO É RECADO. Este mora no alto da página, e ele costuma estar
+  // lá embaixo, na fila ou no prompt, quando a resposta chega.
+  if (txt && tom) alto.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 /* NUNCA SOBRESCREVER O QUE NÃO FOI LIDO. Se a fila do disco tem chaves e a da tela não as
@@ -9976,12 +10040,22 @@ $("ch_ok").onclick = async () => {
     d.modelo = CH_RASCUNHO.modelo || "";
     $("ch_diz").textContent = "";
   }
-  if (CH_QUAL >= 0) Object.assign(IA.chaves[CH_QUAL], d);
+  const editando = CH_QUAL >= 0;
+  if (editando) Object.assign(IA.chaves[CH_QUAL], d);
   else IA.chaves.push(Object.assign({ id: novaChaveId() }, d));
+
+  // GRAVA ANTES DE FECHAR A JANELA, para o erro, se houver, aparecer aqui dentro, onde os
+  // olhos dele estão. Só fecha depois de o disco ter confirmado.
+  $("ch_diz").className = "pop-diz";
+  $("ch_diz").textContent = "Guardando no disco...";
+  const deu = await salvarFila(editando ? "Chave alterada." : "Chave guardada.");
+  if (!deu) {
+    $("ch_diz").className = "pop-diz ruim";
+    $("ch_diz").textContent = "Não deu para gravar no disco. O recado inteiro está no "
+      + "alto da página, atrás desta janela.";
+    return;
+  }
   fecharJanelaDaChave();
-  desenhaCfgIA();
-  parado("ia_cfg_recado", "A fila mudou na tela. Clique em Guardar para gravar no "
-    + "arquivo que o programa lê.");
 };
 
 /* PROVAR DENTRO DA JANELA, antes de a chave entrar na fila. Chave errada, modelo que não
