@@ -778,6 +778,17 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 .pf-retrato .pcard-avatar{width:100%;height:100%;font-size:22px;border-width:2px}
 
 .pf-gal-cab .sel-gatilho{height:30px;border-radius:8px;padding:0 10px;font-size:12.5px}
+/* A BARRA DO ENDERECO ERRADO. Ela empurra a pagina para baixo em vez de flutuar por
+   cima: barra flutuante tapa o cabecalho, e o que ela tem a dizer nao e' urgente a ponto
+   de valer esconder o menu. */
+.fora{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:12px 22px;background:var(--accent);color:#fff;font-size:13px;line-height:1.45}
+.fora[hidden]{display:none}
+.fora b{font-weight:700}
+.fora span{flex:1 1 380px}
+.fora .acao{flex:0 0 auto;background:#fff;color:var(--accent);border-color:#fff}
+.fora .acao:hover{background:#fff;opacity:.88}
+
 /* O que é desta tela e não veio do Social Tracker.
    Tudo aqui usa as variáveis de lá, para as duas telas envelhecerem juntas. */
 
@@ -2516,6 +2527,18 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 </style>
 </head>
 <body>
+<!-- A BARRA DO ENDERECO ERRADO, e ela mora fora das abas de proposito.
+
+     POR QUE ELA EXISTE: o recado que eu tinha posto ficava dentro da aba de
+     Configuracoes, e so' aparecia para quem chegasse la'. O Gabriel voltou pela terceira
+     vez dizendo "a chave ainda nao foi salva", com o Estudio aberto pelo endereco da
+     internet, que e' justamente o que nao grava no disco. Aviso que depende de a pessoa
+     ir ate' ele nao e' aviso. -->
+<div class="fora" id="fora_de_casa" hidden>
+  <span><b>Esta tela está aberta pela internet.</b> Por aqui o navegador não deixa ela
+    gravar no disco desta máquina, então chave e ajuste não ficam guardados.</span>
+  <a class="acao forte" id="fora_ir" href="http://127.0.0.1:8787/">Abrir o Estúdio aqui</a>
+</div>
 <svg class="tinta" aria-hidden="true" focusable="false">
   <defs>
   <!-- A SETA DO BOTAO E O SELO DO INSTAGRAM, desenhados uma vez cada.
@@ -9493,7 +9516,8 @@ async function noPosto(rota, corpo) {
    olhar. Aberto em 127.0.0.1, a página já está dentro da máquina e não há fronteira
    nenhuma. É a mesma tela; muda só a porta por onde ela entra. */
 const CASA_DO_ESTUDIO = "http://127.0.0.1:8787";
-const SEM_POSTO = location.hostname === "127.0.0.1" || location.hostname === "localhost"
+const EM_CASA = location.hostname === "127.0.0.1" || location.hostname === "localhost";
+const SEM_POSTO = EM_CASA
   ? "O posto do Estúdio não está atendendo. Ele sobe junto com o Windows e se levanta "
     + "sozinho a cada cinco minutos; espere um pouco e recarregue a página."
   : "Aberto por este endereço, o navegador não deixa a tela gravar no disco. Abra o "
@@ -10835,6 +10859,14 @@ function entrarNaLegenda() {
    DAQUI PARA BAIXO NAO HA' MAIS DECLARACAO NENHUMA, entao a partir desta linha qualquer
    parte da tela pode ser pintada com seguranca. A aba que ja' estava aberta no endereco
    se pinta agora, e nao la' no comeco, quando metade do estado ainda nao existia. */
+/* A BARRA SOBE ANTES DE QUALQUER OUTRA COISA, e em toda aba. Ela não pergunta se o
+   posto está de pé: a pergunta em si é o que o navegador recusa quando a tela vem da
+   internet, e é justamente por isso que o endereço está errado. */
+if (!EM_CASA && $("fora_de_casa")) {
+  $("fora_ir").href = CASA_DO_ESTUDIO + "/" + (location.hash || "");
+  $("fora_de_casa").hidden = false;
+}
+
 PRONTA = true;
 if ((location.hash || "").slice(1) === "config") retomarPastaEler();
 
