@@ -9262,37 +9262,51 @@ const IA_SERVICOS = [
     lista: () => "https://openrouter.ai/api/v1/models" },
 ];
 
-/* OS QUE SERVEM PARA ESTA TAREFA, em ordem de recomendação.
+/* COMO SE ESCOLHE O MODELO, e por que não por uma lista escrita aqui.
 
-   QUAL É A TAREFA: olhar a imagem da frase de um card de notícia e escrever outra frase
-   equivalente, curta, em português. Isso pede duas coisas ao mesmo tempo, ler imagem e
-   escrever bem, e a maioria dos modelos de um catálogo não faz a primeira.
+   O QUE ACONTECEU EM 21/08/2026: eu tinha `gemini-2.5-flash` como recomendado, escrito à
+   mão neste arquivo. O Gabriel criou a chave dele, clicou em Provar, e o Google respondeu:
+   "This model is no longer available to new users. Please update your code to use
+   models/gemini-3.6-flash". Ou seja, o nome que eu escrevi já estava morto para quem
+   estava criando conta naquele dia, e eu não tinha como saber.
 
-   POR QUE A LISTA É ESTA E NÃO O CATÁLOGO INTEIRO: "não quero talvez, eu quero o melhor
-   modelo recomendado pra função". Antes eu mostrava tudo o que o serviço oferece e
-   marcava com um palpite "talvez não leia imagem", que é jogar a dúvida no colo dele.
-   Agora o que não serve simplesmente não aparece.
+   ENTÃO A LISTA VEM DO CATÁLOGO DA CHAVE DELE, e a ordem sai de regras que não envelhecem:
+   versão mais nova primeiro, linha `flash` na frente da `pro` (é a que serve para reescrever
+   uma frase curta: rápida e com cota folgada), e nome limpo na frente de `preview` e `exp`.
+   Nenhuma versão aparece escrita aqui. O que sobrou de lista fixa é só o último recurso,
+   para quando ainda não há chave e o catálogo não pode ser lido. */
 
-   NO GROQ SÓ A FAMÍLIA LLAMA 4 LÊ IMAGEM; o resto do catálogo dele é texto puro. No
-   Gemini, as linhas flash e pro leem, e o que sobra são modelos de outra função
-   (medir semelhança, gerar imagem, gerar vídeo, transcrever). */
-const RECOMENDADOS = {
-  gemini: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite",
-           "gemini-2.0-flash-lite", "gemini-2.5-pro"],
-  groq: ["meta-llama/llama-4-scout-17b-16e-instruct",
-         "meta-llama/llama-4-maverick-17b-128e-instruct"],
-  // NO OPENROUTER O CATÁLOGO DIZ QUEM LÊ IMAGEM, mas não diz quem escreve bem. Sem uma
-  // ordem, o primeiro da lista virava o recomendado por acaso, e chegou a cair ali um
-  // modelo de MODERAÇÃO de conteúdo, que existe para barrar texto e não para escrever.
-  // Estes prefixos põem na frente as famílias que servem; o resto continua escolhível,
-  // atrás delas.
-  openrouter: ["google/gemma-4-31b", "google/gemma-4", "nvidia/nemotron-nano",
-               "nvidia/nemotron-3-nano", "qwen", "meta-llama"],
+const ULTIMO_RECURSO = {
+  gemini: ["gemini-flash-latest", "gemini-2.0-flash"],
+  groq: ["meta-llama/llama-4-scout-17b-16e-instruct"],
+  openrouter: ["google/gemma-4-31b-it:free"],
 };
 
-/* O QUE NÃO SERVE PARA ESCREVER, por mais que leia imagem: moderar, barrar, classificar
-   risco. São modelos de porteiro, e este trabalho é de redator. */
-const SO_PORTEIRO = /safety|guard|moderat|classif/i;
+/* O QUE NÃO É DESTA TAREFA, por família e não por versão: medir semelhança, gerar imagem,
+   gerar vídeo, falar, transcrever, moderar. Nenhum deles olha um card e escreve uma frase. */
+const OUTRA_FUNCAO =
+  /embedding|imagen|veo|image-generation|tts|speech|audio|whisper|guard|safety|moderat|rerank|aqa|learnlm|robotics|live-/i;
+/* AS QUE LEEM IMAGEM, por família. Serve para pôr na frente, e não para excluir: quando a
+   família é desconhecida ela continua na lista, atrás. */
+const FAMILIA_QUE_VE = /gemini|gemma|llama-4|scout|maverick|vision|-vl|omni|pixtral/i;
+
+/** A versão que o nome carrega, para o mais novo subir. `gemini-3.6-flash` vale 306. */
+function versaoDo(nome) {
+  const m = String(nome).match(/(\d+)\.(\d+)/);
+  return m ? Number(m[1]) * 100 + Number(m[2]) : 0;
+}
+
+/** Quanto o nome pesa para ESTA tarefa. Menor vem primeiro. */
+function pesoDoModelo(nome) {
+  const n = String(nome).toLowerCase();
+  let p = 0;
+  if (!FAMILIA_QUE_VE.test(n)) p += 1000;              // família que talvez não veja
+  if (/preview|exp|thinking|-\d{4}$|-\d{3}$/.test(n)) p += 200;   // versão de teste
+  if (/lite|nano|small|mini|8b|4b/.test(n)) p += 60;   // pequeno demais escreve pior
+  if (/\bpro\b|-pro/.test(n)) p += 20;                 // pro é mais lento e come mais cota
+  p -= versaoDo(n);                                    // mais novo sobe
+  return p;
+}
 
 /* A LISTA VEM DO PRÓPRIO SERVIÇO. "É pra poder selecionar o modelo, não escrever. É pra
    escolher o modelo a depender do serviço, a depender de qual é a empresa." Escrever o
@@ -9304,8 +9318,7 @@ async function modelosDe(servico, chave) {
   const ficha = fichaDoServico(servico);
   const marca = servico + "|" + (chave || "");
   if (MODELOS_JA_BUSCADOS.has(marca)) return MODELOS_JA_BUSCADOS.get(marca);
-  const recomendados = RECOMENDADOS[servico] || [];
-  const reserva = (recomendados.length ? recomendados : [ficha.modelo])
+  const reserva = (ULTIMO_RECURSO[servico] || [ficha.modelo])
     .map((m, i) => ({ v: m, r: m + (i === 0 ? "  ·  recomendado" : "") }));
   if (servico !== "openrouter" && !chave) return reserva;   // sem chave não há catálogo
   let nomes = [];
@@ -9331,19 +9344,8 @@ async function modelosDe(servico, chave) {
   // lista de recomendados, na ordem dela; uma versão com data no nome
   // (`gemini-2.5-flash-preview-...`) entra atrás da versão limpa. No OpenRouter o próprio
   // catálogo declara quem lê imagem, e o filtro já foi feito lá em cima.
-  if (servico === "openrouter") {
-    nomes = nomes.filter(n => !SO_PORTEIRO.test(n));
-    const posicao = n => {
-      const i = recomendados.findIndex(r => n.startsWith(r));
-      return i < 0 ? recomendados.length : i;       // desconhecido vai para o fim
-    };
-    nomes.sort((a, b) => posicao(a) - posicao(b) || a.localeCompare(b));
-  } else if (recomendados.length) {
-    const posicao = n => recomendados.findIndex(r => n === r || n.startsWith(r + "-"));
-    nomes = nomes.filter(n => posicao(n) >= 0);
-    nomes.sort((a, b) => posicao(a) - posicao(b) || a.length - b.length
-                          || a.localeCompare(b));
-  }
+  nomes = nomes.filter(n => !OUTRA_FUNCAO.test(n));
+  nomes.sort((a, b) => pesoDoModelo(a) - pesoDoModelo(b) || a.localeCompare(b));
   if (!nomes.length) return reserva;
   const lista = nomes.map((n, i) => ({ v: n, r: n + (i === 0 ? "  ·  recomendado" : "") }));
   MODELOS_JA_BUSCADOS.set(marca, lista);
