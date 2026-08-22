@@ -13,6 +13,9 @@ import builtins
 import pathlib
 import sys
 
+# QUEM DECIDE CAMINHO E' O `caminhos`, e mais ninguem. Trava do CLAUDE.md da raiz.
+import caminhos
+
 PROGRAMAS = ["minerar.py", "rodada.py", "selecionar.py", "atividade.py",
              "baixar.py", "limpar.py", "registro.py", "etiquetar.py",
              "catalogo.py", "oficina.py"]
@@ -80,7 +83,7 @@ def main() -> int:
     # nao uma exigencia de ambiente.
     import shutil
     import subprocess
-    tela = pathlib.Path(__file__).parent / "tela.js"
+    tela = caminhos.MOLDE_PROGRAMA
     if shutil.which("node") and tela.exists():
         r = subprocess.run(["node", "--check", str(tela)], capture_output=True,
                            text=True, encoding="utf-8", errors="replace")
@@ -109,7 +112,7 @@ def main() -> int:
 
     # E OS ELEMENTOS QUE A TELA PEDE E A PAGINA NAO TEM. `$("x")` de um id que nao existe
     # devolve nulo, e a linha seguinte estoura do mesmo jeito.
-    indice = pathlib.Path(__file__).parent / "index.html"
+    indice = caminhos.TELA
     if tela.exists() and indice.exists():
         import re
         ids = set(re.findall(r'id="([^"]+)"', indice.read_text(encoding="utf-8")))
@@ -134,7 +137,7 @@ def main() -> int:
     # POR QUE A MINHA PROVA NAO PEGOU: eu li o ATRIBUTO (`el.hidden`), que mudava certinho,
     # e nunca li o `display` que a tela aplica de verdade. Conferir a intencao em vez do
     # resultado e' o mesmo que nao conferir.
-    folha = pathlib.Path(__file__).parent / "estilo.css"
+    folha = caminhos.MOLDE_ESTILO
     if indice.exists() and folha.exists():
         import re
         pagina = indice.read_text(encoding="utf-8")
