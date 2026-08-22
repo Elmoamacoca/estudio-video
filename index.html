@@ -3983,10 +3983,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="cfg-linha">
               <div>
                 <div class="cfg-nome">Estudio\ia.json</div>
-                <div class="cfg-desc" id="ia_pasta_desc">O navegador precisa da sua
-                  permissão para escrever no disco. Libere a pasta do Estúdio uma vez e o
-                  botão Guardar passa a gravar aqui; é deste arquivo que o programa deste
-                  computador lê a fila de chaves e o prompt, no começo de cada leva.</div>
+                <div class="cfg-desc" id="ia_pasta_desc">É deste arquivo que o
+                  programa deste computador lê a fila de chaves e o prompt, no começo de
+                  cada leva. Quem grava nele é o posto do Estúdio, que sobe junto com o
+                  Windows, e por isso não há pasta a liberar nem permissão a renovar.</div>
               </div>
               <div class="dir">
                 <button class="acao" id="ia_liberar" type="button">Liberar a pasta</button>
@@ -9442,7 +9442,63 @@ function viraFila(d) {
    ainda vale e dá para reabrir a pasta calado, sem caixinha nenhuma. Sem isto, abrir a
    aba de Configurações mostrava a fila vazia mesmo com as chaves gravadas no disco, e
    parecia que elas tinham sumido. */
+/* O POSTO, e por que ele existe.
+
+   A FRASE DELE, na terceira rodada do mesmo problema: "A CHAVE NÃO ESTÁ FICANDO SALVA
+   PORRA". Três consertos meus, e o arquivo continuava sem existir no disco.
+
+   A CAUSA NÃO ERA UM BUG A MAIS, era o desenho. Para gravar no disco, o navegador exige
+   que ele APONTE a pasta numa caixa do sistema, e essa permissão não atravessa um F5
+   sozinha: em toda visita ele teria de apontar a pasta de novo antes de qualquer coisa
+   ser guardada. Fechou a aba, perdeu. Deu F5, perdeu. Nenhum conserto dentro dessa regra
+   ia sobreviver, e eu estava insistindo numa trava do navegador em vez de sair dela.
+
+   ENTÃO A TELA PAROU DE ESCREVER NO DISCO. Quem escreve é o `posto.py`, um programa deste
+   computador, que já tem acesso à pasta e sobe junto com o Windows. A tela só conversa com
+   ele aqui em casa, em 127.0.0.1, e o que ela pede ele grava. Não há mais caixa de pasta e
+   não há mais permissão para perder.
+
+   AS CHAVES CONTINUAM SEM SAIR DA MÁQUINA: o posto escuta só no endereço de casa, e só
+   responde para as telas do Estúdio. Nada disso passa pela internet. */
+const POSTO = "http://127.0.0.1:8787";
+let POSTO_DE_PE = null;                 // null = ainda não perguntei nesta visita
+
+async function postoDePe() {
+  if (POSTO_DE_PE !== null) return POSTO_DE_PE;
+  try {
+    const r = await fetch(POSTO + "/vivo", { cache: "no-store" });
+    POSTO_DE_PE = r.ok;
+  } catch (e) { POSTO_DE_PE = false; }
+  return POSTO_DE_PE;
+}
+
+/** Um pedido ao posto. Sem `corpo` é leitura; com `corpo` é escrita. */
+async function noPosto(rota, corpo) {
+  const opcoes = corpo === undefined
+    ? { cache: "no-store" }
+    : { method: "POST", cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corpo) };
+  const r = await fetch(POSTO + rota, opcoes);
+  let d = {};
+  try { d = await r.json(); } catch (e) { /* resposta sem corpo */ }
+  if (!r.ok) throw new Error(d.erro || `o posto do Estúdio respondeu ${r.status}`);
+  return d;
+}
+
+const SEM_POSTO = "O posto do Estúdio não está de pé neste computador, e é ele que grava "
+  + "no disco. Ele sobe junto com o Windows; se a máquina acabou de ligar, espere um "
+  + "minuto e recarregue a página.";
+
 async function retomarPastaEler() {
+  // COM O POSTO DE PÉ NÃO HÁ PASTA A PEDIR, e nem aviso a dar: ele lê do disco e pronto.
+  if (await postoDePe()) {
+    IA_LIDA = false;
+    await lerIA();
+    desenhaCfgIA();
+    recadoDaIA("", "");
+    return;
+  }
   if (!EDIT_RAIZ && TEM_PORTA) {
     try {
       const cracha = CRACHA_NA_MAO || await pegarCracha();
@@ -9455,17 +9511,21 @@ async function retomarPastaEler() {
   }
   await lerIA();
   desenhaCfgIA();
-  if (!EDIT_RAIZ) {
-    recadoDaIA("A pasta do Estúdio ainda não está liberada nesta visita, então o que "
-      + "estiver guardado no arquivo não aparece aqui. Clique em Liberar a pasta, ou em "
-      + "Guardar, que ele libera sozinho.", "");
-  } else {
-    recadoDaIA("", "");
-  }
+  recadoDaIA(EDIT_RAIZ ? "" : SEM_POSTO, EDIT_RAIZ ? "" : "ruim");
 }
 
 async function lerIA() {
   if (IA_LIDA) return;
+  if (await postoDePe()) {
+    try {
+      const d = await noPosto("/ia");
+      if (d.tem) IA = viraFila(d.d || {});
+      IA_LIDA = true;
+      await lerUsoDaIA();
+      desenhaCfgIA();
+      return;
+    } catch (e) { /* o posto tropeçou: tenta pela pasta, logo abaixo */ }
+  }
   if (!EDIT_RAIZ) { desenhaCfgIA(); desenhaUsoDaIA(); return; }
   try {
     const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
@@ -9477,7 +9537,14 @@ async function lerIA() {
 }
 
 async function gravarIA() {
-  if (!EDIT_RAIZ) throw new Error("Libere a pasta do Estúdio primeiro, no botão acima.");
+  if (await postoDePe()) {
+    // A PROVA VEM DO DISCO. O posto grava, lê de volta o arquivo que o programa vai ler, e
+    // devolve o que encontrou lá. "Não pode ser front-end só bonitinho": o que aparece na
+    // tela é o conteúdo do arquivo, e não o que ela tinha na mão um instante antes.
+    const d = await noPosto("/ia", IA);
+    return viraFila(d.d || {});
+  }
+  if (!EDIT_RAIZ) throw new Error(SEM_POSTO);
   const h = await EDIT_RAIZ.getFileHandle("ia.json", { create: true });
   const w = await h.createWritable();
   await w.write(JSON.stringify(IA, null, 1));
@@ -9492,6 +9559,13 @@ async function gravarIA() {
    primeiro nas Configurações via o Guardar falhar sem entender por quê. */
 $("ia_liberar").onclick = async () => {
   try {
+    if (await postoDePe()) {
+      IA_LIDA = false;
+      await lerIA();
+      desenhaCfgIA();
+      return recadoDaIA("Não precisa: o posto do Estúdio está de pé e já grava direto "
+        + "no disco desta máquina.", "boa");
+    }
     await pedirPasta();
     IA_LIDA = false;
     await lerIA();
@@ -9503,6 +9577,15 @@ $("ia_liberar").onclick = async () => {
 };
 
 async function lerUsoDaIA() {
+  if (await postoDePe()) {
+    try {
+      const d = await noPosto("/uso");
+      const hoje = new Date().toISOString().slice(0, 10);
+      IA_USO = (d.tem && d.d && d.d.dia === hoje) ? d.d : null;
+      desenhaUsoDaIA();
+      return;
+    } catch (e) { /* segue pela pasta */ }
+  }
   try {
     const f = await (await EDIT_RAIZ.getFileHandle("ia-uso.json")).getFile();
     const d = JSON.parse(await f.text());
@@ -9604,7 +9687,11 @@ function desenhaCfgIA() {
   const fila = $("ia_fila");
   $("ia_n_chaves").textContent = IA.chaves.length
     ? IA.chaves.length + (IA.chaves.length === 1 ? " chave" : " chaves") : "Nenhuma";
-  $("ia_selo_pasta").textContent = EDIT_RAIZ ? "Pasta liberada" : "Pasta não liberada";
+  // O SELO DIZ QUEM ESTÁ GRAVANDO, e não se uma pasta foi apontada. Com o posto de pé
+  // não há pasta nenhuma envolvida, e mostrar "Pasta não liberada" ali seria um susto à
+  // toa exatamente na tela em que ele já brigou três vezes.
+  $("ia_selo_pasta").textContent = POSTO_DE_PE ? "Gravando no disco"
+    : EDIT_RAIZ ? "Pasta liberada" : "Posto fora do ar";
   $("ia_liberar").hidden = !!EDIT_RAIZ;
   $("ia_prompt").value = IA.prompt || IA_PROMPT_PADRAO;
 
@@ -9693,7 +9780,7 @@ $("ia_guardar").onclick = async () => {
     // sem esse clique, falhava. Exigir um passo escondido para o botão principal
     // funcionar é desenho errado: o clique dele em Guardar já é a permissão que o
     // navegador quer.
-    if (!EDIT_RAIZ) {
+    if (!EDIT_RAIZ && !await postoDePe()) {
       recadoDaIA("Liberando a pasta do Estúdio...", "");
       await pedirPasta();
       IA_LIDA = false;
