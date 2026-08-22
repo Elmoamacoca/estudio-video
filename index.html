@@ -9261,7 +9261,13 @@ async function modelosDe(servico, chave) {
   nomes = nomes.filter(n => n && !NAO_SERVE.test(n));
   if (!nomes.length) return reserva;
   nomes.sort((a, b) => (LE_IMAGEM.test(b) - LE_IMAGEM.test(a)) || a.localeCompare(b));
-  const lista = nomes.map(n => ({ v: n, r: n + (LE_IMAGEM.test(n) ? "" : "  (não lê imagem)") }));
+  // O AVISO SÓ VALE ONDE HÁ DÚVIDA. No OpenRouter a lista já foi filtrada pela capacidade
+  // que o próprio catálogo declara, então todos ali leem imagem e marcar o contrário seria
+  // mentira: quatro modelos bons apareceram rotulados como se não servissem. No Gemini e
+  // no Groq o catálogo não diz, e aí o palpite pelo nome é o que há.
+  const adivinhando = servico !== "openrouter";
+  const lista = nomes.map(n => ({ v: n,
+    r: n + (adivinhando && !LE_IMAGEM.test(n) ? "  (talvez não leia imagem)" : "") }));
   MODELOS_JA_BUSCADOS.set(marca, lista);
   return lista;
 }
