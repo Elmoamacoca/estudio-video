@@ -9551,8 +9551,13 @@ function desenhaCfgIA() {
     const selo = u.esgotada ? '<span class="ia-selo ruim">Bateu o limite hoje</span>'
       : u.pedidos ? '<span class="ia-selo boa">Respondendo</span>'
       : '<span class="ia-selo">Ainda não usada</span>';
+    // A MESMA CONTA DO PAINEL DE CIMA. A linha mostrava `pedidos` cru e o painel mostrava
+    // o que saiu escrito; com 128 pedidos e 8 recusas, um dizia 128 e o outro 120, para a
+    // mesma chave. Dois números para a mesma coisa é pior que número nenhum.
+    const escritas = Math.max(0, Number(u.pedidos || 0) - Number(u.sem_cota || 0)
+                                 - Number(u.erros || 0));
     const conta = u.pedidos
-      ? `${num(u.pedidos)} ${u.pedidos === 1 ? "frase" : "frases"} hoje`
+      ? `${num(escritas)} ${escritas === 1 ? "frase" : "frases"} hoje`
         + (u.sem_cota ? `, ${num(u.sem_cota)} recusadas` : "")
       : "Sem uso hoje";
     return `<div class="ia-chave" data-i="${i}">
