@@ -2479,6 +2479,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   border:1px solid var(--rule-solid);border-radius:9px;background:var(--paper-2)}
 #ia_back_diz i{font-style:italic}
 
+/* A BARRA DE ROLAGEM DO SELETOR, no desenho que o resto da tela já usa (a mesma da tabela
+   e da folha de ajuda). Sem isto, a lista de modelos aparecia com a barra crua do Windows,
+   cinza e larga, do lado de um menu escuro. */
+.psel-menu{scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
+.psel-menu::-webkit-scrollbar{width:8px}
+.psel-menu::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
+.psel-menu::-webkit-scrollbar-track{background:transparent}
+.psel-menu::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+/* E ela quase não precisa aparecer: com o crivo da tarefa a lista fica curta. */
+.cfg-sel .psel-menu{max-height:280px;padding:5px}
+
 </style>
 </head>
 <body>
@@ -9210,21 +9221,27 @@ const IA_SERVICOS = [
     lista: () => "https://openrouter.ai/api/v1/models" },
 ];
 
-/* A LISTA DE RESERVA, para quando o serviço não responder o catálogo. Ela é curta de
-   propósito: são as que leem imagem, que é o que este trabalho pede. */
-const MODELOS_DE_RESERVA = {
-  gemini: ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.0-flash-lite"],
+/* OS QUE SERVEM PARA ESTA TAREFA, em ordem de recomendação.
+
+   QUAL É A TAREFA: olhar a imagem da frase de um card de notícia e escrever outra frase
+   equivalente, curta, em português. Isso pede duas coisas ao mesmo tempo, ler imagem e
+   escrever bem, e a maioria dos modelos de um catálogo não faz a primeira.
+
+   POR QUE A LISTA É ESTA E NÃO O CATÁLOGO INTEIRO: "não quero talvez, eu quero o melhor
+   modelo recomendado pra função". Antes eu mostrava tudo o que o serviço oferece e
+   marcava com um palpite "talvez não leia imagem", que é jogar a dúvida no colo dele.
+   Agora o que não serve simplesmente não aparece.
+
+   NO GROQ SÓ A FAMÍLIA LLAMA 4 LÊ IMAGEM; o resto do catálogo dele é texto puro. No
+   Gemini, as linhas flash e pro leem, e o que sobra são modelos de outra função
+   (medir semelhança, gerar imagem, gerar vídeo, transcrever). */
+const RECOMENDADOS = {
+  gemini: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite",
+           "gemini-2.0-flash-lite", "gemini-2.5-pro"],
   groq: ["meta-llama/llama-4-scout-17b-16e-instruct",
          "meta-llama/llama-4-maverick-17b-128e-instruct"],
-  openrouter: ["google/gemma-4-31b-it:free", "nvidia/nemotron-nano-12b-v2-vl:free"],
+  openrouter: [],          // aqui o próprio catálogo diz quem lê imagem, e é ele que manda
 };
-
-/* O QUE NÃO SERVE PARA ESTE TRABALHO, por mais que o catálogo ofereça: transcrever áudio,
-   falar, medir semelhança, moderar. Nenhum deles olha um card e escreve uma frase. */
-const NAO_SERVE = /whisper|tts|embed|guard|moderat|rerank|audio|speech|image-gen|imagen|veo/i;
-/* AS QUE SABIDAMENTE LEEM IMAGEM sobem para o topo da lista, porque são as que funcionam
-   aqui. As outras continuam escolhíveis: o botão Provar diz em segundos se dá certo. */
-const LE_IMAGEM = /gemini|gemma|vision|llama-4|scout|maverick|vl|omni|pixtral|qwen.*vl/i;
 
 /* A LISTA VEM DO PRÓPRIO SERVIÇO. "É pra poder selecionar o modelo, não escrever. É pra
    escolher o modelo a depender do serviço, a depender de qual é a empresa." Escrever o
@@ -9236,8 +9253,9 @@ async function modelosDe(servico, chave) {
   const ficha = fichaDoServico(servico);
   const marca = servico + "|" + (chave || "");
   if (MODELOS_JA_BUSCADOS.has(marca)) return MODELOS_JA_BUSCADOS.get(marca);
-  const reserva = (MODELOS_DE_RESERVA[servico] || [ficha.modelo])
-    .map(m => ({ v: m, r: m }));
+  const recomendados = RECOMENDADOS[servico] || [];
+  const reserva = (recomendados.length ? recomendados : [ficha.modelo])
+    .map((m, i) => ({ v: m, r: m + (i === 0 ? "  ·  recomendado" : "") }));
   if (servico !== "openrouter" && !chave) return reserva;   // sem chave não há catálogo
   let nomes = [];
   try {
@@ -9258,16 +9276,18 @@ async function modelosDe(servico, chave) {
         .map(m => String(m.id));
     }
   } catch (e) { return reserva; }
-  nomes = nomes.filter(n => n && !NAO_SERVE.test(n));
+  // O CATÁLOGO PASSA PELO CRIVO DA TAREFA. No Gemini e no Groq, sobra só o que está na
+  // lista de recomendados, na ordem dela; uma versão com data no nome
+  // (`gemini-2.5-flash-preview-...`) entra atrás da versão limpa. No OpenRouter o próprio
+  // catálogo declara quem lê imagem, e o filtro já foi feito lá em cima.
+  if (recomendados.length) {
+    const posicao = n => recomendados.findIndex(r => n === r || n.startsWith(r + "-"));
+    nomes = nomes.filter(n => posicao(n) >= 0);
+    nomes.sort((a, b) => posicao(a) - posicao(b) || a.length - b.length
+                          || a.localeCompare(b));
+  }
   if (!nomes.length) return reserva;
-  nomes.sort((a, b) => (LE_IMAGEM.test(b) - LE_IMAGEM.test(a)) || a.localeCompare(b));
-  // O AVISO SÓ VALE ONDE HÁ DÚVIDA. No OpenRouter a lista já foi filtrada pela capacidade
-  // que o próprio catálogo declara, então todos ali leem imagem e marcar o contrário seria
-  // mentira: quatro modelos bons apareceram rotulados como se não servissem. No Gemini e
-  // no Groq o catálogo não diz, e aí o palpite pelo nome é o que há.
-  const adivinhando = servico !== "openrouter";
-  const lista = nomes.map(n => ({ v: n,
-    r: n + (adivinhando && !LE_IMAGEM.test(n) ? "  (talvez não leia imagem)" : "") }));
+  const lista = nomes.map((n, i) => ({ v: n, r: n + (i === 0 ? "  ·  recomendado" : "") }));
   MODELOS_JA_BUSCADOS.set(marca, lista);
   return lista;
 }
@@ -9523,7 +9543,8 @@ function abrirJanelaDaChave(i) {
 function desenhaOndePegar() {
   const ficha = fichaDoServico(CH_RASCUNHO.servico);
   $("ch_onde").innerHTML = `A chave gratuita do <b>${escapa(ficha.r)}</b> sai em `
-    + `<b>${escapa(ficha.onde)}</b>.`;
+    + `<b>${escapa(ficha.onde)}</b>. A lista de modelos traz só os que leem imagem e `
+    + `servem para reescrever a frase do card; o primeiro é o recomendado.`;
 }
 
 /* A LISTA SE ENCHE SOZINHA, com o catálogo do serviço quando ele responde e com a lista
