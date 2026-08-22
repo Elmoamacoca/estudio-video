@@ -9240,8 +9240,18 @@ const RECOMENDADOS = {
            "gemini-2.0-flash-lite", "gemini-2.5-pro"],
   groq: ["meta-llama/llama-4-scout-17b-16e-instruct",
          "meta-llama/llama-4-maverick-17b-128e-instruct"],
-  openrouter: [],          // aqui o próprio catálogo diz quem lê imagem, e é ele que manda
+  // NO OPENROUTER O CATÁLOGO DIZ QUEM LÊ IMAGEM, mas não diz quem escreve bem. Sem uma
+  // ordem, o primeiro da lista virava o recomendado por acaso, e chegou a cair ali um
+  // modelo de MODERAÇÃO de conteúdo, que existe para barrar texto e não para escrever.
+  // Estes prefixos põem na frente as famílias que servem; o resto continua escolhível,
+  // atrás delas.
+  openrouter: ["google/gemma-4-31b", "google/gemma-4", "nvidia/nemotron-nano",
+               "nvidia/nemotron-3-nano", "qwen", "meta-llama"],
 };
+
+/* O QUE NÃO SERVE PARA ESCREVER, por mais que leia imagem: moderar, barrar, classificar
+   risco. São modelos de porteiro, e este trabalho é de redator. */
+const SO_PORTEIRO = /safety|guard|moderat|classif/i;
 
 /* A LISTA VEM DO PRÓPRIO SERVIÇO. "É pra poder selecionar o modelo, não escrever. É pra
    escolher o modelo a depender do serviço, a depender de qual é a empresa." Escrever o
@@ -9280,7 +9290,14 @@ async function modelosDe(servico, chave) {
   // lista de recomendados, na ordem dela; uma versão com data no nome
   // (`gemini-2.5-flash-preview-...`) entra atrás da versão limpa. No OpenRouter o próprio
   // catálogo declara quem lê imagem, e o filtro já foi feito lá em cima.
-  if (recomendados.length) {
+  if (servico === "openrouter") {
+    nomes = nomes.filter(n => !SO_PORTEIRO.test(n));
+    const posicao = n => {
+      const i = recomendados.findIndex(r => n.startsWith(r));
+      return i < 0 ? recomendados.length : i;       // desconhecido vai para o fim
+    };
+    nomes.sort((a, b) => posicao(a) - posicao(b) || a.localeCompare(b));
+  } else if (recomendados.length) {
     const posicao = n => recomendados.findIndex(r => n === r || n.startsWith(r + "-"));
     nomes = nomes.filter(n => posicao(n) >= 0);
     nomes.sort((a, b) => posicao(a) - posicao(b) || a.length - b.length
