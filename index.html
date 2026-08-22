@@ -2474,6 +2474,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ia-chave-botoes{flex:0 0 auto;display:flex;align-items:center;gap:6px;
   align-self:flex-start}
 
+.ch-quantos{font-style:normal;font-weight:400;opacity:.6;margin-left:6px}
+.ch-carregando{display:block;padding:9px 11px;font-size:12.5px;color:var(--muted);
+  border:1px solid var(--rule-solid);border-radius:9px;background:var(--paper-2)}
+#ia_back_diz i{font-style:italic}
+
 </style>
 </head>
 <body>
@@ -3949,7 +3954,27 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                 <button class="acao" id="ia_liberar" type="button">Liberar a pasta</button>
               </div>
             </div>
+
+            <!-- A PROVA DE QUE CHEGOU DO OUTRO LADO. "Garanta que o que for feito aqui
+                 salva no back-end, impacta diretamente o back-end, porque não pode ser
+                 front-end só bonitinho." Provar a chave aqui na tela prova a chave, e não
+                 prova o caminho. Este botão manda o PROGRAMA abrir o arquivo, montar a
+                 fila e falar com a IA, e traz de volta o que ele conseguiu. -->
+            <div class="cfg-linha">
+              <div>
+                <div class="cfg-nome">O programa lê daqui</div>
+                <div class="cfg-desc">Mande o programa deste computador abrir o arquivo,
+                  montar a fila de chaves e escrever uma frase de verdade. Se ele
+                  responder, o caminho inteiro está de pé: o que você guardou aqui chegou
+                  lá.</div>
+              </div>
+              <div class="dir">
+                <button class="acao" id="ia_provar_back" type="button">
+                  Provar no programa</button>
+              </div>
+            </div>
           </div>
+          <p class="nota mini" id="ia_back_diz"></p>
         </div>
 
         <!-- A FILA. "Eu preciso ter um sistema de rotacionamento, caso alguma chave,
@@ -4146,9 +4171,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <input id="ch_chave" type="password" placeholder="Cole a chave aqui"
              autocomplete="off" spellcheck="false">
     </label>
+    <!-- O MODELO SE ESCOLHE, NAO SE ESCREVE. "Como assim eu tenho que escrever o nome
+         do modelo? E' pra poder selecionar o modelo, a depender do servico." E a lista
+         nao e' inventada aqui: ela vem do catalogo do proprio servico. -->
     <label class="cfg-campo">
-      <span>Modelo</span>
-      <input id="ch_modelo" autocomplete="off" spellcheck="false">
+      <span>Modelo <i class="ch-quantos" id="ch_quantos"></i></span>
+      <div class="psel cfg-sel" id="ch_modelo"></div>
     </label>
     <p class="nota mini" id="ch_onde"></p>
     <div class="pop-diz" id="ch_diz"></div>
@@ -9171,12 +9199,72 @@ async function olharAEscrita() {
 
 const IA_SERVICOS = [
   { v: "gemini", r: "Google Gemini", modelo: "gemini-2.0-flash",
-    onde: "aistudio.google.com" },
+    onde: "aistudio.google.com",
+    lista: chave => "https://generativelanguage.googleapis.com/v1beta/models?key="
+                    + encodeURIComponent(chave) },
   { v: "groq", r: "Groq", modelo: "meta-llama/llama-4-scout-17b-16e-instruct",
-    onde: "console.groq.com" },
-  { v: "openrouter", r: "OpenRouter",
-    modelo: "meta-llama/llama-3.2-11b-vision-instruct:free", onde: "openrouter.ai" },
+    onde: "console.groq.com",
+    lista: () => "https://api.groq.com/openai/v1/models" },
+  { v: "openrouter", r: "OpenRouter", modelo: "google/gemma-4-31b-it:free",
+    onde: "openrouter.ai",
+    lista: () => "https://openrouter.ai/api/v1/models" },
 ];
+
+/* A LISTA DE RESERVA, para quando o serviço não responder o catálogo. Ela é curta de
+   propósito: são as que leem imagem, que é o que este trabalho pede. */
+const MODELOS_DE_RESERVA = {
+  gemini: ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.0-flash-lite"],
+  groq: ["meta-llama/llama-4-scout-17b-16e-instruct",
+         "meta-llama/llama-4-maverick-17b-128e-instruct"],
+  openrouter: ["google/gemma-4-31b-it:free", "nvidia/nemotron-nano-12b-v2-vl:free"],
+};
+
+/* O QUE NÃO SERVE PARA ESTE TRABALHO, por mais que o catálogo ofereça: transcrever áudio,
+   falar, medir semelhança, moderar. Nenhum deles olha um card e escreve uma frase. */
+const NAO_SERVE = /whisper|tts|embed|guard|moderat|rerank|audio|speech|image-gen|imagen|veo/i;
+/* AS QUE SABIDAMENTE LEEM IMAGEM sobem para o topo da lista, porque são as que funcionam
+   aqui. As outras continuam escolhíveis: o botão Provar diz em segundos se dá certo. */
+const LE_IMAGEM = /gemini|gemma|vision|llama-4|scout|maverick|vl|omni|pixtral|qwen.*vl/i;
+
+/* A LISTA VEM DO PRÓPRIO SERVIÇO. "É pra poder selecionar o modelo, não escrever. É pra
+   escolher o modelo a depender do serviço, a depender de qual é a empresa." Escrever o
+   nome à mão era pedir para ele decorar `meta-llama/llama-4-scout-17b-16e-instruct`, e
+   ainda por cima o meu padrão do OpenRouter já tinha saído do ar sem eu saber. */
+const MODELOS_JA_BUSCADOS = new Map();    // servico+chave -> lista já buscada
+
+async function modelosDe(servico, chave) {
+  const ficha = fichaDoServico(servico);
+  const marca = servico + "|" + (chave || "");
+  if (MODELOS_JA_BUSCADOS.has(marca)) return MODELOS_JA_BUSCADOS.get(marca);
+  const reserva = (MODELOS_DE_RESERVA[servico] || [ficha.modelo])
+    .map(m => ({ v: m, r: m }));
+  if (servico !== "openrouter" && !chave) return reserva;   // sem chave não há catálogo
+  let nomes = [];
+  try {
+    const cabeca = servico === "gemini" ? {} : { Authorization: "Bearer " + chave };
+    const r = await fetch(ficha.lista(chave), { headers: cabeca });
+    if (!r.ok) throw new Error(String(r.status));
+    const d = await r.json();
+    if (servico === "gemini") {
+      nomes = (d.models || [])
+        .filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+        .map(m => String(m.name || "").replace(/^models\//, ""));
+    } else if (servico === "groq") {
+      nomes = (d.data || []).map(m => String(m.id || ""));
+    } else {
+      nomes = (d.data || [])
+        .filter(m => String(m.id || "").endsWith(":free"))
+        .filter(m => ((m.architecture || {}).input_modalities || []).includes("image"))
+        .map(m => String(m.id));
+    }
+  } catch (e) { return reserva; }
+  nomes = nomes.filter(n => n && !NAO_SERVE.test(n));
+  if (!nomes.length) return reserva;
+  nomes.sort((a, b) => (LE_IMAGEM.test(b) - LE_IMAGEM.test(a)) || a.localeCompare(b));
+  const lista = nomes.map(n => ({ v: n, r: n + (LE_IMAGEM.test(n) ? "" : "  (não lê imagem)") }));
+  MODELOS_JA_BUSCADOS.set(marca, lista);
+  return lista;
+}
 
 const IA_PROMPT_PADRAO =
   "Voce le a frase de um card de noticia e escreve OUTRA frase equivalente, para um "
@@ -9411,14 +9499,16 @@ function abrirJanelaDaChave(i) {
   $("ch_titulo").textContent = i >= 0 ? `Chave ${i + 1} da fila` : "Acrescentar uma chave";
   $("ch_ok").textContent = i >= 0 ? "Salvar" : "Acrescentar";
   $("ch_chave").value = c.chave || "";
-  $("ch_modelo").value = c.modelo || "";
   $("ch_diz").textContent = "";
   $("ch_diz").className = "pop-diz";
   pselNovo($("ch_servico"), IA_SERVICOS, c.servico, v => {
     CH_RASCUNHO.servico = v;
+    CH_RASCUNHO.modelo = "";
     desenhaOndePegar();
+    encherModelos();
   });
   desenhaOndePegar();
+  encherModelos();
   $("ch_fundo").hidden = false;
   $("ch_pop").hidden = false;
   setTimeout(() => $("ch_chave").focus(), 30);
@@ -9426,11 +9516,32 @@ function abrirJanelaDaChave(i) {
 
 function desenhaOndePegar() {
   const ficha = fichaDoServico(CH_RASCUNHO.servico);
-  $("ch_modelo").placeholder = ficha.modelo;
   $("ch_onde").innerHTML = `A chave gratuita do <b>${escapa(ficha.r)}</b> sai em `
-    + `<b>${escapa(ficha.onde)}</b>. Deixe o modelo vazio para usar o padrão, que é `
-    + `<b>${escapa(ficha.modelo)}</b>.`;
+    + `<b>${escapa(ficha.onde)}</b>.`;
 }
+
+/* A LISTA SE ENCHE SOZINHA, com o catálogo do serviço quando ele responde e com a lista
+   curta de reserva quando não responde. Trocar a chave refaz a busca, porque o catálogo
+   do Gemini e o do Groq dependem dela. */
+async function encherModelos() {
+  const alvo = $("ch_modelo");
+  alvo.innerHTML = '<span class="ch-carregando">Buscando os modelos...</span>';
+  const lista = await modelosDe(CH_RASCUNHO.servico, $("ch_chave").value.trim());
+  const atual = lista.some(m => m.v === CH_RASCUNHO.modelo)
+    ? CH_RASCUNHO.modelo : lista[0].v;
+  CH_RASCUNHO.modelo = atual;
+  pselNovo(alvo, lista, atual, v => { CH_RASCUNHO.modelo = v; });
+  $("ch_quantos").textContent = lista.length === 1
+    ? "1 modelo" : `${lista.length} modelos`;
+}
+
+/* TROCOU A CHAVE, TROCA O CATÁLOGO. Espera ele parar de digitar para não pedir a lista a
+   cada tecla. */
+let CH_ESPERA = null;
+$("ch_chave").oninput = () => {
+  clearTimeout(CH_ESPERA);
+  CH_ESPERA = setTimeout(encherModelos, 600);
+};
 
 function fecharJanelaDaChave() {
   CH_QUAL = -1;
@@ -9446,7 +9557,7 @@ document.addEventListener("keydown", ev => {
 const leJanela = () => ({
   servico: CH_RASCUNHO.servico,
   chave: $("ch_chave").value.trim(),
-  modelo: $("ch_modelo").value.trim(),
+  modelo: CH_RASCUNHO.modelo || "",
 });
 
 $("ch_ok").onclick = () => {
@@ -9489,6 +9600,70 @@ $("ch_provar").onclick = async () => {
   b.disabled = false;
   b.textContent = antes;
 };
+
+/* A PROVA QUE ATRAVESSA, e é a única que responde à pergunta que importa: o que eu
+   guardei aqui chegou no programa? A prova da janela fala com o serviço a partir desta
+   aba, e por isso prova a chave e mais nada. Aqui a tela só deixa o pedido; quem abre o
+   `ia.json`, monta a fila e chama a IA é o programa deste computador, e o que volta é o
+   que ELE conseguiu. */
+let BACK_OBRA = null;
+
+$("ia_provar_back").onclick = async () => {
+  if (BACK_OBRA) return;
+  const b = $("ia_provar_back");
+  try {
+    const pedidos = await pastaDo("pedidos", true);
+    if (!pedidos) throw new Error("Libere a pasta do Estúdio primeiro.");
+    const id = "v" + Date.now();
+    const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
+    const w = await h.createWritable();
+    await w.write(JSON.stringify({ id, tipo: "provar-ia" }, null, 1));
+    await w.close();
+    BACK_OBRA = { id, desde: Date.now(), relogio: null };
+    b.disabled = true;
+    parado("ia_back_diz", "Pedido deixado. O programa passa na pasta de minuto em "
+      + "minuto, então a resposta chega em até um minuto.");
+    BACK_OBRA.relogio = setInterval(olharAProva, 2500);
+  } catch (e) { parado("ia_back_diz", e.message); }
+};
+
+async function olharAProva() {
+  if (!BACK_OBRA) return;
+  const seg = Math.round((Date.now() - BACK_OBRA.desde) / 1000);
+  const p = await pastaDo("pedidos", false);
+  if (!p) return;
+  let d = null;
+  try {
+    const f = await (await p.getFileHandle(`${BACK_OBRA.id}.andamento.json`)).getFile();
+    d = JSON.parse(await f.text());
+  } catch (e) {
+    if (seg > 180) {
+      clearInterval(BACK_OBRA.relogio); BACK_OBRA = null;
+      $("ia_provar_back").disabled = false;
+      parado("ia_back_diz", "O programa não passou na pasta em três minutos. Confira se "
+        + "a tarefa agendada do Estúdio está ligada neste computador.");
+    }
+    return;
+  }
+  if (!d.fim) {
+    parado("ia_back_diz", d.passo ? "O programa " + d.passo : "O programa pegou o pedido...");
+    return;
+  }
+  clearInterval(BACK_OBRA.relogio);
+  BACK_OBRA = null;
+  $("ia_provar_back").disabled = false;
+  if (d.erro) {
+    parado("ia_back_diz", "O programa leu o arquivo, mas não conseguiu escrever: " + d.erro);
+    return;
+  }
+  $("ia_back_diz").innerHTML = "<b>Chegou.</b> O programa abriu o arquivo, achou "
+    + `${d.chaves} ${d.chaves === 1 ? "chave" : "chaves"}, usou a de nº `
+    + `<b>${escapa(String(d.chave))}</b> no <b>${escapa(nomeDoServico(d.servico))}</b>, `
+    + `e da frase <i>${escapa(d.frase || "")}</i> ela escreveu: `
+    + `<b>${escapa(d.dito || "")}</b>`;
+  await lerUsoDaIA();
+  desenhaCfgIA();
+}
 
 /* A PROVA DE UMA CHAVE QUE JÁ ESTÁ NA FILA, a partir da lista. */
 async function provarChave(i, botao) {
