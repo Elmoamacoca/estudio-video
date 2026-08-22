@@ -2503,6 +2503,16 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .est-cab{display:none}
 }
 
+/* O AVISO DO ALTO da aba de Configuracoes. */
+.ia-alerta{margin:0 0 18px;padding:13px 15px;border-radius:11px;font-size:13px;
+  line-height:1.55;border:1px solid var(--rule-solid);background:var(--paper-2);
+  color:var(--muted)}
+.ia-alerta[hidden]{display:none}
+.ia-alerta.boa{border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+  background:var(--accent-tint);color:var(--accent)}
+.ia-alerta.ruim{border-color:color-mix(in srgb,#e0574b 45%,transparent);
+  background:color-mix(in srgb,#e0574b 12%,transparent);color:#e0574b}
+
 </style>
 </head>
 <body>
@@ -3954,6 +3964,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <p>A fila de chaves, o prompt, e o que já se gastou hoje.</p>
         </div>
 
+        <!-- O AVISO FICA NO ALTO. Quando gravar falha, o motivo tem de estar onde o olho
+             esta', e nao numa linha pequena no rodape' da pagina. -->
+        <div class="ia-alerta" id="ia_alerta" hidden></div>
+
         <!-- ONDE ISTO VAI PARAR, e a caixa existe porque a pergunta foi essa: "tem que
              verificar se eu alterar ou salvar alguma coisa aqui vai impactar no
              back-end". Vai, e por um caminho só: este arquivo. Mas o navegador só escreve
@@ -4818,7 +4832,7 @@ function irPara(chave, empurrar) {
   if (chave !== "editar") document.body.classList.remove("ed-focado");
   // A ABA DE CONFIGURACOES SE PINTA AO SER ABERTA, e nao no carregamento da pagina: ela
   // depende da pasta do Estudio, que so' e' liberada na aba de Edicao.
-  if (chave === "config" && PRONTA) { lerIA(); desenhaCfgIA(); }
+  if (chave === "config" && PRONTA) { retomarPastaEler(); }
   const folha = document.getElementById("faq_folha");
   if (folha && !folha.hidden) {
     folha.hidden = true;
@@ -7964,16 +7978,34 @@ function desenhaPorta(cracha) {
 async function pedirPasta() {
   if (EDIT_RAIZ) return EDIT_RAIZ;
   if (!TEM_PORTA) throw new Error("Este navegador não abre pastas do computador.");
+
+  // A ARMADILHA DO CRACHÁ VELHO, e ela custou uma tarde ao Gabriel: "a chave não está
+  // ficando salva". O crachá guardado podia apontar para `Estudio\levas`, de uma versão
+  // em que a tela só lia vídeo. Liberar dava certo, o navegador dizia sim, e mesmo assim
+  // `EDIT_RAIZ` continuava nulo, porque a raiz do Estúdio é UM NÍVEL ACIMA de `levas` e
+  // não há como subir a partir de uma pasta liberada. Resultado: gravar falhava sempre, e
+  // o recado dizia "libere a pasta", que era justamente o que ele acabara de fazer.
   const cracha = CRACHA_NA_MAO || await pegarCracha();
   if (cracha) {
     const h = await pastaValendo(cracha, true);
     if (h) {
-      ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(h));
-      return EDIT_RAIZ;
+      const { raiz, levas } = await abrirRaiz(h);
+      if (raiz) {
+        EDIT_RAIZ = raiz;
+        EDIT_PASTA = levas;
+        return EDIT_RAIZ;
+      }
+      // o crachá aponta para dentro: pede a pasta certa em vez de fingir que deu
     }
   }
   const h = await window.showDirectoryPicker({ id: "estudio-raiz", mode: "readwrite" });
-  ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(h));
+  const { raiz, levas } = await abrirRaiz(h);
+  if (!raiz) {
+    throw new Error(`Essa é a pasta "${h.name}", e o que eu preciso é a pasta `
+      + `"Estudio", um nível acima (a que tem levas, recortes e pedidos dentro).`);
+  }
+  EDIT_RAIZ = raiz;
+  EDIT_PASTA = levas;
   await guardarCracha(h);
   return EDIT_RAIZ;
 }
@@ -7982,7 +8014,16 @@ async function pedirPasta() {
 async function escolherPasta() {
   try {
     const h = await window.showDirectoryPicker({ id: "estudio-raiz", mode: "readwrite" });
-    ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(h));
+    // APONTAR A PASTA DE DENTRO NÃO LIGA NADA, e antes isso passava calado: a tela dizia
+    // "pasta ligada" e a raiz continuava nula, porque não há como subir um nível a partir
+    // de uma pasta liberada. Foi o que deixou a chave da IA sem conseguir gravar.
+    const { raiz, levas } = await abrirRaiz(h);
+    if (!raiz) {
+      return parado("ed_recado_pasta", `essa é a pasta "${h.name}". Aponte a pasta `
+        + `"Estudio", um nível acima, que é a que tem levas, recortes e pedidos dentro.`);
+    }
+    EDIT_RAIZ = raiz;
+    EDIT_PASTA = levas;
     const colou = await guardarCracha(h);
     parado("ed_recado_pasta", colou ? "pasta ligada."
       : "pasta ligada, mas o navegador não deixou guardar a escolha: na próxima visita "
@@ -8006,7 +8047,13 @@ $("ed_liberar").onclick = async () => {
   const h = await pastaValendo(cracha, true);
   if (!h) return parado("ed_recado_pasta", "o navegador não liberou. Tente de novo, ou "
     + "aponte a pasta outra vez.");
-  ({ raiz: EDIT_RAIZ, levas: EDIT_PASTA } = await abrirRaiz(h));
+  const { raiz, levas } = await abrirRaiz(h);
+  if (!raiz) {
+    return parado("ed_recado_pasta", `a pasta guardada é "${h.name}", de uma versão `
+      + `antiga. Clique em trocar de pasta e aponte a "Estudio", um nível acima.`);
+  }
+  EDIT_RAIZ = raiz;
+  EDIT_PASTA = levas;
   parado("ed_recado_pasta", "");
   await mostrarPecas();
 };
@@ -9391,6 +9438,32 @@ function viraFila(d) {
   return { chaves: fila, prompt: d.prompt || "" };
 }
 
+/* RETOMAR A PASTA SEM PERGUNTAR. Quando a permissão desta visita já foi dada, o crachá
+   ainda vale e dá para reabrir a pasta calado, sem caixinha nenhuma. Sem isto, abrir a
+   aba de Configurações mostrava a fila vazia mesmo com as chaves gravadas no disco, e
+   parecia que elas tinham sumido. */
+async function retomarPastaEler() {
+  if (!EDIT_RAIZ && TEM_PORTA) {
+    try {
+      const cracha = CRACHA_NA_MAO || await pegarCracha();
+      const h = cracha ? await pastaValendo(cracha, false) : null;   // sem pedir
+      if (h) {
+        const { raiz, levas } = await abrirRaiz(h);
+        if (raiz) { EDIT_RAIZ = raiz; EDIT_PASTA = levas; }
+      }
+    } catch (e) { /* segue sem a pasta, e o aviso abaixo explica */ }
+  }
+  await lerIA();
+  desenhaCfgIA();
+  if (!EDIT_RAIZ) {
+    recadoDaIA("A pasta do Estúdio ainda não está liberada nesta visita, então o que "
+      + "estiver guardado no arquivo não aparece aqui. Clique em Liberar a pasta, ou em "
+      + "Guardar, que ele libera sozinho.", "");
+  } else {
+    recadoDaIA("", "");
+  }
+}
+
 async function lerIA() {
   if (IA_LIDA) return;
   if (!EDIT_RAIZ) { desenhaCfgIA(); desenhaUsoDaIA(); return; }
@@ -9613,18 +9686,63 @@ $("ia_prompt_padrao").onclick = () => { $("ia_prompt").value = IA_PROMPT_PADRAO;
 
 $("ia_guardar").onclick = async () => {
   IA.prompt = $("ia_prompt").value.trim();
+  const b = $("ia_guardar");
+  b.disabled = true;
   try {
+    // GUARDAR LIBERA A PASTA SOZINHO. Antes ele exigia um clique anterior noutro botão e,
+    // sem esse clique, falhava. Exigir um passo escondido para o botão principal
+    // funcionar é desenho errado: o clique dele em Guardar já é a permissão que o
+    // navegador quer.
+    if (!EDIT_RAIZ) {
+      recadoDaIA("Liberando a pasta do Estúdio...", "");
+      await pedirPasta();
+      IA_LIDA = false;
+      await juntarComOQueJaEstava();
+    }
     const gravado = await gravarIA();
     IA_LIDA = true;
     desenhaCfgIA();
     // O RECADO DIZ O QUE FOI PARAR NO ARQUIVO, lido de volta dele. É a resposta à
     // pergunta "salvar aqui vai impactar no back-end": foi para lá, e é isto que está lá.
     const n = (gravado.chaves || []).length;
-    parado("ia_cfg_recado", `Guardado em Estudio\\ia.json: `
+    recadoDaIA(`Guardado em Estudio\\ia.json: `
       + `${n} ${n === 1 ? "chave" : "chaves"} na fila e um prompt de `
-      + `${(gravado.prompt || "").length} caracteres. É deste arquivo que o programa lê.`);
-  } catch (e) { parado("ia_cfg_recado", e.message); }
+      + `${(gravado.prompt || "").length} caracteres. É deste arquivo que o programa lê.`,
+      "boa");
+  } catch (e) {
+    recadoDaIA("Não deu para guardar: " + e.message, "ruim");
+  }
+  b.disabled = false;
 };
+
+/* O RECADO APARECE EM CIMA, e não só na linha do rodapé. Quando gravar falha, o motivo
+   tem de estar onde o olho está, e não a uma rolagem de distância. */
+function recadoDaIA(txt, tom) {
+  const alto = $("ia_alerta");
+  alto.textContent = txt;
+  alto.className = "ia-alerta " + (tom || "");
+  alto.hidden = !txt;
+  parado("ia_cfg_recado", txt);
+}
+
+/* NUNCA SOBRESCREVER O QUE NÃO FOI LIDO. Se a fila do disco tem chaves e a da tela não as
+   conhece, gravar por cima apagaria as dele. Então o que está no arquivo é lido e juntado
+   ao que está na tela, e não o contrário. */
+async function juntarComOQueJaEstava() {
+  let doDisco = { chaves: [], prompt: "" };
+  try {
+    const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
+    doDisco = viraFila(JSON.parse(await f.text()) || {});
+  } catch (e) { IA_LIDA = true; return; }
+  const daTela = IA.chaves.slice();
+  const juntas = doDisco.chaves.slice();
+  for (const c of daTela) {
+    if (!juntas.some(x => x.chave === c.chave && x.servico === c.servico)) juntas.push(c);
+  }
+  IA = { chaves: juntas, prompt: IA.prompt || doDisco.prompt || "" };
+  IA_LIDA = true;
+  desenhaCfgIA();
+}
 
 
 /* ------------------------------------------------ a janela da chave
