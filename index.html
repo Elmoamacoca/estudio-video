@@ -9545,7 +9545,16 @@ function viraFila(d) {
 
    AS CHAVES CONTINUAM SEM SAIR DA MÁQUINA: o posto escuta só no endereço de casa, e só
    responde para as telas do Estúdio. Nada disso passa pela internet. */
-const POSTO = "http://127.0.0.1:8787";
+/* O POSTO E' O ENDERECO DE ONDE A TELA VEIO, quando ela veio de casa.
+
+   POR QUE NAO E' UM NUMERO FIXO: a pagina e' servida pelo proprio posto, entao perguntar a
+   ele e' perguntar a quem abriu a porta. Escrever 8787 na pedra impedia uma coisa que o
+   projeto precisava: subir um posto de ENSAIO noutra porta, com uma pasta descartavel, para
+   as provas gravarem, apagarem e corromperem arquivo sem chegar perto do Estudio de
+   verdade. Com esta linha, a tela de ensaio fala com o posto de ensaio sozinha. */
+const POSTO = (location.hostname === "127.0.0.1" || location.hostname === "localhost")
+  ? location.origin
+  : "http://127.0.0.1:8787";
 let POSTO_DE_PE = null;                 // null = ainda não perguntei, ou a resposta venceu
 let POSTO_PERGUNTADO = 0;
 const VALIDADE_DO_POSTO = 15000;        // 15 s: o posto reinicia sozinho a cada 5 minutos
