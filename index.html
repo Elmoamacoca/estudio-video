@@ -778,6 +778,12 @@ span.pcard-avatar[class*="av-"]{background-size:cover;background-position:center
 .pf-retrato .pcard-avatar{width:100%;height:100%;font-size:22px;border-width:2px}
 
 .pf-gal-cab .sel-gatilho{height:30px;border-radius:8px;padding:0 10px;font-size:12.5px}
+/* SELO DE ALERTA. Vermelho quando a tela nao esta' gravando de verdade: o selo verde
+   dizendo "gravando no disco" enquanto nada chegava la' foi o pior falso positivo desta
+   tela, e cor e' a primeira coisa que o olho pega. */
+.badge.badge-ruim{color:#e0574b;border-color:rgba(224,87,75,.4);
+  background:rgba(224,87,75,.10)}
+
 /* Botão escondido é botão escondido, e `.acao` pinta display por conta própria. */
 #ia_liberar[hidden]{display:none}
 
@@ -9488,14 +9494,22 @@ function viraFila(d) {
    AS CHAVES CONTINUAM SEM SAIR DA MÁQUINA: o posto escuta só no endereço de casa, e só
    responde para as telas do Estúdio. Nada disso passa pela internet. */
 const POSTO = "http://127.0.0.1:8787";
-let POSTO_DE_PE = null;                 // null = ainda não perguntei nesta visita
+let POSTO_DE_PE = null;                 // null = ainda não perguntei, ou a resposta venceu
+let POSTO_PERGUNTADO = 0;
+const VALIDADE_DO_POSTO = 15000;        // 15 s: o posto reinicia sozinho a cada 5 minutos
 
+/* A RESPOSTA DO POSTO TEM VALIDADE, e antes não tinha. Ela era guardada para a visita
+   inteira, e bastava o posto reiniciar, coisa que a tarefa agendada faz, para a tela
+   passar horas convencida de que estava gravando no disco enquanto nada chegava lá. */
 async function postoDePe() {
-  if (POSTO_DE_PE !== null) return POSTO_DE_PE;
+  if (POSTO_DE_PE !== null && Date.now() - POSTO_PERGUNTADO < VALIDADE_DO_POSTO) {
+    return POSTO_DE_PE;
+  }
   try {
     const r = await fetch(POSTO + "/vivo", { cache: "no-store" });
     POSTO_DE_PE = r.ok;
   } catch (e) { POSTO_DE_PE = false; }
+  POSTO_PERGUNTADO = Date.now();
   return POSTO_DE_PE;
 }
 
@@ -9506,7 +9520,16 @@ async function noPosto(rota, corpo) {
     : { method: "POST", cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(corpo) };
-  const r = await fetch(POSTO + rota, opcoes);
+  let r;
+  try {
+    r = await fetch(POSTO + rota, opcoes);
+  } catch (e) {
+    // O ERRO DO NAVEGADOR É "Failed to fetch", em inglês e sem dizer nada a quem lê. E a
+    // resposta velha sobre o posto morre aqui: da próxima vez ele pergunta de novo.
+    POSTO_DE_PE = null;
+    throw new Error("O posto do Estúdio parou de atender. Nada foi gravado. Ele volta "
+      + "sozinho em até cinco minutos; recarregue a página e confira.");
+  }
   let d = {};
   try { d = await r.json(); } catch (e) { /* resposta sem corpo */ }
   if (!r.ok) throw new Error(d.erro || `o posto do Estúdio respondeu ${r.status}`);
@@ -9529,12 +9552,16 @@ const SEM_POSTO = EM_CASA
     + "e as chaves passam a ficar guardadas.";
 
 async function retomarPastaEler() {
+  // O QUE O DISCO RECUSOU NAO SE APAGA AO TROCAR DE ABA. Antes, sair e voltar relia o
+  // arquivo por cima, sumia com a chave que ele tinha acabado de colar e ainda apagava o
+  // recado vermelho que explicava o que havia acontecido: erro sem rastro nenhum.
+  if (MUDANCA_PENDENTE) { desenhaCfgIA(); return; }
   // COM O POSTO DE PÉ NÃO HÁ PASTA A PEDIR, e nem aviso a dar: ele lê do disco e pronto.
   if (await postoDePe()) {
     IA_LIDA = false;
     await lerIA();
     desenhaCfgIA();
-    recadoDaIA("", "");
+    if (!LEITURA_FALHOU) recadoDaIA("", "");
     return;
   }
   if (!EDIT_RAIZ && TEM_PORTA) {
@@ -9552,19 +9579,47 @@ async function retomarPastaEler() {
   recadoDaIA(EDIT_RAIZ ? "" : SEM_POSTO, EDIT_RAIZ ? "" : "ruim");
 }
 
+/* TRES ESTADOS, E NAO DOIS: li, li e não tinha nada, e NÃO CONSEGUI LER.
+
+   Confundir os dois últimos foi o defeito mais perigoso desta tela, e ele só apareceu numa
+   auditoria que o reproduziu: o posto reinicia, a leitura cai, o `catch` engole calado, a
+   tela desenha "a fila está vazia" com o selo verde de "gravando no disco", ele acrescenta
+   uma chave, e a gravação apaga as três que estavam no arquivo. Verde do início ao fim.
+
+   Enquanto for "não consegui ler", nada é gravado e a tela diz isso em vermelho. */
+let LEITURA_FALHOU = "";          // vazio = leitura em ordem; com texto = o motivo
+let MUDANCA_PENDENTE = false;     // o disco recusou algo que ainda está na tela
+
 async function lerIA() {
   if (IA_LIDA) return;
   if (await postoDePe()) {
     try {
       const d = await noPosto("/ia");
-      if (d.tem) IA = viraFila(d.d || {});
+      IA = viraFila((d.tem && d.d) || {});   // disco vazio deixa a tela vazia também
+      LEITURA_FALHOU = "";
       IA_LIDA = true;
       await lerUsoDaIA();
       desenhaCfgIA();
       return;
-    } catch (e) { /* o posto tropeçou: tenta pela pasta, logo abaixo */ }
+    } catch (e) {
+      LEITURA_FALHOU = e.message || String(e);
+      IA_LIDA = false;
+      desenhaCfgIA();
+      recadoDaIA("NÃO CONSEGUI LER as chaves que já estão no disco. Não acrescente nem "
+        + "remova nada agora, porque salvar apagaria o que está lá. " + LEITURA_FALHOU,
+        "ruim");
+      return;
+    }
   }
-  if (!EDIT_RAIZ) { desenhaCfgIA(); desenhaUsoDaIA(); return; }
+  if (!EDIT_RAIZ) {
+    // SEM POSTO E SEM PASTA, A TELA NAO SABE NADA. Dizer "a fila esta' vazia" aqui e' o
+    // mesmo engano de antes com outra roupa: ela nao leu coisa alguma.
+    LEITURA_FALHOU = SEM_POSTO;
+    IA_LIDA = false;
+    desenhaCfgIA();
+    desenhaUsoDaIA();
+    return;
+  }
   try {
     const f = await (await EDIT_RAIZ.getFileHandle("ia.json")).getFile();
     IA = viraFila(JSON.parse(await f.text()) || {});
@@ -9576,12 +9631,14 @@ async function lerIA() {
 
 async function gravarIA() {
   /* TELA QUE NAO LEU O DISCO NAO ESCREVE POR CIMA DELE.
-     Sem esta trava, uma aba que abriu antes de o posto responder tem a fila vazia na mao,
-     e o primeiro salvamento dela apaga as chaves que ja' estavam gravadas. E' o tipo de
-     perda que ele so' descobriria na leva seguinte, sem nenhum erro na tela. */
-  if (!IA_LIDA && !(IA.chaves || []).length) {
-    throw new Error("Esta tela ainda não leu o arquivo, então salvar agora apagaria o que "
-      + "está lá. Recarregue a página e tente de novo.");
+
+     A PRIMEIRA VERSAO DESTA TRAVA NAO TRANCAVA NADA, e a auditoria pegou: ela exigia que a
+     fila TAMBEM estivesse vazia, e a fila nunca está vazia na hora de salvar, porque a
+     chave que ele acabou de colar já entrou nela. A condição certa é uma só: se esta tela
+     não leu o arquivo, ela não tem o direito de escrever por cima dele. */
+  if (!IA_LIDA) {
+    throw new Error("Esta tela ainda não leu o arquivo do disco, então salvar agora "
+      + "apagaria o que está lá. Recarregue a página (F5) e faça de novo.");
   }
   if (await postoDePe()) {
     // A PROVA VEM DO DISCO. O posto grava, lê de volta o arquivo que o programa vai ler, e
@@ -9736,15 +9793,27 @@ function desenhaCfgIA() {
   // O SELO DIZ QUEM ESTÁ GRAVANDO, e não se uma pasta foi apontada. Com o posto de pé
   // não há pasta nenhuma envolvida, e mostrar "Pasta não liberada" ali seria um susto à
   // toa exatamente na tela em que ele já brigou três vezes.
-  $("ia_selo_pasta").textContent = POSTO_DE_PE ? "Gravando no disco"
+  const selo = $("ia_selo_pasta");
+  selo.textContent = LEITURA_FALHOU ? "Não consegui ler o arquivo"
+    : POSTO_DE_PE ? "Gravando no disco"
     : EDIT_RAIZ ? "Pasta liberada" : "Posto fora do ar";
+  selo.classList.toggle("badge-ruim", !!LEITURA_FALHOU || (!POSTO_DE_PE && !EDIT_RAIZ));
   // BOTAO QUE NAO TEM O QUE FAZER SAI DA TELA. Com o posto de pé não há pasta a liberar, e
   // um botão inútil ao lado do texto que diz "não há pasta a liberar" é convite a pensar
   // que faltou clicar nele. Sobrou clique a menos, e não a mais, nesta tela.
   $("ia_liberar").hidden = !!POSTO_DE_PE || !!EDIT_RAIZ;
   $("ia_prompt").value = IA.prompt || IA_PROMPT_PADRAO;
 
-  if (!IA.chaves.length) {
+  // "VAZIA" SO' QUANDO O DISCO DISSE QUE ESTA' VAZIA. Se a leitura falhou, dizer vazia e'
+  // mentir, e ainda convida a acrescentar uma chave, que e' o gesto que apaga o arquivo.
+  $("ia_add").disabled = !!LEITURA_FALHOU;
+  if (LEITURA_FALHOU) {
+    fila.innerHTML = '<div class="ia-vazia"><b>Não consegui ler o arquivo do disco.</b>'
+      + '<span class="nota">Não sei quais chaves estão guardadas, então não mostro nenhuma '
+      + 'e não deixo salvar: gravar agora apagaria o que está lá. Recarregue a página '
+      + '(F5). Se continuar, a cópia anterior está em <b>ia.json.anterior</b>, na pasta do '
+      + 'Estúdio.</span></div>';
+  } else if (!IA.chaves.length) {
     fila.innerHTML = '<div class="ia-vazia"><b>A fila está vazia.</b><span class="nota">'
       + 'Acrescente uma chave abaixo. A gratuita do Google Gemini sai em '
       + '<b>aistudio.google.com</b>, a do Groq em <b>console.groq.com</b> e a do '
@@ -9821,10 +9890,18 @@ async function salvarFila(oQueMudou) {
     // quando o campo está vazio, então nada quebrava; parecia quebrado, que é pior.
     const campo = $("ia_prompt");
     IA.prompt = (campo && campo.value.trim()) || IA.prompt || IA_PROMPT_PADRAO;
+    const mandei = (IA.chaves || []).length;
     const g = await gravarIA();
-    IA_LIDA = true;
-    desenhaCfgIA();
     const n = (g.chaves || []).length;
+    // CONFERIR O QUE VOLTOU, e nao so' imprimir. O verde tem de sair da comparacao entre o
+    // que foi mandado e o que o disco devolveu, senao ele e' so' uma palavra bonita.
+    if (n !== mandei) {
+      throw new Error(`mandei ${mandei} e o arquivo voltou com ${n}. `
+        + "Recarregue a página e confira antes de mexer em mais nada.");
+    }
+    IA_LIDA = true;
+    MUDANCA_PENDENTE = false;
+    desenhaCfgIA();
     recadoDaIA(`${oQueMudou} Estudio\\ia.json tem agora `
       + `${n} ${n === 1 ? "chave" : "chaves"} e um prompt de `
       + `${(g.prompt || "").length} caracteres. É deste arquivo que o programa lê.`, "boa");
@@ -9832,15 +9909,26 @@ async function salvarFila(oQueMudou) {
   } catch (e) {
     // O QUE ESTÁ NA TELA NÃO SE APAGA quando o disco recusa: ele acabou de digitar isso.
     // Some o "guardado", fica o vermelho, e a chave continua onde ele a pôs.
+    MUDANCA_PENDENTE = true;
     desenhaCfgIA();
     recadoDaIA("NÃO FOI SALVO NO DISCO. " + (e.message || e), "ruim");
     return false;
   }
 }
 
+let FILA_OCUPADA = false;
+
 $("ia_fila").addEventListener("click", async ev => {
   const b = ev.target.closest("[data-acao]");
   if (!b) return;
+  // UM DE CADA VEZ. Dois cliques seguidos enquanto a gravacao anterior ainda corria
+  // mexiam na chave errada, porque a linha e' identificada pela posicao e a posicao muda.
+  if (FILA_OCUPADA) return;
+  FILA_OCUPADA = true;
+  try { await umCliqueNaFila(ev, b); } finally { FILA_OCUPADA = false; }
+});
+
+async function umCliqueNaFila(ev, b) {
   const i = Number(b.closest(".ia-chave").dataset.i);
   const acao = b.dataset.acao;
   if (acao === "tira") {
@@ -9860,7 +9948,7 @@ $("ia_fila").addEventListener("click", async ev => {
     return;
   }
   if (acao === "provar") await provarChave(i, b);
-});
+}
 
 $("ia_add").onclick = () => abrirJanelaDaChave(-1);
 
@@ -9960,6 +10048,7 @@ function abrirJanelaDaChave(i) {
   const c = i >= 0 ? IA.chaves[i] : { servico: "gemini", chave: "", modelo: "" };
   CH_RASCUNHO = { servico: c.servico, chave: c.chave, modelo: c.modelo };
   $("ch_titulo").textContent = i >= 0 ? `Chave ${i + 1} da fila` : "Nova chave";
+  $("ch_ok").disabled = false;          // ele fica travado apos um salvamento que deu certo
   // SALVAR, E NAO "ACRESCENTAR". "Acrescentar" descreve o que acontece com a lista da
   // tela, e foi por isso que ele clicou dez vezes achando que tinha salvado. O botao tem
   // de dizer o que ele quer que aconteca, que e' a chave ficar guardada.
@@ -10058,8 +10147,10 @@ $("ch_ok").onclick = async () => {
   $("ch_diz").className = "pop-diz";
   $("ch_diz").textContent = "Salvando...";
   const deu = await salvarFila(editando ? "Chave alterada." : "Chave salva.");
-  $("ch_ok").disabled = false;
+  // SO' RELIGA NO CAMINHO DO ERRO. Religar depois de dar certo deixava a janela aberta por
+  // um segundo com o botao vivo, e um segundo clique gravava a mesma chave outra vez.
   if (!deu) {
+    $("ch_ok").disabled = false;
     $("ch_diz").className = "pop-diz ruim";
     $("ch_diz").textContent = "Não deu para salvar. O motivo está no alto da página, "
       + "atrás desta janela. A chave continua aqui, não se perdeu.";
@@ -10109,13 +10200,20 @@ $("ia_provar_back").onclick = async () => {
   if (BACK_OBRA) return;
   const b = $("ia_provar_back");
   try {
-    const pedidos = await pastaDo("pedidos", true);
-    if (!pedidos) throw new Error("Libere a pasta do Estúdio primeiro.");
+    // PELO POSTO, QUE E' POR ONDE ELE USA A FERRAMENTA. Este botao continuava exigindo a
+    // pasta liberada, numa tela que esconde o botao de liberar a pasta: era um botao que
+    // nao tinha como funcionar. A pasta fica de plano B, para quando o posto nao atender.
     const id = "v" + Date.now();
-    const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
-    const w = await h.createWritable();
-    await w.write(JSON.stringify({ id, tipo: "provar-ia" }, null, 1));
-    await w.close();
+    if (await postoDePe()) {
+      await noPosto("/pedido", { id, tipo: "provar-ia" });
+    } else {
+      const pedidos = await pastaDo("pedidos", true);
+      if (!pedidos) throw new Error(SEM_POSTO);
+      const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
+      const w = await h.createWritable();
+      await w.write(JSON.stringify({ id, tipo: "provar-ia" }, null, 1));
+      await w.close();
+    }
     BACK_OBRA = { id, desde: Date.now(), relogio: null };
     b.disabled = true;
     parado("ia_back_diz", "Pedido deixado. O programa passa na pasta de minuto em "
@@ -10126,19 +10224,34 @@ $("ia_provar_back").onclick = async () => {
 
 async function olharAProva() {
   if (!BACK_OBRA) return;
+  // O RELOGIO CONTA ANTES DE QUALQUER VOLTA ANTECIPADA. Ele ficava girando para sempre
+  // quando a pasta sumia no meio, porque a contagem vinha depois do `return`.
   const seg = Math.round((Date.now() - BACK_OBRA.desde) / 1000);
-  const p = await pastaDo("pedidos", false);
-  if (!p) return;
+  const desistir = (porque) => {
+    clearInterval(BACK_OBRA.relogio); BACK_OBRA = null;
+    $("ia_provar_back").disabled = false;
+    parado("ia_back_diz", porque);
+  };
   let d = null;
   try {
-    const f = await (await p.getFileHandle(`${BACK_OBRA.id}.andamento.json`)).getFile();
-    d = JSON.parse(await f.text());
+    if (await postoDePe()) {
+      const r = await noPosto("/pedido?id=" + encodeURIComponent(BACK_OBRA.id));
+      if (!r.tem) throw new Error("ainda não");
+      d = r.d;
+    } else {
+      const p = await pastaDo("pedidos", false);
+      if (!p) {
+        if (seg > 180) desistir("Perdi o caminho até a pasta no meio da prova. "
+          + "Recarregue a página e tente de novo.");
+        return;
+      }
+      const f = await (await p.getFileHandle(`${BACK_OBRA.id}.andamento.json`)).getFile();
+      d = JSON.parse(await f.text());
+    }
   } catch (e) {
     if (seg > 180) {
-      clearInterval(BACK_OBRA.relogio); BACK_OBRA = null;
-      $("ia_provar_back").disabled = false;
-      parado("ia_back_diz", "O programa não passou na pasta em três minutos. Confira se "
-        + "a tarefa agendada do Estúdio está ligada neste computador.");
+      desistir("O programa não pegou o pedido em três minutos. Confira se a tarefa "
+        + "agendada do Estúdio está ligada neste computador.");
     }
     return;
   }
@@ -10214,6 +10327,12 @@ async function imagemDeProva(frase) {
    jeito de trabalhar é dela. */
 const TETO_DE_FICHAS = 4096;
 
+/* O MODELO DO GROQ PARA DE PENSAR EM VOZ ALTA, decidido com ele, com número na mesa.
+   Medido em 22/08/2026, mesma chave e mesmo card: como estava, 700 fichas queimadas e
+   resposta vazia; sem pensar alto, 15 fichas e "Bancos levam bolsa a alta de 2% na terça".
+   Vale só no Groq: o Gemini já responde certo e não recebe campo nenhum a mais. */
+const SEM_PENSAR_ALTO = { groq: { reasoning_effort: "none" } };
+
 function corpoDoPedido(servico, modelo, prompt, b64) {
   if (servico === "gemini") {
     const partes = [{ text: prompt }];
@@ -10224,8 +10343,12 @@ function corpoDoPedido(servico, modelo, prompt, b64) {
   const conteudo = [{ type: "text", text: prompt }];
   if (b64) conteudo.push({ type: "image_url",
                            image_url: { url: "data:image/png;base64," + b64 } });
-  return { model: modelo, temperature: 0.9, max_tokens: TETO_DE_FICHAS,
-           messages: [{ role: "user", content: conteudo }] };
+  // O MESMO AJUSTE DO PROGRAMA, para o botão Provar responder o que a leva vai responder.
+  // Se aqui e lá pedirem coisas diferentes, provar deixa de provar.
+  return Object.assign(
+    { model: modelo, temperature: 0.9, max_tokens: TETO_DE_FICHAS,
+      messages: [{ role: "user", content: conteudo }] },
+    SEM_PENSAR_ALTO[servico] || {});
 }
 
 /* SERVIÇO OCUPADO NÃO É CHAVE RUIM.
@@ -10298,7 +10421,17 @@ async function chamarIA(servico, chave, modelo, prompt, b64, tentativa = 0) {
     throw new Error("O serviço respondeu sem texto"
       + (razao ? ` (motivo: ${razao})` : "") + ". Tente outro modelo da lista.");
   }
-  return dito.trim().replace(/^"|"$/g, "");
+  return soAFrase(dito);
+}
+
+/* O QUE É A FRASE E O QUE É O MODELO PENSANDO ALTO. Alguns modelos abrem a resposta com uma
+   etiqueta <think> e despejam dentro dela o próprio raciocínio antes de entregar a frase, e
+   isso iria parar escrito no card. Não muda nada em como a IA trabalha: ela pensa o que
+   quiser, e o pensamento não vira peça. */
+function soAFrase(texto) {
+  let t = String(texto || "").replace(/<(think|thinking|reasoning)>[\s\S]*?<\/\1>/gi, "");
+  if (/^\s*<(think|thinking|reasoning)>/i.test(t)) t = "";   // ficou aberto, cortado no meio
+  return t.trim().replace(/^"|"$/g, "").trim();
 }
 
 
