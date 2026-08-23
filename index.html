@@ -6253,7 +6253,9 @@ $("exp_baixar").onclick = async () => {
   const arquivo = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(arquivo);
-  a.download = `atividade-estudio-${new Date().toISOString().slice(0, 10)}.csv`;
+  // O DIA DAQUI TAMBEM NO NOME DO ARQUIVO, senao o que ele salva as 22h leva a data de
+  // amanha e a pasta de downloads fica com duas datas para o mesmo dia de trabalho.
+  a.download = `atividade-estudio-${hojeAqui()}.csv`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 
@@ -10224,11 +10226,28 @@ $("ia_liberar").onclick = async () => {
   }
 };
 
+/* QUE DIA E' HOJE, NO RELOGIO DESTE COMPUTADOR.
+
+   `toISOString()` DEVOLVE O DIA EM UTC, e era isso que estava escrito aqui. O programa
+   grava a conta com `time.strftime` do Python, que usa a hora DAQUI. No Brasil sao tres
+   horas de diferenca, entao das 21h em diante os dois discordavam: a tela pedia a folha
+   de amanha, nao achava, e desenhava a aba inteira como se nada tivesse acontecido no
+   dia. Ele viu isso as 22h50 de 22/08/2026, com cem pedidos na conta: "aqui nao traz
+   nenhum veredito referente ao Google Gemini". Nao era a chave, e nem o rodizio: era a
+   tela olhando para o dia errado durante as tres ultimas horas de todo dia.
+
+   TRES HORAS POR DIA E' UM OITAVO DO TEMPO, e justamente o pedaco em que ele trabalha. */
+function hojeAqui() {
+  const d = new Date();
+  const dois = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`;
+}
+
 async function lerUsoDaIA() {
   if (await postoDePe()) {
     try {
       const d = await noPosto("/uso");
-      const hoje = new Date().toISOString().slice(0, 10);
+      const hoje = hojeAqui();          // no relogio daqui, e nao em UTC
       IA_USO = (d.tem && d.d && d.d.dia === hoje) ? d.d : null;
       USO_LIDO = true;            // o posto respondeu: folha vazia tambem e' resposta
       desenhaUsoDaIA();
@@ -10238,7 +10257,7 @@ async function lerUsoDaIA() {
   try {
     const f = await (await EDIT_RAIZ.getFileHandle("ia-uso.json")).getFile();
     const d = JSON.parse(await f.text());
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = hojeAqui();            // no relogio daqui, e nao em UTC
     IA_USO = (d && d.dia === hoje) ? d : null;   // folha de ontem não conta como hoje
     USO_LIDO = true;
   } catch (e) {
