@@ -2468,6 +2468,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--muted)}
 .ia-selo.boa{background:var(--accent-tint);color:var(--accent)}
 .ia-selo.ruim{background:color-mix(in srgb,#e0574b 16%,transparent);color:#e0574b}
+/* O BOTAO DE APAGAR PRECISA DE QUEM DESLIGUE O `display`, senao o atributo de esconder
+   nao esconde e ele fica na tela mesmo sem nada escrito. Trava 1 do CLAUDE.md. */
+.acao.perigo[hidden]{display:none}
 .ia-chave-porque{margin-top:4px;font-size:12px;color:var(--fraco);line-height:1.45}
 .ia-chave-porque b{color:var(--texto)}
 .ia-chave-diz{flex:1 1 220px;min-width:0;font-size:12px;line-height:1.5;
@@ -3853,6 +3856,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
               </div>
               <button class="acao forte" id="ia_escrever" type="button">
                 Começar a escrever</button>
+              <!-- APAGAR O QUE A IA ESCREVEU. Ele fica escondido enquanto não houver
+                   nada escrito, porque botão de apagar o nada é convite a errar. -->
+              <button class="acao mini perigo" id="ia_apagar" type="button" hidden>
+                Apagar o que a IA escreveu</button>
             </div>
             <p class="nota mini" id="ia_recado"></p>
 
@@ -8571,9 +8578,15 @@ async function procurarRecortes() {
   try {
     const d = JSON.parse(await (await ficha.getFile()).text());
     const sem = new Set();
-    for (const x of (d.pecas || [])) if (!x.frase) sem.add(x.arquivo);
+    const onde = new Map();
+    for (const x of (d.pecas || [])) {
+      if (!x.frase) sem.add(x.arquivo);
+      // O RETANGULO DA FILMAGEM, para o texto nao ser desenhado em cima dela.
+      if (x.broll && typeof x.broll.y === "number") onde.set(x.arquivo, x.broll);
+    }
     SEM_FRASE = sem;
-  } catch (e) { SEM_FRASE = null; }
+    BROLL_DE = onde;
+  } catch (e) { SEM_FRASE = null; BROLL_DE = null; }
   arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
   EDIT_RECORTES = arquivos;
   RECORTADO = { pecas: arquivos.length, pasta: nome,
@@ -8988,6 +9001,18 @@ let EXCLUIDAS = new Set();
 // AS PECAS QUE NAO TEM FRASE PARA A IA LER. Nulo quer dizer "nao sei", e nesse caso
 // ninguem e' pulado. Ver a nota em `procurarRecortes`.
 let SEM_FRASE = null;
+
+/* ONDE O B-ROLL FICA DENTRO DE CADA PECA, em fracao da tela.
+
+   E' UM RETANGULO DIFERENTE EM CADA UMA, e isso e' o coracao do problema. Medido na leva
+   29 dele: uma peca tem a filmagem comecando a 40,2% da altura, outra a 37,1%, outra a
+   38,3%. O template e' um so' e as caixas de texto ficam paradas no mesmo lugar; a
+   filmagem e' que sobe e desce. Onde ela sobe mais, o texto cai em cima dela.
+
+   QUEM MEDE E' O PASSO 2, e ele ja' escreve isso na ficha `_origem.json` de cada leva.
+   Nada aqui e' estimado: e' o mesmo retangulo que o programa usa para abrir o buraco na
+   camada do template na hora de montar. */
+let BROLL_DE = null;                // nome do arquivo -> {x, y, w, h}
 let TPL_SUB = 1;
 const ACERVO = { itens: [] };
 
@@ -9591,7 +9616,57 @@ function contaEscrito() {
   }
   $("ed_conta_ia").innerHTML = `<b>${cheias}</b> de ${n} `
     + (n === 1 ? "peça escrita" : "peças escritas");
+  // O BOTAO DE APAGAR SO' EXISTE QUANDO HA' O QUE APAGAR.
+  const apagar = $("ia_apagar");
+  if (apagar) apagar.hidden = !cheias;
 }
+
+/* APAGAR O QUE A IA ESCREVEU, e comecar aquela fase do zero.
+
+   O PEDIDO DELE, em 22/08/2026: "apaga ai' o que a IA fez". O texto morava so' na memoria
+   desta aba e no rascunho, dentro do navegador: nao ha' arquivo para ele apagar na mao, e
+   por isso o botao tem de existir aqui.
+
+   APAGA O TEXTO E O ACERTO JUNTOS, porque um sem o outro nao serve: o acerto e' o tamanho
+   de letra calculado PARA aquele texto. O template, o recorte e os reels tirados da leva
+   nao sao tocados.
+
+   DOIS CLIQUES, e nao um. Cada frase apagada custa um pedido da cota do dia para voltar,
+   e a cota tem teto. Um clique sem volta em cima de trinta e sete frases ja' pagas seria
+   uma armadilha. */
+let IA_APAGA_PEDIDO = false;
+
+$("ia_apagar").onclick = () => {
+  if (IA_OBRA) return;                       // esta escrevendo agora: nao mexo
+  const b = $("ia_apagar");
+  if (!IA_APAGA_PEDIDO) {
+    IA_APAGA_PEDIDO = true;
+    b.textContent = "Clique de novo para apagar mesmo";
+    const quantas = pecas3().filter(p => (ESCRITO.get(p.nome) || {})).length;
+    parado("ia_recado", "Isto apaga as frases que a IA já escreveu e o acerto de letra "
+      + "delas. Cada frase custa um pedido da cota do dia para voltar. O template e os "
+      + "recortes não são tocados.");
+    setTimeout(() => {
+      if (!IA_APAGA_PEDIDO) return;
+      IA_APAGA_PEDIDO = false;
+      b.textContent = "Apagar o que a IA escreveu";
+    }, 6000);
+    return;
+  }
+  IA_APAGA_PEDIDO = false;
+  b.textContent = "Apagar o que a IA escreveu";
+  // SO' AS PECAS DESTA LEVA, e nao o mapa inteiro: ele pode ter outra leva aberta.
+  let n = 0;
+  for (const p of pecas3()) {
+    if (ESCRITO.delete(p.nome)) n++;
+    AJUSTES.delete(p.nome);
+  }
+  contaEscrito();
+  desenhaGaleria();
+  salvarRascunho();
+  parado("ia_recado", `${n} ${n === 1 ? "frase apagada" : "frases apagadas"}. `
+    + "Clique em escrever para a IA fazer de novo.");
+};
 
 /* A TELA NÃO CHAMA A IA. Ela deixa o pedido e passa a olhar o andamento, igual ao
    recorte. Quem chama é o `oficina.py`, e por um motivo que não é de gosto: as imagens
@@ -9608,6 +9683,25 @@ function faltamEscrever() {
     const g = ESCRITO.get(p.nome) || {};
     return !campos.every(c => (g[c.id] || "").trim());
   });
+}
+
+/* ATE' ONDE O TEXTO DESTA CAIXA PODE DESCER, NESTA PECA.
+
+   TRES SITUACOES, e so' a primeira precisa de conta:
+
+     a caixa comeca ACIMA da filmagem   o texto tem de parar antes de encostar nela
+     a caixa comeca DENTRO da filmagem  ele mesmo pos ali de proposito, nao mexo
+     a caixa comeca ABAIXO da filmagem  nao ha' o que atropelar, so' o pe' da tela
+
+   A FOLGA DE 1% E' UM DEDO DE DISTANCIA, cerca de dezenove pixels em 1920. Encostado nao
+   e' em cima, mas parece. */
+const FOLGA_DO_BROLL = 0.012;
+
+function ateOndeDesce(campo, nome) {
+  const b = BROLL_DE && BROLL_DE.get(nome);
+  if (!b) return 1;                       // sem ficha, nao invento limite nenhum
+  if (campo.y >= b.y) return 1;           // a caixa ja' nasce dentro ou abaixo dela
+  return Math.max(campo.y + 0.02, b.y - FOLGA_DO_BROLL);
 }
 
 /** Quantas peças desta leva não têm frase para a IA ler. */
@@ -11259,6 +11353,22 @@ async function pintaPeca(alvo, peca, indice, interativa) {
   const v = document.createElement("video");
   v.muted = true; v.playsInline = true; v.loop = true; v.preload = "metadata";
   v.dataset.arq = indice;
+  /* A FILMAGEM APARECE SO' ONDE ELA VAI APARECER DE VERDADE.
+
+     A GALERIA MOSTRAVA O VIDEO OCUPANDO O QUADRO INTEIRO, e a peca montada nao e' assim:
+     na montagem o template cobre tudo e abre um buraco no formato da filmagem, que ocupa
+     so' um retangulo. Quem olhava aqui via um enquadramento que nao existe, e por isso
+     nao dava para perceber que o texto ia cair em cima dela: aqui ela estava embaixo do
+     texto de qualquer jeito.
+
+     `clip-path` RECORTA A EXIBICAO e nao mexe no arquivo. O video continua escalado para
+     o quadro inteiro, que e' exatamente o que o `ffmpeg` faz na montagem. */
+  const b = BROLL_DE && BROLL_DE.get(peca.nome);
+  if (b) {
+    const dir = Math.max(0, 1 - b.x - b.w) * 100;
+    const bai = Math.max(0, 1 - b.y - b.h) * 100;
+    v.style.clipPath = `inset(${b.y * 100}% ${dir}% ${bai}% ${b.x * 100}%)`;
+  }
   alvo.appendChild(v);
 
   for (const el of TPL.elementos) {
@@ -11455,7 +11565,7 @@ $("ajs_acertar").onclick = () => {
     for (const c of campos) {
       const texto = (g[c.id] || c.texto || "").trim();
       if (!texto) continue;
-      const cabe = tamanhoQueCabe(c, texto);
+      const cabe = tamanhoQueCabe(c, texto, ateOndeDesce(c, p.nome));
       if (Math.abs(cabe - c.tamanho) > 0.0005) {
         const a = AJUSTES.get(p.nome) || {};
         a[c.id] = Object.assign({}, a[c.id], { tamanho: cabe });
@@ -11477,20 +11587,40 @@ $("ajs_acertar").onclick = () => {
 /* QUANTO A LETRA PRECISA ENCOLHER para o texto caber em três linhas dentro da caixa. A
    medida sai do próprio navegador, com a fonte e o peso reais, então bate com o que o
    `oficina.py` vai desenhar. */
-function tamanhoQueCabe(campo, texto) {
+/* QUANTO A LETRA PRECISA ENCOLHER para o texto caber na caixa E NAO ENCOSTAR NO B-ROLL.
+
+   ATE' 22/08/2026 ESTA CONTA SO' OLHAVA A LARGURA. Ela encolhia a letra ate' o texto
+   caber em tres linhas, e tres linhas de letra grande descem muito: onde a filmagem
+   comecava mais alto, a terceira linha caia em cima dela. A frase dele, olhando a leva
+   montada: "o texto ta' caindo em cima do B-roll, nao teve um ajuste nenhum de
+   disposicao".
+
+   AGORA SAO DUAS CONTAS AO MESMO TEMPO: cabe na largura da caixa, e o pe' do texto para
+   antes de `limite`, que e' o topo da filmagem DAQUELA peca. Ver `ateOndeDesce`.
+
+   ENTRELINHA DE 1,22, e o numero nao e' escolha minha: e' o que a folha de estilo usa em
+   `.gal-el` e o que o `oficina.py` desenha, na linha `altura_linha = int(tamanho *
+   1.22)`. Medir com um numero e desenhar com outro daria texto certo na tela e errado no
+   arquivo, que e' o pior tipo de erro daqui. Se mudar num lugar, muda nos tres. */
+const ENTRELINHA = 1.22;
+
+function tamanhoQueCabe(campo, texto, limite) {
   const c = document.createElement("canvas").getContext("2d");
   const larguraPx = campo.w * TELA.w;
   const LINHAS = 3;
+  // A ALTURA QUE SOBRA ENTRE O TOPO DA CAIXA E O QUE VEM DEPOIS DELA.
+  const alturaPx = ((limite == null ? 1 : limite) - campo.y) * TELA.h;
   let t = campo.tamanho;
-  for (let volta = 0; volta < 40; volta++) {
-    c.font = `${campo.peso} ${Math.round(t * TELA.h)}px ${fonteCss(campo.fonte)}`;
+  for (let volta = 0; volta < 60; volta++) {
+    const px = Math.round(t * TELA.h);
+    c.font = `${campo.peso} ${px}px ${fonteCss(campo.fonte)}`;
     let linhas = 1, larg = 0;
     for (const palavra of String(texto).split(/\s+/)) {
       const m = c.measureText((larg ? " " : "") + palavra).width;
       if (larg + m > larguraPx && larg) { linhas++; larg = c.measureText(palavra).width; }
       else larg += m;
     }
-    if (linhas <= LINHAS) return t;
+    if (linhas <= LINHAS && linhas * px * ENTRELINHA <= alturaPx) return t;
     t *= 0.94;
   }
   return t;
