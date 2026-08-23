@@ -1811,6 +1811,31 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-play svg{width:34px;height:34px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
 .ed-peca:hover .ed-play{opacity:1}
 .ed-quadro.tocando .ed-play{opacity:0}
+/* TIRAR UM REEL DA LEVA. O botao mora no canto do quadro e so' aparece no passe do
+   mouse, como o de tocar: a galeria e' para olhar video, e nao para olhar botao.
+   No toque nao ha' passe do mouse, entao ali ele fica sempre visivel. */
+.ed-tira{position:absolute;top:6px;right:6px;width:26px;height:26px;border:0;
+  border-radius:50%;background:rgba(0,0,0,.62);color:#fff;cursor:pointer;
+  display:grid;place-items:center;opacity:0;transition:opacity .14s,background .14s;
+  padding:0;line-height:0}
+.ed-tira svg{width:14px;height:14px}
+.ed-peca:hover .ed-tira,.ed-peca:focus-within .ed-tira{opacity:1}
+.ed-tira:hover{background:var(--perigo,#c0392b)}
+@media (hover:none){.ed-tira{opacity:1}}
+/* A PECA FORA DA LEVA CONTINUA NA TELA, apagada e com o botao virado para voltar.
+   Sumir com ela faria a fileira dancar a cada clique, e tirar por engano viraria uma
+   peca perdida no meio de cento e sete. */
+.ed-peca.fora{opacity:.3}
+.ed-peca.fora .ed-quadro{filter:grayscale(1)}
+.ed-peca.fora .ed-tira{opacity:1;background:rgba(0,0,0,.72)}
+.ed-peca.fora .ed-tira:hover{background:var(--accent)}
+.ed-peca.fora .ed-play{display:none}
+.ed-fora-linha{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  margin:-4px 0 14px;font-size:13px;color:var(--fraco)}
+/* O `display` PRECISA DE QUEM O DESLIGUE. Sem esta linha o atributo de esconder
+   nao esconde nada, e a linha ficaria na tela mesmo sem ninguem ter tirado peca
+   nenhuma. E' a trava 1 do CLAUDE.md, e a conferencia pegou isto na hora. */
+.ed-fora-linha[hidden]{display:none}
 .ed-dur{position:absolute;right:6px;bottom:6px;padding:2px 6px;border-radius:6px;
   background:rgba(0,0,0,.62);color:#fff;font-size:10.5px;font-weight:600;
   font-variant-numeric:tabular-nums;letter-spacing:.01em}
@@ -3435,6 +3460,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         <div class="ed-cab">
           <h2 id="ed_p1_titulo">A leva</h2>
           <div class="ed-conta"><b id="ed_p1_n">0</b><span id="ed_p1_qual">peças</span></div>
+        </div>
+
+        <!-- O QUE FOI TIRADO DA LEVA. A linha só aparece quando há alguma coisa fora,
+             porque um contador parado em zero é ruído em cima da galeria. -->
+        <div class="ed-fora-linha" id="ed_fora_linha" hidden>
+          <span id="ed_fora_diz"></span>
+          <button class="acao mini" type="button" id="ed_fora_voltar">Trazer todas de volta</button>
         </div>
 
         <!-- A PORTA DA PASTA. Ela só aparece quando é preciso: pedir permissão antes de
@@ -7455,7 +7487,16 @@ let RECORTADO = null;              // { pecas, pasta, link } do recorte cumprido
    template trabalha em cima dos recortes e não mais do bruto: é o B-roll que entra na
    moldura, e ele já está sozinho no arquivo. Enquanto não houver recorte, o bruto serve,
    e assim nada quebra numa leva que ainda não passou pelo passo 2. */
-function pecas3() { return EDIT_RECORTES.length ? EDIT_RECORTES : EDIT_PECAS; }
+/* AS PECAS DA LEVA QUE CONTINUAM VALENDO, no passo 1. */
+function pecas1() { return EDIT_PECAS.filter(p => !EXCLUIDAS.has(p.nome)); }
+
+/* AS PECAS DAS FASES DE DEPOIS. O filtro se repete aqui de proposito: quem foi tirado
+   depois de o recorte ja' ter rodado continua com arquivo na pasta de recortes, e sem
+   esta linha ele voltaria para a galeria da IA e para a montagem. */
+function pecas3() {
+  const base = EDIT_RECORTES.length ? EDIT_RECORTES : EDIT_PECAS;
+  return base.filter(p => !EXCLUIDAS.has(p.nome));
+}
 let EDIT_RASCUNHO = null;          // o rascunho aberto, se veio de um
 /* O RASCUNHO QUE AINDA VAI SER RESTAURADO, e a declaracao mora aqui em cima de
    proposito: o `salvarRascunho`, logo abaixo, precisa consultar ele, e uma declaracao
@@ -7682,6 +7723,9 @@ async function salvarRascunho() {
        para o disco quando ele manda, e antes disso mora só na memória desta aba. */
     escrito: Object.fromEntries(ESCRITO),
     ajustes: Object.fromEntries(AJUSTES),
+    // AS PECAS QUE ELE TIROU DA LEVA. Sem isto, um F5 trazia de volta os dez reels que
+    // ele tinha acabado de descartar, e eles voltariam a passar por todas as etapas.
+    excluidas: [...EXCLUIDAS],
     contas: EDIT_LEVA.contas || [],
     pecas: EDIT_PECAS.length,
     passo: EDIT_PASSO,
@@ -7911,6 +7955,7 @@ async function entrarNaOficina(passo, rasc) {
 
 /** Esquece os passos 2, 3 e 4. Leva nova entra limpa, sem herdar nada da anterior. */
 function esquecerOsPassos() {
+  EXCLUIDAS = new Set();          // leva nova nao herda o que foi tirado da anterior
   MONTADO = null;
   RECORTADO = null;
   EDIT_RECORTES = [];
@@ -8029,8 +8074,16 @@ function lerNome(nome) {
 }
 
 function desenhaPecas() {
-  $("ed_p1_n").textContent = num(EDIT_PECAS.length);
-  $("ed_p1_qual").textContent = EDIT_PECAS.length === 1 ? "peça" : "peças";
+  // A CONTA E' DO QUE VAI PASSAR, e nao do que esta' na pasta. Tirou dez de cento e
+  // sete, o cabecalho diz noventa e sete, que e' o numero de pecas que vao sair no fim.
+  const valendo = pecas1().length;
+  const fora = EDIT_PECAS.length - valendo;
+  $("ed_p1_n").textContent = num(valendo);
+  $("ed_p1_qual").textContent = valendo === 1 ? "peça" : "peças";
+  $("ed_fora_linha").hidden = !fora;
+  if (fora) {
+    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pelo recorte, nem pela IA, nem pela montagem. O arquivo continua no computador.`;
+  }
 
   // O VÍDEO CARREGA SÓ O CABEÇALHO, e o quadro mostrado é o do segundo e meio. Pedir os
   // quarenta e um arquivos inteiros de uma vez travaria a aba por vários segundos, e o
@@ -8040,12 +8093,23 @@ function desenhaPecas() {
     // A PEÇA É O VÍDEO, e nada em volta. O rodapé trazia o índice de desempenho e o
     // código do post, e os dois já cumpriram o papel deles lá atrás, na régua: aqui o
     // que se faz é olhar imagem. O tempo fica, porque duração muda o que se decide.
-    return `<div class="ed-peca" data-i="${i}" title="${n.indice != null
+    const fora = EXCLUIDAS.has(a.nome);
+    return `<div class="ed-peca${fora ? " fora" : ""}" data-i="${i}"
+        data-nome="${escapa(a.nome)}" title="${n.indice != null
         ? n.indice.toFixed(2).replace(".", ",") + "x acima da mediana" : a.nome}">
       <div class="ed-quadro"><video preload="metadata" muted playsinline
         data-arquivo="${i}"></video>
         <span class="ed-play"><svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M8 5v14l11-7z"/></svg></span>
+        <button type="button" class="ed-tira" data-tira="${escapa(a.nome)}"
+          aria-label="${fora ? "Trazer esta peça de volta para a leva"
+                             : "Tirar esta peça da leva"}"
+          title="${fora ? "Trazer de volta" : "Tirar da leva"}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+            stroke-linecap="round">${fora
+              ? '<path d="M3 12h14M11 6l6 6-6 6"/>'
+              : '<path d="M6 6l12 12M18 6L6 18"/>'}</svg>
+        </button>
         <span class="ed-dur"></span></div>
     </div>`;
   }).join("");
@@ -8099,8 +8163,34 @@ function desenhaPecas() {
 /* Clicar na peça toca ali mesmo. Abrir num tocador à parte seria mais uma janela para
    fechar, e o que se quer aqui é bater o olho em quarenta e um vídeos depressa. */
 $("ed_galeria").addEventListener("click", ev => {
+  // O BOTAO DE TIRAR VEM ANTES DO TOCAR, senao o clique nele tocaria o video junto.
+  const tira = ev.target.closest("[data-tira]");
+  if (tira) {
+    ev.stopPropagation();
+    const nome = tira.dataset.tira;
+    if (EXCLUIDAS.has(nome)) EXCLUIDAS.delete(nome);
+    else {
+      EXCLUIDAS.add(nome);
+      const v = tira.closest(".ed-peca").querySelector("video");
+      if (v && !v.paused) { v.pause(); v.parentNode.classList.remove("tocando"); }
+    }
+    // SO' A PECA E A CONTA SE REDESENHAM, e nao a galeria inteira: redesenhar tudo
+    // descarregaria os cento e sete videos e a fileira piscaria a cada clique.
+    const caixa = tira.closest(".ed-peca");
+    const fora = EXCLUIDAS.has(nome);
+    caixa.classList.toggle("fora", fora);
+    tira.title = fora ? "Trazer de volta" : "Tirar da leva";
+    tira.setAttribute("aria-label", fora ? "Trazer esta peça de volta para a leva"
+                                          : "Tirar esta peça da leva");
+    tira.querySelector("svg").innerHTML = fora
+      ? '<path d="M3 12h14M11 6l6 6-6 6"/>' : '<path d="M6 6l12 12M18 6L6 18"/>';
+    contaDaLeva();
+    anotarMexida();
+    return;
+  }
   const peca = ev.target.closest(".ed-peca");
   if (!peca) return;
+  if (peca.classList.contains("fora")) return;   // peca tirada nao toca
   const v = peca.querySelector("video");
   if (!v || !v.src) return;
   document.querySelectorAll("#ed_galeria video").forEach(o => {
@@ -8109,6 +8199,25 @@ $("ed_galeria").addEventListener("click", ev => {
   if (v.paused) { v.play(); v.parentNode.classList.add("tocando"); }
   else { v.pause(); v.parentNode.classList.remove("tocando"); }
 });
+
+/** Só a conta do cabeçalho e a linha do que ficou fora, sem mexer na galeria. */
+function contaDaLeva() {
+  const valendo = pecas1().length;
+  const fora = EDIT_PECAS.length - valendo;
+  $("ed_p1_n").textContent = num(valendo);
+  $("ed_p1_qual").textContent = valendo === 1 ? "peça" : "peças";
+  $("ed_fora_linha").hidden = !fora;
+  if (fora) {
+    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pelo recorte, nem pela IA, nem pela montagem. O arquivo continua no computador.`;
+  }
+}
+
+$("ed_fora_voltar").onclick = () => {
+  if (!EXCLUIDAS.size) return;
+  EXCLUIDAS.clear();
+  desenhaPecas();
+  anotarMexida();
+};
 
 /** Qual das duas caras o cartão mostra: escolher a pasta, ou só liberar a leitura. */
 function desenhaPorta(cracha) {
@@ -8452,7 +8561,7 @@ function desenhaRecortado() {
      tivessem falhado, a tela dizia "95 recortes prontos", escondia o botao, e nao havia
      mais como pedir as doze que faltaram: as pecas iam para a montagem sem elas, e ele
      so' descobriria contando os arquivos no fim. */
-  const faltam = tem ? Math.max(0, EDIT_PECAS.length - RECORTADO.pecas) : 0;
+  const faltam = tem ? Math.max(0, pecas1().length - RECORTADO.pecas) : 0;
   const r2 = $("ed_r2");
   if (r2) r2.textContent = tem
     ? num(RECORTADO.pecas) + (RECORTADO.pecas === 1 ? " recorte pronto" : " recortes prontos")
@@ -8516,14 +8625,16 @@ $("rec_aplicar").onclick = async () => {
       // SEM RETÂNGULO ESCRITO AQUI: cada peça é medida na hora de gravar, porque cada
       // reel põe a filmagem num lugar e num tamanho diferentes. Mandar um retângulo só
       // para as cento e sete seria justamente o erro que este passo veio consertar.
-      pecas: EDIT_PECAS.map(p => ({ arquivo: p.nome }))
+      // SO' O QUE ELE DEIXOU NA LEVA. Peca tirada no passo 1 nao entra no recorte, e
+      // por isso nao existe recorte dela para as fases seguintes usarem.
+      pecas: pecas1().map(p => ({ arquivo: p.nome }))
     };
     const h = await pedidos.getFileHandle(id + ".json", { create: true });
     const w = await h.createWritable();
     await w.write(JSON.stringify(pedido, null, 1));
     await w.close();
 
-    REC_OBRA = { id, desde: Date.now(), total: EDIT_PECAS.length, relogio: null };
+    REC_OBRA = { id, desde: Date.now(), total: pecas1().length, relogio: null };
     $("rec_obra").hidden = false;
     document.querySelector("#rec_obra .cfg-girando").style.display = "";
     $("rec_obra_txt").textContent = "pedido deixado";
@@ -8811,6 +8922,22 @@ async function acharBrollAqui(v) {
 
    AS COORDENADAS SÃO FRAÇÃO DA TELA, e não pixel, para o mesmo template servir a
    qualquer tamanho de peça e a tela do editor ter a largura que couber. */
+
+/* AS PECAS QUE ELE TIROU DA LEVA, pelo nome do arquivo.
+
+   O PEDIDO DELE, em 22/08/2026: "esse reels daqui eu nao quero que ele passe. Ai' que
+   eu tenho um xzinho aonde eu excluo esse reels, esse reels nao passa por toda essa
+   etapa de edicao ate' sair a peca final".
+
+   PELO NOME, E NAO PELA POSICAO. O indice muda quando a lista e' reordenada ou quando
+   uma peca some da pasta, e um rascunho guardado por indice passaria a excluir outro
+   video no dia seguinte, calado. O nome do arquivo e' o mesmo do comeco ao fim da
+   linha: e' ele que vai no pedido de recorte, e' ele que nomeia o recorte, e e' ele que
+   a IA e a montagem usam.
+
+   TIRAR NAO APAGA NADA DO DISCO. O video bruto continua na pasta da leva; o que muda e'
+   que ele nao entra em pedido nenhum daqui para a frente. */
+let EXCLUIDAS = new Set();
 
 // AS PECAS QUE NAO TEM FRASE PARA A IA LER. Nulo quer dizer "nao sei", e nesse caso
 // ninguem e' pulado. Ver a nota em `procurarRecortes`.
@@ -11369,6 +11496,8 @@ async function tentarRetomar() {
   for (const [k, v] of Object.entries(r.escrito || {})) ESCRITO.set(k, v);
   AJUSTES.clear();
   for (const [k, v] of Object.entries(r.ajustes || {})) AJUSTES.set(k, v);
+  EXCLUIDAS = new Set(r.excluidas || []);
+  desenhaPecas();                 // a galeria volta com as tiradas apagadas
   if (TPL) {
     await entrarNoTemplate();
     const alvo = Math.min(4, Math.max(1, r.sub || 1));
