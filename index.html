@@ -2468,6 +2468,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--muted)}
 .ia-selo.boa{background:var(--accent-tint);color:var(--accent)}
 .ia-selo.ruim{background:color-mix(in srgb,#e0574b 16%,transparent);color:#e0574b}
+.ia-chave-porque{margin-top:4px;font-size:12px;color:var(--fraco);line-height:1.45}
+.ia-chave-porque b{color:var(--texto)}
 .ia-chave-diz{flex:1 1 220px;min-width:0;font-size:12px;line-height:1.5;
   color:var(--muted)}
 .ia-chave-diz.boa{color:var(--accent)}
@@ -9769,6 +9771,15 @@ async function olharAEscrita() {
   for (const [arq, textos] of Object.entries(d.textos || {})) {
     ESCRITO.set(arq, Object.assign(ESCRITO.get(arq) || {}, textos));
   }
+  /* O ACERTO DE CABIMENTO RODA SOZINHO, e antes ele esperava um clique.
+
+     ELE PERGUNTOU POR QUE O TEXTO NAO TINHA SIDO AJUSTADO: "o texto ali nao teve ajuste
+     de disposicao". Tinha o botao, no fim da fase, e ninguem diz que ele existe. Como a
+     IA escreve com um limite de LETRAS e a caixa tem uma LARGURA, uma palavra comprida
+     estoura a caixa mesmo dentro do limite: acertar e' parte de escrever, e nao um extra.
+
+     ELE CONTINUA PODENDO CLICAR, para quando ele mesmo mexer no texto depois. */
+  if ($("ajs_acertar") && !$("ajs_acertar").hidden) $("ajs_acertar").onclick();
   // GRAVA NA HORA, e não daqui a pouco. O que acabou de chegar custou cota; um F5 antes da
   // próxima gravação jogaria fora frases que não dá para refazer de graça.
   salvarRascunho();
@@ -10272,12 +10283,24 @@ function desenhaUsoDaIA() {
 function usoDaChave(c) { return ((IA_USO || {}).chaves || {})[c.id] || {}; }
 function estaEsgotada(c) { return !!usoDaChave(c).esgotada; }
 
+/* O SALDO QUE O SERVICO MANDA NAO E' O TETO QUE PARA A LEVA.
+
+   O GROQ MANDA O SALDO DE PEDIDOS, e a tela mostrava "999 de 1.000 restando" como se
+   houvesse folga de sobra. O que parou a leva de 22/08/2026 foi outro teto, o de FICHAS
+   por dia: 200.000, e um card custa cerca de 1.500. Restavam 966 pedidos dos mil quando
+   o trabalho parou na peca 37 de 91. Numero verdadeiro que leva a conclusao errada e' a
+   pior especie de numero, e a trava 2 do CLAUDE.md existe por causa disso.
+
+   ENTAO O SALDO SO' APARECE COM O NOME DO QUE ELE MEDE, e some quando a chave ja' parou
+   por outro motivo, que a linha de cima explica. */
 function saldoDaChave(c) {
-  const l = (usoDaChave(c).limites) || {};
+  const u = usoDaChave(c);
+  if (u.esgotada) return null;
+  const l = u.limites || {};
   if (l.restam_pedidos && l.teto_pedidos) {
-    return `${num(Number(l.restam_pedidos))} de ${num(Number(l.teto_pedidos))} restando`;
+    return `${num(Number(l.restam_pedidos))} de ${num(Number(l.teto_pedidos))} pedidos`;
   }
-  if (l.restam_pedidos) return `${num(Number(l.restam_pedidos))} restando`;
+  if (l.restam_pedidos) return `${num(Number(l.restam_pedidos))} pedidos restando`;
   return null;
 }
 
@@ -10368,6 +10391,13 @@ function desenhaCfgIA() {
 
   fila.innerHTML = IA.chaves.map((c, i) => {
     const u = usoDaChave(c), ficha = fichaDoServico(c.servico);
+    /* O SELO DIZ QUAL TETO BATEU, e nao so' que bateu.
+
+       SAO QUATRO TETOS DIFERENTES e cada um pede uma coisa: fichas por minuto passa
+       sozinho em segundos, fichas por dia so' zera amanha, e pedidos por dia daquele
+       modelo se resolve trocando de modelo na mesma chave, o que o programa ja' faz.
+       "Bateu o limite hoje" nao separava nenhum dos tres, e foi o que ele cobrou em
+       22/08/2026: "aqui nao traz nenhum veredito referente ao Google Gemini". */
     const selo = u.esgotada ? '<span class="ia-selo ruim">Bateu o limite hoje</span>'
       : u.pedidos ? '<span class="ia-selo boa">Respondendo</span>'
       : '<span class="ia-selo">Ainda não usada</span>';
@@ -10385,8 +10415,14 @@ function desenhaCfgIA() {
       <div class="ia-chave-corpo">
         <div class="ia-chave-topo"><b>${escapa(ficha.r)}</b>${selo}</div>
         <div class="ia-chave-resumo">${escapa(pontinhos(c.chave))}
-          <i>·</i> ${escapa(c.modelo || "Modelo padrão")}
+          <i>·</i> ${escapa(u.modelo_agora || c.modelo || "Modelo padrão")}${
+            u.modelo_agora && u.modelo_agora !== c.modelo
+              ? ` <span class="nota">(trocado sozinho)</span>` : ""}
           <i>·</i> ${escapa(conta)}</div>
+        ${u.motivo ? `<div class="ia-chave-porque">Parou por <b>${escapa(u.motivo)}</b>.${
+          (u.modelos_gastos || []).length
+            ? ` Já rodou ${num((u.modelos_gastos || []).length)} modelo${(u.modelos_gastos || []).length === 1 ? "" : "s"} desta chave hoje.` : ""
+        }</div>` : ""}
         <div class="ia-chave-diz" data-diz="${i}"></div>
       </div>
       <span class="ia-chave-botoes">
