@@ -1825,8 +1825,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* A PECA FORA DA LEVA CONTINUA NA TELA, apagada e com o botao virado para voltar.
    Sumir com ela faria a fileira dancar a cada clique, e tirar por engano viraria uma
    peca perdida no meio de cento e sete. */
-.ed-peca.fora{opacity:.3}
-.ed-peca.fora .ed-quadro{filter:grayscale(1)}
+/* O APAGADO VAI NO VIDEO, E NAO NO CARTAO INTEIRO. Baixando a opacidade do cartao,
+   o botao de trazer de volta apagava junto e virava um fantasma cinza em cima de
+   um video cinza: o desfazer tem de ficar legivel, senao tirar por engano nao tem
+   volta visivel. */
+.ed-peca.fora{border-style:dashed}
+.ed-peca.fora .ed-quadro video{opacity:.22;filter:grayscale(1)}
+.ed-peca.fora .ed-quadro{background:var(--branco)}
+.ed-peca.fora .ed-dur{opacity:.3}
 .ed-peca.fora .ed-tira{opacity:1;background:rgba(0,0,0,.72)}
 .ed-peca.fora .ed-tira:hover{background:var(--accent)}
 .ed-peca.fora .ed-play{display:none}
