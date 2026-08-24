@@ -222,6 +222,16 @@ def mesma_midia(a: Path, b: Path) -> bool:
     def resumo(arq, qual):
         r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(arq), "-map", qual,
                             "-c", "copy", "-f", "md5", "-"], capture_output=True, text=True)
+        # REEL SEM TRILHA DE AUDIO NAO E' DEFEITO. Auditoria de 22/08/2026: num reel
+        # mudo, o mapa "0:a" nao casa com trilha nenhuma, o ffmpeg sai em erro com a
+        # saida vazia, e o vazio derrubava a comparacao ali embaixo: o reel era
+        # reprovado com laudo errado, apagado e banido por uma trilha que ele nunca
+        # teve. A ausencia vira o marcador "ausente", distinto do vazio de falha
+        # real: ausente dos dois lados combina e a limpeza segue normal; o vazio
+        # continua reprovando, porque vazio e' o ffmpeg quebrando por outro motivo,
+        # e dos dois lados ele combinaria por engano.
+        if "matches no streams" in (r.stderr or ""):
+            return "ausente"
         return r.stdout.strip()
     return all(resumo(a, q) == resumo(b, q) and resumo(a, q) for q in ("0:v", "0:a"))
 
@@ -328,6 +338,35 @@ if __name__ == "__main__":
     (destino / "_limpeza.json").write_text(
         json.dumps({"quando": int(time.time()), "laudos": laudos},
                    ensure_ascii=False, indent=1), encoding="utf-8")
+
+    # A ORIGEM DE CADA PECA SEGUE VIAGEM JUNTO COM ELA.
+    #
+    # O QUE SE PERDIA, e o Gabriel bateu nisso em 23/08/2026. O `baixar.py` grava um
+    # `_lote.json` na pasta de onde estes arquivos sairam, com a legenda e o endereco do
+    # post de cada um. Esse arquivo ficava para tras: o pacote que vai para o computador
+    # leva `tratados/`, e o lote morava em `brutos/`. A leva chegava sem saber de onde
+    # veio nenhuma das pecas.
+    #
+    # E ISSO SO' APARECE LA' NA FRENTE, que e' o pior tipo de perda: a etapa 4 escreve a
+    # descricao do post a partir da original, e sem o lote ela nao tem materia-prima.
+    # Quem descobre e' quem chega na etapa 4, meses depois de a leva ter sido baixada.
+    #
+    # VAI SO' O QUE PASSOU NA LIMPEZA, para o lote nao prometer peca reprovada, que foi
+    # apagada do destino algumas linhas acima.
+    origem = arquivos[0].parent / "_lote.json" if arquivos else None
+    if origem and origem.is_file():
+        try:
+            lote = json.loads(origem.read_text(encoding="utf-8"))
+            vivos = {l["arquivo"] for l in laudos if l.get("limpo")}
+            lote["itens"] = [x for x in (lote.get("itens") or [])
+                             if x.get("arquivo_local") in vivos]
+            (destino / "_lote.json").write_text(
+                json.dumps(lote, ensure_ascii=False, indent=1), encoding="utf-8")
+            print(f"  origem de {len(lote['itens'])} pecas seguiu junto")
+        except (OSError, ValueError) as e:
+            print(f"  NAO consegui levar a origem das pecas: {e}")
+    else:
+        print("  aviso: nao achei _lote.json na origem; a leva vai sem a origem das pecas")
 
     print(f"\n{passaram} limpos, {reprovados} reprovados")
     # SAI BEM MESMO COM REPROVADO, de proposito: o lote continua e entrega o que passou.
