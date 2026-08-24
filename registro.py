@@ -26,6 +26,16 @@ INDICE = PASTA / "indice.json"
 BAIXADOS = Path("dados/baixados.json")
 # QUEM REPROVOU NA LIMPEZA NAO VOLTA PARA A FILEIRA. Ver `fechar()` para o porque.
 REPROVADOS = Path("dados/reprovados.json")
+# O ENVIO E A CHEGADA SAO FATOS DIFERENTES, e ficam guardados separados.
+# `baixados.json` tira o reel da fileira (e' o que o selecionar.py le'); `enviados.json`
+# diz em qual pacote e quando ele subiu. A chegada de verdade e' o passo "guardado" que
+# o guardar.py escreve no diario do lote quando o pacote desce para o computador. Sem
+# essa separacao, o envio valia como entrega: o pacote vence em catorze dias, e vencer
+# sem download deixava o reel "entregue" no papel e perdido de fato, para sempre.
+ENVIADOS = Path("dados/enviados.json")
+# O prazo de vida do pacote na esteira, o `retention-days: 14` do fluxo de baixa.
+# Passado ele sem chegada, o envio nao vale mais nada e a vaga tem que voltar.
+PRAZO_PACOTE = 14 * 24 * 3600
 LOTE = Path("brutos/_lote.json")
 LIMPEZA = Path("tratados/_limpeza.json")
 
@@ -125,6 +135,10 @@ def andamento(numero: int, conta: str, feitos: int, total: int, fim: bool = Fals
 
 
 def abrir(numero: int, execucao: str, pedido: str) -> None:
+    # A VARREDURA RODA ANTES DA SELECAO DESTA LEVA (o passo seguinte do fluxo roda o
+    # selecionar.py): reel que subiu num pacote vencido sem chegar ao computador volta
+    # para a fileira agora, senao a leva que esta' nascendo ja' nasce sem ele.
+    varrer_vencidos()
     contas = [] if not pedido or pedido.isdigit() else \
         [c.strip().lstrip("@") for c in pedido.split(",") if c.strip()]
     capa(numero, execucao=execucao, contas=contas, estado="em curso")
@@ -182,6 +196,56 @@ def limpo(numero: int) -> None:
                   aprovados=d["ok"], reprovados=len(d["mau"]))
 
 
+def chegada(numero: int) -> int | None:
+    """Quando o pacote daquele lote chegou ao computador, se chegou.
+
+    A prova e' o passo "guardado" que o guardar.py escreve no diario do lote na hora
+    do download. A data devolvida e' a do proprio passo, e nao a de agora: a marca de
+    chegada tem que dizer quando o pacote desceu de verdade.
+    """
+    for p in ler(diario(numero), {}).get("passos", []):
+        if p.get("tipo") == "guardado":
+            return p.get("quando")
+    return None
+
+
+def varrer_vencidos() -> None:
+    """Cruza envio com chegada e devolve para a fileira o que venceu sem descer.
+
+    Reel enviado cujo lote ja' tem o passo "guardado" ganha a marca de chegada. Reel
+    cujo pacote passou do prazo sem chegada perde a vaga em `baixados.json`: enviado
+    nao e' entregue, e sem esta varredura o pacote vencido sem download deixava o reel
+    contando como entregue e ele nunca mais descia. A marca "vencido" fica em
+    `enviados.json` como historia, e e' sobrescrita se ele subir de novo num lote novo.
+    """
+    env = ler(ENVIADOS, {})
+    if not env:
+        return
+    feitos = ler(BAIXADOS, {})
+    agora = int(time.time())
+    # a chegada de um lote vale para todos os reels dele; conferir uma vez por lote
+    chegadas: dict = {}
+    mexeu = False
+    for conta, codigos in env.items():
+        for codigo, marca in codigos.items():
+            if not isinstance(marca, dict) or "guardado" in marca or "vencido" in marca:
+                continue
+            n = marca.get("lote")
+            if n not in chegadas:
+                chegadas[n] = chegada(n)
+            if chegadas[n]:
+                marca["guardado"] = chegadas[n]
+                mexeu = True
+            elif agora - marca.get("quando", agora) > PRAZO_PACOTE:
+                marca["vencido"] = agora
+                if codigo in feitos.get(conta, []):
+                    feitos[conta].remove(codigo)
+                mexeu = True
+    if mexeu:
+        escrever(ENVIADOS, env)
+        escrever(BAIXADOS, feitos)
+
+
 def fechar(numero: int, entregue: bool) -> None:
     """Marca o que foi entregue e fecha o lote.
 
@@ -197,13 +261,25 @@ def fechar(numero: int, entregue: bool) -> None:
 
     A reprovacao aqui e' da auditoria de limpeza, que e' deterministica: o mesmo arquivo
     reprova de novo. Repetir o download nao muda o resultado, so' gasta.
+
+    E ENTREGUE AQUI E' O ENVIO, NAO A CHEGADA. Este passo roda logo depois de o pacote
+    subir como artifact, que vence em catorze dias. Marcar so' `baixados.json` fazia o
+    envio valer como chegada: pacote vencido sem download deixava o reel entregue no
+    papel e perdido de fato. Por isso o envio tambem fica em `enviados.json` (qual lote,
+    quando), e a `varrer_vencidos()` cruza isso com o passo "guardado" do diario para
+    devolver a fileira o que venceu sem descer. A vaga em `baixados.json` continua sendo
+    tomada ja' no envio, de proposito: enquanto o pacote vive, a leva seguinte nao deve
+    baixar o mesmo reel de novo.
     """
+    # a varredura vem antes de ler `baixados.json`, porque ela reescreve esse arquivo
+    varrer_vencidos()
     reg = ler(LOTE, {}).get("itens", [])
     laudos = ler(LIMPEZA, {}).get("laudos", [])
     aprovados = {x["arquivo"] for x in laudos if x.get("limpo")}
     caidos = {x["arquivo"] for x in laudos if not x.get("limpo")}
     feitos = ler(BAIXADOS, {})
     maus = ler(REPROVADOS, {})
+    env = ler(ENVIADOS, {})
     marcados = 0
     for i in reg:
         local = i.get("arquivo_local")
@@ -212,12 +288,18 @@ def fechar(numero: int, entregue: bool) -> None:
             if i["codigo"] not in feitos[i["conta"]]:
                 feitos[i["conta"]].append(i["codigo"])
                 marcados += 1
+            # O FATO HONESTO DO ENVIO, separado da chegada: qual pacote e quando. E'
+            # esta marca que a varredura cruza com o passo "guardado" do diario; num
+            # reenvio ela sobrescreve a marca vencida do lote anterior, que era o certo.
+            env.setdefault(i["conta"], {})[i["codigo"]] = {
+                "lote": numero, "quando": int(time.time())}
         elif local in caidos:
             maus.setdefault(i["conta"], [])
             if i["codigo"] not in maus[i["conta"]]:
                 maus[i["conta"]].append(i["codigo"])
     escrever(BAIXADOS, feitos)
     escrever(REPROVADOS, maus)
+    escrever(ENVIADOS, env)
 
     d = ler(LIMPEZA, {})
     ok = len([x for x in d.get("laudos", []) if x.get("limpo")])
