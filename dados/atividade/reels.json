@@ -1,0 +1,12 @@
+{
+ "conta": "reels",
+ "nome": null,
+ "eventos": [
+  {
+   "quando": 1787596765,
+   "tipo": "aguardando",
+   "gravidade": "aviso",
+   "texto": "Perfil na fila de origem, esperando a esteira abrir pelo arroba"
+  }
+ ]
+}

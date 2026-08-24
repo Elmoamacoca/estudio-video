@@ -1,6 +1,17 @@
 {
  "contas": [
   {
+   "conta": "reels",
+   "nome": null,
+   "rotulo": "reels",
+   "primeiro": 1787596765,
+   "ultimo": 1787596765,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "aguardando"
+  },
+  {
    "conta": "thenews.business",
    "nome": "the news business",
    "rotulo": "reels",
@@ -57,5 +68,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787594408
+ "atualizado": 1787596765
 }
