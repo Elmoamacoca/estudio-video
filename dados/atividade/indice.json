@@ -4,10 +4,10 @@
    "conta": "upflip",
    "nome": null,
    "primeiro": 1787623137,
-   "ultimo": 1787623137,
-   "eventos": 1,
+   "ultimo": 1787623148,
+   "eventos": 2,
    "falhas": 0,
-   "avisos": 1,
+   "avisos": 2,
    "ultimo_tipo": "aguardando",
    "lidos": 0,
    "publicacoes": 0,
@@ -84,5 +84,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787623140
+ "atualizado": 1787623150
 }
