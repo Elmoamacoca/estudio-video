@@ -823,10 +823,11 @@
 
           <div class="ed-porta-nunca">
             <h3>Apontar A Pasta Do Estúdio</h3>
-            <p class="nota">Os vídeos estão no seu computador, e esta tela vem da
-              internet. Por segurança, nenhuma página abre um arquivo do seu disco sem
-              você mandar. Aponte a pasta uma vez: o navegador guarda <b>qual pasta é</b>
-              e não pergunta mais qual. Nada é enviado para lugar nenhum.</p>
+            <p class="nota">Este é o plano B, de quando o posto do Estúdio está fora e
+              os vídeos moram nesta máquina. Por segurança, nenhuma página abre um
+              arquivo do seu disco sem você mandar. Aponte a pasta uma vez: o navegador
+              guarda <b>qual pasta é</b> e não pergunta mais qual. Nada é enviado para
+              lugar nenhum.</p>
             <p class="ed-caminho">C:\Users\Gabri\Estudio\levas</p>
             <div class="linha">
               <button class="acao forte" id="ed_abrir_pasta" type="button">
@@ -1085,7 +1086,7 @@
               <section class="ed-bloco">
                 <h4>Acrescentar</h4>
                 <label class="ed-solta" id="ed_solta">
-                  <input type="file" id="ed_add_img" accept="image/png,image/jpeg" hidden>
+                  <input type="file" id="ed_add_img" accept="image/png,image/jpeg,image/webp" hidden>
                   <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/>
                     <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
                   <span>escolher uma imagem</span>
@@ -1487,7 +1488,8 @@
             <b>Esta leva ainda não foi fabricada.</b>
             <p class="nota">A etapa 4 trabalha em cima das peças prontas. Volte ao
               <b>passo 3</b>, na primeira olhada, e clique em <b>Fabricar as peças</b>.
-              Se você já fabricou, confira se a pasta do Estúdio está liberada nesta aba.</p>
+              Se você já fabricou e nada aparece, o posto pode estar reiniciando:
+              espere um pouco e recarregue a página.</p>
           </div>
 
           <div class="leg-vazio" id="dsc_sem_origem" hidden>
@@ -1610,7 +1612,7 @@
               <button class="acao forte" id="ent_subir" type="button">
                 Empacotar E Subir</button>
               <button class="acao mini" id="ent_so_pacote" type="button">
-                Só Empacotar Aqui</button>
+                Só Empacotar Na Casa</button>
             </div>
           </div>
 
@@ -1638,7 +1640,7 @@
             <h3 id="ent_feito_tit">Entregue</h3>
             <div id="ent_feito_linhas"></div>
             <div class="linha">
-              <a class="acao" id="ent_feito_pasta" href="#">Abrir A Pasta Daqui</a>
+              <a class="acao" id="ent_feito_pasta" href="#">Ver A Pasta Na Casa</a>
               <a class="acao" id="ent_feito_drive" href="#" target="_blank"
                 rel="noopener">Ver No Drive</a>
               <!-- A SAIDA, QUE NAO EXISTIA. Entregue e marcado, nao ha' mais nada para
@@ -1694,7 +1696,7 @@
         </div>
       </div>
       <div class="cfg-menu-pe">
-        <span class="nota mini">Tudo aqui fica neste computador</span>
+        <span class="nota mini">Tudo aqui fica guardado na casa do Estúdio</span>
       </div>
     </aside>
 
@@ -1725,11 +1727,12 @@
           <div class="cfg-linhas">
             <div class="cfg-linha">
               <div>
-                <div class="cfg-nome">Estudio\ia.json</div>
+                <div class="cfg-nome">Estudio/ia.json</div>
                 <div class="cfg-desc" id="ia_pasta_desc">É deste arquivo que o
-                  programa deste computador lê a fila de chaves e o prompt, no começo de
-                  cada leva. Quem grava nele é o posto do Estúdio, que sobe junto com o
-                  Windows, e por isso não há pasta a liberar nem permissão a renovar.</div>
+                  programa do Estúdio lê a fila de chaves e o prompt, no começo de
+                  cada leva. Quem grava nele é o posto, que mora na casa do Estúdio e
+                  se levanta sozinho, e por isso não há pasta a liberar nem permissão a
+                  renovar.</div>
               </div>
               <div class="dir">
                 <button class="acao" id="ia_liberar" type="button">Liberar A Pasta</button>
@@ -1744,7 +1747,7 @@
             <div class="cfg-linha">
               <div>
                 <div class="cfg-nome">O programa lê daqui</div>
-                <div class="cfg-desc">Mande o programa deste computador abrir o arquivo,
+                <div class="cfg-desc">Mande o programa do Estúdio abrir o arquivo,
                   montar a fila de chaves e escrever uma frase de verdade. Se ele
                   responder, o caminho inteiro está de pé: o que você guardou aqui chegou
                   lá.</div>
@@ -1774,7 +1777,7 @@
             <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia2">Hoje</span></div>
           </div>
           <div class="gasto" id="ia_gasto"></div>
-          <p class="nota mini">A conta é das frases que saíram deste computador hoje, e
+          <p class="nota mini">A conta é das frases que saíram do Estúdio hoje, e
             zera quando o dia vira. A barra compara as empresas entre si; ela não mede
             quanto falta para o teto, porque nenhum dos serviços publica esse número.</p>
         </div>
@@ -1807,7 +1810,7 @@
             <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia">Hoje</span></div>
           </div>
           <div class="cfg-pares cfg-uma cfg-numeros" id="ia_uso"></div>
-          <p class="nota mini">A conta é do que este computador pediu, e não do saldo que
+          <p class="nota mini">A conta é do que o Estúdio pediu, e não do saldo que
             sobra lá. Nenhum dos três serviços publica quanto resta por programa; o que dá
             para saber com certeza é o que saiu daqui e o que voltou recusado.</p>
         </div>
@@ -1847,14 +1850,14 @@
           <div class="cfg-linhas">
             <div class="cfg-linha">
               <div>
-                <div class="cfg-nome">Na placa de vídeo</div>
-                <div class="cfg-desc">Esta máquina tem Intel Iris Xe, com Quick Sync. O
-                  quadro entra na placa quando é decodificado e só sai de lá já
-                  codificado: ampliar, aplicar a máscara e gravar acontecem os três lá
-                  dentro. Se a placa recusar uma peça, ela volta sozinha para o
-                  processador, sem falhar.</div>
+                <div class="cfg-nome">Na casa do Estúdio</div>
+                <div class="cfg-desc">O programa testa a máquina da casa antes de cada
+                  recorte: quando ela tem placa Intel com Quick Sync, o quadro entra e
+                  sai da placa (três peças por vez); sem placa, tudo corre no
+                  processador, uma peça por vez, sem falhar. A casa na VPS não tem
+                  placa, então lá a conversão vai no processador.</div>
               </div>
-              <div class="dir"><span class="badge badge-secondary">3 peças por vez</span></div>
+              <div class="dir"><span class="badge badge-secondary">medido a cada leva</span></div>
             </div>
           </div>
         </div>
@@ -1910,12 +1913,13 @@
         <div class="caixa">
           <div class="cfg-topo"><h3>Por Que A Lista É Esta</h3><div class="dir"></div></div>
           <p class="nota">Cada uma precisa existir nos dois lados: aqui, para o navegador
-            mostrar enquanto você monta, e no computador, para o programa desenhar na hora
+            mostrar enquanto você monta, e na casa do Estúdio, para o programa desenhar na hora
             de gravar. Fonte que existisse só de um lado faria a peça sair diferente do que
             você viu na tela.</p>
           <p class="nota">As nove novas vieram do Google Fonts, licença aberta, sem custo,
-            e estão em <b>Estudio\fontes</b>. As outras já vinham com o Windows, menos a
-            Izmir e a Apple Garamond, que são suas.</p>
+            e estão em <b>Estudio/fontes</b>, na casa do Estúdio. As outras vieram do
+            computador antigo (as que acompanhavam o Windows, mais a Izmir e a Apple
+            Garamond, que são suas) e foram copiadas para a casa junto com a mudança.</p>
         </div>
       </div>
 
@@ -1923,7 +1927,7 @@
       <div class="cfg-pagina" data-pg="pastas">
         <div class="cfg-pagina-cab">
           <h2>As Pastas</h2>
-          <p>Onde cada coisa mora neste computador.</p>
+          <p>Onde cada coisa mora na casa do Estúdio.</p>
         </div>
         <div class="caixa">
           <div class="cfg-topo">
@@ -1931,8 +1935,9 @@
             <div class="dir"><span class="badge badge-sinal" id="pas_selo">Não liberada</span></div>
           </div>
           <div class="cfg-linhas" id="pas_lista"></div>
-          <p class="nota mini">O navegador só enxerga esta pasta depois que você libera o
-            acesso uma vez. Nada sai daqui para lugar nenhum.</p>
+          <p class="nota mini">Com o posto de pé, quem conta as pastas é a casa do
+            Estúdio. Liberar uma pasta no navegador é só o plano B, para quando o posto
+            estiver fora numa casa local.</p>
         </div>
       </div>
 
@@ -2015,7 +2020,7 @@
   <div class="ajuda-cab">
     <div>
       <h2>Como Funciona Esta Aba</h2>
-      <p class="nota">Do clique no perfil até o arquivo tratado no seu computador.</p>
+      <p class="nota">Do clique no perfil até o arquivo tratado na casa do Estúdio.</p>
     </div>
     <button class="ajuda-fecha" id="faq_fecha" type="button" aria-label="Fechar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -2035,7 +2040,7 @@
       <div class="ajuda-passo"><b>3 · Entregar</b>
         <span>O que passou vira um pacote só, e o que reprovou é apagado.</span></div>
       <div class="ajuda-passo"><b>4 · Guardar</b>
-        <span>O pacote desce para uma pasta no seu computador, de dez em dez minutos.</span></div>
+        <span>O pacote desce para a casa do Estúdio, de dez em dez minutos.</span></div>
     </div>
 
     <h3 class="ajuda-grupo">Montar A Leva</h3>
@@ -2121,7 +2126,7 @@
       com um laudo próprio, e a contagem de reprovados aparece no registro ao vivo,
       junto de baixados e tratados.</p>
       <p>A conferência é feita duas vezes: uma na esteira, outra quando o pacote chega
-      ao seu computador. Não é desconfiança do passo anterior, é que conferir de novo
+      à casa do Estúdio. Não é desconfiança do passo anterior, é que conferir de novo
       custa dois centésimos de segundo por arquivo.</p></div>
     </details>
 
@@ -2139,18 +2144,17 @@
 
     <details class="ajuda-item">
       <summary>Onde para a versão final?</summary>
-      <div><p>Numa pasta fixa no seu computador:</p>
-      <p class="ajuda-caminho">C:\Users\Gabri\Estudio\levas\leva-<i>N</i></p>
+      <div><p>Numa pasta fixa na casa do Estúdio:</p>
+      <p class="ajuda-caminho">levas/leva-<i>N</i></p>
       <p>Uma subpasta por leva, e <i>N</i> é o número dela. Dentro ficam só os reels já
       tratados e conferidos, prontos para editar.</p>
-      <p>A pasta fica <b>fora do OneDrive</b> de propósito: Área de Trabalho,
-      Documentos e Imagens sobem para a nuvem sozinhos, e uma leva de um perfil inteiro
-      pesa de 440 MB a 2,7 GB. Em duas levas sua cota estouraria.</p></div>
+      <p>Como a casa mora no servidor do Estúdio, e não neste computador, leva nenhuma
+      ocupa seu disco nem sua cota do OneDrive.</p></div>
     </details>
 
     <details class="ajuda-item">
       <summary>Como o pacote chega até lá?</summary>
-      <div><p>Sozinho. Uma tarefa agendada roda de <b>dez em dez minutos</b>, olha se
+      <div><p>Sozinho. Um programa da casa do Estúdio olha de tempos em tempos se
       alguma leva ficou pronta, e traz. Você não precisa clicar em nada.</p>
       <p>Quando ela chega, o registro da leva ganha o último passo, <i>guardado</i>, e
       a tabela de Mineração passa a mostrar essa palavra na coluna Baixar. Enquanto ele
@@ -2161,7 +2165,7 @@
       <summary>O material fica guardado para sempre na esteira?</summary>
       <div><p>Não. O pacote da esteira vence em <b>catorze dias</b> e some. A máquina
       que monta a leva é criada para o trabalho e destruída no fim.</p>
-      <p>A pasta do seu computador é o único lugar permanente. Ela tem um
+      <p>A pasta da casa do Estúdio é o único lugar permanente. Ela tem um
       <i>LEIA.txt</i> dentro dizendo isso, para o caso de alguém achar que é lixo.</p></div>
     </details>
 
