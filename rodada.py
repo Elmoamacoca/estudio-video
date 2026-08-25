@@ -395,6 +395,21 @@ def _segurando_a_fala(func, *args, **kw):
     return resultado, fala
 
 
+def publicacoes_conhecidas(conta: str) -> int:
+    """Quantas publicacoes os retratos registram para a conta; zero quando nao se sabe.
+
+    E' a prova cruzada do vazio: a identificacao pela nuvem grava as publicacoes em
+    dados/retratos.json, e uma conta com publicacoes registradas que responde vazio
+    aqui esta' recusando, nao vazia."""
+    import json as _json
+    import pathlib as _pathlib
+    try:
+        d = _json.loads(_pathlib.Path("dados/retratos.json").read_text(encoding="utf-8"))
+        return int((d.get(conta) or {}).get("publicacoes") or 0)
+    except Exception:
+        return 0
+
+
 def _resumo_da_resposta(fala: str) -> str:
     """O que o Instagram respondeu, em poucas palavras, a partir do que foi impresso.
 
@@ -534,10 +549,35 @@ def main() -> int:
         # A ABERTURA PASSOU: o contador de tentativas zera aqui, senão o cartão
         # continuaria dizendo "Tentativa N" para um perfil que já entrou.
         livro = atividade.carregar(conta)
-        if livro.get("tentativas_id"):
+        if livro.get("tentativas_id") or (livro.get("vazios_vistos")
+                                          and not aberto.get("vazio")):
             livro["tentativas_id"] = 0
+            if not aberto.get("vazio"):
+                # abriu com conteudo: o vazio de antes era recusa mesmo
+                livro.pop("vazios_vistos", None)
             atividade.gravar(livro)
         if aberto.get("vazio"):
+            # O VAZIO MENTE. Um endereco de datacenter pode levar 200 com nada dentro
+            # como recusa disfarçada, e em 25/08/2026 isso encerrou o startse, conta
+            # com posts aos milhares, como "sem posts publicos" na primeira olhada.
+            # Encerrar exige DUAS visoes de vazio em momentos diferentes, e nunca
+            # contra a evidencia dos retratos: publicacoes > 0 la' e' prova de que a
+            # conta tem conteudo, e o vazio daqui e' recusa, nao fato.
+            publicas = publicacoes_conhecidas(conta)
+            vezes = int(livro.get("vazios_vistos") or 0) + 1
+            if publicas > 0 or vezes < 2:
+                livro["vazios_vistos"] = vezes
+                atividade.anotar_de_novo(
+                    livro, "sem_leitura", int(time.time()),
+                    (f"O Instagram Respondeu Vazio, Mas Os Retratos Registram "
+                     f"{publicas} Publicações: Recusa Disfarçada, Outra Vaga Tenta."
+                     if publicas > 0 else
+                     "O Instagram Respondeu Vazio. Pode Ser Conta Sem Posts Ou "
+                     "Recusa Disfarçada: Outra Rodada Confirma Antes De Encerrar."),
+                    vaga=vaga, vezes=vezes)
+                atividade.gravar(livro)
+                print(f"[{conta}] resposta vazia (visao {vezes}); nao encerro ainda.")
+                return 0
             # sai da fila com motivo escrito, em vez de ser tentado para sempre
             estado["perfil"] = {"conta": conta, "id": None, "nome": None,
                                 "seguidores": 0, "publicacoes": 0, "privado": None}
@@ -545,7 +585,8 @@ def main() -> int:
             estado["completo"] = True
             estado["atualizado"] = int(time.time())
             grava(conta, estado)
-            print(f"[{conta}] SEM POSTS PÚBLICOS: conta fechada ou sem publicação.")
+            print(f"[{conta}] SEM POSTS PÚBLICOS: conta fechada ou sem publicação, "
+                  "confirmado em duas visoes.")
             return 0
         # SO' O QUE FOI PEDIDO ENTRA, ja' na abertura. A primeira leitura vem misturada
         # porque e' assim que o Instagram entrega, mas o que fica guardado e' a escolha.
