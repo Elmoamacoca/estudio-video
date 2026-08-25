@@ -228,6 +228,13 @@ def pendentes(contas: list[str]) -> list[str]:
     fila = []
     for c in contas:
         e = estado_de(c)
+        # CONTA DE CASA NAO E' DA ESTEIRA. Perfil com muro de login so' abre logado, do
+        # PC do dono (casa.py). A esteira e' anonima: se paginasse esta conta, levaria
+        # 200 vazio e gravaria "completo" com marcador nulo POR CIMA da varredura parcial
+        # que o casa.py deixou, perdendo todo o resto do perfil. A marca `so_logado` na
+        # ficha diz "esta e' territorio do resgate em casa", e a esteira nao encosta.
+        if e.get("so_logado"):
+            continue
         if e.get("completo"):
             if not quer_reler(c, e, pedidas, quando):
                 continue
