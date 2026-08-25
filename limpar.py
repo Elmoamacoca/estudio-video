@@ -32,6 +32,7 @@ import shutil
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 # As caixas que carregam DADO, e nao midia nem indice de reproducao. Qualquer uma delas
@@ -233,7 +234,17 @@ def mesma_midia(a: Path, b: Path) -> bool:
         if "matches no streams" in (r.stderr or ""):
             return "ausente"
         return r.stdout.strip()
-    return all(resumo(a, q) == resumo(b, q) and resumo(a, q) for q in ("0:v", "0:a"))
+    # CADA RESUMO SAI UMA VEZ SO'. A primeira versao comparava com a expressao inteira
+    # dentro do all(), e cada lado era calculado de novo a cada aparicao: seis chamadas
+    # de ffmpeg onde quatro bastavam, e o resumo e' o custo dominante da limpeza (0,4 s
+    # dos 0,5 s por arquivo). Guardar em variavel corta um terco do relogio da etapa
+    # com o MESMO veredito.
+    for q in ("0:v", "0:a"):
+        da_entrada = resumo(a, q)
+        da_saida = resumo(b, q)
+        if not da_entrada or da_entrada != da_saida:
+            return False
+    return True
 
 
 def conferir_pasta(pasta: Path) -> int:
@@ -313,23 +324,46 @@ if __name__ == "__main__":
         except Exception:
             pass
 
-    for arq in arquivos:
-        laudo = limpar(arq, destino / arq.name)
-        laudo["arquivo"] = arq.name
-        laudos.append(laudo)
-        if laudo.get("limpo"):
-            passaram += 1
-            print(f"  limpo   {arq.name}  ({laudo['segundos']}s, {laudo['casca']})")
-        else:
-            reprovados += 1
-            # O REPROVADO NAO SEGUE VIAGEM. Entregar um arquivo que nao passou seria pior
-            # do que nao entregar: ele iria para o Instagram com a sobra dentro, e
-            # ninguem saberia qual dos arquivos do lote era o furado.
-            (destino / arq.name).unlink(missing_ok=True)
-            print(f"  REPROVA {arq.name}: {laudo.get('erro') or laudo.get('sobras')} "
-                  f"{laudo.get('marcas')} {laudo.get('tags_formato')} "
-                  f"{laudo.get('tags_trilha')}")
-        avisar(passaram + reprovados)
+    # QUATRO LIMPEZAS DE CADA VEZ. O custo por arquivo e' quase todo de subprocesso
+    # (o ffmpeg da copia e os resumos md5), que roda fora do Python e solta o
+    # interpretador; quatro juntas ocupam os nucleos da maquina da esteira em vez de
+    # deixa-los parados. O teto que impede mais e' a memoria: o auditar le' o arquivo
+    # inteiro, entao N limpezas juntas seguram N videos na memoria ao mesmo tempo.
+    #
+    # O DESENHO E' O MESMO DO RECORTE NA OFICINA: o trabalhador so' devolve o laudo, e
+    # quem soma, imprime, apaga reprovado e avisa a tela e' o laco de fora, um por vez,
+    # para nenhum contador nem arquivo ser escrito por duas maos.
+    QUATRO_JUNTAS = 4
+    resultados: dict[int, dict] = {}
+    with ThreadPoolExecutor(max_workers=QUATRO_JUNTAS) as piscina:
+        futuros = {piscina.submit(limpar, arq, destino / arq.name): i
+                   for i, arq in enumerate(arquivos)}
+        for fut in as_completed(futuros):
+            i = futuros[fut]
+            arq = arquivos[i]
+            try:
+                laudo = fut.result()
+            except Exception as e:
+                laudo = {"arquivo": arq.name, "limpo": False,
+                         "erro": f"{type(e).__name__}: {e}"}
+            laudo["arquivo"] = arq.name
+            resultados[i] = laudo
+            if laudo.get("limpo"):
+                passaram += 1
+                print(f"  limpo   {arq.name}  ({laudo['segundos']}s, {laudo['casca']})")
+            else:
+                reprovados += 1
+                # O REPROVADO NAO SEGUE VIAGEM. Entregar um arquivo que nao passou seria
+                # pior do que nao entregar: ele iria para o Instagram com a sobra dentro,
+                # e ninguem saberia qual dos arquivos do lote era o furado.
+                (destino / arq.name).unlink(missing_ok=True)
+                print(f"  REPROVA {arq.name}: {laudo.get('erro') or laudo.get('sobras')} "
+                      f"{laudo.get('marcas')} {laudo.get('tags_formato')} "
+                      f"{laudo.get('tags_trilha')}")
+            avisar(passaram + reprovados)
+    # O LAUDO SAI NA ORDEM DOS ARQUIVOS, e nao na ordem de chegada. Quem abre o
+    # _limpeza.json compara com a pasta, e ordem que muda a cada rodada so' confunde.
+    laudos = [resultados[i] for i in range(len(arquivos))]
 
     # O LAUDO FICA JUNTO DOS ARQUIVOS, para o registro da tela ler depois. Sem ele, a
     # unica prova da limpeza seria o texto que rolou no terminal da esteira, que o
