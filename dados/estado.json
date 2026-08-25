@@ -1,7 +1,7 @@
 {
  "prontas": 500,
  "avaliados": 1404,
- "ultima_rodada": 1787622028,
+ "ultima_rodada": 1787622824,
  "perfis": [
   {
    "conta": "blankpartners",
@@ -50,6 +50,29 @@
    "baixados": 0,
    "reprovados": 0,
    "restam": 93
+  },
+  {
+   "conta": "startse",
+   "nome": null,
+   "avatar": null,
+   "seguidores": 0,
+   "mercado": null,
+   "etiquetas": [],
+   "atualizado": 1787622464,
+   "publicacoes": 0,
+   "lidos": 0,
+   "completo": true,
+   "relendo": false,
+   "mais_antigo": null,
+   "mais_novo": null,
+   "reels": 0,
+   "imagens": 0,
+   "carrosseis": 0,
+   "acima": 0,
+   "baixaveis": 0,
+   "baixados": 0,
+   "reprovados": 0,
+   "restam": 0
   },
   {
    "conta": "thenews.business",

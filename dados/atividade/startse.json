@@ -31,6 +31,15 @@
    "tipo": "sem_leitura",
    "gravidade": "aviso",
    "texto": "A Ficha Tinha Sido Encerrada Por Engano: O Vazio Era Recusa Disfarçada Do Instagram, Não Conta Sem Posts. Perfil Reaberto, A Esteira Tenta De Novo."
+  },
+  {
+   "quando": 1787622464,
+   "tipo": "vazio",
+   "gravidade": "aviso",
+   "texto": "Sem posts públicos: conta fechada ou sem publicação. Nada a varredura aqui.",
+   "detalhe": {
+    "total": 0
+   }
   }
  ],
  "vazios_vistos": 1

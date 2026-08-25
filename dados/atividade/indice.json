@@ -3,20 +3,21 @@
   {
    "conta": "startse",
    "nome": null,
+   "rotulo": "publicações",
    "primeiro": 1787622096,
-   "ultimo": 1787622125,
-   "eventos": 4,
+   "ultimo": 1787622464,
+   "eventos": 6,
    "falhas": 0,
-   "avisos": 4,
-   "ultimo_tipo": "aguardando",
+   "avisos": 6,
+   "ultimo_tipo": "vazio",
    "lidos": 0,
    "publicacoes": 0,
-   "completo": false
+   "completo": true
   },
   {
    "conta": "thenews.business",
    "nome": "the news business",
-   "rotulo": "reels",
+   "rotulo": "publicações",
    "primeiro": 1787176012,
    "ultimo": 1787177420,
    "eventos": 4,
@@ -24,13 +25,13 @@
    "avisos": 0,
    "ultimo_tipo": "concluido",
    "lidos": 267,
-   "publicacoes": 0,
+   "publicacoes": 2542,
    "completo": true
   },
   {
    "conta": "blankpartners",
    "nome": "Blank Partners",
-   "rotulo": "reels",
+   "rotulo": "publicações",
    "primeiro": 1787076365,
    "ultimo": 1787080298,
    "eventos": 9,
@@ -38,13 +39,13 @@
    "avisos": 1,
    "ultimo_tipo": "concluido",
    "lidos": 737,
-   "publicacoes": 0,
+   "publicacoes": 1678,
    "completo": true
   },
   {
    "conta": "brandsdecoded__",
    "nome": "BrandsDecoded®️ | Conteúdo & Cultura",
-   "rotulo": "reels",
+   "rotulo": "publicações",
    "primeiro": 1787076371,
    "ultimo": 1787077500,
    "eventos": 5,
@@ -52,13 +53,13 @@
    "avisos": 1,
    "ultimo_tipo": "concluido",
    "lidos": 294,
-   "publicacoes": 0,
+   "publicacoes": 2256,
    "completo": true
   },
   {
    "conta": "vinci.society",
    "nome": "Vinci",
-   "rotulo": "reels",
+   "rotulo": "publicações",
    "primeiro": 1787074280,
    "ultimo": 1787074569,
    "eventos": 2,
@@ -70,5 +71,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787622127
+ "atualizado": 1787622824
 }
