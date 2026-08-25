@@ -4113,7 +4113,19 @@ async function procurarRecortes() {
   if (await postoDePe()) {
     let r = null;
     try { r = await noPosto(`/recortes?leva=${EDIT_LEVA.numero}`); }
-    catch (e) { return; }
+    catch (e) {
+      // A FICHA ILEGÍVEL FALA, E NÃO SOME: o posto manda 500 de propósito para a
+      // tela PARAR, mas o catch mudo fazia o passo 2 parecer "nunca recortou" e
+      // oferecer recortar as 107 de novo, horas de máquina refazendo o pronto. O
+      // estado não é apagado (certo), e agora a causa fica escrita onde se olha.
+      const aviso = $("rec_diz");
+      if (aviso) {
+        aviso.textContent = "não consegui ler os recortes desta leva: "
+          + (e && e.message ? e.message : "falha ao falar com o posto")
+          + " — recarregue e tente de novo antes de recortar qualquer coisa.";
+      }
+      return;
+    }
     EDIT_RECORTES = [];
     RECORTADO = null;
     const nomeDaLeva = "leva-" + EDIT_LEVA.numero;
@@ -4364,12 +4376,40 @@ async function olharORecorte() {
   REC_OBRA.mudo = 0;
   REC_OBRA.jaViu = true;
 
+  // NA FILA NÃO É SUMIDO, mesma regra do olharAObra: o posto responde `fila` quando
+  // o pedido existe e a oficina ainda está ocupada com outro trabalho.
+  if (d.fila) {
+    REC_OBRA.mudo = 0;
+    $("rec_obra_txt").textContent = "na fila, atrás de um trabalho em curso";
+    $("rec_obra_nota").textContent = "a oficina termina o que está fazendo e pega "
+      + "este pedido em seguida.";
+    return;
+  }
   if (d.erro) return pararORecorte("não deu: " + d.erro);
   const feitos = d.feitos || 0, total = d.total || REC_OBRA.total;
   $("rec_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
   if (!d.fim) {
-    $("rec_obra_txt").textContent = "recortando " + (feitos + 1) + " de " + total;
+    // A ESTEIRA APARECE COMO ESTEIRA, e não como "recortando 1 de 107" com dezesseis
+    // vagas trabalhando em paralelo (auditoria de 25/08/2026).
+    if (d.esteira && d.esteira.vagas) {
+      $("rec_obra_txt").textContent = "na esteira: " + (d.esteira.colhidas || 0)
+        + " de " + d.esteira.vagas + " vagas colhidas";
+    } else {
+      $("rec_obra_txt").textContent = "recortando " + (feitos + 1) + " de " + total;
+    }
     $("rec_obra_nota").textContent = d.atual ? "agora: " + d.atual : "";
+    return;
+  }
+  // A DESISTÊNCIA DA ESTEIRA NÃO SOME: as peças que não voltaram viraram um pedido
+  // local (mesmo id com "r"), e a vigia SEGUE nele em vez de declarar vitória com a
+  // leva pela metade (auditoria de 25/08/2026).
+  if (d.aviso && !REC_OBRA.id.endsWith("r")) {
+    $("rec_obra_txt").textContent = "a esteira devolveu parte da leva";
+    $("rec_obra_nota").textContent = d.aviso
+      + ". Sigo acompanhando as peças que voltaram para esta máquina.";
+    REC_OBRA.id = REC_OBRA.id + "r";
+    REC_OBRA.mudo = 0;
+    REC_OBRA.jaViu = false;
     return;
   }
   clearInterval(REC_OBRA.relogio);
@@ -5840,7 +5880,11 @@ async function postoDePe() {
     return POSTO_DE_PE;
   }
   try {
-    const r = await fetch(POSTO + "/vivo", { cache: "no-store" });
+    // COM PRAZO DE CORTE, desde 25/08/2026: conexão aceita e nunca respondida (máquina
+    // saturada, Caddy pendurado) não rejeita nem resolve, e sem o corte a tela inteira
+    // congelava no primeiro "await postoDePe()". Erro rejeita; conexão muda pendura.
+    const r = await fetch(POSTO + "/vivo",
+      { cache: "no-store", signal: AbortSignal.timeout(4000) });
     POSTO_DE_PE = r.ok;
     try { CASA_INFO = await r.json(); } catch (e) { /* corpo velho, sem os campos */ }
   } catch (e) { POSTO_DE_PE = false; }
@@ -5855,6 +5899,9 @@ async function noPosto(rota, corpo) {
     : { method: "POST", cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(corpo) };
+  // O PRAZO DE CORTE anda junto com o do postoDePe: sem ele, uma conexão pendurada
+  // (aceita e nunca respondida) congelava o fluxo para sempre, sem recado.
+  opcoes.signal = AbortSignal.timeout(30000);
   let r;
   try {
     r = await fetch(POSTO + rota, opcoes);
@@ -5867,6 +5914,12 @@ async function noPosto(rota, corpo) {
   }
   let d = {};
   try { d = await r.json(); } catch (e) { /* resposta sem corpo */ }
+  // SESSÃO VENCIDA TEM RECADO PRÓPRIO: o 401 cru dizia "entre primeiro" sem dizer
+  // como, e só a aba de Configurações sabia traduzir. O socorro é um só: recarregar.
+  if (r.status === 401) {
+    throw new Error("A sessão desta página venceu. Recarregue a página e entre com "
+      + "a senha; nada foi perdido.");
+  }
   if (!r.ok) throw new Error(d.erro || `o posto do Estúdio respondeu ${r.status}`);
   return d;
 }
@@ -8672,6 +8725,17 @@ async function olharAObra() {
   OBRA.mudo = 0;
   OBRA.jaViu = true;
 
+  // NA FILA NÃO É SUMIDO: o posto responde `fila` quando o pedido existe e a oficina
+  // ainda não o pegou (uma leva longa na frente segura a fila por horas). Antes, três
+  // minutos mudos terminavam em "confira se a oficina está de pé" com ela viva e
+  // trabalhando (auditoria de 25/08/2026).
+  if (d.fila) {
+    OBRA.mudo = 0;
+    $("apl_obra_txt").textContent = "na fila, atrás de um trabalho em curso";
+    $("apl_obra_nota").textContent = "a oficina termina o que está fazendo e pega "
+      + "este pedido em seguida; a barra anda sozinha quando chegar a vez.";
+    return;
+  }
   if (d.erro) {
     pararDeOlhar(false);          // a barra fica onde parou: ver a nota em pararDeOlhar
     $("apl_obra_txt").textContent = "não deu: " + d.erro;
@@ -8680,12 +8744,38 @@ async function olharAObra() {
   const feitos = d.feitos || 0, total = d.total || OBRA.total;
   $("apl_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
   if (!d.fim) {
-    $("apl_obra_txt").textContent = `montando ${feitos + 1} de ${total}`;
+    // A ESTEIRA APARECE COMO ESTEIRA: com as vagas trabalhando, "montando 1 de 107"
+    // lia como máquina parada na primeira peça (auditoria de 25/08/2026).
+    if (d.esteira && d.esteira.vagas) {
+      $("apl_obra_txt").textContent = "na esteira: " + (d.esteira.colhidas || 0)
+        + " de " + d.esteira.vagas + " vagas colhidas";
+    } else {
+      $("apl_obra_txt").textContent = `montando ${feitos + 1} de ${total}`;
+    }
     $("apl_obra_nota").textContent = d.atual ? `agora: ${d.atual}` : "";
     return;
   }
-  MONTADO = { pecas: feitos, pasta: d.pasta || "",
-              onde: "edicoes/" + (d.pasta || "") };
+  // A DESISTÊNCIA DA ESTEIRA NÃO SOME: as peças que não voltaram viraram um pedido
+  // local (mesmo id com "r" no fim), e a vigia SEGUE nele em vez de declarar vitória
+  // com a leva pela metade (auditoria de 25/08/2026).
+  if (d.aviso && !OBRA.id.endsWith("r")) {
+    $("apl_obra_txt").textContent = "a esteira devolveu parte da leva";
+    $("apl_obra_nota").textContent = d.aviso
+      + ". Sigo acompanhando as peças que voltaram para esta máquina.";
+    OBRA.id = OBRA.id + "r";
+    OBRA.mudo = 0;
+    OBRA.jaViu = false;
+    return;
+  }
+  // O FIM DE VERDADE VEM DO RE-SCAN, e não do andamento montado à mão: o andamento
+  // final traz a pasta como caminho ABSOLUTO do disco da casa e não traz a lista de
+  // arquivos, e o MONTADO manual deixava a etapa 4 abrir zerada até um F5 (auditoria
+  // de 25/08/2026). O procurarMontagem devolve pasta relativa, peças e arquivos.
+  MONTADO = null;
+  try { await procurarMontagem(); } catch (e) { /* o fallback abaixo cobre */ }
+  if (!MONTADO) {
+    MONTADO = { pecas: feitos, pasta: "", arquivos: [], onde: "edicoes/" };
+  }
   pararDeOlhar(true);
   $("apl_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça montada" : "peças montadas"}`
     + (d.falhas ? `, ${d.falhas} falharam` : "");
@@ -8694,7 +8784,7 @@ async function olharAObra() {
   // avançava sozinha ao passo 4. Achado da auditoria de 25/08/2026 (o vigia de nomes
   // só olhava função chamada, não variável lida).
   $("apl_obra_nota").innerHTML = 'estão em <a href="#" data-abrir="'
-    + escapa("edicoes/" + (d.pasta || "")) + '">' + escapa(d.pasta || "")
+    + escapa(MONTADO.onde) + '">' + escapa(MONTADO.pasta || "a pasta da montagem")
     + "</a>. Os recortes continuam onde estavam, intactos.";
   desenhaFeito();
   irParaPasso(4);
@@ -8909,7 +8999,16 @@ async function lerAOrigem() {
           legenda: (x.legenda || "").trim(), endereco: x.endereco || "" });
       }
     }
-  } catch (e) { /* leva sem lote: a tela avisa, e não é erro de programa */ }
+  } catch (e) {
+    // FALHA DE LEITURA NÃO É AUSÊNCIA. O fetch que rejeita (posto reiniciando,
+    // resposta truncada) caía aqui sem marcar nada, e a etapa 4.1 afirmava "sem
+    // legenda de origem" sobre um dado que existe: o mesmo falso positivo já
+    // consertado no ramo dos status. Só o caminho da pasta local (leva antiga sem
+    // lote, NotFoundError) segue em silêncio, que aí é ausência de verdade.
+    if (!(e && e.name === "NotFoundError")) {
+      ORIGEM_FALHOU = (e && e.message) ? e.message : "a leitura falhou";
+    }
+  }
 }
 
 async function entrarNaLegenda() {
@@ -9183,6 +9282,14 @@ function andouADescricao(d) {
   $("dsc_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
   $("dsc_obra_txt").textContent = `Escrevendo ${Math.min(feitos + 1, total)} de ${total}`;
   $("dsc_obra_nota").textContent = d.atual ? `Agora: ${d.atual}` : "";
+  // CADA LEGENDA PAGA ENTRA NO RASCUNHO ASSIM QUE APARECE, como a escrita já faz: o
+  // andamento passou a carregar os textos (25/08/2026), e sem esta absorção um F5 no
+  // meio jogava fora o que a cota do dia já tinha pago.
+  let chegou = false;
+  for (const [arq, texto] of Object.entries(d.textos || {})) {
+    if (texto && !DESCRICOES.get(arq)) { DESCRICOES.set(arq, texto); chegou = true; }
+  }
+  if (chegou) { desenhaDescricoes(); contaDescricoes(); salvarRascunho(); }
 }
 
 async function terminouADescricao(d) {
