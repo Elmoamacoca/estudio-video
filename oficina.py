@@ -45,6 +45,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import urllib.error
 import urllib.parse
 import urllib.request
 import tempfile
@@ -721,14 +722,18 @@ def tirar_assinatura(arq: Path) -> dict:
             break
         except OSError:
             if tentativa == 2:
-                return {"limpo": False, "erro": "o arquivo ficou preso por outro programa"}
+                # "AVISO", E NAO "ERRO": o arquivo esta' inteiro no disco, so' ficou
+                # com o carimbo. Com "erro", a peca pronta contava como falha e saia
+                # da ficha (perdia mascara e frase); a auditoria de 25/08/2026 pegou.
+                return {"limpo": False,
+                        "aviso": "o arquivo ficou preso por outro programa"}
             time.sleep(0.6)
     try:
         r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(bruto)]
                            + LIMPEZA + [str(arq)], capture_output=True, text=True)
         if r.returncode != 0 or not arq.exists():
             bruto.replace(arq)          # sem carimbo tirado e' melhor que sem arquivo
-            return {"limpo": False, "erro": "nao consegui tirar a assinatura"}
+            return {"limpo": False, "aviso": "nao consegui tirar a assinatura"}
         casca = sem_udta(arq)
         laudo = auditar(arq)
         laudo["casca"] = casca
@@ -739,15 +744,35 @@ def tirar_assinatura(arq: Path) -> dict:
 
 # --------------------------------------------------------------- os pedidos
 
+def _disco_apertado(pid) -> bool:
+    """Dois gigas de folga antes de comecar uma leva local; menos que isso e' parar
+    com o motivo escrito. Sem esta porta, o disco cheio aparecia como centenas de
+    falhas peca a peca, com a tela muda (o proprio andamento nao consegue gravar) e
+    o pedido repetindo a leva contra o mesmo disco cheio (auditoria de 25/08/2026).
+    """
+    livre = shutil.disk_usage(CASA).free
+    if livre >= 2 * 1024 ** 3:
+        return False
+    andamento(pid, {"id": pid, "fim": True,
+                    "erro": f"o disco da casa esta' quase cheio "
+                            f"({livre // 1048576} MB livres); libere espaco e "
+                            "peca de novo"})
+    print(f"  {pid}: disco quase cheio ({livre // 1048576} MB livres), nao comecei")
+    return True
+
+
 def andamento(pedido_id: str, dados: dict) -> None:
     """Escreve o andamento para a tela ler. NUNCA DERRUBA A MONTAGEM.
 
     E' a mesma licao do passo 8 da baixa: a telemetria caiu e levou junto 441 MB que ja'
     estavam no disco. Aviso que atrapalha o trabalho nao e' aviso, e' sabotagem.
+
+    E A ESCRITA E' ATOMICA desde 25/08/2026: o posto le' este arquivo a cada 3 s para
+    a tela, e no escrever ele carrega dezenas de KB de textos; leitura no meio de um
+    write_text devolvia JSON rasgado e a tela piscava "sem contato" a' toa.
     """
     try:
-        (PEDIDOS / f"{pedido_id}.andamento.json").write_text(
-            json.dumps(dados, ensure_ascii=False), encoding="utf-8")
+        _gravar_json_atomico(PEDIDOS / f"{pedido_id}.andamento.json", dados)
     except OSError:
         pass
 
@@ -1138,16 +1163,27 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
 
 
 def arquivar(caminho: Path, p: dict, feitos: int, falhas: int, gasto: int) -> None:
-    """Guarda o pedido cumprido e tira ele da fila."""
+    """Guarda o pedido cumprido e tira ele da fila.
+
+    O PEDIDO SAI DA FILA MESMO QUANDO A COPIA EM FEITOS FALHA, e isso e' conserto da
+    auditoria de 25/08/2026: com o disco cheio, o write de feitos estourava ANTES do
+    unlink e o pedido voltava para a fila, e a leva inteira repetia a cada minuto
+    contra o mesmo disco cheio, regastando cota de IA e enchendo mais o disco. O
+    unlink nao precisa de espaco; perder o registro em feitos e' mais barato que
+    regastar cota em laco.
+    """
     FEITOS.mkdir(parents=True, exist_ok=True)
     p["cumprido"] = int(time.time())
     p["feitos"], p["falhas"], p["segundos"] = feitos, falhas, gasto
     try:
         (FEITOS / caminho.name).write_text(json.dumps(p, ensure_ascii=False, indent=1),
                                            encoding="utf-8")
+    except OSError as e:
+        print(f"  nao consegui guardar a copia em feitos: {e}")
+    try:
         caminho.unlink(missing_ok=True)
     except OSError as e:
-        print(f"  nao consegui arquivar o pedido: {e}")
+        print(f"  nao consegui tirar o pedido da fila: {e}")
 
 
 def fundir_ficha(velha, leva, origem: Path, pecas_novas: list) -> dict:
@@ -1255,11 +1291,15 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
 
     if not origem.is_dir():
         andamento(pid, {"id": pid, "erro": f"nao achei a pasta {origem.name}", "fim": True})
+        arquivar(caminho, p, 0, 0, 0)   # sai da fila: ver a nota em cumprir_escrever
         return
 
     # LEVA GRANDE VAI PARA A ESTEIRA, desde 25/08/2026: ver o bloco "a esteira de
     # edicao". Falhando o despacho, o caminho local de sempre continua daqui.
     if despacho_vale(pecas, p) and despachar(caminho, p, "recorte"):
+        return
+    if _disco_apertado(pid):
+        arquivar(caminho, p, 0, 0, 0)
         return
 
     # O PARALELISMO E' DA PLACA, e nao da maquina: o proprio comentario do
@@ -2380,12 +2420,19 @@ def cumprir_descrever(caminho: Path, p: dict) -> None:
     parou_por = ""
     saida, diario = {}, []
 
+    # A LEGENDA PAGA NAO PODE EVAPORAR, e o descrever ganhou em 25/08/2026 as duas
+    # protecoes que o escrever ja' tinha: cada legenda aceita vai no andamento (a tela
+    # grava no rascunho na hora, e um F5 no meio nao joga fora o que a cota ja' pagou)
+    # e num arquivo ao lado da leva, para queda de processo tambem nao perder nada.
+    guardadas_em = LEVAS / str(p.get("pasta") or "") / "_descricoes.json"
     for i, peca in enumerate(pecas, 1):
         nome = str(peca.get("arquivo", ""))
         andamento(pid, {"id": pid, "tipo": "descrever", "total": len(pecas),
                         "feitos": feitos, "falhas": falhas,
                         "sem_original": sem_original, "atual": nome,
-                        "fim": False, "segundos": round(time.time() - t0)})
+                        "fim": False, "segundos": round(time.time() - t0),
+                        "textos": saida})
+        renovar_tranca()   # leva de IA e' longa; a tranca do dono vivo nao envelhece
         original = (peca.get("original") or "").strip()
         if not original:
             original = (doLote.get(nome) or {}).get("legenda", "").strip()
@@ -2408,14 +2455,26 @@ def cumprir_descrever(caminho: Path, p: dict) -> None:
             diario.append({"arquivo": nome, "erro": str(e)})
             print(f"  {i}/{len(pecas)} {nome}: {e}")
             falhas += 1
+            # SO' SE PARA A LEVA QUANDO NAO HA' MAIS CHAVE VIVA, como o escrever ja'
+            # faz: uma peca que todas as chaves recusam e' falha DELA, e as outras
+            # cento e tantas seguem. O break incondicional parava a leva na peca 5
+            # com "restantes" altos e nenhuma explicacao (auditoria de 25/08/2026).
             if not rodizio.vivas():
                 parou_por = "As chaves da fila bateram o teto de hoje."
-            break
+                break
+            continue
         if texto:
             # O FECHO ENTRA AQUI, depois de a IA responder e antes de guardar.
             saida[nome] = (texto + ("\n\n" + rodape if rodape else "")).strip()
             feitos += 1
             print(f"  {i}/{len(pecas)} {nome}: {texto[:60]}")
+            # A COPIA EM DISCO SAI A CADA LEGENDA, com o OSError engolido como nos
+            # irmaos (_textos.json, _origem.json): telemetria nunca derruba trabalho.
+            try:
+                guardadas_em.write_text(json.dumps(saida, ensure_ascii=False,
+                                                   indent=1), encoding="utf-8")
+            except OSError:
+                pass
         else:
             diario.append({"arquivo": nome, "aviso": "a IA nao achou assunto"})
 
@@ -2722,6 +2781,13 @@ def cumprir_entregar(caminho: Path, p: dict) -> None:
 
     rotulo = nome_da_entrega(numero, contas)
     casa = ENTREGAS / rotulo
+    # A PASTA DA ENTREGA NASCE LIMPA, sempre. O rotulo e' o mesmo em toda re-entrega,
+    # e o empacote mantinha arquivo que ja' existia: depois de um "so' empacotar" e uma
+    # re-montagem, a peca de mesmo nome subia com o VIDEO ANTIGO, e titulo mudado
+    # deixava a pasta velha ao lado como sobra, tudo somando certo na contagem do
+    # Drive. Zerar custa nada (o empacote e' os.link, refaz em instantes) e garante
+    # que o que sobe e' exatamente o que esta' montado agora (auditoria de 25/08/2026).
+    shutil.rmtree(casa, ignore_errors=True)
     print(f"pedido {pid}: entregar {len(videos)} pecas como '{rotulo}'")
 
     def contar(fase, feitos, total, extra=None):
@@ -2731,6 +2797,7 @@ def cumprir_entregar(caminho: Path, p: dict) -> None:
         if extra:
             d.update(extra)
         andamento(pid, d)
+        renovar_tranca()   # a subida de uma leva e' longa; a tranca nao envelhece
 
     # ------------------------------------------------------------ 1. empacotar
     empacotadas = sem_descricao = 0
@@ -2833,9 +2900,17 @@ def cumprir_entregar(caminho: Path, p: dict) -> None:
                              else ""))
         else:
             conferidos = int(conferencia.get("quantos") or 0)
-            if conferidos < empacotadas:
-                porque_nao = (f"o Drive respondeu {conferidos} videos, e eu empacotei "
-                              f"{empacotadas}")
+            # O PORTAO COMPARA COM O TOTAL DA LEVA, e nao com as empacotadas. A
+            # auditoria de 25/08/2026 pegou o furo: uma peca que falhava no empacote
+            # saia das duas pontas da conta, a leva era carimbada 100% com 106, e o
+            # apagar levava embora a unica copia da 107a. Faltou peca, e' entrega
+            # parcial: nada de carimbo, nada de apagar, e o motivo escrito.
+            if empacotadas < len(videos):
+                porque_nao = (f"{len(videos) - empacotadas} pecas falharam no "
+                              "empacote; entrega parcial nao ganha carimbo")
+            elif conferidos < len(videos):
+                porque_nao = (f"o Drive respondeu {conferidos} videos, e a leva "
+                              f"tem {len(videos)}")
             else:
                 verificado = True
 
@@ -2967,8 +3042,14 @@ def cumprir_escrever(caminho: Path, p: dict) -> None:
                         "feitos": feitos, "falhas": falhas, "sem_frase": sem_frase,
                         "atual": nome, "textos": saida,
                         "fim": False, "segundos": round(time.time() - t0)})
+        renovar_tranca()   # leva de IA e' longa; a tranca do dono vivo nao envelhece
         frase = origem / "_frases" / (Path(nome).stem + ".png")
-        imagem = frase.read_bytes() if frase.is_file() else None
+        # A FRASE ILEGIVEL NAO DERRUBA A LEVA: um PNG rasgado no disco (queda no meio
+        # da gravacao do recorte) virava OSError solto que matava a oficina inteira.
+        try:
+            imagem = frase.read_bytes() if frase.is_file() else None
+        except OSError:
+            imagem = None
         # SEM IMAGEM NAO HA' O QUE LER, E ENTAO NAO SE PEDE NADA.
         #
         # ISTO QUEIMAVA COTA PARA INVENTAR TEXTO. A peca so' tem `_frases/<nome>.png`
@@ -3081,7 +3162,17 @@ def cumprir(caminho: Path) -> None:
     try:
         p = json.loads(caminho.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
+        # PEDIDO ILEGIVEL SAI DE CENA COM O MOTIVO ESCRITO, no mesmo desenho do
+        # estado corrompido da colheita: sem isto ele era relido a cada minuto para
+        # sempre, sem andamento, e a tela nunca ficava sabendo (auditoria 25/08/2026).
         print(f"  pedido {caminho.name} ilegivel: {e}")
+        andamento(caminho.stem, {"id": caminho.stem, "fim": True,
+                                 "erro": "o pedido chegou ilegivel e saiu da fila; "
+                                         "peca de novo pela tela"})
+        try:
+            caminho.rename(caminho.with_name(caminho.stem + ".corrompido"))
+        except OSError:
+            caminho.unlink(missing_ok=True)
         return
 
     # DOIS TIPOS DE PEDIDO NA MESMA FILA. O passo 2 manda `tipo: recorte`; o passo 3
@@ -3117,6 +3208,7 @@ def cumprir(caminho: Path) -> None:
     if not origem.is_dir():
         andamento(pid, {"id": pid, "erro": f"nao achei os recortes de {origem.name}",
                         "fim": True})
+        arquivar(caminho, p, 0, 0, 0)   # sai da fila: ver a nota em cumprir_escrever
         return
 
     # A FICHA DO PASSO 2 diz onde esta' a mascara de cada peca. Sem ela o B-roll entraria
@@ -3136,6 +3228,9 @@ def cumprir(caminho: Path) -> None:
     # onde o relogio vai. Falhando o despacho, o caminho local de sempre segue abaixo.
     if despacho_vale(pecas, p) and despachar(caminho, p, "montagem", tpl, mascaras):
         return
+    if _disco_apertado(pid):
+        arquivar(caminho, p, 0, 0, 0)
+        return
 
     print(f"pedido {pid}: {len(pecas)} pecas sobre {p.get('template')}")
     destino.mkdir(parents=True, exist_ok=True)
@@ -3143,7 +3238,12 @@ def cumprir(caminho: Path) -> None:
     t0 = time.time()
     feitos = falhas = 0
     diario = []
-    guardado = {}          # fundo e frente ja' pintados, por conjunto de textos
+    # SO' O ULTIMO PAR PINTADO FICA NA MEMORIA. Cada par fundo+frente em 1080x1920
+    # pesa uns 14,5 MB; depois da fase da IA cada peca tem texto proprio, e guardar
+    # todos os pares acumulava ate' 1,5 GB de RAM junto com o ffmpeg, na maquina sem
+    # placa onde a leva local ja' dura horas (auditoria de 25/08/2026). O caso que o
+    # cache serve de verdade, template sem IA, e' um par so', e chega consecutivo.
+    guardado = {"chave": None, "par": None}
 
     try:
         for i, peca in enumerate(pecas, 1):
@@ -3164,9 +3264,11 @@ def cumprir(caminho: Path) -> None:
             textos = peca.get("textos") or {}
             acertos = peca.get("ajustes") or {}
             chave = json.dumps([textos, acertos], sort_keys=True, ensure_ascii=False)
-            if chave not in guardado:
+            if guardado["chave"] != chave:
                 try:
-                    guardado[chave] = pintar_camadas(tpl, textos, tela, TEMPLATES, acertos)
+                    guardado = {"chave": chave,
+                                "par": pintar_camadas(tpl, textos, tela,
+                                                      TEMPLATES, acertos)}
                 except Exception as e:
                     # PINTAR O TEMPLATE E' O QUE VALE PARA A LEVA INTEIRA, entao uma falha
                     # aqui e' mesmo o fim da montagem. Mas o pedido tem de sair da fila,
@@ -3181,7 +3283,7 @@ def cumprir(caminho: Path) -> None:
             # corrompida, disco cheio, arquivo preso) estourava para fora do laco, matava
             # as outras 106 e ainda deixava o pedido na fila para repetir tudo de novo.
             try:
-                fundo, frente = guardado[chave]
+                fundo, frente = guardado["par"]
                 camada = trabalho / f"camada{i}.png"
                 camada_da_peca(fundo, frente, mascaras.get(nome), tela,
                                peca.get("enquadre")).save(camada)
@@ -3432,9 +3534,27 @@ def despachar(caminho: Path, p: dict, tipo: str, tpl: dict | None = None,
             shutil.rmtree(aux, ignore_errors=True)
             (caminhos.DESPACHADOS / f"{pid}.json").unlink(missing_ok=True)
             return False
-        # O PEDIDO JA' SAIU DA FILA e o disparo pode ter ido: NAO se apaga a ficha nem
-        # o estado, porque as vagas precisam do manifesto e o colhedor precisa do
-        # estado. O teto de 3 horas devolve as pecas se a esteira nao acordar.
+        # DISPARO RECUSADO NA CARA (4xx) NAO ESPERA TETO NENHUM: a resposta chegou e
+        # disse nao (token vencido e' 401, fluxo renomeado e' 404), entao a esteira
+        # garantidamente nao acordou. As pecas voltam para a fila JA', como pedido
+        # local, e a ficha e o estado morrem aqui, sem as 3 horas de espera.
+        if isinstance(e, urllib.error.HTTPError) and e.code < 500:
+            try:
+                novo = dict(p)
+                novo["aqui"] = True
+                caminho.write_text(json.dumps(novo, ensure_ascii=False, indent=1),
+                                   encoding="utf-8")
+                (caminhos.DESPACHOS / f"{ficha}.json").unlink(missing_ok=True)
+                shutil.rmtree(aux, ignore_errors=True)
+                (caminhos.DESPACHADOS / f"{pid}.json").unlink(missing_ok=True)
+                print(f"    (o GitHub recusou o disparo: {e.code}; a leva segue "
+                      "nesta maquina)")
+                return False
+            except OSError:
+                pass
+        # O PEDIDO JA' SAIU DA FILA e o disparo pode ter ido (timeout, 5xx): NAO se
+        # apaga a ficha nem o estado, porque as vagas precisam do manifesto e o
+        # colhedor precisa do estado. O teto devolve as pecas se a esteira nao acordar.
         print("    (o pedido ja' esta' na esteira; o colhedor assume)")
         return True
 
@@ -3485,13 +3605,16 @@ def _achar_artifact(nome: str, ficha_github: str, runs: set) -> dict | None:
     return None
 
 
-def instalar_fatia(pacote: Path, destino: Path, tipo: str) -> dict:
+def instalar_fatia(pacote: Path, destino: Path, tipo: str,
+                   pedido=None, fatia=None) -> dict:
     """Abre o pacote de uma vaga dentro do destino e devolve o laudo dela.
 
     O PACOTE E' ENTRADA DE FORA, mesmo vindo do nosso proprio fluxo: cada nome de
     arquivo e' conferido antes de tocar o disco. Nome com barra invertida, caminho
     absoluto, `..` ou pasta fora das tres esperadas nao entra, e derruba a fatia
-    inteira, porque pacote adulterado nao e' pacote pela metade.
+    inteira, porque pacote adulterado nao e' pacote pela metade. E O LAUDO SE CONFERE
+    ANTES DA GRAVACAO, nao depois: um laudo de outro pedido descoberto tarde ja'
+    teria misturado arquivos na pasta errada (auditoria de 25/08/2026).
     """
     import zipfile
     with zipfile.ZipFile(pacote) as z:
@@ -3513,6 +3636,10 @@ def instalar_fatia(pacote: Path, destino: Path, tipo: str) -> dict:
         laudo = json.loads(z.read("_laudo.json").decode("utf-8"))
         if not isinstance(laudo, dict):
             raise ValueError("o _laudo.json do pacote nao e' uma ficha")
+        if pedido is not None and (str(laudo.get("pedido")) != str(pedido)
+                                   or laudo.get("fatia") != fatia):
+            raise ValueError(f"laudo de outra origem: {laudo.get('pedido')}"
+                             f"/{laudo.get('fatia')}")
         for nome in nomes:
             if nome == "_laudo.json":
                 continue
@@ -3635,14 +3762,11 @@ def _colher_fatia(pid, i, estado, tipo, destino, runs, ficha_do_github,
         guardar.baixar_pacote(art["id"], ficha_do_github, pacote,
                               int(art.get("size_in_bytes") or 0))
         destino.mkdir(parents=True, exist_ok=True)
-        fragmento = instalar_fatia(pacote, destino, tipo)
+        # O LAUDO E' CONFERIDO DENTRO DO INSTALAR, ANTES de qualquer gravacao: um
+        # laudo de outro pedido nao pode ter misturado arquivo nenhum no destino.
+        fragmento = instalar_fatia(pacote, destino, tipo, pedido=pid, fatia=i)
     finally:
         pacote.unlink(missing_ok=True)
-    # O LAUDO TEM DE DIZER QUE E' DESTE PEDIDO E DESTA FATIA. Mesmo vindo de um run
-    # nosso, um laudo com pedido ou fatia trocados e' sinal de engano, nao de pressa.
-    if str(fragmento.get("pedido")) != str(pid) or fragmento.get("fatia") != i:
-        raise ValueError(f"laudo de outra origem: {fragmento.get('pedido')}"
-                         f"/{fragmento.get('fatia')}")
     return fragmento
 
 
@@ -3890,7 +4014,22 @@ def main() -> int:
         if despachados:
             colher_despachos()
         for x in na_fila():
-            cumprir(x)
+            # UM PEDIDO QUE ESTOURA NAO TRAVA A FILA INTEIRA. Sem este cerco, uma
+            # excecao fora dos cercos internos derrubava a passagem, o pedido culpado
+            # ficava na fila e a oficina crashava de novo a cada minuto, muda. Agora
+            # ele sai de cena com o motivo no andamento e os outros pedidos seguem.
+            try:
+                cumprir(x)
+            except (Exception, SystemExit) as e:                    # noqa: BLE001
+                print(f"  o pedido {x.name} estourou: {type(e).__name__}: {e}")
+                andamento(x.stem, {"id": x.stem, "fim": True,
+                                   "erro": f"o pedido quebrou a oficina "
+                                           f"({type(e).__name__}: {e}) e saiu da "
+                                           "fila; peca de novo pela tela"})
+                try:
+                    x.rename(x.with_name(x.stem + ".corrompido"))
+                except OSError:
+                    x.unlink(missing_ok=True)
     finally:
         destrancar()
     return 0
