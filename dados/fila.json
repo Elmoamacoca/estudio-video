@@ -7,6 +7,24 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@upflip",
+   "indice": 453.13,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 344.13,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 287.28,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@thenews.business",
    "indice": 283.62,
    "etapa": "reels",
@@ -27,6 +45,24 @@
   {
    "origem": "@thenews.business",
    "indice": 216.76,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 200.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 172.7,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 171.93,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -57,6 +93,12 @@
   {
    "origem": "@blankpartners",
    "indice": 111.37,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 105.32,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -99,6 +141,12 @@
   {
    "origem": "@blankpartners",
    "indice": 73.28,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 71.09,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -205,6 +253,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@upflip",
+   "indice": 39.91,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@blankpartners",
    "indice": 38.91,
    "etapa": "reels",
@@ -259,6 +313,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@upflip",
+   "indice": 29.81,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@thenews.business",
    "indice": 28.52,
    "etapa": "reels",
@@ -299,67 +359,7 @@
    "indice": 24.91,
    "etapa": "reels",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 24.7,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 23.91,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 23.34,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 22.83,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 22.16,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 21.8,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 21.58,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 21.37,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 20.0,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 19.76,
-   "etapa": "reels",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1787622976
+ "atualizado": 1787623870
 }
