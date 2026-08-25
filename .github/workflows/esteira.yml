@@ -141,7 +141,12 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: main
-          fetch-depth: 0
+          # RASO, E NAO O HISTORICO INTEIRO: quem precisa do historico e' so' o
+          # `fechar` (o atividade.py conta gravacoes por git log). Baixar milhares
+          # de commits de JSONs pesados em VINTE maquinas, 48 rodadas por dia, so'
+          # engordava cada rodada. Cinquenta commits cobrem com folga a base do
+          # rebase durante a propria rodada (auditoria de 25/08/2026).
+          fetch-depth: 50
 
       - name: Ler uma pagina
         env:
@@ -279,7 +284,18 @@ jobs:
               return (not d.get("completo")) or d.get("relendo")
           pasta = pathlib.Path("dados/perfis")
           perfis = {a.stem: ler(a, {}) for a in pasta.glob("*.json")} if pasta.exists() else {}
-          pendentes = [c for c, d in perfis.items() if falta(d)]
+          # A MESMA REGUA DO PORTAO, desde 25/08/2026: conta nova em fontes.json cuja
+          # abertura ainda nao passou NAO tem arquivo em dados/perfis, e a contagem
+          # por pasta a deixava invisivel: o portao subia 20 elos e a emenda dizia
+          # "tudo varrido, a esteira descansa" com a fila cheia. O rodada.pendentes
+          # conta as duas coisas, e e' exatamente o que o portao `conferir` usa.
+          try:
+              import rodada
+              pendentes = [str(c) for c in rodada.pendentes(rodada.contas_pedidas())]
+          except Exception as e:
+              print(f"sem a regua do rodada ({type(e).__name__}: {e}); uso a pasta",
+                    file=sys.stderr)
+              pendentes = [c for c, d in perfis.items() if falta(d)]
           # quantos commits de elo entraram nos ultimos 30 minutos
           r = subprocess.run(["git", "log", "--since=30.minutes", "--oneline", "--grep=^vaga"],
                              capture_output=True, text=True)
@@ -301,7 +317,8 @@ jobs:
           memoria = vigia.get("perfis") or {}
           travados, agora_perfis = [], {}
           for c in pendentes:
-              prova = int(perfis[c].get("atualizado") or 0)
+              # conta nova sem arquivo entra com prova 0: o vigia passa a observa-la
+              prova = int((perfis.get(c) or {}).get("atualizado") or 0)
               antes = memoria.get(c) or {}
               paradas = int(antes.get("paradas") or 0) + 1 if prova == antes.get("prova", -1) else 0
               agora_perfis[c] = {"prova": prova, "paradas": paradas}
@@ -345,13 +362,18 @@ jobs:
           read PENDENTES AVANCOU VIGIA < veredito.txt
           echo "perfis pela metade: $PENDENTES | elos que gravaram nesta rodada: $AVANCOU | vigia reapresenta: $VIGIA"
           if [ "$PENDENTES" -gt 0 ] && [ "$AVANCOU" -gt 0 ]; then
+            # O `|| echo` SEGURA O `bash -e`: um soluco do curl abortava o passo aqui
+            # e PULAVA a gravacao do vigia logo abaixo, zerando a memoria dele a cada
+            # soluco (auditoria de 25/08/2026). O cron de 30 min cobre a emenda.
             curl -s -o /dev/null -w "proxima rodada chamada: %{http_code}\n" \
               -X POST -H "Content-Type: application/json" \
-              "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}'
+              "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}' \
+              || echo "a ponte nao respondeu; o cron cobre em ate 30 min"
           elif [ "$VIGIA" -gt 0 ]; then
             curl -s -o /dev/null -w "vigia reapresentou a esteira: %{http_code}\n" \
               -X POST -H "Content-Type: application/json" \
-              "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}'
+              "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}' \
+              || echo "a ponte nao respondeu; o cron cobre em ate 30 min"
           elif [ "$PENDENTES" -eq 0 ]; then
             echo "tudo varrido, a esteira descansa"
           else
