@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "startse",
+   "nome": null,
+   "primeiro": 1787622096,
+   "ultimo": 1787622096,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "aguardando",
+   "lidos": 0,
+   "publicacoes": 0,
+   "completo": false
+  },
+  {
    "conta": "thenews.business",
    "nome": "the news business",
    "rotulo": "reels",
@@ -57,5 +70,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787622028
+ "atualizado": 1787622099
 }
