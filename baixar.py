@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 import time
 import urllib.error
@@ -72,16 +73,44 @@ def ja_reprovados() -> dict:
 
 
 def baixa_um(url: str, destino: Path) -> tuple[bool, int, str]:
-    try:
-        req = urllib.request.Request(url, headers=CABECALHO)
-        with urllib.request.urlopen(req, timeout=90) as r:
-            dados = r.read()
-        destino.write_bytes(dados)
-        return True, len(dados), ""
-    except urllib.error.HTTPError as e:
-        return False, 0, f"HTTP {e.code}"
-    except Exception as e:
-        return False, 0, type(e).__name__
+    """Baixa um arquivo por inteiro ou nao baixa nada.
+
+    O DOWNLOAD NASCE COM OUTRO NOME e so' vira o arquivo de verdade no fim, por
+    troca atomica: um parcial de queda de processo ou disco cheio que ficasse com o
+    nome final viraria "ja tinha" na rodada seguinte, seguiria para a limpeza, seria
+    reprovado pelo ffmpeg e BANIDO para sempre em reprovados.json, tudo por uma
+    falha passageira (auditoria de 25/08/2026). E o fluxo desce em pedacos direto
+    para o disco, nunca o video inteiro na memoria.
+
+    E O TROPECO DE REDE TEM UMA SEGUNDA CHANCE: timeout e 5xx tentam mais uma vez
+    apos espera curta antes de contar falha. 403 e 410 nao: e' link vencido, e
+    insistir no mesmo link vencido nao renova nada.
+    """
+    parcial = destino.with_name(destino.name + ".part")
+    for tentativa in (1, 2):
+        try:
+            req = urllib.request.Request(url, headers=CABECALHO)
+            with urllib.request.urlopen(req, timeout=90) as r, \
+                    open(parcial, "wb") as f:
+                shutil.copyfileobj(r, f, 1024 * 256)
+            tam = parcial.stat().st_size
+            os.replace(parcial, destino)
+            return True, tam, ""
+        except urllib.error.HTTPError as e:
+            parcial.unlink(missing_ok=True)
+            if e.code in (403, 410):
+                return False, 0, f"HTTP {e.code}: o link venceu"
+            if e.code >= 500 and tentativa == 1:
+                time.sleep(2)
+                continue
+            return False, 0, f"HTTP {e.code}"
+        except Exception as e:                                      # noqa: BLE001
+            parcial.unlink(missing_ok=True)
+            if tentativa == 1:
+                time.sleep(2)
+                continue
+            return False, 0, type(e).__name__
+    return False, 0, "nao consegui baixar"
 
 
 def main(cru: str) -> int:
@@ -90,7 +119,13 @@ def main(cru: str) -> int:
         return 1
 
     contas, limite = pedido(cru)
-    sel = json.loads(SELECAO.read_text(encoding="utf-8"))
+    # SELECAO ILEGIVEL E' RECADO, E NAO PILHA DE ERRO: um traceback de JSON nao diz
+    # a ninguem o que fazer. O socorro e' rodar o selecionar de novo.
+    try:
+        sel = json.loads(SELECAO.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        print(f"a selecao esta ilegivel ({e}). Rode o selecionar.py de novo.")
+        return 1
     com_arquivo = [i for i in sel.get("itens", []) if i.get("arquivo")]
     sem_arquivo = len(sel.get("itens", [])) - len(com_arquivo)
 
@@ -123,7 +158,7 @@ def main(cru: str) -> int:
     DESTINO.mkdir(parents=True, exist_ok=True)
     print(f"baixando {len(itens)} arquivos\n")
 
-    ok = falhas = total_bytes = 0
+    ok = falhas = total_bytes = vencidos = 0
     registro = []
     t0 = time.time()
 
@@ -174,6 +209,12 @@ def main(cru: str) -> int:
             caminho = DESTINO / nome
             if caminho.exists():
                 n += 1
+                # O "JA TINHA" TAMBEM ENTRA NO REGISTRO. Sem isto, uma queda entre o
+                # download e a marca de baixado fazia a peca voltar como "ja tinha" e
+                # ficar FORA do _lote.json novo, que e' sobrescrito: ela passava na
+                # limpeza e chegava na etapa 4 sem legenda e sem endereco, a perda
+                # que so' aparece meses depois (auditoria de 25/08/2026).
+                baixados_da_conta[j] = (item, nome, caminho.stat().st_size)
                 print(f"  [{n}/{len(itens)}] ja tinha: {nome}")
                 continue
             por_baixar.append((j, item, nome, caminho))
@@ -197,6 +238,8 @@ def main(cru: str) -> int:
                     avisar(conta, feitos, len(lista))
                 else:
                     falhas += 1
+                    if "venceu" in erro:
+                        vencidos += 1
                     print(f"  [{n}/{len(itens)}] FALHOU ({erro})  {item['endereco']}")
 
         for j in sorted(baixados_da_conta):
@@ -218,6 +261,11 @@ def main(cru: str) -> int:
     # nao pode contar como feito. Marcado aqui, ele sumiria da fileira da tela sem nunca
     # ter chegado tratado a mao do Gabriel, e ninguem tentaria de novo.
     print(f"\n{ok} baixados, {falhas} falharam, {total_bytes / 1048576:.0f} MB em {gasto:.0f}s")
+    if vencidos:
+        # O MOTIVO E O SOCORRO, ditos uma vez: o link de midia da selecao vence em
+        # horas, e a unica renovacao e' a mineracao passar de novo pelo perfil.
+        print(f"{vencidos} falharam por LINK VENCIDO: a selecao e' antiga demais. "
+              "Rode a mineracao do perfil de novo para renovar os links.")
     if repetidos:
         print(f"{repetidos} ficaram de fora por ja terem vindo em lote anterior")
     if sem_arquivo:
