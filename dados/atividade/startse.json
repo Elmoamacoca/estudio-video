@@ -25,6 +25,13 @@
    "tipo": "aguardando",
    "gravidade": "aviso",
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (www.instagram.com Respondeu 401; i.instagram.com Respondeu Sem Os Dados Do Perfil); A Esteira Vai Tentar Pelos IPs Dela"
+  },
+  {
+   "quando": 1787622455,
+   "tipo": "sem_leitura",
+   "gravidade": "aviso",
+   "texto": "A Ficha Tinha Sido Encerrada Por Engano: O Vazio Era Recusa Disfarçada Do Instagram, Não Conta Sem Posts. Perfil Reaberto, A Esteira Tenta De Novo."
   }
- ]
+ ],
+ "vazios_vistos": 1
 }
