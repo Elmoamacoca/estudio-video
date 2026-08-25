@@ -14,13 +14,13 @@
    }
   },
   {
-   "quando": 1787630158,
+   "quando": 1787630192,
    "tipo": "sem_leitura",
    "gravidade": "aviso",
-   "texto": "Nenhuma Página Veio (Reels): Recusa 401 Do Instagram. A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa 8.",
+   "texto": "Nenhuma Página Veio (Reels): Recusa 401 Do Instagram. A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa 9.",
    "detalhe": {
-    "seguidas": 8,
-    "vaga": 19,
+    "seguidas": 9,
+    "vaga": 20,
     "caminho": "reels",
     "resposta": "reels: recusou (401)"
    }
