@@ -3,7 +3,7 @@
   {
    "numero": 31,
    "inicio": 1787689200,
-   "estado": "em curso",
+   "estado": "pronto",
    "baixados": 180,
    "limpos": 180,
    "reprovados": 0,
@@ -11,8 +11,9 @@
    "execucao": "32894712580",
    "contas": [
     "leisdamentemilionaria"
-   ]
+   ],
+   "fim": 1787689293
   }
  ],
- "atualizado": 1787689282
+ "atualizado": 1787689293
 }

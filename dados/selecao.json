@@ -32,9 +32,9 @@
    "carrosseis": 0,
    "acima": 180,
    "baixaveis": 180,
-   "baixados": 0,
+   "baixados": 180,
    "reprovados": 0,
-   "restam": 180
+   "restam": 0
   }
  ],
  "avaliados": 395,
