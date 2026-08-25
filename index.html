@@ -3844,10 +3844,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
           <div class="ed-porta-nunca">
             <h3>Apontar A Pasta Do Estúdio</h3>
-            <p class="nota">Os vídeos estão no seu computador, e esta tela vem da
-              internet. Por segurança, nenhuma página abre um arquivo do seu disco sem
-              você mandar. Aponte a pasta uma vez: o navegador guarda <b>qual pasta é</b>
-              e não pergunta mais qual. Nada é enviado para lugar nenhum.</p>
+            <p class="nota">Este é o plano B, de quando o posto do Estúdio está fora e
+              os vídeos moram nesta máquina. Por segurança, nenhuma página abre um
+              arquivo do seu disco sem você mandar. Aponte a pasta uma vez: o navegador
+              guarda <b>qual pasta é</b> e não pergunta mais qual. Nada é enviado para
+              lugar nenhum.</p>
             <p class="ed-caminho">C:\Users\Gabri\Estudio\levas</p>
             <div class="linha">
               <button class="acao forte" id="ed_abrir_pasta" type="button">
@@ -4106,7 +4107,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
               <section class="ed-bloco">
                 <h4>Acrescentar</h4>
                 <label class="ed-solta" id="ed_solta">
-                  <input type="file" id="ed_add_img" accept="image/png,image/jpeg" hidden>
+                  <input type="file" id="ed_add_img" accept="image/png,image/jpeg,image/webp" hidden>
                   <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/>
                     <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
                   <span>escolher uma imagem</span>
@@ -4508,7 +4509,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <b>Esta leva ainda não foi fabricada.</b>
             <p class="nota">A etapa 4 trabalha em cima das peças prontas. Volte ao
               <b>passo 3</b>, na primeira olhada, e clique em <b>Fabricar as peças</b>.
-              Se você já fabricou, confira se a pasta do Estúdio está liberada nesta aba.</p>
+              Se você já fabricou e nada aparece, o posto pode estar reiniciando:
+              espere um pouco e recarregue a página.</p>
           </div>
 
           <div class="leg-vazio" id="dsc_sem_origem" hidden>
@@ -4631,7 +4633,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
               <button class="acao forte" id="ent_subir" type="button">
                 Empacotar E Subir</button>
               <button class="acao mini" id="ent_so_pacote" type="button">
-                Só Empacotar Aqui</button>
+                Só Empacotar Na Casa</button>
             </div>
           </div>
 
@@ -4659,7 +4661,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <h3 id="ent_feito_tit">Entregue</h3>
             <div id="ent_feito_linhas"></div>
             <div class="linha">
-              <a class="acao" id="ent_feito_pasta" href="#">Abrir A Pasta Daqui</a>
+              <a class="acao" id="ent_feito_pasta" href="#">Ver A Pasta Na Casa</a>
               <a class="acao" id="ent_feito_drive" href="#" target="_blank"
                 rel="noopener">Ver No Drive</a>
               <!-- A SAIDA, QUE NAO EXISTIA. Entregue e marcado, nao ha' mais nada para
@@ -4715,7 +4717,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         </div>
       </div>
       <div class="cfg-menu-pe">
-        <span class="nota mini">Tudo aqui fica neste computador</span>
+        <span class="nota mini">Tudo aqui fica guardado na casa do Estúdio</span>
       </div>
     </aside>
 
@@ -4746,11 +4748,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="cfg-linhas">
             <div class="cfg-linha">
               <div>
-                <div class="cfg-nome">Estudio\ia.json</div>
+                <div class="cfg-nome">Estudio/ia.json</div>
                 <div class="cfg-desc" id="ia_pasta_desc">É deste arquivo que o
-                  programa deste computador lê a fila de chaves e o prompt, no começo de
-                  cada leva. Quem grava nele é o posto do Estúdio, que sobe junto com o
-                  Windows, e por isso não há pasta a liberar nem permissão a renovar.</div>
+                  programa do Estúdio lê a fila de chaves e o prompt, no começo de
+                  cada leva. Quem grava nele é o posto, que mora na casa do Estúdio e
+                  se levanta sozinho, e por isso não há pasta a liberar nem permissão a
+                  renovar.</div>
               </div>
               <div class="dir">
                 <button class="acao" id="ia_liberar" type="button">Liberar A Pasta</button>
@@ -4765,7 +4768,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="cfg-linha">
               <div>
                 <div class="cfg-nome">O programa lê daqui</div>
-                <div class="cfg-desc">Mande o programa deste computador abrir o arquivo,
+                <div class="cfg-desc">Mande o programa do Estúdio abrir o arquivo,
                   montar a fila de chaves e escrever uma frase de verdade. Se ele
                   responder, o caminho inteiro está de pé: o que você guardou aqui chegou
                   lá.</div>
@@ -4795,7 +4798,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia2">Hoje</span></div>
           </div>
           <div class="gasto" id="ia_gasto"></div>
-          <p class="nota mini">A conta é das frases que saíram deste computador hoje, e
+          <p class="nota mini">A conta é das frases que saíram do Estúdio hoje, e
             zera quando o dia vira. A barra compara as empresas entre si; ela não mede
             quanto falta para o teto, porque nenhum dos serviços publica esse número.</p>
         </div>
@@ -4828,7 +4831,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia">Hoje</span></div>
           </div>
           <div class="cfg-pares cfg-uma cfg-numeros" id="ia_uso"></div>
-          <p class="nota mini">A conta é do que este computador pediu, e não do saldo que
+          <p class="nota mini">A conta é do que o Estúdio pediu, e não do saldo que
             sobra lá. Nenhum dos três serviços publica quanto resta por programa; o que dá
             para saber com certeza é o que saiu daqui e o que voltou recusado.</p>
         </div>
@@ -4868,14 +4871,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           <div class="cfg-linhas">
             <div class="cfg-linha">
               <div>
-                <div class="cfg-nome">Na placa de vídeo</div>
-                <div class="cfg-desc">Esta máquina tem Intel Iris Xe, com Quick Sync. O
-                  quadro entra na placa quando é decodificado e só sai de lá já
-                  codificado: ampliar, aplicar a máscara e gravar acontecem os três lá
-                  dentro. Se a placa recusar uma peça, ela volta sozinha para o
-                  processador, sem falhar.</div>
+                <div class="cfg-nome">Na casa do Estúdio</div>
+                <div class="cfg-desc">O programa testa a máquina da casa antes de cada
+                  recorte: quando ela tem placa Intel com Quick Sync, o quadro entra e
+                  sai da placa (três peças por vez); sem placa, tudo corre no
+                  processador, uma peça por vez, sem falhar. A casa na VPS não tem
+                  placa, então lá a conversão vai no processador.</div>
               </div>
-              <div class="dir"><span class="badge badge-secondary">3 peças por vez</span></div>
+              <div class="dir"><span class="badge badge-secondary">medido a cada leva</span></div>
             </div>
           </div>
         </div>
@@ -4931,12 +4934,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
         <div class="caixa">
           <div class="cfg-topo"><h3>Por Que A Lista É Esta</h3><div class="dir"></div></div>
           <p class="nota">Cada uma precisa existir nos dois lados: aqui, para o navegador
-            mostrar enquanto você monta, e no computador, para o programa desenhar na hora
+            mostrar enquanto você monta, e na casa do Estúdio, para o programa desenhar na hora
             de gravar. Fonte que existisse só de um lado faria a peça sair diferente do que
             você viu na tela.</p>
           <p class="nota">As nove novas vieram do Google Fonts, licença aberta, sem custo,
-            e estão em <b>Estudio\fontes</b>. As outras já vinham com o Windows, menos a
-            Izmir e a Apple Garamond, que são suas.</p>
+            e estão em <b>Estudio/fontes</b>, na casa do Estúdio. As outras vieram do
+            computador antigo (as que acompanhavam o Windows, mais a Izmir e a Apple
+            Garamond, que são suas) e foram copiadas para a casa junto com a mudança.</p>
         </div>
       </div>
 
@@ -4944,7 +4948,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="cfg-pagina" data-pg="pastas">
         <div class="cfg-pagina-cab">
           <h2>As Pastas</h2>
-          <p>Onde cada coisa mora neste computador.</p>
+          <p>Onde cada coisa mora na casa do Estúdio.</p>
         </div>
         <div class="caixa">
           <div class="cfg-topo">
@@ -4952,8 +4956,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             <div class="dir"><span class="badge badge-sinal" id="pas_selo">Não liberada</span></div>
           </div>
           <div class="cfg-linhas" id="pas_lista"></div>
-          <p class="nota mini">O navegador só enxerga esta pasta depois que você libera o
-            acesso uma vez. Nada sai daqui para lugar nenhum.</p>
+          <p class="nota mini">Com o posto de pé, quem conta as pastas é a casa do
+            Estúdio. Liberar uma pasta no navegador é só o plano B, para quando o posto
+            estiver fora numa casa local.</p>
         </div>
       </div>
 
@@ -5036,7 +5041,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   <div class="ajuda-cab">
     <div>
       <h2>Como Funciona Esta Aba</h2>
-      <p class="nota">Do clique no perfil até o arquivo tratado no seu computador.</p>
+      <p class="nota">Do clique no perfil até o arquivo tratado na casa do Estúdio.</p>
     </div>
     <button class="ajuda-fecha" id="faq_fecha" type="button" aria-label="Fechar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -5056,7 +5061,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <div class="ajuda-passo"><b>3 · Entregar</b>
         <span>O que passou vira um pacote só, e o que reprovou é apagado.</span></div>
       <div class="ajuda-passo"><b>4 · Guardar</b>
-        <span>O pacote desce para uma pasta no seu computador, de dez em dez minutos.</span></div>
+        <span>O pacote desce para a casa do Estúdio, de dez em dez minutos.</span></div>
     </div>
 
     <h3 class="ajuda-grupo">Montar A Leva</h3>
@@ -5142,7 +5147,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       com um laudo próprio, e a contagem de reprovados aparece no registro ao vivo,
       junto de baixados e tratados.</p>
       <p>A conferência é feita duas vezes: uma na esteira, outra quando o pacote chega
-      ao seu computador. Não é desconfiança do passo anterior, é que conferir de novo
+      à casa do Estúdio. Não é desconfiança do passo anterior, é que conferir de novo
       custa dois centésimos de segundo por arquivo.</p></div>
     </details>
 
@@ -5160,18 +5165,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
     <details class="ajuda-item">
       <summary>Onde para a versão final?</summary>
-      <div><p>Numa pasta fixa no seu computador:</p>
-      <p class="ajuda-caminho">C:\Users\Gabri\Estudio\levas\leva-<i>N</i></p>
+      <div><p>Numa pasta fixa na casa do Estúdio:</p>
+      <p class="ajuda-caminho">levas/leva-<i>N</i></p>
       <p>Uma subpasta por leva, e <i>N</i> é o número dela. Dentro ficam só os reels já
       tratados e conferidos, prontos para editar.</p>
-      <p>A pasta fica <b>fora do OneDrive</b> de propósito: Área de Trabalho,
-      Documentos e Imagens sobem para a nuvem sozinhos, e uma leva de um perfil inteiro
-      pesa de 440 MB a 2,7 GB. Em duas levas sua cota estouraria.</p></div>
+      <p>Como a casa mora no servidor do Estúdio, e não neste computador, leva nenhuma
+      ocupa seu disco nem sua cota do OneDrive.</p></div>
     </details>
 
     <details class="ajuda-item">
       <summary>Como o pacote chega até lá?</summary>
-      <div><p>Sozinho. Uma tarefa agendada roda de <b>dez em dez minutos</b>, olha se
+      <div><p>Sozinho. Um programa da casa do Estúdio olha de tempos em tempos se
       alguma leva ficou pronta, e traz. Você não precisa clicar em nada.</p>
       <p>Quando ela chega, o registro da leva ganha o último passo, <i>guardado</i>, e
       a tabela de Mineração passa a mostrar essa palavra na coluna Baixar. Enquanto ele
@@ -5182,7 +5186,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
       <summary>O material fica guardado para sempre na esteira?</summary>
       <div><p>Não. O pacote da esteira vence em <b>catorze dias</b> e some. A máquina
       que monta a leva é criada para o trabalho e destruída no fim.</p>
-      <p>A pasta do seu computador é o único lugar permanente. Ela tem um
+      <p>A pasta da casa do Estúdio é o único lugar permanente. Ela tem um
       <i>LEIA.txt</i> dentro dizendo isso, para o caso de alguém achar que é lixo.</p></div>
     </details>
 
@@ -7639,8 +7643,8 @@ const ETAPAS = {
   // o passo 3 é a máquina da esteira puxando os reels do Instagram, o passo 8 é este
   // computador puxando o pacote pronto da esteira. Por isso nenhum dos dois diz só
   // "baixando": cada um diz de onde para onde.
-  buscando: "8 · trazendo para o seu computador",
-  guardado: "8 · guardado no seu computador",
+  buscando: "8 · trazendo para a casa do Estúdio",
+  guardado: "8 · guardado na casa do Estúdio",
   falha:    "falhou",
 };
 
@@ -7709,7 +7713,7 @@ function desenhaRegistroDeLotes(indice) {
           ? `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}. `
             + "Já estão em C:\\Users\\Gabri\\Estudio\\levas\\leva-" + atual.numero
           : `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}. `
-            + "Falta a última etapa: trazer para o seu computador, o que acontece "
+            + "Falta a última etapa: trazer para a casa do Estúdio, o que acontece "
             + "sozinho em poucos minutos.")
         + (atual.reprovados ? ` ${num(atual.reprovados)} reprovados na limpeza.` : "");
 
@@ -7787,19 +7791,23 @@ function desenhaRegistroDeLotes(indice) {
    E FICA O BOTÃO DE COPIAR AO LADO, porque o endereço só existe nesta máquina: aberta
    de outro computador ou do celular, a página continua entregando o caminho. */
 function paraOndeFoi(p, numero) {
-  const caminho = (p.texto.match(/([A-Za-z]:\\[^\s.]*(?:\\[^\s.]*)*)/) || [])[1];
+  // O CAMINHO PODE SER DOS DOIS MUNDOS: `C:\...` quando a casa era o Windows, e
+  // `/home/...` desde que ela mora na VPS. Sem a segunda forma, o passo escrito pela
+  // casa nova saía como texto morto, sem link e sem botão de copiar.
+  const caminho = (p.texto.match(/([A-Za-z]:\\[^\s.]*(?:\\[^\s.]*)*|\/[^\s]*\/leva-\d+)/)
+                   || [])[1];
   if (!caminho || !numero) return `<span>${p.texto}</span>`;
   const antes = p.texto.slice(0, p.texto.indexOf(caminho));
   return `<span>${antes}</span><a class="liv-pasta" href="#"
       data-abrir="levas/leva-${numero}"
-      title="Abrir a pasta no Explorador">${caminho}</a>`
+      title="Abrir a pasta">${caminho}</a>`
     + `<button type="button" class="liv-copiar" data-copiar="${caminho}"
         title="Copiar o caminho">copiar</button>`;
 }
 
 /* A ETAPA 8 APARECE ENQUANTO ELA ACONTECE, e não só depois de pronta.
 
-   Ela é a única do caminho que roda no computador do Gabriel, e não na esteira: por isso
+   Ela é a única do caminho que roda na casa do Estúdio, e não na esteira: por isso
    ela é a única que a esteira não consegue anunciar quando começa. O registro ficava
    parado no 7 durante os dois a três minutos da busca, sem uma linha explicando, e a
    leitura era de log incompleto. Ele reclamou três vezes disso, e as três estavam certas:
@@ -7808,7 +7816,7 @@ function paraOndeFoi(p, numero) {
    Esta linha é montada pela tela, e não vem do acervo. Ela nasce no instante em que a
    leva fica pronta sem estar guardada, e é substituída pela linha de verdade, com o
    link, assim que a pasta local existir. */
-/* E A RODA NÃO GIRA PARA SEMPRE. Quem busca é um programa agendado neste computador,
+/* E A RODA NÃO GIRA PARA SEMPRE. Quem busca é um programa da casa do Estúdio,
    que passa de minuto em minuto: dez minutos sem a busca nem começar não é espera, é
    algo errado (computador desligado na hora marcada, tarefa agendada parada, GitHub
    fora do ar). A roda ficava girando sem mensagem e sem desistir; passado o prazo, a
@@ -7838,7 +7846,7 @@ function etapaOitoEmCurso(leva, passos) {
     return `<div class="liv-ev falha"><i></i><div class="oque">
       <b>${ETAPAS.buscando}</b>
       <div class="dados"><span>A leva está pronta na esteira há ${faz} e a busca não
-        começou. Quem busca é um programa agendado neste computador: confira se ele
+        começou. Quem busca é um programa da casa do Estúdio: confira se ele
         estava ligado na hora e se há internet. Nada se perdeu, o pacote fica na
         esteira por catorze dias. </span>
         <button type="button" class="liv-copiar" data-buscar-de-novo="${leva.numero}"
@@ -7847,7 +7855,7 @@ function etapaOitoEmCurso(leva, passos) {
   }
   return `<div class="liv-ev indo"><i></i><div class="oque">
       <b>${ETAPAS.buscando}</b>
-      <div class="dados"><span>A leva está pronta na esteira. O seu computador olha de
+      <div class="dados"><span>A leva está pronta na esteira. A casa do Estúdio olha de
         minuto em minuto e vai trazer os ${leva.mb || 0} MB: quando começar, os megabytes
         aparecem aqui andando.</span></div></div>
     <span class="data"><span class="liv-girando"></span></span></div>`;
@@ -8435,10 +8443,12 @@ document.addEventListener("keydown", ev => {
    oficina as barras desenham do zero, e é essa animação que diz "começou".
 
    O PROBLEMA QUE ESTA ABA TEM E AS OUTRAS NÃO:
-   os vídeos moram no computador do Gabriel e esta tela é servida pela internet. As outras
-   abas só precisam de números, e número cabe no acervo; aqui é preciso ver o vídeo.
-   Página nenhuma pode abrir sozinha um arquivo do disco de quem a visita, e ainda bem: se
-   pudesse, qualquer site conseguiria.
+   os vídeos moram na casa do Estúdio (na VPS, desde 25/08/2026), e as outras abas só
+   precisam de números, que cabem no acervo; aqui é preciso ver o vídeo. Quem serve os
+   vídeos é o posto, em pedaços; a permissão de pasta do navegador que resolvia isso no
+   mundo local virou o plano B de quando a casa é esta própria máquina. Página nenhuma
+   pode abrir sozinha um arquivo do disco de quem a visita, e ainda bem: se pudesse,
+   qualquer site conseguiria.
 
    Ele aponta a pasta uma vez. O navegador entrega um crachá daquela pasta, o crachá fica
    guardado aqui do lado de cá, e nas próximas visitas a tela pede a permissão de volta em
@@ -8576,6 +8586,11 @@ async function abrirRaiz(h) {
 
 /** Uma pasta irmã dentro da raiz do Estúdio. Devolve null se a raiz não estiver na mão. */
 async function pastaDo(nome, criar) {
+  // NA CASA REMOTA A PASTA LOCAL É O DISCO ERRADO, e este é o ponto único que corta o
+  // plano B inteiro de uma vez (auditoria de 25/08/2026): com a casa na VPS, ler ou
+  // gravar na pasta desta máquina pintaria dado do mundo velho como se fosse da casa,
+  // e um pedido gravado aqui nunca seria atendido por ninguém.
+  if (SEM_PASTA_AQUI) return null;
   if (!EDIT_RAIZ) return null;
   try { return await EDIT_RAIZ.getDirectoryHandle(nome, { create: !!criar }); }
   catch (e) { return null; }
@@ -8717,6 +8732,9 @@ async function salvarRascunho() {
        reescrever a mesma frase toda vez que a página abre é trabalho repetido à toa. */
     descricoes: Object.fromEntries(DESCRICOES),
     rodape: RODAPE == null ? RODAPE_PADRAO : RODAPE,
+    // O TETO DA DESCRIÇÃO TAMBÉM É ESCOLHA DELE: sem esta linha, um F5 devolvia 500
+    // com ele trabalhando em outro número. Auditoria de 25/08/2026.
+    limite: Number(($("dsc_max") || {}).value) || 500,
     subLeg: LEG_SUB,
     // O ENQUADRAMENTO E QUEM MEXEU. Mesma razao dos de cima: mora so' nesta aba ate'
     // o pedido de montagem sair, e um F5 no meio jogaria fora o trabalho de mao.
@@ -8865,7 +8883,7 @@ $("ed_volta_escolha").onclick = () => {
 
    A LISTA VEM DO ACERVO, e não da pasta. É o acervo que sabe o que cada leva é: de quais
    perfis, quantas peças, se já foi guardada. A pasta sabe só que há arquivos dentro dela.
-   Leva que ainda não desceu para o computador aparece na lista, apagada, dizendo por quê:
+   Leva que ainda não chegou à casa do Estúdio aparece na lista, apagada, dizendo por quê:
    escondê-la faria o Gabriel procurar uma leva que ele sabe que existe. */
 function desenhaLevasDaEdicao(indice) {
   const levas = ((indice && indice.lotes) || [])
@@ -8889,8 +8907,8 @@ function desenhaLevasDaEdicao(indice) {
         <span class="ed-leva-num"><b>${num(l.limpos)}</b> peças
           <i>·</i> ${l.mb || 0} MB <i>·</i> ${quando(l.fim || l.inicio)}</span>
       </span>
-      <span class="ed-leva-pe">${aqui ? "no seu computador"
-        : "ainda não desceu para o computador"}</span>
+      <span class="ed-leva-pe">${aqui ? "na casa do Estúdio"
+        : "ainda não chegou à casa do Estúdio"}</span>
     </button>`;
   }).join("");
 }
@@ -8963,6 +8981,13 @@ function esquecerOsPassos() {
   MONTADO = null;
   RECORTADO = null;
   EDIT_RECORTES = [];
+  // AS PECAS E A FICHA DA LEVA ANTERIOR TAMBEM MORREM AQUI, achado da auditoria de
+  // 25/08/2026: sem estas tres linhas, abrir uma leva que ainda nao chegou deixava a
+  // galeria vazia com pecas1() cheio da leva anterior, e o passo 2 oferecia recortar
+  // os arquivos errados; SEM_FRASE e BROLL_DE atravessavam junto.
+  EDIT_PECAS = [];
+  SEM_FRASE = null;
+  BROLL_DE = null;
   REC_NOME = "";
   REC_ACHADO = null;
   TPL = null;
@@ -9027,7 +9052,14 @@ document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
     // VOLTAR SEMPRE PODE; AVANÇAR, SÓ COM O PASSO ANTERIOR RESOLVIDO. É o que faz disto
     // um passo a passo e não um menu com quatro páginas soltas.
     if (n > 1 && !EDIT_LEVA) return;
-    if (n > 2 && !RECORTADO) return;    // sem B-roll recortado não há o que templatar
+    // SEM B-ROLL RECORTADO NÃO HÁ O QUE TEMPLATAR, e o clique barrado explica em vez
+    // de morrer calado: o silêncio aqui era convite a achar a tela quebrada.
+    if (n > 2 && !RECORTADO) {
+      irParaPasso(2);
+      $("rec_diz").textContent = "o template e a legenda trabalham em cima do recorte: "
+        + "faça o passo 2 primeiro.";
+      return;
+    }
     irParaPasso(n);
     salvarRascunho();
   });
@@ -9047,6 +9079,9 @@ async function mostrarPecas() {
     try {
       const r = await noPosto(`/pecas?leva=${EDIT_LEVA.numero}`);
       if (!r.tem) {
+        // A LISTA MORRE JUNTO COM O RECADO: sem isto, pecas1() seguia devolvendo a
+        // leva anterior e o passo 2 oferecia recortar os arquivos errados.
+        EDIT_PECAS = [];
         gal.innerHTML = `<div class="ed-carregando">a pasta leva-${EDIT_LEVA.numero} `
           + "ainda não está na casa do Estúdio. O guardar busca a leva pronta de minuto "
           + "em minuto; espere um pouco e tente de novo.</div>";
@@ -9060,9 +9095,18 @@ async function mostrarPecas() {
       await tentarRetomar();
       salvarRascunho();
     } catch (e) {
+      EDIT_PECAS = [];
       gal.innerHTML = `<div class="ed-carregando">não consegui ler a leva na casa do `
         + `Estúdio: ${e.message}</div>`;
     }
+    return;
+  }
+
+  // NA CASA REMOTA NAO HA' PORTA A OFERECER: a pasta desta máquina é o disco errado.
+  // Posto fora aqui é espera, e não caixa de escolher pasta.
+  if (SEM_PASTA_AQUI) {
+    $("ed_porta").hidden = true;
+    gal.innerHTML = '<div class="ed-carregando">' + SEM_POSTO + "</div>";
     return;
   }
 
@@ -9299,6 +9343,9 @@ function desenhaPorta(cracha) {
    já existe crachá, um clique basta; quando não existe, abre a janela de arquivos. */
 async function pedirPasta() {
   if (EDIT_RAIZ) return EDIT_RAIZ;
+  // NA CASA REMOTA NÃO SE PEDE PASTA: a pasta desta máquina é o disco errado, e o que
+  // falta é o posto voltar. Auditoria de 25/08/2026.
+  if (SEM_PASTA_AQUI) throw new Error(SEM_POSTO);
   if (!TEM_PORTA) throw new Error("Este navegador não abre pastas do computador.");
 
   // A ARMADILHA DO CRACHÁ VELHO, e ela custou uma tarde ao Gabriel: "a chave não está
@@ -9334,6 +9381,9 @@ async function pedirPasta() {
 
 /** Escolher a pasta pela janela de arquivos. Só quando ainda não há crachá nenhum. */
 async function escolherPasta() {
+  if (SEM_PASTA_AQUI) {
+    return parado("ed_recado_pasta", SEM_POSTO);
+  }
   try {
     const h = await window.showDirectoryPicker({ id: "estudio-raiz", mode: "readwrite" });
     // APONTAR A PASTA DE DENTRO NÃO LIGA NADA, e antes isso passava calado: a tela dizia
@@ -9401,8 +9451,9 @@ document.addEventListener("click", async ev => {
   if (!ev.target.closest("#aba-editar") && !ev.target.closest('[data-aba="editar"]')) return;
   desenhaRascunhos();
   if (EDIT_PASTA || !TEM_PORTA || JA_PEDIU_A_PASTA) return;
-  // COM O POSTO DE PÉ NÃO HÁ PASTA A PEDIR: quem enxerga o disco é ele. A caixinha de
-  // permissão só volta a aparecer no plano B, quando o posto está fora.
+  // COM O POSTO DE PÉ NÃO HÁ PASTA A PEDIR: quem enxerga o disco é ele. E na casa
+  // remota não há pasta a pedir NUNCA: a desta máquina é o disco errado.
+  if (SEM_PASTA_AQUI) return;
   if (await postoDePe()) return;
   const cracha = CRACHA_NA_MAO || await pegarCracha();
   if (!cracha) return;                    // nunca apontou: o cartão pede, não o clique
@@ -9467,8 +9518,8 @@ let REC_ACHADO = null;             // o B-roll medido nela
 let REC_OBRA = null;               // o pedido de recorte em curso
 
 async function entrarNoRecorte() {
-  $("rec_caminho").textContent = "Estudio\\recortes\\leva-"
-    + (EDIT_LEVA ? EDIT_LEVA.numero : "");
+  $("rec_caminho").textContent = "recortes/leva-"
+    + (EDIT_LEVA ? EDIT_LEVA.numero : "") + ", na casa do Estúdio";
   await procurarRecortes();
   desenhaRecortado();
   resumoDoRecorte();
@@ -9500,6 +9551,12 @@ async function verOutroReel() {
   try {
     const u = await urlDaMidia(lista[i], pastaDaLeva());
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
+    // SEM ISTO O CANVAS FICA CONTAMINADO na vitrine do GitHub Pages (o vídeo vem do
+    // posto local, que é outra origem) e o medidor devolvia nulo para todo reel. O
+    // posto já ecoa o cabeçalho de origem para as telas conhecidas; em mesma origem o
+    // atributo é inofensivo.
+    v.crossOrigin = "anonymous";
+    corte.crossOrigin = "anonymous";
     v.dataset.url = u;
     v.src = u; corte.src = u;
     // O "MEDINDO" TEM PRAZO. Vídeo que o navegador não decodifica (arquivo pela
@@ -9568,10 +9625,17 @@ function desenhaRecorteExemplo() {
   $("rec_med_b").textContent = "a peça sai em " + TELA.w + " por " + TELA.h
     + (cabe === 1 ? "" : ", com o bruto ampliado " + cabe.toFixed(1) + " vez"
        + (cabe >= 2 ? "es" : ""));
-  $("rec_diz").innerHTML = b.modo === "card"
-    ? "achei o card: o recorte pega <b>só a filmagem</b>, sem o arroba e sem a legenda."
-    : "este reel <b>não tem card</b>: a filmagem ocupa o quadro inteiro, então é ele "
-      + "inteiro que vai ser gravado.";
+  // NÃO CONSEGUI MEDIR NÃO É TELA CHEIA. O `acharBrollAqui` devolve nulo em várias
+  // falhas de leitura (vídeo que não decodifica, quadro que não chega no prazo), e
+  // afirmar "não tem card" a partir do nulo era inventar. Quem mede de verdade é a
+  // oficina, na hora de gravar; esta tela é só conferência. Trava 2 do CLAUDE.md.
+  $("rec_diz").innerHTML = !REC_ACHADO
+    ? "não consegui medir este vídeo daqui. Quem mede de verdade é a oficina, na hora "
+      + "de gravar; clique em Ver Outro Reel para conferir o método com outra peça."
+    : b.modo === "card"
+      ? "achei o card: o recorte pega <b>só a filmagem</b>, sem o arroba e sem a legenda."
+      : "este reel <b>não tem card</b>: a filmagem ocupa o quadro inteiro, então é ele "
+        + "inteiro que vai ser gravado.";
 }
 
 /** A forma do B-roll como recorte de CSS: desce pela borda esquerda e volta pela direita. */
@@ -9693,7 +9757,11 @@ function desenhaRecortado() {
      tivessem falhado, a tela dizia "95 recortes prontos", escondia o botao, e nao havia
      mais como pedir as doze que faltaram: as pecas iam para a montagem sem elas, e ele
      so' descobriria contando os arquivos no fim. */
-  const faltam = tem ? Math.max(0, pecas1().length - RECORTADO.pecas) : 0;
+  // A CONTA DO QUE FALTA É POR NOME, e não por subtração de totais: recorte de peça
+  // depois tirada da leva mascarava peça que ficou SEM recorte, e ela sumia calada das
+  // fases seguintes. O nome do arquivo atravessa a leva inteira, então ele é a chave.
+  const temRec = new Set(EDIT_RECORTES.map(r => r.nome));
+  const faltam = tem ? pecas1().filter(p => !temRec.has(p.nome)).length : 0;
   const r2 = $("ed_r2");
   if (r2) r2.textContent = tem
     ? num(RECORTADO.pecas) + (RECORTADO.pecas === 1 ? " recorte pronto" : " recortes prontos")
@@ -9737,7 +9805,7 @@ function resumoDoRecorte() {
 /* ---------------------------------------------------------- deixar o pedido
 
    A TELA NÃO RECORTA NADA: ela escreve o pedido e passa a olhar o andamento. Quem recorta
-   é o `oficina.py`, que roda neste computador de minuto em minuto. Por isso a primeira
+   é o `oficina.py`, que roda na casa do Estúdio de minuto em minuto. Por isso a primeira
    frase que aparece é sobre a espera: sem ela, o minuto entre o clique e o primeiro sinal
    de vida é indistinguível de tela travada. */
 $("rec_aplicar").onclick = async () => {
@@ -9757,6 +9825,13 @@ $("rec_aplicar").onclick = async () => {
        `pedirPasta` E' QUEM SABE DESFAZER ISSO: ela reconhece o cracha velho e abre a
        janela de arquivos na pasta certa. Chamada de dentro do clique, ainda tem o gesto
        do usuario na mao, que e' o que o navegador exige para abrir essa janela. */
+    // SO' AS QUE FALTAM, quando já houve recorte: o botão promete "Recortar as N que
+    // faltaram" e o pedido cumpre a promessa, em vez de pagar a leva inteira de novo.
+    // Quem protege a ficha é a oficina, fundindo a `_origem.json` nova com a que já
+    // existe. Sem recorte nenhum, vão todas as que ficaram na leva.
+    const jaTem = new Set(EDIT_RECORTES.map(x => x.nome));
+    const alvos = RECORTADO ? pecas1().filter(x => !jaTem.has(x.nome)) : pecas1();
+    if (!alvos.length) { $("rec_aplicar").disabled = false; return; }
     const id = "r" + Date.now();
     const pedido = {
       id, tipo: "recorte", leva: EDIT_LEVA.numero,
@@ -9767,7 +9842,7 @@ $("rec_aplicar").onclick = async () => {
       // para as cento e sete seria justamente o erro que este passo veio consertar.
       // SO' O QUE ELE DEIXOU NA LEVA. Peca tirada no passo 1 nao entra no recorte, e
       // por isso nao existe recorte dela para as fases seguintes usarem.
-      pecas: pecas1().map(p => ({ arquivo: p.nome }))
+      pecas: alvos.map(p => ({ arquivo: p.nome }))
     };
     // O POSTO PRIMEIRO, desde 25/08/2026: este era um dos dois pedidos que só sabiam a
     // pasta, e com a casa na VPS a pasta desta máquina não leva a lugar nenhum. O plano
@@ -9788,7 +9863,7 @@ $("rec_aplicar").onclick = async () => {
       await w.close();
     }
 
-    REC_OBRA = { id, desde: Date.now(), total: pecas1().length, relogio: null };
+    REC_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null };
     $("rec_obra").hidden = false;
     document.querySelector("#rec_obra .cfg-girando").style.display = "";
     $("rec_obra_txt").textContent = "pedido deixado";
@@ -9879,6 +9954,10 @@ async function olharORecorte() {
     + (cegas ? ", <b>" + cegas + "</b> que não consegui medir" : "") + ".";
   await procurarRecortes();
   desenhaRecortado();
+  // O BOTÃO VOLTA À VIDA NO FIM: com falhas, o desenhaRecortado o deixa visível
+  // dizendo "Recortar as N que faltaram", e ele estava preso no disabled do clique
+  // até um F5. Auditoria de 25/08/2026.
+  $("rec_aplicar").disabled = false;
   const onde = RECORTADO ? RECORTADO.onde : "";
   $("rec_obra_nota").innerHTML = "estão em <a href=\"#\" data-abrir=\""
     + escapa(onde) + "\">" + escapa(d.pasta || "")
@@ -9904,7 +9983,10 @@ function irNoTempo(v, t) {
     const pronto = () => { v.removeEventListener("seeked", pronto); ok(); };
     v.addEventListener("seeked", pronto);
     v.currentTime = t;
-    setTimeout(pronto, 1800);           // vídeo que não busca não trava a análise
+    // O PRAZO SUBIU DE 1,8 s PARA 5 s em 25/08/2026: com o vídeo vindo da casa da VPS
+    // em pedaços, o salto de quadro pode esperar a rede, e o prazo curto fazia a
+    // análise ler o mesmo quadro várias vezes numa ligação lenta.
+    setTimeout(pronto, 5000);           // vídeo que não busca não trava a análise
   });
 }
 
@@ -10277,8 +10359,16 @@ async function lerAcervo() {
     try {
       const r = await noPosto("/acervo");
       ACERVO.itens = (r.tem && r.d && Array.isArray(r.d.itens)) ? r.d.itens : [];
+      ACERVO.falhou = "";
       return true;
-    } catch (e) { ACERVO.itens = []; return null; }
+    } catch (e) {
+      // LEITURA QUE FALHOU NÃO É ACERVO VAZIO: o motivo fica guardado e trava a
+      // gravação (gravarAcervo), senão um catálogo ilegível seria reescrito vazio por
+      // cima, levando os templates dele junto. Trava 3 do CLAUDE.md.
+      ACERVO.itens = [];
+      ACERVO.falhou = e.message || String(e);
+      return null;
+    }
   }
   const p = await pastaDo("templates", true);
   if (!p) { ACERVO.itens = []; return null; }
@@ -10291,6 +10381,9 @@ async function lerAcervo() {
 }
 
 async function gravarAcervo() {
+  // ACERVO QUE NÃO FOI LIDO NÃO SE GRAVA POR CIMA: se a última leitura falhou, gravar
+  // agora apagaria itens que só o disco conhece. O recado sobe para quem clicou.
+  if (ACERVO.falhou) throw new Error("não gravei o acervo: " + ACERVO.falhou);
   // PELO POSTO A CONFERÊNCIA É DELE: ele grava inteiro, relê o disco e responde com o
   // que ficou. Falha vira erro aqui, nunca silêncio.
   if (await postoDePe()) {
@@ -10298,7 +10391,7 @@ async function gravarAcervo() {
     return;
   }
   const p = await pastaDo("templates", true);
-  if (!p) return;
+  if (!p) throw new Error(SEM_POSTO);
   const h = await p.getFileHandle("templates.json", { create: true });
   const w = await h.createWritable();
   await w.write(JSON.stringify({ itens: ACERVO.itens }, null, 1));
@@ -10560,15 +10653,32 @@ $("ed_add_img").addEventListener("change", async ev => {
   ev.target.value = "";
   if (!f) return;
   if (!TPL) TPL = tplVazio();
-  const ext = (f.name.match(/\.(png|jpe?g)$/i) || [".png"])[0].toLowerCase();
-  const nome = TPL.id + "_" + novoId() + ext;
-  await guardarNoAcervo(nome, await f.arrayBuffer());
-  const m = await medirImagem(f);
-  const larg = 0.3;
-  TPL.elementos.push({ id: novoId(), tipo: "imagem", arquivo: nome,
-    x: 0.35, y: 0.82, w: larg, h: larg * (m.h / m.w) * (TELA.w / TELA.h), trava: true });
-  EL_SEL = TPL.elementos[TPL.elementos.length - 1].id;
-  desenhaEditor();
+  // O RECADO MORA NO PRÓPRIO BOTÃO de escolher, e a falha não passa mais calada: a
+  // gravação vai pelo posto e pode recusar, e o elemento só entra no molde se o
+  // arquivo de fato ficou no acervo. Auditoria de 25/08/2026.
+  const rotulo = document.querySelector("#ed_solta span");
+  const antes = rotulo ? rotulo.textContent : "";
+  const diz = (t) => { if (rotulo) rotulo.textContent = t; };
+  const casou = f.name.match(/\.(png|jpe?g|webp)$/i);
+  if (!casou) {
+    diz("só png, jpg ou webp");
+    setTimeout(() => diz(antes), 2500);
+    return;
+  }
+  try {
+    const ext = casou[0].toLowerCase();
+    const nome = TPL.id + "_" + novoId() + ext;
+    await guardarNoAcervo(nome, await f.arrayBuffer());
+    const m = await medirImagem(f);
+    const larg = 0.3;
+    TPL.elementos.push({ id: novoId(), tipo: "imagem", arquivo: nome,
+      x: 0.35, y: 0.82, w: larg, h: larg * (m.h / m.w) * (TELA.w / TELA.h), trava: true });
+    EL_SEL = TPL.elementos[TPL.elementos.length - 1].id;
+    desenhaEditor();
+  } catch (e) {
+    diz("não deu: " + (e.message || e));
+    setTimeout(() => diz(antes), 4000);
+  }
 });
 
 function apagarSel() {
@@ -10912,7 +11022,7 @@ async function pedirEscrita() {
     document.querySelector("#ia_obra .cfg-girando").style.display = "";
     $("ia_obra_txt").textContent = "Pedido Deixado";
     $("ia_obra_nota").textContent = "A escrita começa em até um minuto, que é o passo do "
-      + "programa que fala com a IA aqui do computador.";
+      + "programa da casa do Estúdio que fala com a IA.";
     IA_OBRA.relogio = setInterval(olharAEscrita, 3000);
     olharAEscrita();
   } catch (e) {
@@ -11266,7 +11376,13 @@ function viraFila(d) {
    pagina E' o posto (em casa direto, na VPS atras do Caddy), e as unicas excecoes sao
    as moradas que nao tem posto proprio: a vitrine do GitHub Pages e a pagina aberta
    de arquivo, que continuam falando com o posto local de quem olha. */
-const POSTO = (location.hostname.endsWith("github.io") || !/^https?:$/.test(location.protocol))
+/* A PONTE NAO E' POSTO, achado da auditoria de 25/08/2026: ela serve a mesma tela e
+   responde /vivo com 200, mas nao tem /pecas, /recortes, /arquivo nem /pedido. Sem esta
+   linha, a tela aberta pela morada da ponte achava que o posto atendia e a edicao
+   inteira quebrava com "rota desconhecida", sem nunca cair no plano B. */
+const POSTO = (location.hostname.endsWith("github.io")
+    || location.hostname.endsWith("workers.dev")
+    || !/^https?:$/.test(location.protocol))
   ? "http://127.0.0.1:8787"
   : location.origin;
 let POSTO_DE_PE = null;                 // null = ainda não perguntei, ou a resposta venceu
@@ -11276,6 +11392,11 @@ const VALIDADE_DO_POSTO = 15000;        // 15 s: o posto reinicia sozinho a cada
 /* A RESPOSTA DO POSTO TEM VALIDADE, e antes não tinha. Ela era guardada para a visita
    inteira, e bastava o posto reiniciar, coisa que a tarefa agendada faz, para a tela
    passar horas convencida de que estava gravando no disco enquanto nada chegava lá. */
+/* O CORPO DO BATIMENTO FICA GUARDADO, desde 25/08/2026: o /vivo conta onde a casa mora,
+   se esta máquina abre pastas no Explorador (só o Windows abre) e se a sessão deste
+   navegador ainda vale. É o que deixa a tela esconder botão de abrir pasta onde ele não
+   funciona e avisar de bilhete vencido antes de uma gravação ser recusada. */
+let CASA_INFO = null;
 async function postoDePe() {
   if (POSTO_DE_PE !== null && Date.now() - POSTO_PERGUNTADO < VALIDADE_DO_POSTO) {
     return POSTO_DE_PE;
@@ -11283,6 +11404,7 @@ async function postoDePe() {
   try {
     const r = await fetch(POSTO + "/vivo", { cache: "no-store" });
     POSTO_DE_PE = r.ok;
+    try { CASA_INFO = await r.json(); } catch (e) { /* corpo velho, sem os campos */ }
   } catch (e) { POSTO_DE_PE = false; }
   POSTO_PERGUNTADO = Date.now();
   return POSTO_DE_PE;
@@ -11339,14 +11461,28 @@ function pastaDasPecas3() {
    com um programa da própria máquina, e diz isso em inglês no console, onde ele nunca vai
    olhar. Aberto em 127.0.0.1, a página já está dentro da máquina e não há fronteira
    nenhuma. É a mesma tela; muda só a porta por onde ela entra. */
-const CASA_DO_ESTUDIO = "http://127.0.0.1:8787";
-const EM_CASA = location.hostname === "127.0.0.1" || location.hostname === "localhost";
-const SEM_POSTO = EM_CASA
-  ? "O posto do Estúdio não está atendendo. Ele sobe junto com o Windows e se levanta "
-    + "sozinho a cada cinco minutos; espere um pouco e recarregue a página."
-  : "Aberto por este endereço, o navegador não deixa a tela gravar no disco. Abra o "
-    + "Estúdio em " + CASA_DO_ESTUDIO + ", que é o mesmo programa rodando na sua máquina, "
-    + "e as chaves passam a ficar guardadas.";
+/* A CASA OFICIAL E' A DA VPS desde 25/08/2026, e a regra de "estar em casa" virou tres
+   pecas, porque tres perguntas diferentes estavam espremidas numa so':
+
+     EM_CASA        a pagina foi servida pelo proprio posto? Vale no 127.0.0.1 E na
+                    casa da VPS. E' quem decide recado e selo.
+     EM_CASA_LOCAL  a casa e' ESTA maquina? So' 127.0.0.1/localhost. E' quem decide se
+                    a pasta do navegador serve de plano B: fora daqui, a pasta local e'
+                    o disco ERRADO (o da VPS e' outro), e ler dela pintaria numero do
+                    mundo velho como se fosse da casa.
+     CASA_DO_ESTUDIO  o endereco que se recomenda a quem esta' fora (vitrine, arquivo). */
+const CASA_DO_ESTUDIO = "https://estudio.borusa.com.br";
+const EM_CASA = POSTO === location.origin;
+const EM_CASA_LOCAL = location.hostname === "127.0.0.1" || location.hostname === "localhost";
+const SEM_PASTA_AQUI = EM_CASA && !EM_CASA_LOCAL;
+const SEM_POSTO = !EM_CASA
+  ? "Aberto por este endereço, a tela não grava em lugar nenhum. Abra o Estúdio em "
+    + CASA_DO_ESTUDIO + " e tudo fica guardado na casa dele."
+  : EM_CASA_LOCAL
+    ? "O posto do Estúdio não está atendendo. Ele sobe junto com o Windows e se levanta "
+      + "sozinho a cada cinco minutos; espere um pouco e recarregue a página."
+    : "O posto da casa do Estúdio não respondeu. Ele se levanta sozinho em segundos; "
+      + "espere um pouco e recarregue a página.";
 
 async function retomarPastaEler() {
   // O QUE O DISCO RECUSOU NAO SE APAGA AO TROCAR DE ABA. Antes, sair e voltar relia o
@@ -11361,7 +11497,7 @@ async function retomarPastaEler() {
     if (!LEITURA_FALHOU) recadoDaIA("", "");
     return;
   }
-  if (!EDIT_RAIZ && TEM_PORTA) {
+  if (!EDIT_RAIZ && TEM_PORTA && !SEM_PASTA_AQUI) {
     try {
       const cracha = CRACHA_NA_MAO || await pegarCracha();
       const h = cracha ? await pastaValendo(cracha, false) : null;   // sem pedir
@@ -11513,7 +11649,7 @@ $("ia_liberar").onclick = async () => {
       await lerIA();
       desenhaCfgIA();
       return recadoDaIA("Não precisa: o posto do Estúdio está de pé e já grava direto "
-        + "no disco desta máquina.", "boa");
+        + "no disco da casa do Estúdio.", "boa");
     }
     await pedirPasta();
     IA_LIDA = false;
@@ -11676,11 +11812,21 @@ function desenhaCfgIA() {
   // O SELO DIZ QUEM ESTÁ GRAVANDO, e não se uma pasta foi apontada. Com o posto de pé
   // não há pasta nenhuma envolvida, e mostrar "Pasta não liberada" ali seria um susto à
   // toa exatamente na tela em que ele já brigou três vezes.
+  // E O BILHETE VENCIDO TEM SELO PRÓPRIO: o batimento (/vivo) responde 200 mesmo sem
+  // sessão, e o selo verde só descobriria a porta fechada na primeira gravação
+  // recusada. Falso positivo é o pior erro desta tela. Auditoria de 25/08/2026.
+  const sessaoVencida = !!(POSTO_DE_PE && CASA_INFO && CASA_INFO.sessao === "vencida");
   const selo = $("ia_selo_pasta");
   selo.textContent = LEITURA_FALHOU ? "Não consegui ler o arquivo"
-    : POSTO_DE_PE ? "Gravando no disco"
+    : sessaoVencida ? "Sessão Vencida"
+    : POSTO_DE_PE ? "Gravando na casa do Estúdio"
     : EDIT_RAIZ ? "Pasta liberada" : "Posto Fora Do Ar";
-  selo.classList.toggle("badge-ruim", !!LEITURA_FALHOU || (!POSTO_DE_PE && !EDIT_RAIZ));
+  selo.classList.toggle("badge-ruim",
+    !!LEITURA_FALHOU || sessaoVencida || (!POSTO_DE_PE && !EDIT_RAIZ));
+  if (sessaoVencida) {
+    recadoDaIA("A sessão desta página venceu: recarregue e entre com a senha de novo. "
+      + "Nada foi perdido.", "ruim");
+  }
   // BOTAO QUE NAO TEM O QUE FAZER SAI DA TELA. Com o posto de pé não há pasta a liberar, e
   // um botão inútil ao lado do texto que diz "não há pasta a liberar" é convite a pensar
   // que faltou clicar nele. Sobrou clique a menos, e não a mais, nesta tela.
@@ -11801,7 +11947,7 @@ async function salvarFila(oQueMudou) {
     IA_LIDA = true;
     MUDANCA_PENDENTE = false;
     desenhaCfgIA();
-    recadoDaIA(`${oQueMudou} Estudio\\ia.json tem agora `
+    recadoDaIA(`${oQueMudou} Estudio/ia.json tem agora `
       + `${n} ${n === 1 ? "chave" : "chaves"} e um prompt de `
       + `${(g.prompt || "").length} caracteres. É deste arquivo que o programa lê.`, "boa");
     return true;
@@ -11884,7 +12030,7 @@ $("ia_guardar").onclick = async () => {
     // O RECADO DIZ O QUE FOI PARAR NO ARQUIVO, lido de volta dele. É a resposta à
     // pergunta "salvar aqui vai impactar no back-end": foi para lá, e é isto que está lá.
     const n = (gravado.chaves || []).length;
-    recadoDaIA(`Salvo em Estudio\\ia.json: `
+    recadoDaIA(`Salvo em Estudio/ia.json: `
       + `${n} ${n === 1 ? "chave" : "chaves"} na fila e um prompt de `
       + `${(gravado.prompt || "").length} caracteres. É deste arquivo que o programa lê.`,
       "boa");
@@ -12147,7 +12293,7 @@ $("ch_provar").onclick = async () => {
 /* A PROVA QUE ATRAVESSA, e é a única que responde à pergunta que importa: o que eu
    guardei aqui chegou no programa? A prova da janela fala com o serviço a partir desta
    aba, e por isso prova a chave e mais nada. Aqui a tela só deixa o pedido; quem abre o
-   `ia.json`, monta a fila e chama a IA é o programa deste computador, e o que volta é o
+   `ia.json`, monta a fila e chama a IA é o programa da casa do Estúdio, e o que volta é o
    que ELE conseguiu. */
 let BACK_OBRA = null;
 
@@ -12206,7 +12352,7 @@ async function olharAProva() {
   } catch (e) {
     if (seg > 180) {
       desistir("O programa não pegou o pedido em três minutos. Confira se a tarefa "
-        + "agendada do Estúdio está ligada neste computador.");
+        + "oficina do Estúdio está de pé na casa dele.");
     }
     return;
   }
@@ -12339,7 +12485,7 @@ async function chamarIA(servico, chave, modelo, prompt, b64, tentativa = 0) {
     r = await fetch(url, { method: "POST", headers: cabeca, body: JSON.stringify(corpo) });
   } catch (e) {
     throw new Error("não consegui falar com o serviço daqui do navegador. A chave pode "
-      + "estar certa mesmo assim: quem chama de verdade é o programa deste computador.");
+      + "estar certa mesmo assim: quem chama de verdade é o programa do Estúdio.");
   }
   const txt = await r.text();
   if (!r.ok) {
@@ -12418,7 +12564,9 @@ function desenhaAsFontes() {
 }
 
 function desenhaOMotor() {
-  $("mot_onde").textContent = "Na Placa, 3 Por Vez";
+  // O SELO NÃO AFIRMA PLACA QUE NÃO MEDIU: quem testa a placa é a oficina, a cada
+  // recorte, na máquina da casa. Aqui fica a regra, não um palpite de hardware.
+  $("mot_onde").textContent = "Na Casa Do Estúdio";
 }
 
 async function desenhaAsPastas() {
@@ -12434,7 +12582,7 @@ async function desenhaAsPastas() {
   const pintar = (rotulo, de) => {
     lista.innerHTML = quadros.map(([nome, diz]) => {
       const selo2 = de(nome);
-      return '<div class="cfg-linha"><div><div class="cfg-nome">Estudio\\' + nome
+      return '<div class="cfg-linha"><div><div class="cfg-nome">Estudio/' + nome
         + '</div><div class="cfg-desc">' + diz + '</div></div><div class="dir">'
         + '<span class="badge badge-secondary">' + selo2 + "</span></div></div>";
     }).join("");
@@ -12460,12 +12608,16 @@ async function desenhaAsPastas() {
     }
     return;
   }
-  if (!EDIT_RAIZ) {
-    selo.textContent = "Não liberada";
+  if (SEM_PASTA_AQUI || !EDIT_RAIZ) {
+    selo.textContent = SEM_PASTA_AQUI ? "Posto fora do ar" : "Não liberada";
     lista.innerHTML = '<div class="cfg-linha"><div><div class="cfg-nome">'
-      + 'O posto está fora e a pasta não foi liberada</div><div class="cfg-desc">Espere '
-      + 'um minuto e recarregue a página; ou abra a aba de Edição e libere a pasta do '
-      + 'Estúdio, que é o plano B para o navegador enxergar o disco.</div></div></div>';
+      + (SEM_PASTA_AQUI
+        ? 'O posto da casa não respondeu</div><div class="cfg-desc">'
+          + escapa(SEM_POSTO)
+        : 'O posto está fora e a pasta não foi liberada</div><div class="cfg-desc">'
+          + 'Espere um minuto e recarregue a página; ou abra a aba de Edição e libere '
+          + 'a pasta do Estúdio, que é o plano B para o navegador enxergar o disco.')
+      + '</div></div></div>';
     return;
   }
   const contar = async nome => {
@@ -12566,10 +12718,15 @@ async function mascaraDe(nome) {
       if (r.ok) {
         const b = await r.blob();
         url = MASCARA_POR_LUZ ? URL.createObjectURL(b) : await alfaDaMascara(b);
+        MASCARAS.set(nome, url);
+        return url;
       }
-    } catch (e) { url = null; }
-    MASCARAS.set(nome, url);
-    return url;
+      // SÓ O 404 VIRA "NÃO TEM MÁSCARA" GUARDADO (peça de tela cheia). Posto
+      // reiniciando ou bilhete vencido é falha passageira: sem guardar, a próxima
+      // chamada tenta de novo, em vez de a peça ficar sem furo para sempre.
+      if (r.status === 404) MASCARAS.set(nome, null);
+      return null;
+    } catch (e) { return null; }
   }
   try {
     const raiz = await pastaDo("recortes", false);
@@ -13869,6 +14026,7 @@ async function tentarRetomar() {
   DESCRICOES.clear();
   for (const [k, v] of Object.entries(r.descricoes || {})) DESCRICOES.set(k, v);
   RODAPE = r.rodape != null ? r.rodape : RODAPE_PADRAO;
+  if ($("dsc_max")) $("dsc_max").value = r.limite || 500;
   LEG_SUB = Math.min(2, Math.max(1, r.subLeg || 1));
   // RASCUNHO VELHO NAO TEM ESTE CAMPO, e a lista vazia e' a resposta certa: nenhuma
   // peca foi dada por pronta porque a fase de dar por pronta nao existia ainda.
@@ -14093,8 +14251,13 @@ async function olharAObra() {
   pararDeOlhar(true);
   $("apl_obra_txt").textContent = `${feitos} ${feitos === 1 ? "peça montada" : "peças montadas"}`
     + (d.falhas ? `, ${d.falhas} falharam` : "");
-  $("apl_obra_nota").innerHTML = `estão em <a href="${link}">${escapa(d.pasta || "")}</a>`
-    + ". Os recortes continuam onde estavam, intactos.";
+  // O ENDEREÇO É O data-abrir, como no recorte: a versão anterior lia uma variável
+  // `link` que nunca existiu, o fim de toda montagem estourava aqui e a tela nem
+  // avançava sozinha ao passo 4. Achado da auditoria de 25/08/2026 (o vigia de nomes
+  // só olhava função chamada, não variável lida).
+  $("apl_obra_nota").innerHTML = 'estão em <a href="#" data-abrir="'
+    + escapa("edicoes/" + (d.pasta || "")) + '">' + escapa(d.pasta || "")
+    + "</a>. Os recortes continuam onde estavam, intactos.";
   desenhaFeito();
   irParaPasso(4);
 }
@@ -14148,6 +14311,7 @@ function pararDeOlhar(cheia) {
 let LEG_SUB = 1;                   // em qual subetapa do passo 4 ele está
 let DESCRICOES = new Map();        // arquivo -> a descrição pronta do post
 let ORIGEM_DA_PECA = new Map();    // arquivo -> { legenda, endereco } do post original
+let ORIGEM_FALHOU = "";            // o motivo, quando a leitura do _lote.json falhou
 let RODAPE = null;                 // o fecho que vai em todas; null = ainda não lido
 let DSC_OBRA = null;               // o pedido de escrita das descrições, em curso
 let ENT_OBRA = null;               // o pedido de entrega, em curso
@@ -14280,13 +14444,19 @@ async function procurarMontagem() {
 async function lerAOrigem() {
   ORIGEM_DA_PECA.clear();
   if (!EDIT_LEVA) return;
+  ORIGEM_FALHOU = "";
   try {
     let d = null;
     // O POSTO PRIMEIRO, desde 25/08/2026: o `_lote.json` mora na leva, e a leva na casa.
     if (await postoDePe()) {
       const r = await fetch(urlDoArquivo(pastaDaLeva() + "/_lote.json"),
         { cache: "no-store" });
-      if (!r.ok) return;
+      if (!r.ok) {
+        // 404 é leva antiga sem lote; qualquer outra recusa é leitura que falhou, e
+        // os dois não podem virar a mesma frase na tela.
+        if (r.status !== 404) ORIGEM_FALHOU = "o posto respondeu " + r.status;
+        return;
+      }
       d = await r.json();
     } else {
       const levas = await pastaDo("levas", false);
@@ -14358,10 +14528,16 @@ function desenhaSubTrilho4() {
   });
   const prontas = quantasDescritas();
   const total = pecasDaEntrega().length;
-  $("ed_r4").textContent = ENTREGUE ? "entregue"
+  // "ENTREGUE" NO TRILHO SÓ COM A CONFERÊNCIA DO DRIVE; só empacotar diz "empacotada",
+  // que é o que foi medido. Auditoria de 25/08/2026.
+  $("ed_r4").textContent = ENTREGUE
+    ? (ENTREGUE.verificado ? "entregue" : "empacotada, sem subir")
     : total ? `${prontas} de ${total} descritas` : "depois da montagem";
   const b = document.querySelector('#ed_trilho .ed-ponto[data-passo="4"] .ed-barra b');
-  if (b && EDIT_PASSO === 4) b.style.height = ENTREGUE ? "100%" : ((LEG_SUB - 1) * 50) + "%";
+  if (b && EDIT_PASSO === 4) {
+    b.style.height = (ENTREGUE && ENTREGUE.verificado)
+      ? "100%" : ((LEG_SUB - 1) * 50) + "%";
+  }
 }
 
 document.querySelectorAll("#ed_sub4 li").forEach(li => {
@@ -14389,7 +14565,16 @@ async function entrarNasDescricoes() {
   // TRÊS ESTADOS, E CADA UM PEDE UMA COISA DIFERENTE. Sem origem não há o que adaptar;
   // sem chave não há quem escreva; com os dois, trabalha.
   $("dsc_sem_pecas").hidden = !!pecas.length;
-  $("dsc_sem_origem").hidden = !(pecas.length && !comOrigem);
+  // LEITURA QUE FALHOU NÃO É LEVA SEM ORIGEM: quando o posto recusou o _lote.json
+  // (que não seja o 404 de leva antiga), a caixa diz o motivo em vez de afirmar que a
+  // leva nunca guardou a legenda. Trava 2 do CLAUDE.md, auditoria de 25/08/2026.
+  const semOrigem = pecas.length && !comOrigem;
+  $("dsc_sem_origem").hidden = !semOrigem;
+  if (semOrigem && ORIGEM_FALHOU) {
+    $("dsc_sem_origem").innerHTML = "<b>Não consegui ler a legenda de origem.</b>"
+      + '<p class="nota">' + escapa(ORIGEM_FALHOU)
+      + ". Recarregue a página e tente de novo.</p>";
+  }
   $("dsc_sem_chave").hidden = !(comOrigem && !temChave);
   $("dsc_corpo").hidden = !(comOrigem && temChave);
   if ($("dsc_rodape").value !== (RODAPE == null ? RODAPE_PADRAO : RODAPE)) {
@@ -14521,7 +14706,14 @@ async function pedirDescricoes() {
       // originais. O programa lê de lá; ver `originais_da_leva` no `oficina.py`.
       pasta: `leva-${EDIT_LEVA.numero}`,
       pecas: alvos.map(a => ({ arquivo: a })),
-      limite: Math.max(120, Math.min(2200, Number($("dsc_max").value) || 500)),
+      // O TETO REAL DA LEGENDA DO INSTAGRAM É 2200 COM O FECHO DENTRO: o programa cola
+      // o fecho depois do texto da IA, então o limite pedido desconta o fecho, senão a
+      // soma estoura e o Instagram corta o fim. Auditoria de 25/08/2026.
+      limite: (() => {
+        const fecho = (RODAPE == null ? RODAPE_PADRAO : RODAPE).trim();
+        const teto = 2200 - (fecho ? fecho.length + 2 : 0);
+        return Math.max(120, Math.min(teto, Number($("dsc_max").value) || 500));
+      })(),
       rodape: (RODAPE == null ? RODAPE_PADRAO : RODAPE).trim(),
     });
     DSC_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null, mudo: 0 };
@@ -14531,7 +14723,7 @@ async function pedirDescricoes() {
     document.querySelector("#dsc_obra .cfg-girando").style.display = "";
     $("dsc_obra_txt").textContent = "Pedido Deixado";
     $("dsc_obra_nota").textContent = "A escrita começa em até um minuto, que é o passo do "
-      + "programa que fala com a IA aqui do computador.";
+      + "programa da casa do Estúdio que fala com a IA.";
     const olhar = olharOPedido(DSC_OBRA, andouADescricao, terminouADescricao);
     DSC_OBRA.relogio = setInterval(olhar, 3000);
     olhar();
@@ -14601,8 +14793,10 @@ async function entrarNaEntrega() {
     : "";
   $("ent_subir").disabled = !!ENT_OBRA || !total;
   $("ent_so_pacote").disabled = !!ENT_OBRA || !total;
+  // "ENTREGUE" SÓ COM A CONFERÊNCIA DO DRIVE: sem `verificado`, o que houve foi
+  // empacotamento, e a palavra tem de medir isso. Auditoria de 25/08/2026.
   $("ent_conta").innerHTML = ENTREGUE
-    ? `<b>${num(ENTREGUE.feitos || 0)}</b> entregues`
+    ? `<b>${num(ENTREGUE.feitos || 0)}</b> ${ENTREGUE.verificado ? "entregues" : "empacotadas"}`
     : `<b>${num(prontas)}</b> de ${num(total)} descritas`;
   verODrive();
   desenhaSubTrilho4();
@@ -14662,8 +14856,15 @@ function desenhaODrive() {
   if (d.autorizando) {
     pino.className = "pino indo";
     pino.textContent = "autorizando";
-    txt.textContent = "Uma janela do Google abriu no seu navegador. Entre na sua conta e "
-      + "clique em permitir; esta tela percebe sozinha quando terminar.";
+    // NA CASA DA VPS NÃO HÁ NAVEGADOR PARA O GOOGLE ABRIR: a janela abriria no
+    // servidor, que não tem tela. A autorização de lá se faz uma vez, por SSH, e o
+    // texto tem de dizer isso em vez de prometer uma janela que nunca vem.
+    txt.textContent = (CASA_INFO && CASA_INFO.abre_pastas === false)
+      ? "A casa do Estúdio fica num servidor sem navegador, então a janela do Google "
+        + "não abre sozinha: a autorização de lá se faz uma vez, por SSH (rclone). Se "
+        + "o Drive já estava autorizado antes, nada muda."
+      : "Uma janela do Google abriu no seu navegador. Entre na sua conta e "
+        + "clique em permitir; esta tela percebe sozinha quando terminar.";
     return;
   }
   if (d.autorizado) {
@@ -14762,7 +14963,7 @@ function andouAEntrega(d) {
    descobrir se a tabela de minerados tinha sido marcada era preciso ler até o fim.
 
    A ORDEM É A DO CAMINHO QUE O ARQUIVO FEZ: subiu, caiu em tal pasta, a tabela soube,
-   e o que sobrou aqui no computador. A última linha é a que ele passou a pedir agora,
+   e o que sobrou na casa do Estúdio. A última linha é a que ele passou a pedir agora,
    quando mandou apagar a cópia local depois do envio. */
 function umaLinha(rotulo, valor) {
   return `<div class="ent-linha"><span class="ed-rot">${escapar(rotulo)}</span>`
@@ -14778,14 +14979,14 @@ function linhasDoFecho(d, queria) {
     return umaLinha("O rclone disse", `${num(d.subiu_agora || 0)} enviadas nesta rodada`)
       + umaLinha("A conferência", d.porque_nao || "não respondeu")
       + umaLinha("Na tabela", "não marquei, porque não confirmei")
-      + umaLinha("A cópia daqui", "mantida, até dar para conferir");
+      + umaLinha("A cópia na casa","mantida, até dar para conferir");
   }
   if (!d.subiu) {
     /* NAO SUBIU NAO E' MEIO ENTREGUE. O pacote existe aqui e nada foi apagado: dizer as
        duas coisas evita que ele vá procurar no Drive o que está no disco. */
-    return umaLinha("Aqui no computador", `${pecas} em "${d.rotulo}"`)
+    return umaLinha("Na casa do Estúdio", `${pecas} em "${d.rotulo}"`)
       + (queria ? umaLinha("Não subiu", d.drive || "o Drive não respondeu") : "")
-      + umaLinha("A cópia daqui", "mantida, porque nada subiu");
+      + umaLinha("A cópia na casa","mantida, porque nada subiu");
   }
   /* O NUMERO DO DRIVE E' O QUE O DRIVE CONTOU. Ate' 24/08/2026 esta linha mostrava o
      numero de EMPACOTADAS, que e' medida deste lado: dizia 92 mesmo que o rclone tivesse
@@ -14802,8 +15003,8 @@ function linhasDoFecho(d, queria) {
   /* O QUE SOBROU AQUI. Apagar é ordem dele; mas a trava é minha e é dura: só apaga
      depois de o Drive ter respondido quantos vídeos recebeu. Quando a conferência não
      bate, o arquivo FICA, e esta linha diz por quê em vez de sumir com o assunto. */
-  html += umaLinha("A cópia daqui", d.apagou
-    ? `apagada, ${num(d.liberado_mb || 0)} MB livres no disco`
+  html += umaLinha("A cópia na casa",d.apagou
+    ? `apagada, ${num(d.liberado_mb || 0)} MB livres no disco da casa`
     : (d.nao_apagou || "mantida"));
   if (d.sem_descricao) {
     html += umaLinha("Sem descrição", `${num(d.sem_descricao)} `
@@ -14835,19 +15036,25 @@ async function terminouAEntrega(d) {
      de la'; subir sem conseguir conferir e' um terceiro estado, e tem nome proprio. */
   $("ent_feito_tit").textContent = d.verificado ? "Entregue No Drive"
     : d.rclone_ok ? "Subiu, Mas Não Consegui Conferir"
-    : "Empacotado Aqui, Ainda Não Subiu";
+    : "Empacotado Na Casa, Ainda Não Subiu";
   $("ent_feito_linhas").innerHTML = linhasDoFecho(d, queria);
   if (d.onde) $("ent_feito_pasta").dataset.abrir = d.onde;
   /* O BOTAO DA PASTA DAQUI SOME QUANDO A PASTA DAQUI NAO EXISTE MAIS. Desde 24/08/2026 a
      entrega apaga a copia local depois de conferir no Drive; deixar o botao no lugar era
      oferecer um clique que abre o vazio, e ele ficaria procurando onde foi parar. */
   $("ent_feito_pasta").hidden = !!d.apagou;
-  $("ent_feito_drive").hidden = !d.subiu;
+  // O LINK DO DRIVE TAMBÉM APARECE NO "SUBIU, MAS NÃO CONSEGUI CONFERIR": é
+  // justamente quando olhar o Drive com o próprio olho tira a dúvida.
+  $("ent_feito_drive").hidden = !(d.subiu || d.rclone_ok);
   if (d.drive_link) $("ent_feito_drive").href = d.drive_link;
+  // A MONTAGEM APAGADA SAI DO CARTÃO: a entrega apaga também a pasta montada de
+  // origem, e o "107 em leva-N" continuaria afirmando uma pasta que não existe mais.
+  if (d.apagou) { MONTADO = null; mostrarAMontagem(); }
   // A PORTA DE AUTORIZAR APARECE AQUI SE FOI ISSO QUE FALTOU, para ele não ter de
   // procurar o que fazer em seguida.
   if (d.autorizar) verODrive();
-  $("ent_conta").innerHTML = `<b>${num(d.feitos || 0)}</b> entregues`;
+  $("ent_conta").innerHTML = `<b>${num(d.feitos || 0)}</b> `
+    + (d.verificado ? "entregues" : "empacotadas");
   desenhaSubTrilho4();
 
   /* ENTREGUE E MARCADO NAO E' MAIS RASCUNHO, e ate 24/08/2026 continuava sendo.
@@ -14930,12 +15137,30 @@ $("ent_feito_sair").onclick = () => {
    UM OUVINTE SO' PARA TODOS OS BOTOES, e nao um por botao: um deles e' escrito dentro
    de um recado que se redesenha, e ligar evento em elemento que renasce e' ligar
    evento que se perde. */
-async function abrirNoComputador(relativo, ondeAvisar) {
-  const avisa = (t) => { if (ondeAvisar && $(ondeAvisar)) parado(ondeAvisar, t); };
+async function abrirNoComputador(relativo, ondeAvisar, elemento) {
+  // SEM LUGAR DE AVISO, O AVISO TOMA O LUGAR DO LINK: metade dos botões de abrir não
+  // tem `data-avisa`, e o clique deles morria calado. O link que não pode cumprir o
+  // que promete vira o próprio recado. Auditoria de 25/08/2026.
+  const avisa = (t) => {
+    if (ondeAvisar && $(ondeAvisar)) return parado(ondeAvisar, t);
+    if (elemento) {
+      elemento.textContent = t;
+      elemento.removeAttribute("data-abrir");
+      elemento.removeAttribute("href");
+    }
+  };
   if (!relativo) return avisa("Ainda não sei qual pasta abrir.");
   if (!(await postoDePe()))
     return avisa("O posto do Estúdio não está no ar, então não consigo abrir a pasta "
                  + "daqui. O caminho está escrito acima: copie e cole no explorador.");
+  // A CASA DA VPS NÃO TEM EXPLORADOR A ABRIR: em vez de um clique que morre num erro,
+  // a resposta honesta é o caminho completo na casa, para achar por SSH ou esperar a
+  // entrega descer. O batimento (/vivo) conta se a casa abre pastas.
+  if (CASA_INFO && CASA_INFO.abre_pastas === false) {
+    const casa = (CASA_INFO.casa || "a casa do Estúdio").replace(/[\\/]+$/, "");
+    return avisa("Essa pasta mora na casa do Estúdio, no servidor: "
+      + casa + "/" + relativo);
+  }
   try {
     const r = await noPosto("/abrir?onde=" + encodeURIComponent(relativo));
     if (!r || !r.ok) avisa("Não consegui abrir: " + ((r && r.erro) || "sem resposta"));
@@ -14948,7 +15173,7 @@ document.addEventListener("click", ev => {
   const a = ev.target.closest("[data-abrir]");
   if (!a) return;
   ev.preventDefault();
-  abrirNoComputador(a.dataset.abrir, a.dataset.avisa || null);
+  abrirNoComputador(a.dataset.abrir, a.dataset.avisa || null, a);
 });
 
 /* ---------------------------------------------------------------- o fim da leitura
