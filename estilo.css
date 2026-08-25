@@ -1,8 +1,32 @@
+/* SELO DE ALERTA. Vermelho quando a tela nao esta' gravando de verdade: o selo verde
+   dizendo "gravando no disco" enquanto nada chegava la' foi o pior falso positivo desta
+   tela, e cor e' a primeira coisa que o olho pega. */
+.badge.badge-ruim{color:#e0574b;border-color:rgba(224,87,75,.4);
+  background:rgba(224,87,75,.10)}
+
+/* Botão escondido é botão escondido, e `.acao` pinta display por conta própria. */
+#ia_liberar[hidden]{display:none}
+
+/* A BARRA DO ENDERECO ERRADO. Ela empurra a pagina para baixo em vez de flutuar por
+   cima: barra flutuante tapa o cabecalho, e o que ela tem a dizer nao e' urgente a ponto
+   de valer esconder o menu. */
+.fora{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:12px 22px;background:var(--accent);color:#fff;font-size:13px;line-height:1.45}
+.fora[hidden]{display:none}
+.fora b{font-weight:700}
+.fora span{flex:1 1 380px}
+/* O BOTAO PRECISA DE UM PONTO A MAIS DE FORCA, e nao e' capricho: `.acao.forte` pinta
+   fundo com a cor de destaque, que aqui e' a cor da propria barra, e o botao sumia dentro
+   dela. E como isto e' um link e nao um botao, ele ainda vinha sublinhado e em bloco. */
+.fora .acao.forte{flex:0 0 auto;display:inline-flex;align-items:center;
+  background:#fff;color:var(--accent);border-color:#fff;text-decoration:none;
+  white-space:nowrap}
+.fora .acao.forte:hover{background:#fff;color:var(--accent);filter:none;opacity:.88}
+
 /* O que é desta tela e não veio do Social Tracker.
    Tudo aqui usa as variáveis de lá, para as duas telas envelhecerem juntas. */
 
 .corpo{max-width:1340px;margin:0 auto;padding:26px clamp(20px,3.2vw,56px) 80px}
-
 .aba[hidden]{display:none}
 /* Animação PRÓPRIA, e com nome próprio.
    Aqui morava `animation:subir`, emprestada do Social Tracker. Lá `subir` termina em
@@ -13,19 +37,16 @@
 @keyframes entra-aba{from{opacity:0;transform:translateY(10px)}
                      to{opacity:1;transform:none}}
 .aba{animation:entra-aba .34s cubic-bezier(.22,1,.36,1) both}
-
 .secao{margin-bottom:26px}
 .secao-cab{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
            margin-bottom:12px;flex-wrap:wrap}
 .secao-cab h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;
               color:var(--muted);font-weight:600;margin:0}
 .secao-cab .dir{display:flex;align-items:center;gap:10px}
-
 .caixa{background:var(--branco);border:1px solid var(--rule-solid);
        border-radius:var(--r-lg);padding:20px;box-shadow:var(--sombra)}
 .caixa h3{font-size:15.5px;font-weight:650;margin:0 0 5px;color:var(--ink)}
 .nota{color:var(--muted);font-size:13.5px;margin:0}
-
 .numeros{display:grid;gap:1px;background:var(--rule-solid);border:1px solid var(--rule-solid);
          border-radius:var(--r-lg);overflow:hidden}
 .numeros.quatro{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -33,7 +54,6 @@
 .num b{display:block;font-size:27px;font-weight:650;letter-spacing:-.02em;line-height:1.1;
        color:var(--ink);font-variant-numeric:tabular-nums}
 .num span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
-
 textarea{width:100%;min-height:104px;resize:vertical;margin-top:12px;
          font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
          background:var(--paper);color:var(--ink);border:1px solid var(--rule-solid);
@@ -42,11 +62,9 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent)}
 input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   font:14px ui-monospace,Consolas,monospace;background:var(--paper);color:var(--ink);
   border:1px solid var(--rule-solid);border-radius:var(--r-filtro);padding:0 13px}
-
 .linha{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:14px}
 .campo{flex:1;min-width:160px}
 .campo label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-
 /* O botão do sistema tem quatro filhos e vive no molde de lá. Aqui as ações são de
    comando, não de navegação, então usam a forma sóbria: retângulo, sem seta. */
 .acao{height:var(--h-filtro);padding:0 18px;border-radius:var(--r-filtro);cursor:pointer;
@@ -57,11 +75,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .acao.forte:hover{filter:brightness(1.07);color:#fff}
 .acao:disabled{opacity:.42;cursor:not-allowed}
 .acao:disabled:hover{border-color:var(--rule-solid);color:var(--ink)}
-
 .vazio{color:var(--muted);font-size:14px;padding:26px 0;text-align:center;
        background:var(--branco);border:1px solid var(--rule-solid);
        border-radius:var(--r-lg)}
-
 /* ---- as máquinas da rodada, uma pastilha cada ---- */
 .elos{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:7px;
       margin-top:16px}
@@ -75,7 +91,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
            font-weight:600}
 .elo.agora .luz{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
 .elo.falhou .luz{background:var(--vermelho)}
-
 /* ====================================================== O REGISTRO, EM FORMA DE CONSOLE
 
    Molde escolhido pelo Gabriel em 17/08: cartão fechado, com cabeça de identidade, três
@@ -91,7 +106,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    que é a verdade, e não uma onda inventada para a tela parecer viva. */
 .konsole{border:1px solid var(--rule-solid);border-radius:var(--r-lg);
          background:var(--branco);overflow:hidden;box-shadow:var(--sombra)}
-
 .kon-topo{display:flex;align-items:center;gap:14px;padding:18px 20px;flex-wrap:wrap}
 .kon-selo{flex:none;display:grid;place-items:center;width:34px;height:34px;
           border-radius:9px;background:var(--paper-2);border:1px solid var(--rule-solid);
@@ -114,7 +128,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .kon-vivo i{width:6px;height:6px;border-radius:50%;background:var(--soft);flex:none}
 .kon-vivo.ativa{color:var(--verde)}
 .kon-vivo.ativa i{background:var(--verde)}
-
 /* as três medidas, divididas por fio, como no molde */
 .kon-medidas{display:grid;grid-template-columns:repeat(3,1fr);
              border-top:1px solid var(--rule)}
@@ -134,21 +147,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .kon-medida.aviso .kon-traco path{stroke:var(--chart-3)}
 .kon-medida.evento .kon-traco path{stroke:var(--chart-2)}
 .kon-traco.parado path{opacity:.32}
-
 /* as máquinas só aparecem enquanto a rodada está no ar */
 .kon-maquinas{padding:0 20px 16px;border-top:1px solid var(--rule);padding-top:16px}
 .kon-maquinas[hidden]{display:none}
-
 /* Os filtros dentro do cartão, na linha logo abaixo das medidas. */
 .liv-filtros{display:flex;gap:10px;flex-wrap:wrap;padding:15px 20px;
              border-top:1px solid var(--rule)}
 .liv-filtros .ct-busca{flex:1 1 240px}
-
 @media(max-width:720px){
   .kon-medidas{grid-template-columns:1fr}
   .kon-medida + .kon-medida{border-left:0;border-top:1px solid var(--rule)}
 }
-
 /* ---- perfil: barra de avanço ---- */
 .perfil-linha{background:var(--branco);border:1px solid var(--rule-solid);
               border-radius:var(--r-lg);padding:16px 18px;margin-bottom:10px}
@@ -158,12 +167,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .barra{height:5px;background:var(--paper-2);border-radius:999px;overflow:hidden;margin-top:9px}
 .barra i{display:block;height:100%;background:var(--accent);border-radius:999px;
          transition:width .5s cubic-bezier(.22,1,.36,1)}
-
 .tag{font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--rule-solid);
      color:var(--muted);white-space:nowrap}
 .tag.ok{color:var(--verde);border-color:color-mix(in srgb,var(--verde) 40%,transparent)}
 .tag.trab{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
-
 /* ---- cartão de perfil pronto para baixar ---- */
 .pronto{background:var(--branco);border:1px solid var(--rule-solid);
         border-radius:var(--r-lg);padding:18px 20px;margin-bottom:12px;
@@ -178,7 +185,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .pronto-numeros b{display:block;font-size:19px;font-weight:650;color:var(--ink);
                   font-variant-numeric:tabular-nums;line-height:1.15}
 .pronto-numeros span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
-
 /* ---- aba que ainda não existe ---- */
 .por-vir{background:var(--branco);border:1px dashed var(--rule-solid);
          border-radius:var(--r-lg);padding:30px 28px;text-align:left}
@@ -190,20 +196,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
             margin:0 0 6px;text-transform:none}
 .por-vir-lista{margin:16px 0 0 20px;color:var(--muted);font-size:14px}
 .por-vir-lista li{margin-bottom:8px;padding-left:4px}
-
 /* ---- o aviso de que o Drive ainda não foi autorizado ---- */
 .travado{display:flex;gap:12px;align-items:flex-start;background:var(--paper);
          border:1px solid color-mix(in srgb,var(--ambar) 35%,transparent);
          border-radius:var(--r-md);padding:13px 15px;margin-top:14px;font-size:13.5px;
          color:var(--muted)}
 .travado b{color:var(--ink)}
-
 @media(max-width:640px){
   .corpo{padding:18px 14px 60px}
   .caixa,.pronto{padding:16px}
   .por-vir{padding:22px 18px}
 }
-
 /* ================================================== A TABELA E OS FILTROS DE MINERADOS
 
    AQUI NÃO SE REESCREVE NADA QUE JÁ VEIO COPIADO, e isso é o conserto de 17/08.
@@ -220,7 +223,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* `hidden` não vence sozinho quem tem `display` escrito. As duas caixas abaixo têm:
    `.pag` é `flex` e o painel precisa sumir quando a sub-aba troca. */
 .ct-painel[hidden],.pag[hidden]{display:none}
-
 /* O botão de comando desta tela dentro da linha da tabela. Lá a ação da linha é o
    botão de navegação do sistema, que tem seta e quatro filhos; aqui são comandos. */
 .tab-acao-in{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end}
@@ -228,13 +230,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                 display:inline-flex;align-items:center;text-decoration:none}
 .tab-acao .acao.redonda{width:32px;padding:0;justify-content:center}
 .tab-acao .acao.redonda svg{width:15px;height:15px}
-
 /* A COBERTURA CARREGA O TOTAL DA CONTA EMBAIXO. O total era coluna própria, e sozinho
    ele empurrava a última coluna para fora da tela. Junto da porcentagem ele também lê
    melhor: 62% de 4.976 é uma frase, e duas colunas separadas eram duas metades dela. */
 .tab-dupla{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tab-dupla i{font-style:normal;font-size:11.5px;color:var(--muted)}
-
 /* ============================================================== SINAL DE CARREGAMENTO
 
    Traduzido do componente que o Gabriel mandou, que é React com Tailwind. Aqui não há
@@ -259,7 +259,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .pix-grade.orbita i{animation-duration:950ms}
 .pix-grade i.apagado{opacity:.07;animation:none}
 @keyframes pixel-on{0%,100%{opacity:.15}35%{opacity:1}}
-
 .pix-rotulo{font-size:13px;font-weight:500;color:transparent;
   background-image:linear-gradient(90deg,var(--muted) 35%,var(--ink) 50%,var(--muted) 65%);
   background-size:200% 100%;
@@ -270,17 +269,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @supports not ((background-clip:text) or (-webkit-background-clip:text)){
   .pix-rotulo{color:var(--muted);background-image:none;animation:none}
 }
-
 .pix-tempo{font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
            color:var(--muted);font-variant-numeric:tabular-nums}
-
 /* Movimento reduzido congela a grade no apagado, e o relógio continua andando: quem
    pediu menos movimento quer menos movimento, não menos informação. */
 @media (prefers-reduced-motion: reduce){
   .pix-grade i{animation:none}
   .pix-rotulo{animation:none;background-image:none;color:var(--muted)}
 }
-
 /* ============================================ OS CARTÕES DE PERFIL, DENTRO DO CONSOLE
 
    Um cartão por perfil, que abre e fecha. Molde escolhido pelo Gabriel em 17/08, no
@@ -310,7 +306,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
           stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
           transition:transform .2s cubic-bezier(.22,1,.36,1)}
 .liv-cartao.aberto .liv-seta{transform:rotate(90deg)}
-
 /* o painel do detalhe, recuado como no molde */
 .liv-corpo{display:none;padding:0 20px 18px 39px}
 .liv-cartao.aberto .liv-corpo{display:block}
@@ -334,14 +329,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
                   border:1px solid var(--rule-solid);border-radius:5px;padding:1px 6px}
 .liv-ev .data{flex:none;font-size:11.5px;color:var(--soft);white-space:nowrap;
               font-variant-numeric:tabular-nums}
-
 .liv-mais{padding:14px 20px;border-top:1px solid var(--rule);
           display:flex;justify-content:center}
 /* a faixa some junto com o botão: vazia, ela ficava como um degrau no pé do cartão */
 .liv-mais:has(.acao[hidden]){display:none}
 .liv-mais .acao[hidden]{display:none}
 .liv-mais .acao{height:36px;padding:0 20px;font-size:13px}
-
 /* a folha de exportação, no molde de balão do sistema */
 .liv-export{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
             background:rgba(0,0,0,.45);padding:20px}
@@ -377,7 +370,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .liv-datas input:focus{outline:none;border-color:var(--accent)}
 .liv-datas input::-webkit-calendar-picker-indicator{opacity:.45;cursor:pointer}
 .liv-datas input:hover::-webkit-calendar-picker-indicator{opacity:.9}
-
 /* A escolha, com a marca desenhada aqui: o botão redondo do sistema operacional tem
    azul do Windows dentro dele e não obedece à paleta. */
 .liv-opcao input{appearance:none;-webkit-appearance:none;width:16px;height:16px;
@@ -388,7 +380,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:var(--accent)}
 .liv-opcao:has(input:checked){border-color:var(--accent);background:var(--accent-tint)}
 .liv-pe{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
-
 /* ------------------------------------------------------- os campos da folha de iniciar */
 .campo-bloco{margin-bottom:16px}
 .campo-rot{display:block;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:7px}
@@ -398,7 +389,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   color:var(--ink);padding:0 12px;width:100%}
 .campo-bloco input[type=number]:focus{outline:none;border-color:var(--accent)}
 .campo-bloco[hidden]{display:none}
-
 /* A ESCOLHA, E O NOME DELA NÃO É `marca`.
    Esta classe se chamava assim, e `marca` já é a LOGOMARCA no sistema copiado, com
    26 pixels de largura e altura fixos. O resultado foi das duas: a logomarca do
@@ -423,21 +413,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .escolha > span{flex:1;min-width:0;font-size:13.5px;color:var(--ink);line-height:1.4}
 .escolha small{display:block;font-size:11.5px;color:var(--muted);margin-top:4px;
                font-weight:400;line-height:1.5}
-
-
 /* as três réguas lado a lado; a do formato que saiu da escolha some junto */
 .cortes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .cortes label{font-size:11.5px;color:var(--muted)}
 .cortes label[hidden]{display:none}
 .cortes input{margin-top:5px}
 .liv-pe .nota{margin-right:auto;text-align:left}
-
 /* a linha do que está acontecendo neste segundo, no topo do histórico */
 .liv-ev.agora{background:var(--accent-tint)}
 .liv-ev.agora i{background:var(--accent);animation:ping 1.1s ease-in-out infinite}
 .liv-ev.agora .oque > b{color:var(--accent)}
 .liv-vivo{color:var(--accent);font-weight:600}
-
 /* AS PÁGINAS DE UMA RODADA, recuadas sob o evento que as resume. Menores e mais
    apagadas de propósito: são o detalhe de quem quer conferir, e não a leitura principal
    de quem só quer saber como está o perfil. */
@@ -445,10 +431,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .liv-ev.passo .oque > b{font-weight:450;font-size:12px}
 .liv-ev.passo i{width:5px;height:5px;margin-top:6px}
 .liv-ev.passo .data{font-size:11px}
-
 /* ------------------------------------------------ A TABELA LARGA DE MINERADOS
 
-   Onze colunas não cabem em tela nenhuma sem rolagem, e a rolagem existe: `.tab-rolo`
+   Treze colunas não cabem em tela nenhuma sem rolagem, e a rolagem existe: `.tab-rolo`
    já tem `overflow-x`. O que não existia era o AVISO de que ela existe. A barra vem
    escondida do sistema de origem, onde a tabela é estreita e cabe inteira; aqui o botão
    da última coluna ficava metade fora e a leitura era de tabela quebrada.
@@ -458,26 +443,1682 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
      1. a coluna de ação gruda na direita, então o botão nunca sai de vista, role-se
         quanto for. O fundo dela é opaco para o texto das outras colunas passar por baixo;
      2. as colunas param de se espremer: com largura mínima, a rolagem entra em vez de
-        o conteúdo virar sopa. */
-#tab_minerados{min-width:1080px}
+        o conteúdo virar sopa.
 
+   O NÚMERO SUBIU DE 1.080 PARA 1.520 em 19/08/2026, e o primeiro palpite, 1.360, estava
+   curto: com ele a tabela cabia, mas cabia espremendo a coluna de Baixar até ela virar
+   duas linhas picadas. Uma tabela que rola e mostra tudo é melhor que uma tabela mais
+   estreita que esconde. Duas coisas seguraram o número: a marcação desceu de baixo do
+   nome do perfil, e o botão "Marcar" saiu da ponta da linha. */
+#tab_minerados{min-width:1560px}
 .tab td.tab-acao, .tab th.tab-acao{position:sticky;right:0;z-index:2;
   background:var(--branco);box-shadow:-10px 0 12px -10px rgba(0,0,0,.45)}
 .tab thead th.tab-acao{background:var(--paper-2)}
 .tab tbody tr:hover td.tab-acao{background:var(--paper-2)}
-
 /* a rolagem passa a ser visível, discreta, para o olho saber que há mais à direita */
 .tab-rolo{scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
 .tab-rolo::-webkit-scrollbar{display:block;height:9px}
 .tab-rolo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
 .tab-rolo::-webkit-scrollbar-track{background:transparent}
-
 /* ------------------------------------------------------- MONTAR UM LOTE
-   O comando de baixar era um botão por perfil, e ele prometia um recorte que não
-   existia: quem baixa percorre a seleção inteira, ordenada por desempenho. Agora é um
-   comando só, com a única escolha que muda o resultado, que é o tamanho do lote. */
-.lote-montar{margin-bottom:18px}
-.lote-linha{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
-.lote-linha .campo-rot{margin:0}
-.lote-linha input[type=number]{width:110px}
-.prontos-lista{display:grid;gap:12px}
+   O comando de baixar já foi um botão por perfil, e ele prometia um recorte que não
+   existia: quem baixa percorre a seleção inteira. Depois virou um botão só com um
+   campo de quantidade, e aí eram duas decisões para um pedido. Agora é uma decisão:
+   quais perfis. A conta do lote sai da marcação da fileira. */
+.lote-montar{margin-bottom:14px}
+.lote-linha{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-top:16px}
+.lote-campo{display:flex;flex-direction:column;gap:6px}
+/* Filtro sem nada para recortar fica apagado e não abre, e a linha embaixo do cartão
+   diz por quê. Deixá-lo aceso seria prometer um recorte que hoje não existe. */
+.lote-campo[data-inerte="true"]{opacity:.42;pointer-events:none}
+.lote-campo .campo-rot{margin:0;font-size:12px;color:var(--muted)}
+/* o comando encosta no fim da linha: ele fecha o cartão, não divide espaço com filtro */
+.lote-linha .acao.forte{margin-left:auto}
+/* O RESPIRO DEPOIS DA LINHA DE FILTROS. Sem ele a contagem nascia colada na caixa da
+   etiqueta, parecendo legenda do filtro em vez de resposta do cartão. */
+#recado_lote{margin-top:18px}
+#recado_filtros{margin-top:10px}
+/* ------------------------------ MERCADO, ETIQUETA E BAIXAR: AS TRÊS COLUNAS NOVAS
+
+   A marcação já morou embaixo do nome do perfil, espremida em duas pastilhas, para não
+   alargar uma tabela que já rolava de lado. Perdia o principal: dali não se comparava
+   dois perfis nem se ordenava por elas. Em 19/08/2026 viraram coluna, e a rolagem, que
+   o Gabriel aceitou, é o preço.
+
+   E A CÉLULA É O BOTÃO. O botão "Marcar" saiu da linha; clicar no mercado ou na
+   etiqueta abre a mesma folha. Célula vazia diz "definir", que é convite e não erro. */
+/* LARGURA MÍNIMA NAS TRÊS, e isto não é capricho de layout. A tabela distribui o espaço
+   pelo conteúdo, e as colunas de número, que são oito, ganhavam a disputa: a coluna de
+   Baixar nasceu com cinquenta pixels e o estado do perfil saía picado em duas linhas,
+   "254 r / régu". Coluna espremida é coluna que mente. */
+.tab-marc{vertical-align:middle;min-width:112px}
+.tab-marc-etq{min-width:142px}
+.tab-baixa{min-width:196px;vertical-align:middle}
+.tab-toque{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;cursor:pointer;
+           padding:4px 7px;margin:-4px -7px;border-radius:8px;
+           border:1px solid transparent;transition:background .12s,border-color .12s}
+.tab-toque:hover{background:var(--paper-2);border-color:var(--rule-solid)}
+.tab-toque:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tab-toque .mercado{font-size:11.5px;font-weight:600;color:var(--ink);
+                    text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.tab-toque .sem{font-size:12px;color:var(--soft)}
+.tab-toque:hover .sem{color:var(--muted)}
+.tab-etqs{max-width:190px}
+/* A COLUNA DE BAIXAR: A PASTILHA E O NÚMERO NA MESMA LINHA.
+   Ela já usou o par de linhas da coluna de cobertura, com o número embaixo. O Gabriel
+   reprovou em 19/08 e a razão é de leitura: todas as outras células desta tabela têm uma
+   linha só e ficam no meio da altura; uma de duas linhas encostada no topo quebra o
+   alinhamento da fileira inteira, e o olho, que corre a linha na horizontal, tropeça.
+   Estado sem número continua sendo opinião, então o número não sai, só muda de lugar. */
+.tab-lado{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
+.tab-lado i{font-style:normal;font-size:12px;color:var(--muted);
+            font-variant-numeric:tabular-nums}
+.pino.meio{color:var(--ambar);
+           border-color:color-mix(in srgb,var(--ambar) 35%,transparent)}
+.pino.meio::before{background:var(--ambar)}
+.pino.indo::before{background:var(--chart-2);animation:bxpulso 1.4s ease-in-out infinite}
+@keyframes bxpulso{0%,100%{opacity:1}50%{opacity:.25}}
+/* AS COLUNAS DE NÚMERO APERTAM, e as de texto não. Com três colunas a mais a tabela
+   passou de 1.080 para perto de 1.400 pixels: tirar quatro pixels de cada lado das oito
+   colunas de número devolve sessenta e quatro sem espremer nada que se leia. */
+.tab td.tab-num,.tab th.tab-num{padding-left:10px;padding-right:10px}
+.tab-acao .acao + .acao{margin-left:6px}
+/* ------------------------------------------------- A FILEIRA DE PERFIS
+   Um cartão por perfil que tem conteúdo esperando. Só a marca e, no rodapé, quanto há
+   para baixar dali: quem quiser o detalhe abre a tabela de Minerados, que é onde ele
+   mora. Perfil sem nada a baixar não aparece, e é isso que faz a fileira encolher
+   sozinha à medida que os lotes saem. */
+.fileira{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));
+            gap:12px}
+.fperfil{background:var(--branco);border:1px solid var(--rule-solid);
+      border-radius:var(--r-lg);box-shadow:var(--sombra);overflow:hidden;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;padding-top:18px;
+      transition:border-color .16s, box-shadow .16s}
+.fperfil:hover{border-color:var(--accent)}
+.fperfil .pcard-retrato{flex:0 0 58px;width:58px;height:58px;margin-bottom:16px}
+.fperfil .pcard-avatar{border-width:2px;font-size:19px}
+.fperfil-pe{width:100%;border-top:1px solid var(--rule);background:var(--paper);
+         padding:9px 6px;text-align:center}
+.fperfil-pe b{font-size:16px;font-weight:650;color:var(--ink);
+           font-variant-numeric:tabular-nums}
+.fperfil-pe span{font-size:11.5px;color:var(--muted);margin-left:4px}
+/* MARCADO: borda de destaque e o certo no canto. A cor sozinha não basta, porque o
+   cartão marcado e o cartão sob o cursor teriam o mesmo desenho. */
+.fperfil.marcado{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.fperfil.marcado .fperfil-pe{background:var(--accent-tint)}
+.fperfil-certo{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;
+            background:var(--accent);color:#fff;display:none;
+            align-items:center;justify-content:center}
+.fperfil-certo svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:3;
+                stroke-linecap:round;stroke-linejoin:round}
+.fperfil{position:relative}
+.fperfil.marcado .fperfil-certo{display:flex}
+/* ==================================================== O TIRA-DÚVIDAS DA ABA DE BAIXAR
+
+   UMA BOLHA NO CANTO E UMA FOLHA QUE ENTRA PELA DIREITA.
+
+   OS DOIS MORAM FORA DAS ABAS, e quem os esconde nas outras é a troca de aba. Dentro da
+   seção seria mais simples e não precisaria de programa nenhum, mas não funciona: `.aba`
+   tem animação de entrada com `transform`, e elemento com animação de transform vira
+   âncora para quem é `position:fixed`. A gaveta parava na altura da seção, com o fundo
+   escuro cortado no meio da tela, em vez de ir de topo a rodapé.
+
+   A FOLHA É LARGA E ROLA POR DENTRO. O conteúdo é documentação, não um balão de dica:
+   cabe leitura de dois minutos ali, e ela não pode empurrar a página. */
+.ajuda-bolha{position:fixed;right:24px;bottom:24px;z-index:60;
+  height:48px;padding:0 18px 0 15px;display:inline-flex;align-items:center;gap:9px;
+  border-radius:99px;border:1px solid var(--rule-solid);background:var(--branco);
+  color:var(--ink);cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.20);
+  font-family:var(--fonte);font-size:13.5px;font-weight:600;
+  transition:transform .16s, box-shadow .16s, border-color .16s}
+.ajuda-bolha:hover{transform:translateY(-2px);border-color:var(--accent);
+  box-shadow:0 14px 34px rgba(0,0,0,.26)}
+.ajuda-bolha svg{width:20px;height:20px;flex-shrink:0;color:var(--accent)}
+.ajuda-bolha-rot{letter-spacing:-.01em}
+/* `hidden` NÃO VENCE QUEM TEM `display` ESCRITO, e sem esta linha a bolha aparecia nas
+   três abas: a troca de aba mandava escondê-la, o atributo entrava, e o `inline-flex`
+   daqui de cima passava por cima dele. O mesmo remendo já existe para `.ct-painel`. */
+.ajuda-bolha[hidden]{display:none}
+/* O celular perde o rótulo e vira só o círculo: ali a bolha disputa espaço com o
+   polegar, e "Dúvidas" escrito não vale a largura. */
+@media (max-width:640px){
+  .ajuda-bolha{right:16px;bottom:16px;width:48px;padding:0;justify-content:center}
+  .ajuda-bolha-rot{display:none}
+}
+.ajuda-fundo{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.42);
+  backdrop-filter:blur(2px);animation:ajudaEntra .18s ease both}
+.ajuda-fundo[hidden],.ajuda-folha[hidden]{display:none}
+.ajuda-folha{position:fixed;top:0;right:0;bottom:0;z-index:71;width:min(560px,100vw);
+  display:flex;flex-direction:column;background:var(--branco);
+  border-left:1px solid var(--rule-solid);box-shadow:-24px 0 60px rgba(0,0,0,.30);
+  animation:ajudaDesliza .22s cubic-bezier(.22,1,.36,1) both}
+@keyframes ajudaEntra{from{opacity:0}to{opacity:1}}
+@keyframes ajudaDesliza{from{transform:translateX(26px);opacity:0}
+                        to{transform:none;opacity:1}}
+.ajuda-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  padding:22px 24px 18px;border-bottom:1px solid var(--rule-solid);flex-shrink:0}
+.ajuda-cab h2{margin:0;font-size:19px;font-weight:700;letter-spacing:-.02em}
+.ajuda-cab .nota{margin:5px 0 0}
+.ajuda-fecha{width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;
+  justify-content:center;border-radius:10px;border:1px solid var(--rule-solid);
+  background:transparent;color:var(--muted);cursor:pointer;transition:background .14s}
+.ajuda-fecha:hover{background:var(--paper-2);color:var(--ink)}
+.ajuda-fecha svg{width:16px;height:16px}
+.ajuda-corpo{flex:1;overflow-y:auto;padding:20px 24px 40px;
+  scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
+.ajuda-corpo::-webkit-scrollbar{width:9px}
+.ajuda-corpo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
+/* O CAMINHO INTEIRO, ANTES DAS PERGUNTAS. Quem abre um tira-dúvidas sem saber a forma
+   da coisa fica lendo resposta solta. Os quatro passos ficam em coluna, numerados, com
+   uma linha ligando um ao outro: é uma esteira, e ela é lida de cima para baixo. */
+.ajuda-trilho{display:flex;flex-direction:column;gap:2px;margin:0 0 26px;
+  padding-left:15px;border-left:2px solid var(--rule-solid)}
+.ajuda-passo{position:relative;padding:8px 0 8px 14px}
+.ajuda-passo::before{content:"";position:absolute;left:-21px;top:14px;width:9px;height:9px;
+  border-radius:99px;background:var(--accent);border:2px solid var(--branco)}
+.ajuda-passo b{display:block;font-size:13px;font-weight:700;letter-spacing:-.01em}
+.ajuda-passo span{display:block;font-size:12.5px;color:var(--muted);line-height:1.5;
+  margin-top:2px}
+.ajuda-grupo{margin:26px 0 10px;font-size:11.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em}
+.ajuda-grupo:first-child{margin-top:0}
+/* CADA PERGUNTA É UM `details`, e não um acordeão escrito à mão: o navegador já sabe
+   abrir, fechar, responder ao teclado e ser lido por leitor de tela. */
+.ajuda-item{border:1px solid var(--rule-solid);border-radius:var(--r-md);
+  background:var(--paper);margin-bottom:8px;overflow:hidden}
+.ajuda-item[open]{background:var(--branco);border-color:var(--accent)}
+.ajuda-item > summary{list-style:none;cursor:pointer;padding:13px 40px 13px 15px;
+  font-size:13.5px;font-weight:600;color:var(--ink);position:relative;
+  transition:background .14s}
+.ajuda-item > summary::-webkit-details-marker{display:none}
+.ajuda-item > summary:hover{background:var(--paper-2)}
+.ajuda-item > summary::after{content:"";position:absolute;right:16px;top:calc(50% - 4px);
+  width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(45deg);transition:transform .18s}
+.ajuda-item[open] > summary::after{transform:rotate(-135deg);top:calc(50% - 2px)}
+.ajuda-item > div{padding:0 15px 14px;border-top:1px solid var(--rule)}
+.ajuda-item p{margin:11px 0 0;font-size:13px;line-height:1.62;color:var(--muted)}
+.ajuda-item p b{color:var(--ink);font-weight:650}
+.ajuda-item p i{font-style:normal;color:var(--ink);font-weight:500}
+.ajuda-lista{margin:11px 0 0;padding-left:19px;font-size:13px;line-height:1.62;
+  color:var(--muted)}
+.ajuda-lista li{margin-bottom:6px}
+.ajuda-lista li b{color:var(--ink);font-weight:650}
+.ajuda-lista li i{font-style:normal;color:var(--ink);font-weight:500}
+/* O caminho da pasta em fonte de largura fixa e caixa própria: é para ser copiado com
+   o olho, e barra invertida no meio de prosa some. */
+.ajuda-caminho{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px;color:var(--ink)!important;background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
+  word-break:break-all;line-height:1.5}
+.ajuda-caminho i{font-style:italic;color:var(--accent)!important}
+/* A LISTA SUSPENSA `psel`, TRAZIDA À MÃO DO SOCIAL TRACKER.
+
+   Ela é o seletor que o catálogo de lá usa nos dois lugares, e não estava aqui: o
+   `extrair.py` copia as peças pelo nome da classe, e `psel` nunca entrou na lista dele
+   porque nenhuma tela deste sistema a usava até hoje. Sem estas regras o seletor sai
+   como um botão sem moldura e um menu empilhado no meio do texto, que é como ele nasceu
+   na primeira montagem.
+
+   O bloco é o de lá, literal. Repetir a medida "parecida" é o jeito de as duas telas
+   divergirem sem ninguém ver. */
+.psel{position:relative}
+.psel-b{display:inline-flex;align-items:center;gap:5px;border:0;background:none;
+        font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:2px 0;
+        color:inherit;outline:0;white-space:nowrap}
+.psel-b svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.5;
+            transition:transform .18s}
+.psel-b[aria-expanded="true"] svg{transform:rotate(180deg)}
+.psel-menu{position:absolute;top:calc(100% + 7px);right:0;z-index:40;min-width:132px;
+           background:var(--branco);border:1px solid var(--rule-solid);
+           border-radius:10px;box-shadow:0 8px 26px rgba(14,14,14,.14);padding:4px;
+           display:flex;flex-direction:column;gap:1px;
+           opacity:0;transform:translateY(-4px);pointer-events:none;
+           transition:opacity .14s ease, transform .14s cubic-bezier(.22,1,.36,1)}
+.psel-menu.aberto{opacity:1;transform:translateY(0);pointer-events:auto}
+.psel-menu button{display:flex;align-items:center;justify-content:space-between;gap:10px;
+                  border:0;background:none;border-radius:7px;padding:7px 10px;
+                  font:inherit;font-size:13px;font-weight:600;color:var(--ink);
+                  cursor:pointer;text-align:left;white-space:nowrap}
+.psel-menu button:hover{background:var(--paper-2)}
+.psel-menu button.on{background:var(--accent-tint);color:var(--accent)}
+.psel-menu button i{display:none}
+.psel-menu button.on i{display:block;font-style:normal}
+/* ============================== O CATÁLOGO DE MERCADOS E ETIQUETAS
+
+   COPIADO DA ABA DE CONFIGURAÇÕES DO SOCIAL TRACKER, item "Nichos e etiquetas", a
+   pedido do Gabriel em 19/08/2026. Aqui ele mora dentro da folha de marcação do perfil,
+   e não numa aba própria, porque este sistema não tem aba de configurações: quem marca
+   um perfil é quem cria e apaga os nomes, e as duas coisas são o mesmo gesto.
+
+   AS MEDIDAS SÃO AS DE LÁ, e isso é o ponto: as duas telas usam as mesmas variáveis de
+   tema, então uma medida reescrita "parecida" é uma divergência que ninguém vê nascer.
+
+   O QUE NÃO VEIO: a paleta de vinte e quatro ícones por etiqueta. Lá ela é enfeite da
+   própria lista de configurações e não chega à pastilha, porque o desenho da etiqueta é
+   sempre o mesmo símbolo. Copiá-la seria trazer superfície sem função.
+
+   A FOLHA FICA MAIS LARGA quando carrega as duas listas. As outras folhas desta tela têm
+   440 pixels, que é a medida de um formulário curto; duas colunas de catálogo dentro
+   disso viram duas colunas de trinta pixels. */
+.etq-larga{width:min(760px,100%)}
+/* AS PASTILHAS DE ETIQUETA, marcando e desmarcando ao clique. A não escolhida fica
+   apagada e mantém o mesmo desenho: uma caixa de seleção ao lado de cada nome daria a
+   mesma função e roubaria do olho a etiqueta, que é o que ele já reconhece nas outras
+   telas do sistema. */
+.etq-escolha{display:flex;flex-wrap:wrap;gap:7px}
+.etq-op{border:0;background:none;padding:0;cursor:pointer;border-radius:99px;
+        opacity:.34;filter:grayscale(1);transition:opacity .14s,filter .14s}
+.etq-op:hover{opacity:.7;filter:grayscale(.3)}
+.etq-op.on{opacity:1;filter:none}
+.etq-op:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Criar e apagar são raros; marcar um perfil é o que se faz toda hora. Abertas por
+   padrão, as duas listas empurrariam para baixo o botão de salvar, que é o que trouxe a
+   pessoa até aqui. */
+.etq-gerir{margin-top:20px;padding-top:16px;border-top:1px solid var(--rule-solid)}
+.etq-gerir > summary{list-style:none;cursor:pointer;font-size:13px;font-weight:600;
+  color:var(--muted);display:flex;align-items:center;gap:8px;transition:color .14s}
+.etq-gerir > summary::-webkit-details-marker{display:none}
+.etq-gerir > summary::before{content:"";width:7px;height:7px;flex:none;
+  border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+  transform:rotate(-45deg);transition:transform .18s}
+.etq-gerir[open] > summary::before{transform:rotate(45deg)}
+.etq-gerir > summary:hover{color:var(--ink)}
+.etq-gerir[open] > summary{margin-bottom:14px;color:var(--ink)}
+/* AS DUAS CAIXAS TERMINAM JUNTAS, com a linha de criar encostada no pé. Uma lista de
+   dois mercados ao lado de uma de seis etiquetas deixaria as caixas com alturas
+   diferentes e os dois campos de escrever em alturas diferentes. */
+.cfg-duas{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+.cfg-duas > .caixa{display:flex;flex-direction:column;align-self:stretch;padding:16px}
+.cfg-duas > .caixa > .cfg-cat{flex:1}
+.cfg-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cfg-topo h3{margin:0;font-size:14px;font-weight:700}
+.cfg-topo .dir{margin-left:auto;display:flex;align-items:center;gap:8px}
+.cfg-cat-conta{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.cfg-cat{display:flex;flex-direction:column;gap:0}
+.cfg-cat-lista{flex:1;min-height:0}
+.cfg-cat-l{display:flex;align-items:center;gap:11px;padding:9px 0;min-height:44px;
+           border-top:1px solid color-mix(in srgb,var(--rule-solid) 45%,transparent)}
+.cfg-cat-l:first-child{border-top:0}
+.cfg-cat-n{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;
+           white-space:nowrap}
+.cfg-cat-uso{margin-left:auto;font-size:12px;color:var(--soft);white-space:nowrap;
+             font-variant-numeric:tabular-nums}
+/* O XIS SÓ APARECE AO PASSAR O MOUSE, para a lista parada ser uma lista e não um painel
+   de controle cheio de xis. */
+.cfg-cat-x{display:flex;align-items:center;justify-content:center;width:26px;height:26px;
+           flex:0 0 26px;border:0;border-radius:7px;background:transparent;
+           color:var(--soft);cursor:pointer;padding:0;opacity:0;
+           transition:opacity .15s,background .15s,color .15s}
+.cfg-cat-l:hover .cfg-cat-x{opacity:1}
+.cfg-cat-x:hover{background:color-mix(in srgb,var(--vermelho) 12%,transparent);
+                 color:var(--vermelho)}
+.cfg-cat-x svg{width:15px;height:15px}
+.cfg-cat-l.esperando{opacity:.5}
+/* O painel de mover abre dentro da própria linha, numa segunda fileira, e não numa caixa
+   flutuante: quem está decidindo o destino precisa continuar vendo, logo acima, o nome
+   que vai sumir. */
+.cfg-cat-l.cfg-abrindo{flex-wrap:wrap;padding-bottom:12px}
+.cfg-mover{flex:0 0 100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+           padding-top:11px;font-size:12.5px;color:var(--muted)}
+.cfg-mover > span{flex:0 0 100%;margin-bottom:-2px}
+.cfg-mover .cfg-cat-btn{height:32px;padding:0 13px;font-size:12.5px}
+.cfg-cat-btn.cfg-fraco{background:transparent;color:var(--muted);
+                       border:1px solid var(--rule-solid)}
+/* APAGAR É VERMELHO: é a única ação desta folha que tira alguma coisa, e ela fica ao
+   lado de um Cancelar. Sem cor, os dois botões pedem a mesma atenção. */
+.cfg-cat-btn.cfg-vermelho{background:var(--vermelho);color:#FFFFFF}
+.cfg-sel{flex:1;min-width:140px}
+.cfg-sel .psel-b{width:100%;height:32px;padding:0 10px;justify-content:space-between;
+                 gap:8px;border:1px solid var(--rule-solid);border-radius:8px;
+                 background:var(--branco);color:var(--ink);font-size:13px;
+                 font-weight:500;transition:border-color .15s}
+.cfg-sel .psel-b:hover{border-color:var(--ink)}
+.cfg-sel .psel-b > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cfg-sel .psel-b svg{flex:0 0 12px}
+.cfg-sel .psel-menu{left:0;right:auto;min-width:100%;max-height:240px;overflow:auto}
+/* O seletor de mercado do perfil é o mesmo componente, e ocupa a linha inteira. */
+#etq_merc{width:100%}
+#etq_merc .psel-b{height:38px}
+/* A linha de criar: o campo cresce, o botão não. */
+.cfg-cat-novo{display:flex;align-items:center;gap:8px;margin-top:14px;
+              padding-top:14px;border-top:1px solid var(--rule-solid)}
+.cfg-cat-novo input{flex:1;min-width:0;height:34px;padding:0 11px;font:inherit;
+                    font-size:13.5px;color:var(--ink);background:var(--branco);
+                    border:1px solid var(--rule-solid);border-radius:9px;outline:none;
+                    transition:border-color .15s}
+.cfg-cat-novo input:focus{border-color:var(--ink)}
+.cfg-cat-novo input::placeholder{color:var(--soft)}
+.cfg-cat-btn{height:34px;padding:0 15px;font:inherit;font-size:13px;font-weight:600;
+             color:var(--branco);background:var(--ink);border:0;border-radius:9px;
+             cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.cfg-cat-btn:hover{opacity:.85}
+.cfg-cat-btn:disabled{opacity:.4;cursor:default}
+.cfg-cat-vazio{padding:18px 0;font-size:13px;color:var(--soft)}
+/* O CARREGANDO: roda, três pontinhos e cronômetro. Ele existe porque a espera é real: o
+   pedido vai até a esteira do GitHub, que roda numa máquina alugada e leva de trinta
+   segundos a um minuto. Uma tela parada nesse intervalo é indistinguível de uma travada. */
+.cfg-cat-diz{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;
+             line-height:1.5;color:var(--soft);min-height:19px}
+.cfg-cat-diz.cfg-indo{color:var(--muted)}
+.cfg-cat-diz.ruim{color:var(--vermelho)}
+.cfg-cat-diz.bom{color:var(--verde)}
+.cfg-girando{width:13px;height:13px;flex:0 0 13px;border-radius:50%;
+             border:2px solid color-mix(in srgb,var(--ink) 14%,transparent);
+             border-top-color:var(--ink);animation:cfg-gira .7s linear infinite}
+@keyframes cfg-gira{to{transform:rotate(360deg)}}
+.cfg-pontos{display:flex;align-items:flex-end;gap:2px;margin-left:-4px}
+.cfg-pontos i{width:3px;height:3px;border-radius:50%;background:currentColor;
+              animation:cfg-pisca 1.2s infinite}
+.cfg-pontos i:nth-child(2){animation-delay:.18s}
+.cfg-pontos i:nth-child(3){animation-delay:.36s}
+@keyframes cfg-pisca{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.cfg-cronometro{margin-left:2px;font-variant-numeric:tabular-nums;font-weight:600}
+@media(prefers-reduced-motion:reduce){.cfg-girando,.cfg-pontos i{animation:none}}
+@media(max-width:700px){.cfg-duas{grid-template-columns:1fr}}
+/* O CAMINHO DA PASTA, NA ÚLTIMA LINHA DO REGISTRO.
+
+   Ele é um link de verdade, mas não para `file://`: o navegador proíbe uma página `https`
+   de navegar para um arquivo local, e o clique não faria nada, sem nem erro aparecer.
+   O endereço é `estudio://leva/26`, próprio deste projeto e registrado no Windows pelo
+   `abrir.py`, que traduz o número em pasta e chama o Explorador.
+
+   O botão de copiar existe porque esse endereço só está registrado nesta máquina: aberta
+   de outro computador, a página continua entregando o caminho para levar na mão. */
+.liv-pasta{color:var(--accent);text-decoration:none;border-bottom:1px dashed
+           color-mix(in srgb,var(--accent) 45%,transparent);word-break:break-all}
+.liv-pasta:hover{border-bottom-style:solid}
+.liv-copiar{margin-left:8px;padding:2px 8px;font:inherit;font-size:11px;font-weight:600;
+            color:var(--muted);background:transparent;border:1px solid var(--rule-solid);
+            border-radius:99px;cursor:pointer;white-space:nowrap;vertical-align:1px;
+            transition:color .14s,border-color .14s}
+.liv-copiar:hover{color:var(--ink);border-color:var(--ink)}
+/* A ETAPA 8 ENQUANTO ELA ACONTECE.
+
+   Ela é a única do caminho que roda no computador do Gabriel e não na esteira, então é a
+   única que a esteira não anuncia ao começar. O registro parava no 7 durante os dois ou
+   três minutos da busca, sem uma linha dizendo por quê, e a leitura era de log
+   incompleto. A linha nasce apagada e com uma roda girando, e é trocada pela definitiva,
+   com o link da pasta, assim que a busca termina. */
+.liv-ev.indo{opacity:.72}
+.liv-ev.indo .oque > b{color:var(--muted)}
+.liv-girando{display:inline-block;width:12px;height:12px;border-radius:50%;
+             border:2px solid color-mix(in srgb,var(--ink) 14%,transparent);
+             border-top-color:var(--accent);animation:cfg-gira .7s linear infinite;
+             vertical-align:-2px}
+@media(prefers-reduced-motion:reduce){.liv-girando{animation:none}}
+/* ====================================================== A ABA DE EDIÇÃO
+
+   TRÊS TELAS, uma de cada vez: a portaria, a escolha da leva e a oficina. A primeira
+   versão punha tudo na mesma página e o Gabriel reprovou em 19/08: a escolha da leva
+   ficava solta no meio do passo 1, junto do trilho e da galeria, e nada dizia por onde
+   começar. Tela de começo tem de ser tela de começo. */
+#ed_portaria[hidden],#ed_escolha[hidden],#ed_oficina[hidden]{display:none}
+/* ---------------------------------------------------------- 1 · a portaria */
+.ed-porteira{min-height:calc(100vh - 210px);display:grid;place-items:center;
+  padding:40px 0}
+.ed-porteira-in{width:min(560px,100%)}
+.ed-porteira h1,.ed-escolha h1{margin:0 0 8px;font-size:30px;font-weight:800;
+  letter-spacing:-.03em;line-height:1.15}
+.ed-porteira .nota,.ed-escolha .nota{margin-bottom:28px;font-size:14.5px;line-height:1.55}
+/* O COMEÇO É UM SÓ E APARECE COMO UM SÓ: caixa larga, ícone à esquerda, seta à direita.
+   Botão do tamanho dos outros da tela ficaria à mesma altura da lista de rascunhos, e
+   as duas coisas não têm o mesmo peso. */
+.ed-comeco{display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  padding:20px 22px;border-radius:var(--r-lg);border:1px solid var(--accent);
+  background:var(--accent-tint);color:var(--ink);cursor:pointer;font:inherit;
+  transition:transform .16s,box-shadow .16s}
+.ed-comeco:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.20)}
+.ed-comeco-ico{flex:0 0 44px;width:44px;height:44px;display:grid;place-items:center;
+  border-radius:13px;background:var(--accent);color:#fff}
+.ed-comeco-ico svg{width:21px;height:21px}
+.ed-comeco-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ed-comeco-txt b{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.ed-comeco-txt span{font-size:13px;color:var(--muted)}
+.ed-comeco-seta{width:18px;height:18px;flex:none;color:var(--accent)}
+.ed-rascunhos{margin-top:34px}
+.ed-rascunhos-cab{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.ed-rascunhos-cab h3{margin:0;font-size:12.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em}
+.ed-rascunhos-cab .nota{margin:0 0 0 auto;font-size:12px}
+.ed-vazio{padding:20px 0;font-size:13.5px;line-height:1.55;color:var(--soft)}
+.ed-rasc{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;
+  border:1px solid var(--rule-solid);border-radius:var(--r-md);background:var(--branco);
+  margin-bottom:7px;transition:border-color .14s}
+.ed-rasc:hover{border-color:var(--accent)}
+.ed-rasc-n{font-size:14px;font-weight:700}
+.ed-rasc-quem{font-size:12.5px;color:var(--muted);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ed-rasc-onde{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.ed-rasc-quando{font-size:11.5px;color:var(--soft);white-space:nowrap}
+/* O XIS SÓ APARECE AO PASSAR O MOUSE, para a lista parada ser uma lista e não um painel
+   cheio de xis. Mesmo desenho do catálogo de mercados. */
+.ed-rasc-x{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border:0;
+  border-radius:7px;background:transparent;color:var(--soft);cursor:pointer;padding:0;
+  opacity:0;transition:opacity .14s,background .14s,color .14s}
+.ed-rasc:hover .ed-rasc-x{opacity:1}
+.ed-rasc-x:hover{background:color-mix(in srgb,var(--vermelho) 12%,transparent);
+  color:var(--vermelho)}
+.ed-rasc-x svg{width:14px;height:14px}
+/* ---------------------------------------------------------- 2 · a escolha */
+.ed-escolha{min-height:calc(100vh - 210px);padding:40px 0}
+.ed-escolha-in{width:min(760px,100%);margin:0 auto}
+.ed-voltar{display:inline-flex;align-items:center;gap:5px;margin-bottom:22px;padding:0;
+  border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--muted);
+  cursor:pointer;transition:color .14s}
+.ed-voltar:hover{color:var(--ink)}
+.ed-voltar svg{width:15px;height:15px}
+.ed-voltar.mini{margin-bottom:18px;font-size:12px}
+.ed-levas{display:flex;flex-direction:column;gap:10px}
+/* A LEVA COMO LINHA LARGA, e não como cartãozinho quadrado: o Gabriel achou a primeira
+   versão feia, e ela era mesmo. Um cartão de duzentos pixels com quatro linhas de texto
+   empilhadas não tem hierarquia nenhuma. Aqui a cara do perfil abre a linha, o número da
+   leva domina, e o resto corre em uma linha só. */
+.ed-leva{display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  padding:16px 20px;border-radius:var(--r-lg);border:1px solid var(--rule-solid);
+  background:var(--branco);box-shadow:var(--sombra);cursor:pointer;font:inherit;
+  color:var(--ink);transition:border-color .16s,transform .16s,box-shadow .16s}
+.ed-leva:hover{border-color:var(--accent);transform:translateY(-2px);
+  box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.ed-leva.indo{border-color:var(--accent);transform:scale(.985)}
+.ed-leva-caras{display:flex;flex:none}
+.ed-leva-caras .pcard-retrato{flex:0 0 46px;width:46px;height:46px}
+.ed-leva-caras .pcard-retrato + .pcard-retrato{margin-left:-14px}
+.ed-leva-caras .pcard-avatar{border:2px solid var(--branco);font-size:16px}
+.ed-leva-corpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ed-leva-n{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.ed-leva-quem{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.ed-leva-num{margin-top:4px;font-size:12.5px;color:var(--muted)}
+.ed-leva-num b{font-size:14px;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.ed-leva-num i{font-style:normal;color:var(--soft);margin:0 3px}
+.ed-leva-pe{flex:none;font-size:11px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--verde);white-space:nowrap}
+/* LEVA QUE AINDA NÃO DESCEU APARECE, apagada e dizendo por quê. Escondê-la faria o
+   Gabriel procurar uma leva que ele sabe que existe. */
+.ed-leva.longe{opacity:.5;cursor:not-allowed;box-shadow:none}
+.ed-leva.longe:hover{border-color:var(--rule-solid);transform:none;box-shadow:none}
+.ed-leva.longe .ed-leva-pe{color:var(--soft)}
+/* ---------------------------------------------------------- 3 · a oficina */
+.ed-tela{display:grid;grid-template-columns:266px 1fr;gap:34px;align-items:start}
+/* O TRILHO É TÃO ALTO QUANTO O VIDRO, e gruda enquanto a galeria rola por baixo.
+   Sem a altura fixa, `flex:1` nos passos não tem o que dividir e a espinha volta
+   a ser a caixinha de canto que o Gabriel reprovou duas vezes. */
+.ed-trilho{position:sticky;top:88px;display:flex;flex-direction:column;
+  height:calc(100vh - 150px);min-height:420px}
+/* O TRILHO É UMA ESPINHA QUE DESCE A TELA INTEIRA.
+
+   Terceira tentativa, e é a do rabisco que o Gabriel mandou em 19/08/2026: uma linha
+   vertical longa correndo pela lateral esquerda, com os números espalhados por ela, um
+   perto do topo, o seguinte mais abaixo, e assim por diante.
+
+   AS DUAS ANTERIORES ERRARAM O TAMANHO, não o desenho. A primeira era botão com ícone
+   num quadrado, que é menu. A segunda já tinha a linha que preenche, mas comprimida no
+   alto: dois passos dentro de duzentos e cinquenta pixels leem como uma caixinha de
+   canto, não como percurso. O que faz a coisa virar percurso é ela ocupar o caminho.
+
+   Por isso cada passo tem `flex:1`: eles dividem a altura do vidro entre si, e a linha
+   de um encosta na do outro, formando uma espinha contínua do topo ao pé da tela. */
+/* O PASSO NUNCA ENCOLHE ABAIXO DO QUE ELE TEM DENTRO.
+
+   ERA `flex:1` SECO, que e' `flex:1 1 0%`: o `1` do meio manda encolher, e o trilho
+   tinha altura travada em `100vh - 78px` dividida em quatro. Quando o passo 3 ganhou a
+   quinta subetapa, o conteudo passou a pedir 210 pixels num espaco de 184, e as 26 de
+   diferenca foram parar EM CIMA do passo 4: "peca a peca" escrito por cima de "04 A
+   legenda". Medido no navegador, nao estimado.
+
+   `flex:1 0 auto` MANTEM O CRESCER E TIRA O ENCOLHER. O trilho continua distribuindo a
+   sobra entre os quatro passos, mas nenhum deles fica menor do que precisa. */
+.ed-ponto{display:flex;flex-direction:column;cursor:pointer;opacity:.4;flex:1 0 auto;
+  min-height:0;transition:opacity .22s}
+.ed-ponto.ativo{opacity:1}
+.ed-ponto-n{margin:0 0 10px 24px;font-size:26px;font-weight:800;letter-spacing:-.03em;
+  color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
+.ed-ponto-corpo{display:flex;gap:18px;flex:1;min-height:0}
+/* A BARRA: um trilho apagado e, por cima, o preenchido, cuja altura é a medida do
+   avanço. Ela cresce com o passo, então numa tela alta ela fica longa mesmo. */
+.ed-barra{position:relative;flex:0 0 2px;width:2px;align-self:stretch;min-height:70px}
+.ed-barra i{position:absolute;inset:0;background:var(--rule-solid);border-radius:2px;
+  transform-origin:top}
+.ed-barra b{position:absolute;top:0;left:0;width:2px;border-radius:2px;
+  background:var(--accent);transition:height .42s cubic-bezier(.16,1,.3,1)}
+.ed-ponto-txt{padding-bottom:20px}
+.ed-ponto-txt h3{margin:-4px 0 3px;font-size:16px;font-weight:700;letter-spacing:-.01em}
+.ed-ponto-txt p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+/* A ENTRADA NA OFICINA: a linha DESENHA de cima para baixo, e os passos aparecem atrás
+   dela. Não é enfeite, é o que separa "escolhi a leva" de "comecei a editar". */
+@keyframes ed-linha{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes ed-sobe{from{opacity:0;transform:translateY(18px)}
+                   to{opacity:.4;transform:none}}
+@keyframes ed-sobe-ativo{from{opacity:0;transform:translateY(18px)}
+                         to{opacity:1;transform:none}}
+.ed-trilho.entrou .ed-barra i{animation:ed-linha .38s cubic-bezier(.16,1,.3,1) both}
+.ed-trilho.entrou .ed-ponto{animation:ed-sobe .34s cubic-bezier(.16,1,.3,1) both}
+.ed-trilho.entrou .ed-ponto.ativo{animation-name:ed-sobe-ativo}
+.ed-trilho.entrou .ed-ponto:nth-of-type(1) .ed-barra i{animation-delay:.05s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(2){animation-delay:.06s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(2) .ed-barra i{animation-delay:.30s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(3){animation-delay:.12s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(3) .ed-barra i{animation-delay:.55s}
+@media(prefers-reduced-motion:reduce){
+  .ed-trilho.entrou .ed-ponto,.ed-trilho.entrou .ed-barra i{animation:none}
+  .ed-barra b{transition:none}
+}
+.ed-porvir{margin:6px 0 0 20px;padding-top:14px;border-top:1px dashed var(--rule-solid);
+  font-size:11.5px;line-height:1.5;color:var(--soft)}
+.ed-cab{margin-bottom:20px}
+.ed-cab h2{margin:0 0 5px;font-size:22px;font-weight:700;letter-spacing:-.02em}
+/* O `.ed-pe` ESTAVA ESCRITO DUAS VEZES neste arquivo, com valores diferentes, e a
+   segunda vencia em silencio. Ficou a de baixo, que e' a que estava valendo; esta aqui
+   guarda so' o que ela nao tinha. */
+.ed-pe .nota{margin-right:auto}
+.ed-etapa[hidden]{display:none}
+/* `hidden` NÃO VENCE QUEM TEM `display` ESCRITO, e o pé do passo 1 tem: sem esta linha o
+   botão de continuar aparecia antes de haver leva escolhida. */
+.ed-pe[hidden]{display:none}
+/* ------------------------------------------------------ a porta da pasta */
+.ed-porta{margin-bottom:20px}
+.ed-caminho+.nota.mini{margin-top:10px}
+.ed-caminho{margin:12px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,
+  monospace;font-size:12.5px;color:var(--ink);background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:8px;padding:9px 11px;
+  word-break:break-all}
+/* ------------------------------------------------------ a galeria de peças */
+.ed-carregando{padding:26px 0;font-size:13.5px;color:var(--muted)}
+.ed-galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));
+  gap:14px}
+.ed-peca{border-radius:var(--r-md);overflow:hidden;background:var(--branco);
+  border:1px solid var(--rule-solid);box-shadow:var(--sombra);cursor:pointer;
+  transition:border-color .16s}
+.ed-peca:hover{border-color:var(--accent)}
+/* A PROPORÇÃO É FIXA NA MOLDURA, e não deixada ao vídeo: reel é 9 por 16, mas dois dos
+   arquivos da leva 28 vêm em 360 por 640. Sem a moldura fixa, a grade fica com cartão de
+   altura diferente em cada coluna. */
+.ed-quadro{position:relative;aspect-ratio:9/16;background:#000;overflow:hidden}
+.ed-quadro video{width:100%;height:100%;object-fit:cover;display:block}
+.ed-play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;
+  background:rgba(0,0,0,.22);opacity:.9;transition:opacity .14s}
+.ed-play svg{width:34px;height:34px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.ed-peca:hover .ed-play{opacity:1}
+.ed-quadro.tocando .ed-play{opacity:0}
+/* TIRAR UM REEL DA LEVA. O botao mora no canto do quadro e so' aparece no passe do
+   mouse, como o de tocar: a galeria e' para olhar video, e nao para olhar botao.
+   No toque nao ha' passe do mouse, entao ali ele fica sempre visivel. */
+.ed-tira{position:absolute;top:6px;right:6px;width:26px;height:26px;border:0;
+  border-radius:50%;background:rgba(0,0,0,.62);color:#fff;cursor:pointer;
+  display:grid;place-items:center;opacity:0;transition:opacity .14s,background .14s;
+  padding:0;line-height:0}
+.ed-tira svg{width:14px;height:14px}
+.ed-peca:hover .ed-tira,.ed-peca:focus-within .ed-tira{opacity:1}
+.ed-tira:hover{background:var(--perigo,#c0392b)}
+@media (hover:none){.ed-tira{opacity:1}}
+/* A PECA FORA DA LEVA CONTINUA NA TELA, apagada e com o botao virado para voltar.
+   Sumir com ela faria a fileira dancar a cada clique, e tirar por engano viraria uma
+   peca perdida no meio de cento e sete. */
+/* O APAGADO VAI NO VIDEO, E NAO NO CARTAO INTEIRO. Baixando a opacidade do cartao,
+   o botao de trazer de volta apagava junto e virava um fantasma cinza em cima de
+   um video cinza: o desfazer tem de ficar legivel, senao tirar por engano nao tem
+   volta visivel. */
+.ed-peca.fora{border-style:dashed}
+.ed-peca.fora .ed-quadro video{opacity:.22;filter:grayscale(1)}
+.ed-peca.fora .ed-quadro{background:var(--branco)}
+.ed-peca.fora .ed-dur{opacity:.3}
+.ed-peca.fora .ed-tira{opacity:1;background:rgba(0,0,0,.72)}
+.ed-peca.fora .ed-tira:hover{background:var(--accent)}
+.ed-peca.fora .ed-play{display:none}
+.ed-fora-linha{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  margin:-4px 0 14px;font-size:13px;color:var(--fraco)}
+/* O `display` PRECISA DE QUEM O DESLIGUE. Sem esta linha o atributo de esconder
+   nao esconde nada, e a linha ficaria na tela mesmo sem ninguem ter tirado peca
+   nenhuma. E' a trava 1 do CLAUDE.md, e a conferencia pegou isto na hora. */
+.ed-fora-linha[hidden]{display:none}
+.ed-dur{position:absolute;right:6px;bottom:6px;padding:2px 6px;border-radius:6px;
+  background:rgba(0,0,0,.62);color:#fff;font-size:10.5px;font-weight:600;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+/* AQUI HAVIA UM RODAPÉ POR PEÇA, com o índice de desempenho e o código do post. Saiu
+   por decisão do Gabriel em 19/08/2026: os dois já cumpriram o papel deles na régua, e
+   aqui o que se faz é olhar imagem. O índice continua acessível ao pousar o mouse, sem
+   ocupar espaço permanente. A peça agora é o vídeo e mais nada. */
+
+/* A CONTAGEM DE PEÇAS EM DESTAQUE, ao lado do nome da leva. Ela estava dentro de uma
+   frase comprida que explicava o índice de cada peça, e explicação de coisa que não
+   existe mais é peso morto. */
+.ed-conta{display:flex;align-items:baseline;gap:7px;margin-top:4px}
+.ed-conta b{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
+  line-height:1;font-variant-numeric:tabular-nums}
+.ed-conta span{font-size:14px;color:var(--muted)}
+@media(max-width:900px){
+  .ed-tela{grid-template-columns:1fr}
+  .ed-trilho{position:static;margin-bottom:24px}
+  .ed-barra{min-height:44px}
+  .ed-ponto-txt{padding-bottom:16px}
+}
+/* ================================================ O MODO FOCADO DA OFICINA
+
+   ESCOLHIDA A LEVA, O SISTEMA SAI DE CENA. Pedido do Gabriel em 19/08/2026: editar
+   quarenta e uma peças é trabalho de tela cheia, e a barra com Mineração, Baixar e
+   Edição não serve para nada enquanto ele está dentro de uma leva. Sai a barra, sai o
+   rodapé, e a oficina ocupa o vidro inteiro.
+
+   O cabeçalho SOBE em vez de sumir, e o rodapé desce. Elemento que desaparece de um
+   quadro para o outro deixa a página dando um pulo; deslizando para fora, o olho
+   acompanha para onde ele foi e sabe que ele volta pelo mesmo caminho. */
+.nav-wrap{transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s}
+.ed-focado .nav-wrap{transform:translateY(-110%);opacity:0;pointer-events:none}
+/* O RODAPE VOLTA A APARECER NA OFICINA.
+
+   ESCONDE-LO FOI DECISAO MINHA, e ele desfez: "o layout ta' me jogando la' pra baixo,
+   nao tem nem rodape. Pega o padrao de rodape que tem la' no Social Track e aplica
+   aqui". O padrao ja' estava aqui, montado, e era esta linha que o apagava. Pagina que
+   termina no ar parece pagina quebrada, e ele leu como quebrada porque estava. */
+.ed-focado .rodape-pagina{margin-top:44px}
+/* O corpo perde a margem de leitura: aqui não se lê, se olha material. */
+.ed-focado .corpo{max-width:none;padding:0}
+.ed-focado{overflow-x:hidden}
+/* A oficina toma a altura toda e traz de volta o respiro pelas laterais, agora dela e
+   não da página. */
+.ed-focado .ed-tela{min-height:100vh;padding:26px clamp(20px,3vw,44px) 60px;
+  grid-template-columns:250px 1fr;gap:40px;position:relative}
+/* A ENTRADA: tudo sobe junto, e é isto que diz "começou". Sem ela a troca de tela é um
+   pisca, e a oficina parece que já estava aberta o tempo todo. */
+@keyframes ed-entra{from{opacity:0;transform:translateY(20px)}
+                    to{opacity:1;transform:none}}
+.ed-focado .ed-tela{animation:ed-entra .26s cubic-bezier(.16,1,.3,1) both}
+/* A SAÍDA FICA NO ALTO E À DIREITA, onde o botão de fechar mora em qualquer tela cheia.
+   Com o cabeçalho fora, ela é o único caminho de volta desenhado. */
+.ed-sair{position:absolute;top:22px;right:clamp(20px,3vw,44px);z-index:5;
+  display:inline-flex;align-items:center;gap:7px;padding:8px 14px 8px 11px;
+  border-radius:99px;border:1px solid var(--rule-solid);background:var(--branco);
+  color:var(--muted);cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;
+  transition:color .14s,border-color .14s}
+.ed-sair:hover{color:var(--ink);border-color:var(--ink)}
+.ed-sair svg{width:14px;height:14px}
+.ed-tela:not(.x) .ed-sair{opacity:.75}
+.ed-sair:hover{opacity:1}
+/* A GALERIA OCUPA A LARGURA QUE SOBRA, e é isso que o rabisco do Gabriel mostra: fileira
+   cheia de peças, uma atrás da outra, descendo até acabarem. A versão anterior prendia
+   tudo em 1.180 pixels e sobrava tela preta dos dois lados, que é o oposto de tela cheia.
+
+   As colunas nascem da largura disponível: peça de 172 pixels no mínimo, e o navegador
+   encaixa quantas couberem. Num monitor largo dá sete ou oito por fileira. */
+.ed-focado .ed-palco{width:100%;min-width:0}
+.ed-focado .ed-galeria{grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}
+.ed-focado .ed-cab{text-align:left}
+/* AS PEÇAS SOBEM UMA ATRÁS DA OUTRA. O atraso é calculado pela posição na grade, com um
+   teto: numa leva de quarenta e uma, atraso crescente até o fim faria a última entrar
+   dois segundos depois da primeira, e aí não é animação, é espera. */
+@keyframes ed-peca-sobe{from{opacity:0;transform:translateY(12px)}
+                        to{opacity:1;transform:none}}
+.ed-galeria.subindo .ed-peca{animation:ed-peca-sobe .3s cubic-bezier(.16,1,.3,1) both}
+.ed-galeria.subindo .ed-peca:nth-child(1){animation-delay:.02s}
+.ed-galeria.subindo .ed-peca:nth-child(2){animation-delay:.04s}
+.ed-galeria.subindo .ed-peca:nth-child(3){animation-delay:.06s}
+.ed-galeria.subindo .ed-peca:nth-child(4){animation-delay:.08s}
+.ed-galeria.subindo .ed-peca:nth-child(5){animation-delay:.10s}
+.ed-galeria.subindo .ed-peca:nth-child(6){animation-delay:.12s}
+.ed-galeria.subindo .ed-peca:nth-child(7){animation-delay:.14s}
+.ed-galeria.subindo .ed-peca:nth-child(8){animation-delay:.16s}
+.ed-galeria.subindo .ed-peca:nth-child(9){animation-delay:.18s}
+.ed-galeria.subindo .ed-peca:nth-child(10){animation-delay:.20s}
+.ed-galeria.subindo .ed-peca:nth-child(n+11){animation-delay:.20s}
+/* O TRILHO GRUDA NO ALTO DA TELA, e não embaixo do cabeçalho que já não existe.
+   E ganha a altura toda: sem cabeçalho sobram mais cem pixels de vidro. */
+/* ALTURA MINIMA, E NAO ALTURA TRAVADA. Travada, o trilho nao tinha para onde crescer
+   quando uma subetapa nova entrasse, e transbordava por baixo em silencio. */
+.ed-focado .ed-trilho{top:26px;min-height:calc(100vh - 78px)}
+@media(prefers-reduced-motion:reduce){
+  .ed-focado .ed-tela,.ed-galeria.subindo .ed-peca{animation:none}
+  .nav-wrap{transition:none}
+}
+@media(max-width:900px){
+  .ed-focado .ed-tela{grid-template-columns:1fr;padding-top:64px}
+  .ed-sair{top:14px}
+}
+/* A TELA QUE SAI. Sem ela a troca é um corte seco: uma some e a outra aparece no mesmo
+   quadro, e por mais bonita que seja a entrada da seguinte, o olho perde o fio. */
+.ed-porteira,.ed-escolha,.ed-tela{transition:opacity .13s ease,transform .13s ease}
+.ed-porteira.saindo,.ed-escolha.saindo,.ed-tela.saindo{opacity:0;transform:translateY(-10px)}
+@media(prefers-reduced-motion:reduce){
+  .ed-porteira,.ed-escolha,.ed-tela{transition:none}
+}
+/* ==================================================================== O PASSO 2
+
+   O TEMPLATE É O FUNDO, O VÍDEO VAI POR CIMA. Vale repetir aqui porque o estilo do
+   enquadramento só faz sentido sabendo disso: o `enq-palco` desenha o template no
+   tamanho real da peça e o vídeo é um retângulo solto dentro dele, que se arrasta. */
+
+.acao.mini{height:30px;padding:0 12px;font-size:12.5px}
+.acao.mini.ativa{border-color:var(--accent);background:var(--accent-tint);
+  color:var(--accent);font-weight:600}
+/* ---------------------------------------------------- os sub-passos no trilho
+
+   ELES SÓ EXISTEM DENTRO DO PASSO 2. Fora dele o trilho volta a ser uma linha por
+   passo: quatro sub-itens abertos o tempo todo transformariam a espinha num índice. */
+.ed-sub{list-style:none;margin:10px 0 0;padding:0;display:none;flex-direction:column;
+  gap:7px}
+/* AS SUBETAPAS APARECEM NO PASSO EM QUE ELE ESTA', e nao no passo 3.
+
+   A REGRA NASCEU PRESA AO 3 porque so' o 3 tinha subetapas. Quando o 4 ganhou as
+   dele, em 23/08/2026, elas simplesmente nao apareciam: ele entrava no passo 4 e o
+   trilho continuava mostrando a lista do 3, com "peca a peca" em verde. A tela
+   dizia que ele estava num lugar e o conteudo era de outro.
+
+   E `ativo` NAO SERVE PARA ISTO: ele marca todo passo ja' vencido, entao o 3
+   continua ativo quando ele esta' no 4. Quem responde "e' aqui que eu estou" e'
+   `agora`, e e' um passo so' por vez. */
+.ed-ponto.agora .ed-sub{display:flex}
+.ed-sub li{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);
+  cursor:pointer;opacity:.55;transition:opacity .18s,color .18s}
+.ed-sub li i{flex:0 0 7px;width:7px;height:7px;border-radius:50%;
+  border:1.5px solid currentColor;transition:background .18s,transform .18s}
+.ed-sub li:hover{opacity:.85}
+.ed-sub li.feito{opacity:1;color:var(--ink)}
+.ed-sub li.feito i{background:var(--rule-solid);border-color:var(--rule-solid)}
+.ed-sub li.agora{opacity:1;color:var(--accent);font-weight:600}
+.ed-sub li.agora i{background:var(--accent);border-color:var(--accent);
+  transform:scale(1.25)}
+.ed-sub-tela[hidden]{display:none}
+@keyframes sub-entra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.ed-sub-tela{animation:sub-entra .24s cubic-bezier(.16,1,.3,1) both}
+@media(prefers-reduced-motion:reduce){.ed-sub-tela{animation:none}}
+/* ---------------------------------------------------- 2.1 · o acervo de templates */
+.tpl-abas{display:flex;gap:4px;padding:4px;background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:var(--r-md);width:max-content;
+  margin-bottom:16px}
+.tpl-aba{height:32px;padding:0 15px;border:0;background:none;border-radius:7px;
+  font:inherit;font-size:13px;color:var(--muted);cursor:pointer;transition:.16s}
+.tpl-aba:hover{color:var(--ink)}
+.tpl-aba.ativa{background:var(--branco);color:var(--ink);font-weight:600;
+  box-shadow:var(--sombra)}
+.tpl-painel[hidden]{display:none}
+.tpl-filtros{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.tpl-filtros .cfg-sel{flex:0 0 200px;min-width:0}
+.tpl-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:14px}
+.tpl-cartao{border:1px solid var(--rule-solid);border-radius:var(--r-md);overflow:hidden;
+  background:var(--branco);cursor:pointer;transition:border-color .16s,transform .16s,
+  box-shadow .16s;position:relative}
+.tpl-cartao:hover{transform:translateY(-2px);box-shadow:var(--sombra);
+  border-color:var(--ink)}
+.tpl-cartao.ativo{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-tint)}
+.tpl-cartao-img{aspect-ratio:9/16;background:var(--paper-2);display:block;width:100%;
+  object-fit:contain}
+.tpl-cartao-pe{padding:9px 11px 11px}
+.tpl-cartao-pe b{display:block;font-size:13px;font-weight:650;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tpl-cartao-rot{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.tpl-cartao-rot span{font-size:10.5px;padding:2px 7px;border-radius:999px;
+  background:var(--paper-2);border:1px solid var(--rule-solid);color:var(--muted)}
+.tpl-cartao-x{position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;
+  border:0;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;display:none;
+  align-items:center;justify-content:center;padding:0}
+.tpl-cartao:hover .tpl-cartao-x{display:flex}
+.tpl-cartao-x svg{width:13px;height:13px}
+.tpl-vazio{grid-column:1/-1;padding:34px;text-align:center;color:var(--muted);
+  font-size:13.5px;border:1px dashed var(--rule-solid);border-radius:var(--r-lg)}
+/* ---------------------------------------------------- 2.1 · subir um novo */
+.tpl-subir{display:grid;grid-template-columns:260px 1fr;gap:22px;align-items:start}
+.tpl-solta{display:block;border:1.5px dashed var(--rule-solid);border-radius:var(--r-lg);
+  background:var(--paper-2);cursor:pointer;aspect-ratio:9/16;overflow:hidden;
+  position:relative;transition:border-color .16s}
+.tpl-solta:hover{border-color:var(--accent)}
+.tpl-solta-vazio{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;padding:22px;text-align:center}
+.tpl-solta-vazio svg{width:26px;height:26px;color:var(--muted)}
+.tpl-solta-vazio b{font-size:13.5px;color:var(--ink)}
+.tpl-solta-prev{width:100%;height:100%;object-fit:contain;display:block;
+  background:var(--paper-2)}
+.tpl-solta-prev[hidden]{display:none}
+.tpl-solta.cheia .tpl-solta-vazio{display:none}
+.tpl-ficha{display:flex;flex-direction:column;gap:14px;max-width:420px}
+.tpl-campo{display:flex;flex-direction:column;gap:6px}
+.tpl-campo > span{font-size:12.5px;color:var(--muted);display:flex;align-items:baseline;
+  gap:7px}
+.tpl-campo > span i{font-size:10.5px;font-style:normal;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.05em}
+.tpl-campo .cfg-sel{flex:none;width:100%}
+/* ---------------------------------------------------- 2.2 · o vídeo de exemplo */
+.ex-linha{display:grid;grid-template-columns:260px 1fr;gap:26px;align-items:start}
+.ex-quadro{aspect-ratio:9/16;border-radius:var(--r-md);overflow:hidden;background:#000;
+  border:1px solid var(--rule-solid)}
+.ex-quadro video{width:100%;height:100%;object-fit:cover;display:block}
+.ex-lado{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.ex-nome{font-size:15px;font-weight:650;color:var(--ink);word-break:break-all}
+.ex-dados{font-size:13px;color:var(--muted);line-height:1.7}
+.ex-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:11px;
+  margin-top:20px}
+.ex-grade[hidden]{display:none}
+.ex-mini{aspect-ratio:9/16;border-radius:9px;overflow:hidden;background:#000;
+  border:2px solid transparent;cursor:pointer;transition:border-color .16s}
+.ex-mini:hover{border-color:var(--ink)}
+.ex-mini.ativo{border-color:var(--accent)}
+.ex-mini video{width:100%;height:100%;object-fit:cover;display:block}
+/* ---------------------------------------------------- 2.3 · o enquadramento
+
+   DOIS LADOS: a origem e a peça. À esquerda o vídeo como ele veio, com o retângulo do
+   B-roll por cima; à direita a peça montada, ao vivo. Mexeu num, o outro acompanha.
+
+   NÃO HÁ MAIS MODO. O desenho anterior tinha um par de botões, "mexendo em: o vídeo / a
+   moldura", e o Gabriel reprovou: "não deveria ser duas opções, era apenas eu clicar
+   dentro do próprio vídeo e poder editar ele". Agora se arrasta o que se vê.
+
+   TUDO É MEDIDO EM PIXEL, e desenhado em por cento: o recorte em pixel do vídeo de
+   origem, a moldura em pixel da peça. Assim o que ele arrasta aqui vale igual quando o
+   ffmpeg corta e monta, sem nenhuma conta de conversão no meio. */
+
+/* ------------------------------------------------- 2 · o recorte do B-roll
+
+   DOIS LADOS E UMA COLUNA DE CONTROLES, o mesmo desenho do enquadramento, porque é a
+   mesma pergunta: o que entra e o que fica de fora. À esquerda o reel com o retângulo
+   marcado, à direita só o que vai ser gravado.
+
+   A ALTURA MANDA E A LARGURA SEGUE. Os quadros são `height` fixa com `width:auto`, e não
+   o contrário: tudo dentro deles é `position:absolute`, então a largura natural é zero e
+   um `margin:0 auto` num item de grade ainda desliga o esticamento. Foi assim que o palco
+   do enquadramento chegou a sair com dois pixels de largura. */
+.rec-dois{display:grid;grid-template-columns:1fr 1fr 250px;gap:24px;align-items:start}
+.rec-lado-a h4,.rec-lado-b h4{margin:0 0 9px;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);font-weight:600}
+.rec-quadro{position:relative;height:min(56vh,540px);width:auto;margin:0 auto;
+  justify-self:center;border-radius:var(--r-md);overflow:hidden;background:#000;
+  border:1px solid var(--rule-solid);aspect-ratio:9/16}
+.rec-quadro video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  display:block}
+/* O LADO DIREITO É UMA JANELA, e não um vídeo redimensionado: o vídeo dentro dele é
+   ampliado e deslocado para que sobre exatamente o retângulo do B-roll. É a mesma conta
+   que o ffmpeg faz no `crop`, e por isso o que se vê aqui é o que sai no arquivo. */
+/* O LADO DIREITO É A PEÇA DE REELS INTEIRA: fundo preto, B-roll no lugar dele. */
+.rec-corte{background:#000}
+.rec-corte video{inset:0;width:100%;height:100%;object-fit:contain}
+/* O QUE FICA DE FORA ESCURECE. Só o contorno não separa o que entra do que sai. */
+.rec-marca{position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,.66);
+  border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
+.rec-marca[hidden]{display:none}
+.rec-lado{display:flex;flex-direction:column;gap:18px}
+.rec-bloco h4{margin:0 0 8px;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);font-weight:600}
+.rec-bloco .acao.mini{margin-top:9px;width:100%}
+.rec-medida{font:12px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
+  margin-top:8px;text-align:center}
+@media(max-width:1180px){ .rec-dois{grid-template-columns:1fr 1fr} }
+@media(max-width:820px){ .rec-dois{grid-template-columns:1fr} }
+/* ------------------------------------------------------ 3 · o editor da peça
+
+   TRÊS COLUNAS: ferramentas à esquerda, a peça no meio, as propriedades do que está
+   selecionado à direita. É o desenho de qualquer editor visual.
+
+   E AS PEÇAS DE TELA SÃO AS DA CASA, não as do navegador. O Gabriel reprovou a primeira
+   versão por isso: "tem vários aqui padrão Windows... você tem literalmente dentro do
+   próprio estúdio referência de como montar uma estrutura de widget de seleção e tu opta
+   por escolher o padrão feio". Aqui não há select, range nem color solto: o suspenso é o
+   `psel` da Mineração, o número é um menos-mais, e a cor é uma paleta. */
+.ed-tres{display:grid;grid-template-columns:230px minmax(0,1fr) 262px;gap:26px;
+  align-items:start}
+.ed-lado{display:flex;flex-direction:column;gap:20px;min-width:0}
+.ed-meio{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0}
+.ed-bloco{min-width:0}
+.ed-bloco h4{margin:0 0 10px;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);font-weight:600}
+.ed-nada{margin:0;padding:14px 16px;border:1px dashed var(--rule-solid);
+  border-radius:var(--r-md);background:var(--paper-2)}
+.acao.larga{width:100%;justify-content:center}
+.acao.perigo{color:#d9534f;border-color:rgba(217,83,79,.35)}
+.acao.perigo:hover{background:rgba(217,83,79,.08)}
+/* A TELA DA PEÇA. `container-type:size` liga a unidade `cqh`, e é ela que faz o tamanho
+   da letra ser fração da ALTURA DA PEÇA aqui na tela, exatamente como o `oficina.py`
+   calcula na hora de gravar. Sem isso o texto sairia de um tamanho na tela e de outro no
+   arquivo, e o editor deixaria de valer como conferência. */
+.ed-canvas{position:relative;height:min(60vh,600px);aspect-ratio:9/16;overflow:hidden;
+  border-radius:var(--r-md);border:1px solid var(--rule-solid);background:#000;
+  container-type:size;touch-action:none;user-select:none}
+.ed-canvas video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
+  display:block}
+.ed-camada{position:absolute;inset:0}
+.ed-el{position:absolute;cursor:grab;outline:1px dashed transparent;white-space:pre-wrap;
+  word-break:break-word;background-repeat:no-repeat}
+.ed-el:hover{outline-color:rgba(255,255,255,.32)}
+.ed-el.sel{outline:1.5px solid var(--accent);cursor:move}
+/* A CAIXA ABERTA GANHA UMA MARCA DISCRETA: é a que a IA vai escrever, e ele precisa
+   distinguir de relance qual texto é dele e qual é dela. */
+.ed-el.aberto{outline-color:rgba(186,90,24,.5);outline-style:dashed}
+.ed-el i{position:absolute;width:13px;height:13px;border-radius:3px;background:var(--accent);
+  border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.ed-el i[data-canto="nw"]{left:-7px;top:-7px;cursor:nwse-resize}
+.ed-el i[data-canto="ne"]{right:-7px;top:-7px;cursor:nesw-resize}
+.ed-el i[data-canto="sw"]{left:-7px;bottom:-7px;cursor:nesw-resize}
+.ed-el i[data-canto="se"]{right:-7px;bottom:-7px;cursor:nwse-resize}
+.ed-medida{margin:0;font:12px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
+  text-align:center}
+/* ......... a pilha de camadas */
+.ed-camadas{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;
+  gap:5px;max-height:216px;overflow:auto}
+.ed-camadas li{display:flex;align-items:center;gap:8px;padding:7px 10px;
+  border-radius:var(--r-sm);background:var(--paper-2);border:1px solid var(--rule-solid);
+  font-size:12.5px;cursor:pointer;min-width:0}
+.ed-camadas li.sel{border-color:var(--accent);color:var(--ink)}
+.ed-camadas li.ed-cam-vazio{justify-content:center;color:var(--muted);cursor:default;
+  border-style:dashed;font-size:12px}
+.ed-cam-nome{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed-cam-cad{flex:none;display:flex;color:var(--muted)}
+.ed-cam-cad svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
+.ed-camadas li:not(.sel) .ed-cam-cad{opacity:.65}
+/* ......... as propriedades */
+.ed-linha-prop{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:7px 0;border-bottom:1px solid var(--rule)}
+.ed-linha-prop:last-of-type{border-bottom:0}
+.ed-linha-prop>span{font-size:12px;color:var(--muted)}
+/* O MENOS E O MAIS, no lugar da barra de arrastar do navegador. */
+.ed-passo{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--rule-solid);
+  border-radius:var(--r-sm);background:var(--paper-2);overflow:hidden}
+.ed-passo button{border:0;background:none;color:var(--muted);cursor:pointer;
+  width:26px;height:26px;font-size:15px;line-height:1}
+.ed-passo button:hover{background:var(--paper);color:var(--ink)}
+.ed-passo b{min-width:46px;text-align:center;font:12px/1 ui-monospace,Consolas,monospace;
+  color:var(--ink)}
+/* OS BOTÕES EM FILEIRA, para alinhamento e cadeado. */
+.ed-botoes{display:inline-flex;gap:2px;border:1px solid var(--rule-solid);
+  border-radius:var(--r-sm);background:var(--paper-2);overflow:hidden}
+.ed-botoes.largo{display:flex;width:100%}
+.ed-botoes button{flex:1;display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;border:0;background:none;color:var(--muted);cursor:pointer;padding:7px 9px;
+  font:inherit;font-size:12px}
+.ed-botoes button:hover{background:var(--paper);color:var(--ink)}
+.ed-botoes button.on{background:var(--accent-tint);color:var(--accent)}
+.ed-botoes svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+/* A PALETA, com a última casa abrindo o seletor do navegador só quando ele quer uma cor
+   que não está aqui. */
+.ed-cores{display:flex;flex-wrap:wrap;gap:6px}
+.ed-cor{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--rule-solid);
+  cursor:pointer;padding:0;position:relative}
+.ed-cor.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-tint)}
+.ed-cor.outra{display:flex;align-items:center;justify-content:center;
+  background:var(--paper-2);color:var(--muted);font-size:15px;overflow:hidden}
+.ed-cor.outra input{position:absolute;inset:0;opacity:0;cursor:pointer;border:0;padding:0}
+.ed-cores.mini{margin-top:10px}
+/* ......... a área de soltar imagem */
+.ed-solta{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 14px;
+  border:1px dashed var(--rule-solid);border-radius:var(--r-md);cursor:pointer;
+  color:var(--muted);font-size:12.5px;text-align:center}
+.ed-solta:hover{border-color:var(--accent);color:var(--ink)}
+.ed-solta svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+/* O RODAPÉ DA FASE. Ele estava colado no elemento de cima, e o Gabriel apontou: "rodapé
+   grudado com outro elemento, tá literalmente grudado um com o outro". A borda e a folga
+   separam. */
+.ed-pe{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:30px;
+  padding-top:20px;border-top:1px solid var(--rule)}
+.ed-pe-conta{flex:1;min-width:120px;font-size:13px;color:var(--muted)}
+.ed-pe-conta b{color:var(--ink)}
+/* ......... a fase da IA */
+.ia-topo{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+/* A FRASE DE ORIGEM AO LADO DA CAIXA. Sem ver a frase do card, não há como julgar se o
+   que a IA escreveu tem a ver com o vídeo. */
+.ia-frase{flex:none;width:160px;border-radius:var(--r-sm);overflow:hidden;
+  background:#000;font-size:11px;color:var(--muted);display:flex;align-items:center;
+  justify-content:center;min-height:56px}
+/* ......... a gaveta de configuração da IA */
+.ia-cab{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;
+  padding-bottom:14px;border-bottom:1px solid var(--rule)}
+.ia-cfg-campo.cresce{flex:1;min-width:200px}
+.ia-cfg-campo .psel{align-self:flex-start;border:1px solid var(--rule-solid);
+  border-radius:var(--r-sm);padding:5px 10px;background:var(--paper-2)}
+.leg-vazio{max-width:560px;padding:20px 22px;border:1px dashed var(--rule-solid);
+  border-radius:var(--r-md);background:var(--paper-2)}
+@media(max-width:1280px){ .ed-tres{grid-template-columns:210px minmax(0,1fr)} }
+@media(max-width:900px){ .ed-tres{grid-template-columns:1fr} }
+/* ------------------------------------------------------- 4 · a legenda */
+.leg-vazio{max-width:560px;padding:20px 22px;border:1px dashed var(--rule-solid);
+  border-radius:var(--r-md);background:var(--paper-2)}
+.leg-campo b{display:block;font-size:13px}
+.pos-caixa{max-width:520px}
+.pos-n{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.pos-n b{font-size:30px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
+  line-height:1;font-variant-numeric:tabular-nums}
+.pos-n span{font-size:14px;color:var(--muted)}
+.pos-caixa .ed-caminho{margin:0 0 14px}
+/* ......... 4.1 · as descrições
+
+   O FECHO É UM CAMPO, E NÃO UMA LINHA DE CÓDIGO. Ele pediu "um padrão pra toda a
+   descrição, por exemplo com CTA, pedindo pra seguir"; CTA muda com a campanha, e
+   ferramenta em que trocar uma frase exige mexer no programa não é ferramenta. */
+.dsc-fecho{max-width:560px;margin-bottom:18px}
+.dsc-fecho textarea.campo{width:100%;resize:vertical;min-height:52px}
+.dsc-limite{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;
+  padding-top:14px;border-top:1px solid var(--rule)}
+.dsc-limite .campo{width:104px;font-variant-numeric:tabular-nums}
+.dsc-limite .ed-rot{margin:0}
+/* A LISTA DO QUE ELA ESCREVEU. Rola dentro de si mesma: cento e sete descrições soltas
+   na página empurram o pé da tela para longe da mão dele, que foi a reclamação de 23/08
+   sobre a peça a peça ("o layout está me jogando lá pra baixo"). */
+.dsc-lista{margin-top:20px;max-height:min(52vh,520px);overflow-y:auto;
+  display:flex;flex-direction:column;gap:10px;padding-right:4px}
+.dsc-lista:empty{display:none}
+.dsc-item{border:1px solid var(--rule-solid);border-radius:var(--r-md);
+  background:var(--paper-2);padding:12px 14px}
+.dsc-item-topo{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.dsc-item-topo b{font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+.dsc-item-topo span{font-size:11.5px;color:var(--muted);margin-left:auto;
+  font-variant-numeric:tabular-nums;flex:none}
+/* DE QUE VÍDEO É ESTA DESCRIÇÃO. A primeira linha da legenda original, que é o assunto
+   escrito por quem fez o post. O nome do arquivo ele mandou tirar da tela, e "peça 7"
+   sozinho não diz nada sobre o que está ali dentro. */
+.dsc-item-topo i{font-style:normal;font-size:12px;color:var(--muted);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsc-item textarea{width:100%;resize:vertical;min-height:76px;font-size:13px;
+  line-height:1.5;border:1px solid var(--rule-solid);border-radius:var(--r-sm);
+  background:var(--branco);color:var(--ink);padding:9px 11px;font-family:inherit}
+.dsc-item textarea:focus{outline:none;border-color:var(--accent)}
+.dsc-item.sem{border-style:dashed}
+.dsc-item.sem .dsc-item-topo b{color:var(--muted)}
+/* ......... 4.2 · a entrega */
+/* A ENTREGA, DEPOIS DA REPROVACAO DE 24/08/2026.
+
+   O QUE ELE VIU: "olha como e' que ta' os titulos... tipo o texto grudado". Medindo a
+   tela por dentro, os dois problemas tinham numero:
+
+   1. NAO HAVIA HIERARQUIA. O titulo de caixa era um `<b>` de 14,5px; o rotulo de campo
+      DENTRO de outra caixa era 15px. Ou seja: o rotulo era MAIOR que o titulo que devia
+      manda-lo, e o valor ao lado do rotulo era menor ainda (14px). Tres tamanhos entre
+      14 e 15,5px, na ordem trocada. O olho nao tem por onde comecar.
+
+   2. TITULO E TEXTO A 5 E 8 PIXELS um do outro. Com a nota logo abaixo em 13,5px, titulo
+      e corpo viram um bloco so'. Era literalmente o "texto grudado".
+
+   O CONSERTO USA O QUE A CASA JA' TEM: `.caixa h3` e' o titulo de caixa do resto do
+   aplicativo (15,5px/650). As quatro caixas daqui passaram a usa-lo, em vez de cada uma
+   inventar o seu. Rotulo desce para 12,5px apagado, valor sobe para 14,5px firme: a
+   ordem volta a ser titulo > valor > rotulo. */
+.ent-drive,.ent-caixa,.ent-feito{max-width:560px;margin-top:18px}
+.pos-caixa h3,.ent-drive h3,.ent-caixa h3,.ent-feito h3{margin:0 0 12px}
+.ent-drive-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ent-drive-topo h3{margin:0}
+.ent-drive .linha,.ent-caixa .linha,.ent-feito .linha{margin-top:16px}
+.ent-drive .acao{text-decoration:none;display:inline-flex;align-items:center}
+/* O ROTULO E' LEGENDA, E NAO TITULO. Apagado e menor que a resposta que ele apresenta. */
+.ent-linha .ed-rot{font-size:12.5px;font-weight:500;color:var(--muted);
+                   line-height:1.45}
+.ent-linha{display:flex;align-items:baseline;gap:12px;padding:9px 0;
+  border-bottom:1px solid var(--rule)}
+.ent-linha:last-of-type{border-bottom:0}
+.ent-linha .ed-rot{margin:0;flex:none;width:140px}
+.ent-linha b{font-size:14px;color:var(--ink);min-width:0;overflow-wrap:anywhere;line-height:1.45}
+.ent-feito{border-color:color-mix(in srgb,var(--accent) 45%,var(--rule-solid))}
+.ent-feito[hidden]{display:none}
+.ent-feito .nota{margin-bottom:2px}
+.ent-feito #ent_feito_linhas .ent-linha:first-child{padding-top:0}
+.ent-feito .acao{text-decoration:none;display:inline-flex;align-items:center}
+.apl-feito{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.apl-feito[hidden]{display:none}
+.apl-feito .acao{text-decoration:none;display:inline-flex;align-items:center}
+/* ---------------------------------------------------- 2.4 · a quem se aplica */
+.apl-escolhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px}
+.apl-op.ativa{border-color:var(--accent);background:var(--accent-tint)}
+.apl-mini.marcado{border-color:var(--accent)}
+.apl-mini.marcado video{opacity:1}
+.apl-mini.marcado .apl-tique{background:var(--accent)}
+.apl-mini.marcado .apl-tique svg{opacity:1}
+.apl-pe{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  margin-top:24px;padding-top:18px;border-top:1px solid var(--rule-solid);flex-wrap:wrap}
+.apl-resumo{font-size:13.5px;color:var(--muted)}
+.apl-resumo b{color:var(--ink);font-weight:650}
+.apl-obra{margin-top:20px}
+.apl-obra[hidden]{display:none}
+.apl-obra-topo{display:flex;align-items:center;gap:10px;font-size:14px;margin-bottom:11px}
+.apl-obra-topo .dir{margin-left:auto;font-variant-numeric:tabular-nums;
+  color:var(--muted);font-size:13px}
+.apl-barra{height:5px;border-radius:999px;background:var(--rule-solid);overflow:hidden}
+.apl-barra i{display:block;height:100%;width:0;background:var(--accent);
+  border-radius:999px;transition:width .4s ease}
+@media(max-width:960px){
+  .tpl-subir,.ex-linha,.enq-linha{grid-template-columns:1fr}
+}
+/* ==================================================================== ABA · CONFIGURAÇÕES
+
+   O DESENHO É O DO SOCIAL TRACKER, e é cópia de propósito. O Gabriel mandou a chave da IA
+   sair de dentro da edição em 21/08/2026 e apontou para onde ela devia ir: "é que nem tem
+   agora do Social Tracker; se não sabe do que eu estou falando, vai no Social Tracker pra
+   ver". Duas telas do mesmo dono que se configuram de dois jeitos diferentes é uma a mais
+   para aprender sem motivo nenhum. */
+
+.cfg-corpo{display:flex;gap:0;min-height:min(74vh,760px);
+  border:1px solid var(--rule-solid);border-radius:16px;overflow:hidden;
+  background:var(--paper)}
+.cfg-menu{width:260px;flex:0 0 260px;display:flex;flex-direction:column;padding:12px;
+  border-right:1px solid var(--rule-solid);background:var(--paper-2)}
+.cfg-menu-topo{display:flex;align-items:center;gap:11px;padding:6px 8px 14px 6px;
+  border-bottom:1px solid var(--rule-solid);margin-bottom:14px}
+.cfg-menu-id{display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.cfg-menu-id b{font-size:13px;font-weight:600;letter-spacing:-.1px;line-height:1}
+.cfg-menu-id span{font-size:11px;color:var(--muted);line-height:1}
+.cfg-menu-rolo{flex:1;display:flex;flex-direction:column;gap:16px}
+.cfg-grupo{display:flex;flex-direction:column;gap:2px}
+.cfg-grupo-tit{padding:0 8px 6px;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted)}
+.cfg-item{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px;border-radius:9px;color:var(--muted);text-decoration:none;
+  font-size:13px;transition:background .15s ease,color .15s ease}
+.cfg-item:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);
+  color:var(--ink);text-decoration:none}
+.cfg-item.cfg-ativo{background:color-mix(in srgb,var(--ink) 7%,transparent);
+  color:var(--ink);font-weight:600}
+.cfg-item-esq{display:flex;align-items:center;gap:10px;min-width:0}
+.cfg-ic{width:16px;height:16px;flex:0 0 16px;color:var(--muted)}
+.cfg-item.cfg-ativo .cfg-ic{color:var(--ink)}
+.cfg-menu-pe{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--rule-solid)}
+.cfg-menu-pe .nota{margin:0}
+.cfg-conteudo{flex:1;min-width:0;padding:26px 28px 32px;overflow:auto}
+.cfg-pagina{display:none}
+.cfg-pagina.cfg-ativa{display:block;animation:sub-entra .24s cubic-bezier(.16,1,.3,1) both}
+@media(prefers-reduced-motion:reduce){.cfg-pagina.cfg-ativa{animation:none}}
+.cfg-pagina-cab{margin-bottom:20px}
+.cfg-pagina-cab h2{margin:0 0 5px;font-size:21px;letter-spacing:-.3px}
+.cfg-pagina-cab p{margin:0;color:var(--muted);font-size:13.5px}
+.cfg-pagina .caixa{margin-bottom:16px}
+.cfg-linhas{display:flex;flex-direction:column;gap:2px}
+.cfg-linha{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:12px 0;border-bottom:1px solid var(--rule-solid)}
+.cfg-linha:last-child{border-bottom:0;padding-bottom:0}
+.cfg-linha .dir{flex:0 0 auto;display:flex;align-items:center;gap:9px}
+.cfg-nome{font-size:14px;font-weight:600;margin-bottom:3px}
+.cfg-desc{font-size:12.5px;line-height:1.55;color:var(--muted);max-width:62ch}
+.cfg-pares{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:2px}
+.cfg-pares.cfg-uma{grid-template-columns:1fr}
+.cfg-par{display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid var(--rule-solid);font-size:13px;color:var(--muted)}
+.cfg-par:last-child{border-bottom:0}
+.cfg-par b{margin-left:auto;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.cfg-glossario{display:flex;flex-direction:column;gap:14px}
+.cfg-glo-t{display:flex;align-items:center;gap:8px;margin-bottom:3px;font-size:13.5px}
+.cfg-glo span{font-size:12.5px;line-height:1.55;color:var(--muted)}
+/* OS CAMPOS. Nada de widget cru do navegador aqui: a escolha de serviço usa o mesmo
+   `psel` do resto do sistema, que foi exatamente a bronca do Gabriel na fase 3. */
+.cfg-campos{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.cfg-campo{display:flex;flex-direction:column;gap:6px;min-width:190px}
+.cfg-campo.cresce{flex:1 1 230px}
+.cfg-campo>span{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+.cfg-campo input,.cfg-pagina textarea{width:100%;padding:9px 11px;font:inherit;
+  font-size:13.5px;color:var(--ink);background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:9px;outline:0}
+.cfg-pagina textarea{line-height:1.55;resize:vertical;min-height:120px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.cfg-campo input:focus,.cfg-pagina textarea:focus{border-color:var(--accent)}
+.cfg-campo .psel-b{height:40px;border-radius:9px}
+.cfg-pe{display:flex;align-items:center;gap:12px;padding-top:6px}
+.cfg-recado{font-size:12.5px;color:var(--muted)}
+.cfg-pe .acao.forte{margin-left:auto}
+/* A AMOSTRA DE CADA FONTE, escrita na própria fonte. Uma lista de nomes não diz nada:
+   o que se escolhe aqui é o desenho da letra, então ele tem de estar na tela. */
+.cfg-mostra{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:2px}
+.cfg-fonte{display:flex;align-items:baseline;gap:10px;padding:11px 2px;
+  border-bottom:1px solid var(--rule-solid);min-width:0}
+.cfg-fonte i{font-style:normal;font-size:10.5px;color:var(--muted);
+  flex:0 0 auto;letter-spacing:.02em}
+.cfg-fonte b{font-size:19px;font-weight:700;line-height:1.1;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+@media(max-width:880px){
+  .cfg-corpo{flex-direction:column}
+  .cfg-menu{width:auto;flex:1 1 auto;border-right:0;
+    border-bottom:1px solid var(--rule-solid)}
+  .cfg-menu-rolo{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .cfg-conteudo{padding:20px 16px 26px}
+}
+/* ==================================================== FASE 3 · A IA, SÓ A ESPERA
+
+   ELA NÃO PERGUNTA MAIS NADA. Antes era uma lista de 107 caixas de texto, uma por peça,
+   e o Gabriel cortou: "é pra literalmente eu ter apenas a tela de carregamento da IA
+   escrevendo, algo parecido com o recorte". */
+.ia-pronta{display:flex;align-items:center;gap:18px;padding:18px 20px;
+  border:1px solid var(--rule-solid);border-radius:14px;background:var(--paper-2)}
+.ia-pronta-txt{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ia-pronta-txt b{font-size:14.5px}
+.ia-pronta-txt .nota{margin:0}
+.ia-pronta .acao{margin-left:auto;flex:0 0 auto}
+/* ============================================== FASE 4 · A GALERIA DAS PEÇAS PRONTAS
+
+   O QUE ELE PEDIU, com estas palavras: "a tela mostrando como ficou, para no mais tardar
+   eu ajustar na mão, depois clicar em um botão para fabricar". Então cada peça aqui é
+   desenhada, e não fabricada: aparece na hora, e a conversão só roda no fim. */
+.gal-topo{display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.gal-conta{font-size:13.5px;color:var(--muted)}
+.gal-conta b{color:var(--ink)}
+.gal-acoes{display:flex;align-items:center;gap:10px;margin-left:auto}
+.gal-grade{display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+.gal-peca{border:1px solid var(--rule-solid);border-radius:12px;overflow:hidden;
+  background:var(--paper-2);cursor:pointer;transition:border-color .15s ease,
+  transform .15s ease}
+.gal-peca:hover{border-color:var(--accent);transform:translateY(-2px)}
+.gal-peca.mexida{border-color:var(--accent)}
+/* A PEÇA EM MINIATURA. `container-type:size` faz o tamanho da letra ser fração da altura
+   da peça, igual ao editor e igual ao que o `oficina.py` calcula na hora de gravar: é o
+   que garante que a miniatura mostre a mesma proporção do arquivo. */
+.gal-tela{position:relative;aspect-ratio:9/16;overflow:hidden;container-type:size;
+  background:#000}
+.gal-tela video,.gal-tela .gal-broll{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:fill;display:block}
+.gal-el{position:absolute;white-space:pre-wrap;word-break:break-word;
+  line-height:1.22;pointer-events:none}
+.gal-el img{width:100%;height:100%;object-fit:contain;display:block}
+.gal-pe{display:flex;align-items:center;gap:7px;padding:8px 10px;font-size:11.5px;
+  color:var(--muted)}
+.gal-pe b{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.gal-pe .gal-selo{margin-left:auto;flex:0 0 auto;font-size:10px;padding:2px 7px;
+  border-radius:999px;background:var(--accent-tint);color:var(--accent)}
+/* A PEÇA ABERTA. Mexer aqui vale para esta peça e mais nenhuma. */
+.gal-fundo{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.62);
+  backdrop-filter:blur(2px)}
+.gal-lupa[hidden]{display:none}
+.gal-lupa{position:fixed;z-index:71;inset:50% auto auto 50%;
+  transform:translate(-50%,-50%);width:min(940px,94vw);max-height:92vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid var(--rule-solid);border-radius:16px;background:var(--paper);
+  box-shadow:0 26px 70px rgba(0,0,0,.45)}
+.gal-lupa-cab{display:flex;align-items:center;gap:12px;padding:14px 16px;
+  border-bottom:1px solid var(--rule-solid)}
+.gal-lupa-cab b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gal-lupa-cab .acao{margin-left:auto}
+.gal-x{width:30px;height:30px;flex:0 0 30px;border:0;border-radius:8px;cursor:pointer;
+  background:transparent;color:var(--muted);font-size:20px;line-height:1}
+.gal-x:hover{background:var(--paper-2);color:var(--ink)}
+.gal-lupa-corpo{display:flex;gap:20px;padding:18px 16px;overflow:auto}
+.gal-lupa-tela{position:relative;flex:0 0 auto;height:min(58vh,560px);aspect-ratio:9/16;
+  container-type:size;overflow:hidden;border-radius:12px;background:#000}
+.gal-lupa-tela video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.gal-lupa-tela .gal-el{cursor:pointer;pointer-events:auto;
+  outline:1px dashed transparent;outline-offset:2px}
+.gal-lupa-tela .gal-el:hover{outline-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.gal-lupa-tela .gal-el.sel{outline:1px solid var(--accent);outline-offset:2px}
+.gal-lupa-lado{flex:1;min-width:230px;display:flex;flex-direction:column;gap:16px}
+.gal-lupa-vazio .nota{margin:0}
+.gal-lupa-lado .acao.larga{margin-top:auto}
+@media(max-width:760px){
+  .gal-lupa-corpo{flex-direction:column}
+  .gal-lupa-tela{height:auto;width:min(260px,70vw);align-self:center}
+}
+/* ===================================================== A SUBETAPA 5, PEÇA A PEÇA
+
+   UMA DE CADA VEZ, POR CAUSA DA MEMÓRIA. Ele disse em 23/08/2026: "o meu PC não tem
+   memória RAM, então vai ficar travando muito". A grade da primeira olhada abre um vídeo
+   por peça; aqui abre UM, e o anterior é fechado antes de o próximo nascer.
+
+   A TELA É MAIOR QUE A DA LUPA de propósito. Na lupa ele espiava; aqui ele trabalha, e
+   trabalhar em miniatura é o que faz passar batido o texto encostando na filmagem. */
+/* A BARRA DE COMANDO DA FASE 5.
+
+   TRES BLOCOS NUMA LINHA SO': onde ele esta', quanto falta, e o que fazer. Cada um
+   respondia mal antes: o "onde" era o nome do arquivo mp4, o "quanto falta" era nota
+   cinza de onze pixels, e o "o que fazer" estava fora da tela, no pe' da pagina.
+
+   A LARGURA E' A DO QUE ESTA' EMBAIXO, para os comandos ficarem sobre o trabalho e nao
+   espalhados pelo monitor. */
+.aj-barra{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:0 auto 10px;
+  max-width:calc(min(100vh - 250px,700px) * 9 / 16 + 440px + 26px);
+  padding:10px 14px;border:1px solid var(--rule-solid);border-radius:14px;
+  background:var(--paper-2)}
+.aj-passo{display:flex;align-items:center;gap:10px}
+/* AS SETAS SAO REDONDAS E GRANDES o bastante para a mao acertar sem mirar. */
+.aj-seta{width:34px;height:34px;flex:0 0 34px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--rule-solid);background:var(--paper);color:var(--ink);
+  font-size:19px;line-height:1;transition:border-color .16s,opacity .16s}
+.aj-seta:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.aj-seta:disabled{opacity:.32;cursor:default}
+/* O NUMERO DA PECA E' O TITULO DESTA TELA, e por isso tem corpo de titulo. */
+.aj-numero{display:flex;align-items:baseline;gap:6px;min-width:86px;
+  justify-content:center}
+.aj-numero b{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.aj-numero span{font-size:12.5px;color:var(--muted)}
+.aj-ir{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.aj-ir input{width:58px;padding:5px 7px;border-radius:8px;font:12px/1 inherit;
+  border:1px solid var(--rule-solid);background:var(--paper);color:var(--ink)}
+.aj-ir input:focus{outline:0;border-color:var(--accent)}
+/* O PLACAR NO MEIO, e com peso: e' a pergunta que ele fez em voz alta. */
+.aj-placar{flex:1;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.aj-kpi{display:inline-flex;align-items:baseline;gap:5px;padding:5px 12px;
+  border-radius:999px;background:var(--paper);border:1px solid var(--rule-solid);
+  font-size:12px;color:var(--muted);white-space:nowrap}
+.aj-kpi b{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.aj-kpi.feita{border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+  background:var(--accent-tint)}
+.aj-kpi.feita b{color:var(--accent)}
+.aj-acoes{display:flex;align-items:center;gap:8px}
+/* `hidden` NAO VENCE QUEM TEM `display` ESCRITO, e `.acao` tem. Sem esta linha o botao
+   de marcar pronta continuaria na barra depois de todas ficarem prontas. */
+.aj-acoes .acao[hidden]{display:none}
+/* A OBRA NO PE' DA FASE, e com peso.
+
+   "EU QUERO QUE ELE TENHA UM POUCO MAIS DE DESTAQUE", ele disse, depois de ver a barra
+   espremida no alto. Aqui ela ganha a borda de cima que separa do trabalho, respiro, e
+   uma barra de progresso mais alta: e' o unico lugar da tela que responde "quanto
+   falta", e responder isso em tres pixels e' nao responder. */
+#aj_obra_casa:not(:empty){margin:26px auto 0;padding-top:22px;
+  border-top:1px solid var(--rule-solid);
+  max-width:calc(min(100vh - 250px,700px) * 9 / 16 + 440px + 26px)}
+#aj_obra_casa .apl-obra{padding:18px 20px}
+#aj_obra_casa .apl-obra-topo b{font-size:15px}
+#aj_obra_casa .apl-barra{height:10px;border-radius:999px}
+#aj_obra_casa .apl-feito{display:flex;gap:10px;align-items:center;margin-top:14px}
+.aj-recado{margin:0 auto 12px;text-align:center;min-height:15px;
+  max-width:calc(min(100vh - 250px,700px) * 9 / 16 + 440px + 26px)}
+/* A PECA E' O ASSUNTO; o painel e' so' o que se usa para mexer nela.
+
+   A PRIMEIRA VERSAO DAVA O CONTRARIO. `.aj-lado` era `flex:1` sem teto, entao ela comia
+   toda a sobra: num monitor de 1920 media 1.186 pixels de largura contra 334 da peca,
+   tres e meia vezes maior que o que se estava olhando. Os botoes esticavam de ponta a
+   ponta e o "proxima" ia parar a quase dois mil pixels da esquerda, longe do olho e
+   longe da mao. Medido em oito larguras, de 1100 a 1920.
+
+   AGORA A PECA CRESCE E O PAINEL TEM TETO, e o par fica centrado. Em tela larga sobra
+   margem dos dois lados, que e' melhor do que esticar o que nao precisa esticar. */
+/* A ALTURA SAI DO QUE SOBRA, e nao de uma fracao da tela.
+
+   `76vh` NAO SABIA O QUE VINHA ANTES. Com o cabecalho, a barra e o recado em cima, a
+   peca terminava 38 pixels abaixo da dobra e os botoes 133 abaixo. Descontar o que vem
+   antes faz a fase inteira caber sem rolar, que era a queixa. */
+.aj-corpo{display:flex;gap:26px;align-items:flex-start;justify-content:center}
+.aj-tela{position:relative;flex:0 0 auto;height:min(calc(100vh - 250px),700px);
+  aspect-ratio:9/16;
+  container-type:size;overflow:hidden;border-radius:14px;background:#000;
+  border:1px solid var(--rule-solid)}
+/* ARRASTAR COM O DEDO, e nao pelos botoes de mais e menos.
+
+   ELE FOI DIRETO: "nem a imagem que eu subi, nem o texto eu consigo arrastar. So' tem,
+   tipo, se for la' por aquelas opcoes que tem tamanho e posicao, assim eu nao curto".
+   Tinha razao: acertar posicao clicando em mais e menos e' desenhar de olhos fechados.
+
+   `touch-action:none` E' OBRIGATORIO AQUI. Sem ele o navegador entende o arrasto como
+   rolagem da pagina e o `pointermove` para de chegar no meio do gesto. */
+.aj-tela .gal-el{cursor:grab;pointer-events:auto;touch-action:none;
+  outline:1px dashed transparent;outline-offset:2px}
+.aj-tela .gal-el:hover{outline-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.aj-tela .gal-el.sel{outline:1px solid var(--accent);outline-offset:2px}
+/* A FILMAGEM TAMBEM SE ARRASTA, e ate' agora nem selecionar dava. "Selecionar o recorte
+   do B-roll eu nao consigo, tipo pra ajustar a posicao dele." */
+.aj-tela .gal-broll{cursor:grab;touch-action:none}
+/* A MARCA DA JANELA DA FILMAGEM.
+
+   O CONTORNO NAO PODE MORAR NA PROPRIA CAIXA. Ela ocupa o quadro inteiro e so' aparece
+   na janela por causa do `clip-path`, que corta tambem o contorno: ele era desenhado na
+   borda do quadro, cem por cento fora do recorte, e sumia inteiro. Medido: caixa de 648
+   pixels numa tela de 650, contorno de 2 pixels, nada visivel.
+
+   ENTAO A MARCA E' ELEMENTO PROPRIO, posto sobre a janela e sem recorte. Ela nao recebe
+   clique nenhum: quem recebe continua sendo a caixa que tem a filmagem dentro. */
+/* BOTAO QUE NAO TEM O QUE FAZER SE APAGA, em vez de ficar clicavel sem efeito.
+   Deslizar o conteudo so' existe depois de aproximar: sem sobra nao ha' para onde. */
+.ed-passo.apagado{opacity:.38}
+.ed-passo.apagado button{pointer-events:none}
+/* A MOLDURA DAS ALCAS, que serve texto, imagem e a janela do B-roll.
+
+   ELA E' SEPARADA DO QUE ESTA' SENDO MEXIDO de proposito. Pendurar as alcas dentro da
+   caixa de texto nao funciona: o texto e' escrito com `textContent`, que apaga os
+   filhos, e cada tecla varreria as alcas embora. E a marca do B-roll nao aceita clique.
+
+   `touch-action:none` NAS ALCAS pelo mesmo motivo do arrasto: sem ele o navegador
+   entende o gesto como rolagem e o `pointermove` para de chegar no meio do caminho. */
+.aj-moldura{position:absolute;pointer-events:none;z-index:3}
+.aj-moldura[hidden]{display:none}
+.aj-moldura i{position:absolute;width:13px;height:13px;border-radius:3px;
+  background:var(--accent);border:1.5px solid var(--paper);pointer-events:auto;
+  touch-action:none}
+.aj-moldura i[data-canto="nw"]{left:-7px;top:-7px;cursor:nwse-resize}
+.aj-moldura i[data-canto="ne"]{right:-7px;top:-7px;cursor:nesw-resize}
+.aj-moldura i[data-canto="sw"]{left:-7px;bottom:-7px;cursor:nesw-resize}
+.aj-moldura i[data-canto="se"]{right:-7px;bottom:-7px;cursor:nwse-resize}
+.gal-broll-marca{position:absolute;pointer-events:none;border-radius:10px;
+  border:2px solid transparent;transition:border-color .16s ease}
+.aj-tela .gal-broll-marca{border-color:color-mix(in srgb,var(--accent) 22%,transparent)}
+.aj-tela:hover .gal-broll-marca{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.aj-tela.broll-sel .gal-broll-marca{border-color:var(--accent);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.aj-tela.arrastando,.aj-tela.arrastando *{cursor:grabbing !important}
+.aj-lado{flex:0 1 440px;min-width:0;width:440px;
+  display:flex;flex-direction:column;gap:18px}
+.aj-lado .ed-passo{margin:0 0 8px}
+.aj-lado .acao.larga{margin-top:6px}
+.aj-lado .acao.larga.perigo{margin-top:auto}
+
+/* A CAIXA DO TEXTO NA MÃO. Cresce com o conteúdo até um teto, porque manchete de três
+   linhas numa fresta de uma linha é o mesmo que não mostrar. */
+.aj-campo{margin:0 0 12px}
+.aj-campo label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--muted);margin:0 0 5px}
+.aj-campo textarea{width:100%;min-height:64px;max-height:180px;resize:vertical;
+  padding:9px 11px;border:1px solid var(--rule-solid);border-radius:9px;
+  background:var(--paper-2);color:var(--ink);font:13px/1.45 inherit}
+.aj-campo textarea:focus{outline:0;border-color:var(--accent)}
+
+/* O ALVO DA FONTE: qual caixa de texto vai receber a troca. */
+#aj_fonte_alvo{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 9px}
+.aj-alvo{border:1px solid var(--rule-solid);border-radius:999px;cursor:pointer;
+  padding:4px 11px;font-size:11.5px;background:var(--paper-2);color:var(--muted)}
+.aj-alvo:hover{color:var(--ink)}
+.aj-alvo.sel{border-color:var(--accent);background:var(--accent-tint);color:var(--accent)}
+
+/* O B-ROLL DENTRO DO BURACO. O recorte e a máscara ficam nesta caixa, que não sai do
+   lugar; quem anda e cresce é o vídeo lá dentro. Se o transform fosse no próprio vídeo
+   junto com o recorte, o buraco andaria junto e o reenquadramento não existiria. */
+.gal-broll{position:absolute;inset:0;overflow:hidden}
+.gal-broll video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
+  display:block;transform-origin:50% 50%}
+
+/* EM TELA ESTREITA A PECA VAI PARA CIMA E O PAINEL PARA BAIXO. O teto de 440 sai do
+   caminho aqui, senao ele viraria um piso e abriria rolagem lateral. */
+@media(max-width:900px){
+  .aj-corpo{flex-direction:column;align-items:center}
+  .aj-tela{height:auto;width:min(300px,78vw)}
+  .aj-lado{width:100%;flex:1 1 auto}
+  .aj-barra,.aj-recado{max-width:none}
+  .aj-placar{order:3;width:100%}
+}
+
+/* ================================================= O AR DA ABA DE CONFIGURAÇÕES
+
+   "TEM MUITO TEXTO QUE ESTÁ GRUDADO UM COM O OUTRO." Ele estava certo, e a causa era uma
+   linha só: `.nota.mini` carrega `margin:-3px 0 9px`, uma margem NEGATIVA no topo. Ela faz
+   sentido onde nasceu, logo abaixo de um rótulo de campo; aqui ela puxava a explicação
+   para cima de tudo o que viesse antes, e o texto encostava.
+
+   MEDIDO NA TELA antes de mexer: o vão entre a lista de números e a nota de baixo era de
+   MENOS três pixels, ou seja, sobrepostos. Abaixo, todas as notas desta aba passam a ter
+   margem positiva de verdade, e as caixas ganham respiro entre o título e o conteúdo. */
+#aba-config .nota,
+#aba-config .nota.mini{margin:16px 0 0}
+#aba-config .cfg-campo .nota.mini{margin:6px 0 0}
+#aba-config .cfg-topo{margin-bottom:16px}
+#aba-config .cfg-pagina .caixa{margin-bottom:20px;padding:22px}
+#aba-config .cfg-pagina-cab{margin-bottom:24px}
+#aba-config .cfg-pagina-cab h2{margin-bottom:7px}
+#aba-config .cfg-nome{margin-bottom:6px}
+#aba-config .cfg-linha{padding:15px 0}
+#aba-config .cfg-par{padding:12px 0}
+#aba-config .cfg-campos{gap:16px}
+#aba-config textarea+.nota.mini{margin-top:12px}
+#aba-config .cfg-pe{padding-top:4px;padding-bottom:8px}
+/* ===================================================== A FILA DE CHAVES DA IA
+
+   UMA LINHA POR CHAVE, na ordem em que elas atendem. O número à esquerda é a vez dela; as
+   setas mudam essa ordem; o selo diz se ela ainda responde hoje. */
+.ia-fila{display:flex;flex-direction:column;gap:12px}
+.ia-chave{display:flex;gap:14px;padding:14px;border:1px solid var(--rule-solid);
+  border-radius:12px;background:var(--paper-2)}
+.ia-chave-n{flex:0 0 26px;width:26px;height:26px;display:flex;align-items:center;
+  justify-content:center;border-radius:50%;background:var(--paper);
+  border:1px solid var(--rule-solid);font-size:12px;font-weight:700;color:var(--muted)}
+.ia-chave-campos{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:14px;
+  align-items:flex-end}
+.ia-chave-pe{flex:1 1 100%;display:flex;align-items:center;flex-wrap:wrap;gap:10px;
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-solid)}
+.ia-chave-pe .nota{margin:0}
+.ia-chave-botoes{margin-left:auto;display:flex;align-items:center;gap:6px}
+.ia-mover{width:28px;height:28px;flex:0 0 28px;border:1px solid var(--rule-solid);
+  border-radius:8px;background:var(--paper);color:var(--muted);cursor:pointer;
+  font-size:13px;line-height:1}
+.ia-mover:hover:not(:disabled){color:var(--ink);border-color:var(--ink)}
+.ia-mover:disabled{opacity:.35;cursor:default}
+.ia-mover.perigo:hover{color:#e0574b;border-color:#e0574b}
+.ia-selo{flex:0 0 auto;font-size:10.5px;padding:3px 9px;border-radius:999px;
+  background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--muted)}
+.ia-selo.boa{background:var(--accent-tint);color:var(--accent)}
+.ia-selo.ruim{background:color-mix(in srgb,#e0574b 16%,transparent);color:#e0574b}
+/* O BOTAO DE APAGAR PRECISA DE QUEM DESLIGUE O `display`, senao o atributo de esconder
+   nao esconde e ele fica na tela mesmo sem nada escrito. Trava 1 do CLAUDE.md. */
+.acao.perigo[hidden]{display:none}
+.ia-chave-porque{margin-top:4px;font-size:12px;color:var(--fraco);line-height:1.45}
+.ia-chave-porque b{color:var(--texto)}
+.ia-chave-diz{flex:1 1 220px;min-width:0;font-size:12px;line-height:1.5;
+  color:var(--muted)}
+.ia-chave-diz.boa{color:var(--accent)}
+.ia-chave-diz.ruim{color:#e0574b}
+.ia-vazia{display:flex;flex-direction:column;gap:7px;padding:20px;border-radius:12px;
+  border:1px dashed var(--rule-solid);text-align:center}
+.ia-vazia b{font-size:14px}
+.ia-vazia .nota{margin:0;font-size:12.5px;line-height:1.55}
+.ia-fila-pe{display:flex;align-items:center;gap:12px;margin-top:14px}
+.ia-fila-pe .nota{margin:0}
+@media(max-width:760px){
+  .ia-chave{flex-wrap:wrap}
+  .ia-chave-botoes{margin-left:0}
+}
+/* ==================================================== A JANELA DA CHAVE DA IA
+
+   "NA HORA DE CLICAR EM ACRESCENTAR UMA CHAVE, deve aparecer uma opção de pop-up." Antes,
+   acrescentar abria uma linha vazia com três campos espremidos no meio da lista. */
+.pop-fundo{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.62);
+  backdrop-filter:blur(2px)}
+.pop[hidden]{display:none}
+.pop{position:fixed;z-index:81;inset:50% auto auto 50%;transform:translate(-50%,-50%);
+  width:min(520px,94vw);max-height:92vh;display:flex;flex-direction:column;
+  border:1px solid var(--rule-solid);border-radius:16px;background:var(--paper);
+  box-shadow:0 26px 70px rgba(0,0,0,.45)}
+.pop-cab{display:flex;align-items:center;gap:12px;padding:16px 18px;
+  border-bottom:1px solid var(--rule-solid)}
+.pop-cab b{font-size:15px;letter-spacing:-.2px}
+.pop-cab .gal-x{margin-left:auto}
+.pop-corpo{display:flex;flex-direction:column;gap:16px;padding:20px 18px}
+.pop-corpo .cfg-campo{min-width:0}
+.pop-corpo .nota.mini{margin:0;line-height:1.55}
+.pop-pe{display:flex;align-items:center;gap:10px;padding:14px 18px;
+  border-top:1px solid var(--rule-solid)}
+.pop-pe .acao.forte{margin-left:auto}
+.pop-diz{font-size:12.5px;line-height:1.55;color:var(--muted)}
+.pop-diz:empty{display:none}
+.pop-diz.boa{color:var(--accent)}
+.pop-diz.ruim{color:#e0574b}
+.pop-diz i{font-style:italic}
+/* A LINHA DA FILA VIRA RESUMO. Ela mostra o que existe; mexer abre a janela. */
+.ia-chave-corpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.ia-chave-topo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ia-chave-topo b{font-size:14px}
+.ia-chave-resumo{font-size:12px;color:var(--muted);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ia-chave-resumo i{font-style:normal;opacity:.5;margin:0 4px}
+.ia-chave-diz:empty{display:none}
+.ia-chave-diz{font-size:12px;line-height:1.5;color:var(--muted);margin-top:2px}
+.ia-chave-botoes{flex:0 0 auto;display:flex;align-items:center;gap:6px;
+  align-self:flex-start}
+.ch-quantos{font-style:normal;font-weight:400;opacity:.6;margin-left:6px}
+.ch-carregando{display:block;padding:9px 11px;font-size:12.5px;color:var(--muted);
+  border:1px solid var(--rule-solid);border-radius:9px;background:var(--paper-2)}
+#ia_back_diz i{font-style:italic}
+/* A BARRA DE ROLAGEM DO SELETOR, no desenho que o resto da tela já usa (a mesma da tabela
+   e da folha de ajuda). Sem isto, a lista de modelos aparecia com a barra crua do Windows,
+   cinza e larga, do lado de um menu escuro. */
+.psel-menu{scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
+.psel-menu::-webkit-scrollbar{width:8px}
+.psel-menu::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:99px}
+.psel-menu::-webkit-scrollbar-track{background:transparent}
+.psel-menu::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+/* E ela quase não precisa aparecer: com o crivo da tarefa a lista fica curta. */
+.cfg-sel .psel-menu{max-height:280px;padding:5px}
+/* O GASTO POR EMPRESA. Número grande na frente, barra embaixo, detalhe em cinza. */
+.gasto{display:flex;flex-direction:column;gap:20px}
+.gasto-linha.parada{opacity:.55}
+.gasto-topo{display:flex;align-items:baseline;gap:9px;margin-bottom:9px}
+.gasto-topo b{font-size:14px;flex:0 0 auto}
+.gasto-n{margin-left:auto;font-size:22px;font-weight:700;letter-spacing:-.5px;
+  font-variant-numeric:tabular-nums;line-height:1}
+.gasto-un{font-size:12px;color:var(--muted)}
+.gasto-barra{height:8px;border-radius:99px;background:var(--paper-2);overflow:hidden;
+  border:1px solid var(--rule-solid)}
+.gasto-barra i{display:block;height:100%;border-radius:99px;background:var(--accent);
+  transition:width .35s cubic-bezier(.16,1,.3,1)}
+.gasto-pe{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;font-size:12px;
+  color:var(--muted)}
+.gasto-saldo{margin-left:auto}
+.gasto-saldo i{font-style:italic;opacity:.8}
+@media(max-width:620px){.gasto-saldo{margin-left:0}}
+/* O ESTADO DAS CHAVES, lado a lado. Colunas fixas para dar para comparar de relance, que
+   e' o motivo do card existir. */
+.est-cab,.est-linha{display:grid;gap:12px;align-items:center;
+  grid-template-columns:22px 130px 150px 84px 96px 1fr}
+.ia-selo.meio{background:color-mix(in srgb,#e8a33d 18%,transparent);color:#e8a33d}
+@media(max-width:880px){
+  .est-cab{display:none}
+}
+
+/* O AVISO DO ALTO da aba de Configuracoes. */
+.ia-alerta{margin:0 0 18px;padding:13px 15px;border-radius:11px;font-size:13px;
+  line-height:1.55;border:1px solid var(--rule-solid);background:var(--paper-2);
+  color:var(--muted)}
+.ia-alerta[hidden]{display:none}
+.ia-alerta.boa{border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+  background:var(--accent-tint);color:var(--accent)}
+.ia-alerta.ruim{border-color:color-mix(in srgb,#e0574b 45%,transparent);
+  background:color-mix(in srgb,#e0574b 12%,transparent);color:#e0574b}
+
+/* ==================================================== A ENTRADA DOS ELEMENTOS
+
+   O QUE HAVIA ATE' 24/08/2026: a aba inteira entrava como UM BLOCO, com
+   `.aba{animation:entra-aba}`. Bloco inteiro subindo e' movimento que o olho nao
+   registra: ou tudo esta' la', ou nada esta'. Era o "seco" que ele comparou com o
+   Social Tracker, de onde este sistema vem.
+
+   AGORA CADA PECA DA SECAO ENTRA SOZINHA, e sessenta milesimos depois da anterior. O
+   titulo, a linha de filtros, a caixa, o botao: o olho acompanha a sequencia e a tela
+   parece se montar em vez de aparecer pronta.
+
+   E A PRIMEIRA TELA NAO ANIMA. ESTA E' A TRAVA QUE IMPORTA, e ela vem escrita no
+   proprio Social Tracker, que ja' passou por isto: animar o que JA' ESTA' visivel a cada
+   troca de aba e' meio segundo de espera para ver o que ja' estava pronto, e faz a troca
+   PARECER lenta mesmo quando a pagina chega em 150 ms. Como o Gabriel abriu esta sessao
+   reclamando justamente de lentidao na troca, portar isto sem a trava teria piorado o
+   problema que ele mandou consertar. Quem cuida disso e' o `revelar()` no `tela.js`.
+
+   O `com-revelar` no `:root` e' o interruptor: sem ele, nada aqui existe. Ele so' e'
+   ligado quando o navegador sabe observar e quando o sistema nao esta' pedindo menos
+   movimento. Assim a tela funciona igual sem a animacao, e nunca fica invisivel por
+   causa de uma regra que nao chegou a ser desarmada. */
+:root.com-revelar .secao > *{
+  opacity:0;transform:translateY(16px);filter:blur(5px);
+  transition:opacity .44s ease-out, transform .44s cubic-bezier(.22,1,.36,1),
+             filter .44s ease-out}
+:root.com-revelar .secao[data-visto] > *{opacity:1;transform:none;filter:none}
+:root.com-revelar .secao[data-visto] > *:nth-child(2){transition-delay:.06s}
+:root.com-revelar .secao[data-visto] > *:nth-child(3){transition-delay:.12s}
+:root.com-revelar .secao[data-visto] > *:nth-child(4){transition-delay:.18s}
+:root.com-revelar .secao[data-visto] > *:nth-child(n+5){transition-delay:.24s}
+
+/* A PECA DA GRADE ENTRA UMA A UMA, e isto e' outra coisa do de cima.
+   O de cima anima os filhos DIRETOS da secao. A galeria de pecas e' uma grade, ou seja,
+   um filho so': as 92 pecas subiriam juntas, como bloco, e cai no mesmo nada. Aqui cada
+   cartao entra por conta, e se rearma ao sair da tela para animar de novo na volta. */
+:root.com-revelar .entra{
+  opacity:0;transform:translateY(22px) scale(.985);filter:blur(4px);
+  transition:opacity .42s ease-out, transform .42s cubic-bezier(.22,1,.36,1),
+             filter .42s ease-out}
+:root.com-revelar .entra.entrou{opacity:1;transform:none;filter:none}
+:root.com-revelar .gal-grade > .entra:nth-child(3n+2).entrou{transition-delay:.05s}
+:root.com-revelar .gal-grade > .entra:nth-child(3n+0).entrou{transition-delay:.10s}
+:root.com-revelar .ed-galeria > .entra:nth-child(3n+2).entrou{transition-delay:.05s}
+:root.com-revelar .ed-galeria > .entra:nth-child(3n+0).entrou{transition-delay:.10s}
+
+/* Quem pediu ao sistema para parar de animar nao recebe nada disto. A regra desarma o
+   estado inicial: sem ela, o elemento ficaria parado em opacidade zero para sempre. */
+@media (prefers-reduced-motion: reduce){
+  :root.com-revelar .secao > *,
+  :root.com-revelar .entra{opacity:1;transform:none;filter:none;transition:none}
+}
