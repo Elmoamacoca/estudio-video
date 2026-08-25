@@ -125,11 +125,24 @@ function ponteTropecou() {
 }
 function ponteFirme() { PONTE_TROPECOS = 0; PONTE_DE_CAMA_ATE = 0; }
 
-/** A fonte, sempre revalidada e sem `?t=`: sem endereço único não há o que reaproveitar. */
-const pegarDaFonte = caminho => fetch(`${CRU}/${caminho}`, { cache: "no-cache" })
-  .then(r => r.ok ? r.json().then(d => ({ tem: true, d, via: "fonte" }))
-                  : { tem: false, sumiu: r.status === 404, via: "fonte" })
-  .catch(() => ({ tem: false, via: "fonte" }));
+/** A fonte, sempre revalidada e sem `?t=`: sem endereço único não há o que reaproveitar.
+ *
+ * COM CORTE DE TEMPO, e a razão é o log que ficava girando para sempre. O `fetch` sem
+ * prazo tem um `.catch` para o erro, mas erro não é o caso perigoso: é a conexão que abre
+ * e nunca responde. Aí a promessa não resolve nem rejeita, e o `await daFonte` lá embaixo
+ * espera a vida inteira, deixando o cartão preso em "buscando o histórico" sem uma palavra.
+ * A ponte já tinha corte pelo `freio`; a fonte não tinha, e era o buraco. Passado o prazo,
+ * o pedido é abortado e vira "fonte muda", que o resto do código já sabe tratar. */
+const PACIENCIA_FONTE = 12000;
+const pegarDaFonte = caminho => {
+  const corte = new AbortController();
+  const t = setTimeout(() => corte.abort(), PACIENCIA_FONTE);
+  return fetch(`${CRU}/${caminho}`, { cache: "no-cache", signal: corte.signal })
+    .then(r => r.ok ? r.json().then(d => ({ tem: true, d, via: "fonte" }))
+                    : { tem: false, sumiu: r.status === 404, via: "fonte" })
+    .catch(() => ({ tem: false, via: "fonte" }))
+    .finally(() => clearTimeout(t));
+};
 
 const pegarDaPonte = (dentro, sinal) =>
   fetch(`${PONTE}/dados/${dentro}?t=${Date.now()}`, { cache: "no-store", signal: sinal })
@@ -1420,6 +1433,14 @@ async function abrirCartao(cartao) {
   // que a ponte não conseguiu identificar cai exatamente aqui, e o vazio dele não é
   // ausência de trabalho: é trabalho em curso, do lado da esteira.
   if (ficha && ficha.aguardando && !eventos.length) explicarEspera(caixa);
+  // O RESUMO DIZ QUE HÁ REGISTROS, MAS A LEITURA DO LOG NÃO VOLTOU: não minta "nada
+  // registrado" nem deixe o cartão girando calado. Diz que não carregou e que tenta
+  // sozinho, porque a lista se repinta a cada dez segundos e a próxima volta costuma
+  // trazer. É o par do corte de tempo da fonte: juntos, o log nunca fica mudo para sempre.
+  else if (!eventos.length && ficha && ficha.eventos > 0)
+    caixa.innerHTML = '<div class="liv-ev aviso"><i></i><span class="oque">'
+      + '<b>Não consegui carregar o log agora. Tento de novo em instantes.</b>'
+      + "</span></div>";
   else pintarEventos(caixa, eventos);
 
   const b = BATIMENTOS.get(conta);
