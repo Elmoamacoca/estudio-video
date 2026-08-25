@@ -22,5 +22,11 @@
   "seguidores": 139802,
   "publicacoes": 2542,
   "foto": true
+ },
+ "upflip": {
+  "nome": "UpFlip",
+  "seguidores": 0,
+  "publicacoes": 0,
+  "foto": true
  }
 }
