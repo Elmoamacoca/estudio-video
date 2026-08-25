@@ -900,14 +900,12 @@ const bilheteFresco = b =>
   !!b && (Date.now() / 1000 - (b.quando || 0)) < VALIDADE_DO_BILHETE;
 
 async function ouvirBatimentos() {
-  /* SO' SE PEDE BILHETE DE QUEM A ESTEIRA JA' TOCOU. Perfil recem-aceito (na fila,
-     identificado pela nuvem ou tocado so' pelo resgate, sem página lida) ainda nao
-     tem bilhete NENHUM, e pedir por ele enchia o console de 404 legitimo, o ruido
-     que ensina a ignorar vermelho. Ate' a primeira pagina lida, o card ja' conta a
-     verdade pela ficha do livro; o bilhete assume dali em diante. */
-  const PRE_ESTEIRA = new Set(["aguardando", "identificado", "resgate"]);
-  const ativos = LIVRO.filter(c => !c.completo && !c.naFila
-    && !(!(c.lidos > 0) && PRE_ESTEIRA.has(c.ultimo_tipo)));
+  /* TODO CARD ATIVO TEM BILHETE DESDE O NASCIMENTO: a ponte grava um bilhete de
+     andamento no aceite da conta (fase "aceito", zero lido) e o resgate tambem,
+     entao perguntar "como esta'?" nunca leva 404. A idade do bilhete conta a
+     verdade sozinha: fresco e' vida, velho e' espera, e o card diz qual dos dois.
+     So' o card provisorio da fila (fontes sem ficha nenhuma) fica de fora. */
+  const ativos = LIVRO.filter(c => !c.completo && !c.naFila);
   if (!ativos.length) return;
   await Promise.all(ativos.map(async c => {
     const b = await ler(`dados/andamento/${c.conta}.json`);
