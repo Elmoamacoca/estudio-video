@@ -38,6 +38,11 @@ MARCA = PROJETO / "marca"
 DOCS = PROJETO / "docs"
 PROVAS = PROJETO / "provas"
 FOTOS = PROVAS / "fotos"
+# O CARIMBO DAS PROVAS, desde 25/08/2026: a assinatura dos fontes no estado em que a
+# suite inteira passou. Quem escreve e' o `provar.py` (so' sem filtro), quem le' e' o
+# `publicar.py`, que recusa mandar arquivo com assinatura diferente da carimbada. Fica
+# fora do acervo: e' marca de bancada, nao programa.
+CARIMBO_DAS_PROVAS = PROVAS / "carimbo.json"
 TELAS = PROJETO / "telas"
 TELA = TELAS / "index.html"                       # a pagina montada, nunca editada a' mao
 FLUXOS = PROJETO / ".github" / "workflows"
@@ -91,17 +96,36 @@ CHAVE_DO_GITHUB = Path.home() / ".claude" / "secrets" / "github_token.txt"
 # volta a ser so' a ficha (PC e provas), e a casa publica DEVE configura-lo.
 CHAVE_DA_RETIRADA = Path.home() / ".claude" / "secrets" / "estudio_retirada.txt"
 
+# A SENHA DA PONTE, desde 25/08/2026. As rotas da ponte que gastam (disparar a esteira,
+# escrever no acervo, consultar o Instagram) ficavam destrancadas: qualquer um com o
+# endereco mandava ordem. A senha viaja num cabecalho e mora em quatro cofres, um por
+# chamador: aqui (VPS e bancada), no segredo do repositorio (a esteira), no cofre da
+# Cloudflare (a propria ponte confere) e no /vivo do posto, so' para sessao aberta (e'
+# assim que a tela a recebe sem a senha morar no fonte publico). As LEITURAS da ponte
+# ficam abertas de proposito: o acervo e' um repositorio publico, trancar leitura nao
+# esconderia nada.
+CHAVE_DA_PONTE = Path.home() / ".claude" / "secrets" / "estudio_ponte.txt"
 
-def segredo_da_retirada() -> str | None:
-    """O segredo do cabecalho da retirada, ou None quando nao ha' nenhum configurado."""
-    do_ambiente = (os.environ.get("ESTUDIO_RETIRADA") or "").strip()
+
+def _segredo(nome_no_ambiente: str, arquivo: Path) -> str | None:
+    do_ambiente = (os.environ.get(nome_no_ambiente) or "").strip()
     if do_ambiente:
         return do_ambiente
     try:
-        do_arquivo = CHAVE_DA_RETIRADA.read_text(encoding="utf-8").strip()
+        do_arquivo = arquivo.read_text(encoding="utf-8").strip()
         return do_arquivo or None
     except OSError:
         return None
+
+
+def segredo_da_retirada() -> str | None:
+    """O segredo do cabecalho da retirada, ou None quando nao ha' nenhum configurado."""
+    return _segredo("ESTUDIO_RETIRADA", CHAVE_DA_RETIRADA)
+
+
+def segredo_da_ponte() -> str | None:
+    """A senha das ordens da ponte, ou None quando nao ha' nenhuma configurada."""
+    return _segredo("ESTUDIO_PONTE", CHAVE_DA_PONTE)
 
 
 # A SESSAO DA CONTA DESCARTAVEL DO INSTAGRAM, usada SO' pelo resgate em casa (casa.py),

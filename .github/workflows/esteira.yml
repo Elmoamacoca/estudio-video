@@ -365,13 +365,17 @@ jobs:
             # O `|| echo` SEGURA O `bash -e`: um soluco do curl abortava o passo aqui
             # e PULAVA a gravacao do vigia logo abaixo, zerando a memoria dele a cada
             # soluco (auditoria de 25/08/2026). O cron de 30 min cobre a emenda.
+            # A SENHA DA CASA VAI JUNTO desde 25/08/2026 (bloco da ponte): o /varrer
+            # exige X-Estudio-Ponte, e sem ela a reemenda voltaria 401 em silencio.
             curl -s -o /dev/null -w "proxima rodada chamada: %{http_code}\n" \
               -X POST -H "Content-Type: application/json" \
+              -H "X-Estudio-Ponte: ${{ secrets.ESTUDIO_PONTE }}" \
               "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}' \
               || echo "a ponte nao respondeu; o cron cobre em ate 30 min"
           elif [ "$VIGIA" -gt 0 ]; then
             curl -s -o /dev/null -w "vigia reapresentou a esteira: %{http_code}\n" \
               -X POST -H "Content-Type: application/json" \
+              -H "X-Estudio-Ponte: ${{ secrets.ESTUDIO_PONTE }}" \
               "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}' \
               || echo "a ponte nao respondeu; o cron cobre em ate 30 min"
           elif [ "$PENDENTES" -eq 0 ]; then

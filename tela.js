@@ -221,13 +221,45 @@ async function ler(caminho) {
 }
 
 async function mandar(rota, corpo) {
+  /* A SENHA DA CASA VAI EM TODA ORDEM, desde 25/08/2026 (bloco da ponte). As rotas
+     de ordem da ponte passaram a exigir X-Estudio-Ponte, e a tela nao pode carregar
+     a senha no fonte, que e' publico: ela chega pelo /vivo do posto, so' com sessao
+     aberta, e mora em memoria. O `postoDePe()` garante o CASA_INFO fresco (ele tem
+     validade de 15 s); sem posto ou sem sessao a ordem sai sem senha e a propria
+     ponte responde com o recado de entrar. */
+  await postoDePe();
+  const cab = { "Content-Type": "application/json" };
+  if (CASA_INFO && CASA_INFO.ponte) cab["X-Estudio-Ponte"] = CASA_INFO.ponte;
   const r = await fetch(PONTE + rota, {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers: cab,
     body: JSON.stringify(corpo || {}),
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || d.erro) throw new Error(d.erro || "a esteira não respondeu, tente de novo");
   return d;
+}
+
+/* O /contas TRABALHA EM PARCELAS, desde 25/08/2026: a Cloudflare corta a ponte em 50
+   subpedidos por chamada, entao ela olha poucos nomes por vez e devolve o resto em
+   `ficaram`. Aqui se manda de novo ate' esvaziar, somando as respostas numa so', e a
+   regua (quando ha') vai apenas na primeira, porque gravar duas vezes seria a mesma
+   verdade escrita em dobro. O teto de voltas e' rede de seguranca contra uma ponte
+   que devolvesse sempre a mesma fila. */
+async function mandarContas(contas, regua) {
+  let fila = contas, soma = null;
+  for (let volta = 0; volta < 40 && fila.length; volta++) {
+    const d = await mandar("/contas",
+      volta === 0 && regua ? { contas: fila, regua } : { contas: fila });
+    if (!soma) soma = d;
+    else {
+      soma.novos = (soma.novos || []).concat(d.novos || []);
+      soma.bloqueados = (soma.bloqueados || []).concat(d.bloqueados || []);
+      if (d.avisos) soma.avisos = (soma.avisos || []).concat(d.avisos);
+      if (d.contas != null) soma.contas = d.contas;
+    }
+    fila = d.ficaram || [];
+  }
+  return soma || { novos: [], bloqueados: [] };
 }
 
 /* ---------------------------------------------------------- sinal de carregamento
@@ -1173,7 +1205,7 @@ async function insistirIdentificacao() {
       ULTIMA_TENTATIVA.set(c, Date.now());
     }
     desenhaLivro();
-    const d = await mandar("/contas", { contas: alvos });
+    const d = await mandarContas(alvos);
     const passaram = (d.novos || []).filter(n => n.ok);
     if (passaram.length) {
       // o perfil nasceu: a esteira tem o que ler, e o cartão tem o que mostrar
@@ -1962,7 +1994,7 @@ $("ini_vai").onclick = async () => {
   carregando("ini_recado", contas.length === 1 ? "Identificando o perfil"
                                                : `Identificando ${contas.length} perfis`, "onda");
   try {
-    const d = await mandar("/contas", { contas, regua });
+    const d = await mandarContas(contas, regua);
     const barrados = d.bloqueados || [];
     let entraram = (d.novos || []).filter(n => n.ok);
     let teimosos = (d.novos || []).filter(n => !n.ok).map(n => n.conta);
@@ -1982,7 +2014,7 @@ $("ini_vai").onclick = async () => {
       carregando("ini_recado",
         `O Instagram recusou a consulta, tentativa ${volta} de 4`, "orbita");
       await new Promise(ok => setTimeout(ok, 4000));
-      const outra = await mandar("/contas", { contas: teimosos });
+      const outra = await mandarContas(teimosos);
       entraram = entraram.concat((outra.novos || []).filter(n => n.ok));
       teimosos = (outra.novos || []).filter(n => !n.ok).map(n => n.conta);
     }
@@ -3193,6 +3225,21 @@ async function salvarRascunho() {
     /* O DESENHO INTEIRO, e não só o nome dele. Ver o comentário lá em cima. */
     desenho, desenhoEm,
     template: desenho ? desenho.id : (TPL ? TPL.id : null),
+    /* OS VIGIAS EM CURSO, desde 25/08/2026. Um F5 no meio de um recorte, de uma
+       montagem ou de uma entrega perdia a vigia: a oficina seguia trabalhando e a
+       tela voltava muda, como se nada tivesse sido pedido. O rascunho guarda o id
+       de cada pedido vigiado; quem retoma so' rearma o que ainda esta' vivo, e o
+       que ja' fechou fica com o re-scan de cada passo, que e' quem diz o fim de
+       verdade. Escrever e descrever ficam de fora porque o produto deles ja' entra
+       aqui em cima a cada olhada (escrito, descricoes). */
+    vigias: {
+      rec: REC_OBRA ? { id: REC_OBRA.id, total: REC_OBRA.total,
+                        desde: REC_OBRA.desde } : null,
+      mont: OBRA ? { id: OBRA.id, total: OBRA.total, qual: OBRA.qual,
+                     desde: OBRA.desde } : null,
+      ent: ENT_OBRA ? { id: ENT_OBRA.id, total: ENT_OBRA.total,
+                        subir: ENT_OBRA.subir, desde: ENT_OBRA.desde } : null,
+    },
     mexido: Math.floor(Date.now() / 1000),
   };
   if (!EDIT_RASCUNHO) r.aberto = r.mexido;
@@ -6152,6 +6199,17 @@ $("ia_liberar").onclick = async () => {
   }
 };
 
+/* SAIR É IR ATÉ A PORTA, e não um pedido de bastidor: quem apaga o bilhete é o posto,
+   pela rota /sair, e ela responde com um desvio para a página de entrar. Navegar até lá
+   faz o navegador guardar a ordem de apagar o biscoito, coisa que um pedido de bastidor
+   não garante. O rascunho é gravado antes, porque a página vai embora em seguida. */
+if ($("cfg_sair")) {
+  $("cfg_sair").onclick = async () => {
+    try { await salvarRascunho(); } catch (e) { /* sem leva aberta, nada a gravar */ }
+    location.href = POSTO + "/sair";
+  };
+}
+
 /* QUE DIA E' HOJE, NO RELOGIO DESTE COMPUTADOR.
 
    `toISOString()` DEVOLVE O DIA EM UTC, e era isso que estava escrito aqui. O programa
@@ -6317,6 +6375,13 @@ function desenhaCfgIA() {
   if (sessaoVencida) {
     recadoDaIA("A sessão desta página venceu: recarregue e entre com a senha de novo. "
       + "Nada foi perdido.", "ruim");
+  }
+  /* O SAIR SÓ EXISTE ONDE HÁ SESSÃO PARA ENCERRAR, desde 25/08/2026. A casa na VPS pede
+     senha e guarda o bilhete por trinta dias; sem esta porta, quem abrisse a tela num
+     computador emprestado não tinha como fechar. No PC (sem senha configurada) e com a
+     sessão já vencida não há o que encerrar, e o botão fica fora da tela. */
+  if ($("cfg_sair")) {
+    $("cfg_sair").hidden = !(POSTO_DE_PE && CASA_INFO && CASA_INFO.sessao === "aberta");
   }
   // BOTAO QUE NAO TEM O QUE FAZER SAI DA TELA. Com o posto de pé não há pasta a liberar, e
   // um botão inútil ao lado do texto que diz "não há pasta a liberar" é convite a pensar
@@ -8529,6 +8594,56 @@ async function tentarRetomar() {
     const alvo = Math.min(4, Math.max(1, r.sub || 1));
     if (alvo > 1) irParaSub(alvo);
   }
+  /* OS VIGIAS VOLTAM DEPOIS DO F5, desde 25/08/2026. O rascunho guarda o id dos
+     pedidos vigiados (ver `salvarRascunho`); aqui so' se rearma o que ainda esta'
+     em curso. Pedido ja' fechado (ou sumido) NAO rearma: o re-scan de cada passo
+     mostra o resultado, e rearmar em cima dele pintaria um erro falso de contato
+     perdido num trabalho que terminou dias atras. */
+  const vigias = r.vigias || {};
+  const aindaVivo = async id => {
+    try {
+      if (await postoDePe()) {
+        const p = await noPosto("/pedido?id=" + encodeURIComponent(id));
+        return !!(p.tem && p.d && !p.d.fim && !p.d.erro);
+      }
+      const p = await pastaDo("pedidos", false);
+      if (!p) return false;
+      const d = JSON.parse(await (await
+        (await p.getFileHandle(id + ".andamento.json")).getFile()).text());
+      return !d.fim && !d.erro;
+    } catch (e) { return false; }
+  };
+  if (vigias.rec && !REC_OBRA && await aindaVivo(vigias.rec.id)) {
+    REC_OBRA = { id: vigias.rec.id, desde: vigias.rec.desde || Date.now(),
+                 total: vigias.rec.total || 0, relogio: null };
+    $("rec_obra").hidden = false;
+    document.querySelector("#rec_obra .cfg-girando").style.display = "";
+    $("rec_obra_txt").textContent = "trabalho em curso, vigia retomada";
+    REC_OBRA.relogio = setInterval(olharORecorte, 3000);
+    olharORecorte();
+  }
+  if (vigias.mont && !OBRA && await aindaVivo(vigias.mont.id)) {
+    OBRA = { id: vigias.mont.id, desde: vigias.mont.desde || Date.now(),
+             total: vigias.mont.total || 0, qual: vigias.mont.qual, relogio: null };
+    $("apl_obra").hidden = false;
+    document.querySelector("#apl_obra .cfg-girando").style.display = "";
+    $("apl_obra_txt").textContent = "trabalho em curso, vigia retomada";
+    OBRA.relogio = setInterval(olharAObra, 3000);
+    olharAObra();
+  }
+  if (vigias.ent && !ENT_OBRA && await aindaVivo(vigias.ent.id)) {
+    ENT_OBRA = { id: vigias.ent.id, desde: vigias.ent.desde || Date.now(),
+                 total: vigias.ent.total || 0, relogio: null, mudo: 0,
+                 subir: vigias.ent.subir !== false };
+    $("ent_subir").disabled = $("ent_so_pacote").disabled = true;
+    $("ent_feito").hidden = true;
+    $("ent_obra").hidden = false;
+    document.querySelector("#ent_obra .cfg-girando").style.display = "";
+    $("ent_obra_txt").textContent = "trabalho em curso, vigia retomada";
+    const olhar = olharOPedido(ENT_OBRA, andouAEntrega, terminouAEntrega);
+    ENT_OBRA.relogio = setInterval(olhar, 3000);
+    olhar();
+  }
   salvarRascunho();
 }
 
@@ -8785,7 +8900,10 @@ async function olharAObra() {
   // só olhava função chamada, não variável lida).
   $("apl_obra_nota").innerHTML = 'estão em <a href="#" data-abrir="'
     + escapa(MONTADO.onde) + '">' + escapa(MONTADO.pasta || "a pasta da montagem")
-    + "</a>. Os recortes continuam onde estavam, intactos.";
+    + "</a>. Os recortes continuam onde estavam, intactos."
+    // O DIARIO DAS QUE FALHARAM, peca a peca: sem ele o "3 falharam" acima
+    // obrigava a perguntar quais e por que (fecho de 25/08/2026).
+    + linhasDoDiario(d.diario);
   desenhaFeito();
   irParaPasso(4);
 }
@@ -9515,6 +9633,26 @@ function umaLinha(rotulo, valor) {
        + `<b>${escapar(valor)}</b></div>`;
 }
 
+/* O DIÁRIO DO FECHO, desde 25/08/2026. "104 peças, 3 falharam" obrigava a perguntar
+   QUAIS três e POR QUÊ, e a resposta já estava gravada: o andamento final carrega o
+   diário peça a peça. Aqui entram só as linhas de ERRO, porque as dezenas que deram
+   certo enterrariam as que importam, e os avisos já têm resumo próprio (o "sem
+   descrição", por exemplo). O teto de vinte segura o fecho de uma leva que falhou
+   inteira: acima disso a lista vira contagem. */
+function linhasDoDiario(diario) {
+  const ruins = (diario || []).filter(x => x && x.erro && x.arquivo);
+  if (!ruins.length) return "";
+  let html = ruins.slice(0, 20).map(x =>
+    `<div class="ent-linha"><span class="ed-rot">${escapar(x.arquivo)}</span>`
+    + `<b>${escapar(String(x.erro))}</b></div>`).join("");
+  if (ruins.length > 20) {
+    html += `<div class="ent-linha"><span class="ed-rot">e mais</span>`
+      + `<b>${num(ruins.length - 20)} peças falharam; o diário completo está no `
+      + `andamento da leva</b></div>`;
+  }
+  return html;
+}
+
 function linhasDoFecho(d, queria) {
   const pecas = `${num(d.feitos || 0)} ${d.feitos === 1 ? "peça" : "peças"}`;
   if (!d.subiu && d.rclone_ok) {
@@ -9582,7 +9720,7 @@ async function terminouAEntrega(d) {
   $("ent_feito_tit").textContent = d.verificado ? "Entregue No Drive"
     : d.rclone_ok ? "Subiu, Mas Não Consegui Conferir"
     : "Empacotado Na Casa, Ainda Não Subiu";
-  $("ent_feito_linhas").innerHTML = linhasDoFecho(d, queria);
+  $("ent_feito_linhas").innerHTML = linhasDoFecho(d, queria) + linhasDoDiario(d.diario);
   if (d.onde) $("ent_feito_pasta").dataset.abrir = d.onde;
   /* O BOTAO DA PASTA DAQUI SOME QUANDO A PASTA DAQUI NAO EXISTE MAIS. Desde 24/08/2026 a
      entrega apaga a copia local depois de conferir no Drive; deixar o botao no lugar era

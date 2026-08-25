@@ -3592,17 +3592,29 @@ def _runs_do_despacho(ficha: str, ficha_github: str) -> set:
     return achados
 
 
-def _achar_artifact(nome: str, ficha_github: str, runs: set) -> dict | None:
-    """O artifact deste nome vindo de um run NOSSO, ou None enquanto a vaga trabalha."""
+def _artifacts_dos_runs(runs: set, ficha_github: str) -> dict:
+    """Os pacotes dos runs DESTE despacho, por nome. Uma chamada por run.
+
+    UMA CHAMADA POR RUN, E NAO UMA POR VAGA (fecho de 25/08/2026). A colheita roda
+    a cada minuto e perguntava pelo pacote de CADA vaga que ainda faltava: ate' 16
+    chamadas por volta, por despacho, contra a mesma resposta. A esteira de edicao e'
+    UM run com N trabalhos dentro, entao perguntar ao proprio run traz as N de uma vez.
+
+    E O VENENO CONTINUA BARRADO, agora pela raiz. Antes se procurava o pacote pelo NOME
+    no repositorio inteiro e depois se conferia de quem ele era; agora so' se pergunta
+    aos runs que ESTE despacho disparou (achados pela ficha sorteada, em
+    `_runs_do_despacho`). Pacote de run estranho com o mesmo nome nunca entra na lista.
+
+    O teto de 100 por pagina cobre com folga o teto de 16 vagas de um despacho.
+    """
     import guardar
-    d = guardar.api(f"/actions/artifacts?name={urllib.parse.quote(nome)}&per_page=20",
-                    ficha_github)
-    for art in (d or {}).get("artifacts") or []:
-        if art.get("expired"):
-            continue
-        if (art.get("workflow_run") or {}).get("id") in runs:
-            return art
-    return None
+    achados = {}
+    for run in sorted(runs):
+        d = guardar.api(f"/actions/runs/{run}/artifacts?per_page=100", ficha_github)
+        for art in (d or {}).get("artifacts") or []:
+            if not art.get("expired"):
+                achados.setdefault(art.get("name"), art)
+    return achados
 
 
 def instalar_fatia(pacote: Path, destino: Path, tipo: str,
@@ -3702,11 +3714,14 @@ def _colher_um(arq: Path) -> None:
             if runs:
                 estado["runs"] = sorted(runs)
                 mudou = True
+        # A LISTA DE PACOTES SAI DE UMA CHAMADA SO', antes do laco das vagas: ver a
+        # nota em `_artifacts_dos_runs`. Sem run conhecido ainda nao ha' o que colher.
+        catalogo = _artifacts_dos_runs(runs, ficha_do_github) if runs else {}
         for i in range(int(estado.get("vagas") or 0)):
             if i in colhidas:
                 continue
             try:
-                fragmento = _colher_fatia(pid, i, estado, tipo, destino, runs,
+                fragmento = _colher_fatia(pid, i, estado, tipo, destino, catalogo,
                                           ficha_do_github, guardar)
             except (Exception, SystemExit) as e:                    # noqa: BLE001
                 # UMA FATIA PODRE NAO SEGURA AS OUTRAS nem congela o pedido: registra,
@@ -3750,10 +3765,10 @@ def _colher_um(arq: Path) -> None:
         _desistir_do_despacho(estado, arq, destino)
 
 
-def _colher_fatia(pid, i, estado, tipo, destino, runs, ficha_do_github,
+def _colher_fatia(pid, i, estado, tipo, destino, catalogo, ficha_do_github,
                   guardar) -> dict | None:
     """Baixa e instala UMA fatia, conferindo que ela e' deste pedido. None se nao veio."""
-    art = _achar_artifact(f"edicao-{pid}-fatia-{i}", ficha_do_github, runs)
+    art = (catalogo or {}).get(f"edicao-{pid}-fatia-{i}")
     if not art:
         return None
     with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
