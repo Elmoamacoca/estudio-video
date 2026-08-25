@@ -1,3 +1,18 @@
 {
- "lotes": []
+ "lotes": [
+  {
+   "numero": 31,
+   "inicio": 1787689200,
+   "estado": "em curso",
+   "baixados": 0,
+   "limpos": 0,
+   "reprovados": 0,
+   "mb": 0,
+   "execucao": "32894712580",
+   "contas": [
+    "leisdamentemilionaria"
+   ]
+  }
+ ],
+ "atualizado": 1787689200
 }
