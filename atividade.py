@@ -416,12 +416,27 @@ def reconstruir_indice() -> dict:
         if not ev:
             continue
         estado_perfil = {}
+        da_epoca = {}
         pa = PERFIS / f"{livro['conta']}.json"
         if pa.exists():
             try:
                 d = json.loads(pa.read_text(encoding="utf-8"))
+                # A REGUA DA EPOCA VEM DO PROPRIO ESTADO, desde 25/08/2026. A capa
+                # usava a regua DE HOJE para todos os perfis: mudar a regua para
+                # varrer um perfil novo reetiquetava o historico inteiro (rotulo,
+                # meta e contagem trocavam retroativamente, e "300 de 200 reels"
+                # aparecia num perfil varrido com outra regua). O rodada grava a
+                # regua no estado na hora da varredura; acervo antigo, sem o campo,
+                # cai na regua atual como antes.
+                da_epoca = d.get("regua_da_epoca") or {}
+                formatos_da_epoca = set(da_epoca.get("formatos") or [])
+                posts = d.get("posts") or []
+                lidos = (len([x for x in posts
+                              if x.get("formato") in formatos_da_epoca])
+                         if formatos_da_epoca and formatos_da_epoca != set(TODOS)
+                         else len(posts))
                 estado_perfil = {
-                    "lidos": len(d.get("posts") or []),
+                    "lidos": lidos,
                     "publicacoes": (d.get("perfil") or {}).get("publicacoes") or 0,
                     "completo": bool(d.get("completo")),
                 }
@@ -429,13 +444,14 @@ def reconstruir_indice() -> dict:
                 pass
         # o alvo entra como meta quando ha' filtro de formato: e' contra ele que a tela
         # compara, e nao contra o total de publicacoes do perfil, que nunca sera' lido
-        rot = rotulo()
+        rot = str(da_epoca.get("rotulo") or rotulo())
         if rot != "publicações" and estado_perfil:
             # META SO' EXISTE SE ALGUEM PEDIU UM ALVO. Aqui havia um "ou 200" herdado do
             # tempo em que a varredura parava sozinha: sem alvo, o cartao continuava
             # dizendo "132 de 200 reels (66%)" numa varredura que vai ate' o fim do
             # perfil, e 66% de coisa nenhuma e' pior do que numero nenhum.
-            alvo = int(regua().get("alvo") or 0)
+            alvo = int((da_epoca.get("alvo") if "alvo" in da_epoca
+                        else regua().get("alvo")) or 0)
             estado_perfil["publicacoes"] = alvo if alvo > 0 else 0
         contas.append({
             "conta": livro["conta"],
