@@ -1,0 +1,81 @@
+name: edicao
+
+# A ESTEIRA DE EDICAO, desde 25/08/2026. A oficina da casa fatia a leva grande e
+# acorda estas vagas; cada vaga baixa SO' a fatia dela pela ficha de retirada do
+# posto, recorta ou monta com AS MESMAS funcoes da oficina (vaga_edicao.py importa
+# oficina.py, nada e' reescrito), e devolve um pacote que o colhedor da casa confere
+# e guarda. Por que aqui: medido em 25/08/2026, o mesmo comando de video leva 60,1 s
+# na casa da VPS e 1,88 s nesta maquina, e repositorio publico roda de graca.
+#
+# A FICHA NAO E' A CHAVE SOZINHA: ela viaja como parametro visivel do disparo, entao a
+# vaga tambem manda o cabecalho secreto ESTUDIO_RETIRADA (segredo do repositorio, que
+# o Actions mascara no log). E o nome do run carrega a ficha, para o colhedor da casa
+# so' aceitar artifact de um run que ele mesmo disparou.
+
+run-name: edicao ${{ inputs.pedido }} ${{ inputs.ficha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      pedido:
+        description: "id do pedido despachado"
+        required: true
+      casa:
+        description: "endereco publico do posto"
+        required: true
+      ficha:
+        description: "ficha de retirada deste despacho"
+        required: true
+      fatias:
+        description: "lista json dos numeros das fatias"
+        required: true
+        default: "[0]"
+
+permissions:
+  contents: read
+
+jobs:
+  vaga:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        fatia: ${{ fromJSON(inputs.fatias) }}
+    steps:
+      # O CODIGO VEM DO PROPRIO COMMIT, num snapshot so'. O curl solto de raw main
+      # servia cada arquivo por um pedido independente, com cache de CDN de minutos:
+      # a vaga podia rodar `vaga_edicao.py` novo com `oficina.py` velho e quebrar em
+      # silencio (auditoria de 25/08/2026). O checkout entrega os cinco arquivos do
+      # mesmo commit, como a esteira da mineracao ja' faz.
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      # A IMAGEM NOVA DO UBUNTU NAO TRAZ MAIS O FFMPEG (medido em 25/08/2026: a
+      # bancada quebrou com "command not found"); instala-se sempre, e o numpy e o
+      # pillow junto, que o recorte olha quadros e a montagem compoe camadas.
+      - name: ferramentas
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install -y ffmpeg > /dev/null
+          python3 -m pip -q install --break-system-packages numpy pillow
+      - name: trabalhar
+        env:
+          ESTUDIO_RETIRADA: ${{ secrets.ESTUDIO_RETIRADA }}
+        run: python3 vaga_edicao.py "${{ inputs.casa }}" "${{ inputs.ficha }}" "${{ matrix.fatia }}"
+      # SO' SOBE PACOTE COM LAUDO. A vaga escreve o _laudo.json num finally, entao ele
+      # existe mesmo com peca falha; um pacote sem laudo so' acontece se a vaga foi
+      # morta antes do finally (tempo, memoria), e ai' ele nao pode subir, porque um
+      # pacote sem laudo trava a colheita do despacho inteiro na casa. Sem laudo,
+      # apaga-se a saida e nenhum artifact sobe: a casa trata como fatia ausente.
+      - name: so' com laudo
+        if: always()
+        run: '[ -f saida/_laudo.json ] || rm -rf saida'
+      - name: entregar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edicao-${{ inputs.pedido }}-fatia-${{ matrix.fatia }}
+          path: saida
+          retention-days: 3
+          if-no-files-found: ignore
