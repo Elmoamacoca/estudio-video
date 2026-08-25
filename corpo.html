@@ -15,85 +15,215 @@
     </div>
   </div>
 
-  <!-- ------------------------------------------------------------------- MINERAR -->
+  <!-- ------------------------------------------------------------------- MINERAR
+       SITUAÇÃO VEM PRIMEIRO, e antes ela era a última coisa da tela. Ela é o que se
+       olha ao abrir: quanto já foi varrido e quanto está pronto. Estava embaixo de
+       tudo, depois do registro corrido, que é o oposto da ordem de leitura.
+
+       E SÃO ESTES QUATRO NÚMEROS, não os anteriores. "Contas de origem" repetia a
+       contagem que já está na pastilha de Minerados ali em cima. "Acima do corte"
+       mostrava o tamanho do lote montado, e o lote tem teto de 500 peças: o número era
+       o teto que eu configurei, e ficaria em 500 para sempre. Nenhum dos dois media
+       coisa alguma. -->
   <div class="ct-painel" id="sub-p-minerar">
 
     <div class="secao">
       <div class="secao-cab">
-        <h2>Contas de origem</h2>
-        <div class="dir"><span class="nota" id="recado"></span></div>
+        <h2>Situação</h2>
+        <div class="dir"><span class="nota" id="carga"></span></div>
       </div>
-      <div class="caixa">
-        <h3>De onde os vídeos são minerados</h3>
-        <p class="nota">Uma por linha, com ou sem arroba, ou o endereço inteiro do perfil.
-          A esteira varre o histórico até onde o Instagram deixa, guardando onde parou.</p>
-        <textarea id="fontes" placeholder="boletimdamorte&#10;vinci.society&#10;https://www.instagram.com/outraconta/"></textarea>
-        <div class="linha">
-          <button class="acao forte" id="salvar">Salvar e varrer</button>
-          <button class="acao" id="varrer">Varrer de novo</button>
-        </div>
+      <div class="numeros quatro">
+        <div class="num"><b id="n_lidos">0</b><span id="rot_lidos">publicações varridas</span></div>
+        <div class="num"><b id="n_completos">0</b><span>perfis concluídos</span></div>
+        <div class="num"><b id="n_reels">0</b><span id="rot_acima">acima da régua</span></div>
+        <div class="num"><b id="n_baixados">0</b><span>vídeos baixados</span></div>
       </div>
     </div>
 
     <div class="secao">
       <div class="secao-cab">
-        <h2>Registro ao vivo</h2>
-        <div class="dir"><span class="nota" id="vivo_quando"></span></div>
+        <h2>Contas De Origem</h2>
+        <div class="dir"><span class="nota" id="recado"></span></div>
       </div>
       <div class="caixa">
-        <h3 id="vivo_titulo">Esteira parada</h3>
-        <p class="nota" id="vivo_resumo">Nenhuma rodada em andamento.</p>
-        <div id="vivo_elos" class="elos"></div>
-        <div class="registro" id="registro"></div>
+        <h3>Acrescentar Contas De Origem</h3>
+        <p class="nota">Uma por linha, com ou sem arroba, ou o endereço inteiro do perfil.
+          Perfil que <b>já foi minerado é recusado na entrada</b>. Ao iniciar, tudo
+          acontece de uma vez: varredura, régua e separação dos links.</p>
+        <textarea id="fontes" placeholder="boletimdamorte&#10;vinci.society&#10;https://www.instagram.com/outraconta/"></textarea>
+        <div class="linha">
+          <button class="acao forte" id="iniciar">Iniciar</button>
+        </div>
       </div>
     </div>
 
+    <!-- ================================================ O REGISTRO, NUM BLOCO SÓ
+         Cabeça de identidade com o estado da esteira, três medidas por gravidade com
+         traço de atividade, os filtros, e a lista de perfis que abre e fecha.
+
+         AQUI HAVIA DOIS BLOCOS, e virou um. O de cima era um fluxo de mensagens da
+         sessão ("fechar concluída", "conferir concluída") que sumia ao recarregar a
+         página e não dizia nada sobre perfil nenhum. O que interessa é o histórico de
+         cada conta, que fica no acervo e não se perde. -->
     <div class="secao">
-      <div class="secao-cab"><h2>Situação</h2></div>
-      <div class="numeros quatro">
-        <div class="num"><b id="n_contas">0</b><span>contas de origem</span></div>
-        <div class="num"><b id="n_lidos">0</b><span>posts varridos</span></div>
-        <div class="num"><b id="n_sel">0</b><span>acima do corte</span></div>
-        <div class="num"><b id="n_completos">0</b><span>perfis concluídos</span></div>
+      <div class="secao-cab"><h2>Registro Ao Vivo</h2></div>
+
+      <div class="konsole">
+        <div class="kon-topo">
+          <span class="kon-selo">
+            <svg viewBox="0 0 24 24"><path d="m5 8 4 4-4 4M12 16h7"/></svg>
+          </span>
+          <div class="kon-quem">
+            <b id="vivo_titulo">Esteira parada</b>
+            <span id="vivo_resumo">Nenhuma rodada em andamento.</span>
+          </div>
+          <div class="kon-dir" id="vivo_quando">
+            <span class="kon-vivo"><i></i>parada</span>
+          </div>
+          <button class="acao" id="liv_exportar" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0
+                 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
+        </div>
+
+        <div class="kon-medidas">
+          <div class="kon-medida falha">
+            <div class="kon-rot">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/>
+                <path d="M12 8v5M12 16h.01"/></svg><span>falhas</span>
+            </div>
+            <b id="k_falha">0</b>
+            <svg class="kon-traco parado" id="t_falha" viewBox="0 0 100 20"
+                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
+          </div>
+          <div class="kon-medida aviso">
+            <div class="kon-rot">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/>
+                <path d="M12 16v-5M12 8h.01"/></svg><span>avisos</span>
+            </div>
+            <b id="k_aviso">0</b>
+            <svg class="kon-traco parado" id="t_aviso" viewBox="0 0 100 20"
+                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
+          </div>
+          <div class="kon-medida evento">
+            <div class="kon-rot">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/>
+                <path d="m20 20-4.3-4.3"/></svg><span>registros</span>
+            </div>
+            <b id="k_evento">0</b>
+            <svg class="kon-traco parado" id="t_evento" viewBox="0 0 100 20"
+                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
+          </div>
+        </div>
+
+        <div class="kon-maquinas elos" id="vivo_elos" hidden></div>
+
+        <div class="liv-filtros">
+          <input class="ct-busca" id="liv_q" type="text" autocomplete="off"
+                 spellcheck="false" placeholder="Buscar perfil pelo @ ou pelo nome">
+          <div class="sel" id="liv-tipo">
+            <button class="sel-gatilho" id="liv-tipog" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-valor" id="liv-tipov">Toda A Atividade</span>
+              <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="sel-lista" id="liv-tipol" role="listbox">
+              <div class="sel-grupo" id="liv-tipogr"></div>
+            </div>
+          </div>
+          <div class="sel" id="liv-quando">
+            <button class="sel-gatilho" id="liv-quandog" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-valor" id="liv-quandov">Desde O Começo</span>
+              <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="sel-lista" id="liv-quandol" role="listbox">
+              <div class="sel-grupo" id="liv-quandogr"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="liv_lista"></div>
+        <div class="gal-vazia" id="liv_vazio" hidden>Nenhum perfil com esses filtros.</div>
+        <div class="liv-mais"><button class="acao" id="liv_mais" type="button" hidden>
+          Ver Mais</button></div>
       </div>
     </div>
-
   </div>
 
-  <!-- ----------------------------------------------------------------- MINERADOS -->
+  <!-- ----------------------------------------------------------------- MINERADOS
+       Os nomes de classe aqui são os DE LÁ, e não parecidos com os de lá. A primeira
+       versão inventou `cat-num` e `cat-tit` para o cabeçalho e `pag-nav` para a barra
+       de páginas: nenhum desses nomes existe na folha copiada, então o cabeçalho saía
+       sem a linha embaixo e a paginação sem caixa nenhuma.
+
+       O FILTRO TAMBÉM NÃO É `select`. O do navegador abre a lista do sistema
+       operacional, com a moldura branca e a faixa azul do Windows no meio de uma tela
+       escura. Lá isso está resolvido com um componente próprio, e é ele que está aqui:
+       um botão, uma lista e a marca de escolhido. -->
   <div class="ct-painel" id="sub-p-minerados" hidden>
     <div class="secao">
       <div class="cat-cab">
-        <span class="cat-num">2</span>
-        <div>
-          <h3 class="cat-tit">Perfis minerados</h3>
-          <p class="nota" id="min-sub">o histórico de cada varredura</p>
-        </div>
+        <span class="n">1</span><h3>Perfis Minerados</h3>
+        <span class="sub" id="min-sub">o histórico de cada varredura</span>
       </div>
 
       <div class="ct-filtros">
         <input class="ct-busca" id="min-q" type="text" autocomplete="off"
                spellcheck="false" placeholder="Buscar perfil pelo @ ou pelo nome">
-        <select class="ct-sel" id="min-estado">
-          <option value="">Todos os estados</option>
-          <option value="completo">Concluídos</option>
-          <option value="limite">Varridos até o limite</option>
-          <option value="varrendo">Ainda varrendo</option>
-        </select>
-        <select class="ct-sel" id="min-ordem">
-          <option value="varridos">Mais varridos</option>
-          <option value="cobertura">Maior cobertura</option>
-          <option value="acima">Mais acima da régua</option>
-          <option value="reels">Mais reels</option>
-          <option value="conta">Nome do perfil</option>
-        </select>
+        <div class="sel" id="min-estado">
+          <button class="sel-gatilho" id="min-estadog" type="button"
+                  aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-valor" id="min-estadov">Todos Os Estados</span>
+            <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="sel-lista" id="min-estadol" role="listbox">
+            <div class="sel-grupo" id="min-estadogr"></div>
+          </div>
+        </div>
+        <div class="sel" id="min-ordem">
+          <button class="sel-gatilho" id="min-ordemg" type="button"
+                  aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-valor" id="min-ordemv">Mais Varridos</span>
+            <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="sel-lista" id="min-ordeml" role="listbox">
+            <div class="sel-grupo" id="min-ordemgr"></div>
+          </div>
+        </div>
       </div>
 
+      <!-- TREZE COLUNAS, E ESTA TABELA É O PAINEL DE CONTROLE DO SISTEMA INTEIRO.
+           Eram onze. Entraram três em 19/08/2026, a pedido do Gabriel, e saiu o botão
+           de marcar, que ele não tinha pedido.
+
+           MERCADO E ETIQUETA viravam duas pastilhas espremidas embaixo do nome do
+           perfil, e de lá não dava para comparar dois perfis nem ordenar por elas. São
+           dado do cadastro, e dado de cadastro é coluna. Clicar na célula abre a folha
+           de marcação, que é o que o botão fazia.
+
+           BAIXAR é a coluna que faltava para o sistema fechar. Um perfil some da
+           fileira da aba de Baixar no instante em que vem inteiro, e some sem deixar
+           rastro: quem quisesse saber se a Vinci já tinha descido não tinha onde olhar.
+           Agora tem, e é aqui.
+
+           O TOTAL DE PUBLICAÇÕES continua sem coluna própria, pelo mesmo motivo de
+           sempre: ele é a segunda linha da cobertura, que é onde a conta faz sentido de
+           qualquer forma, 62% de 4.976. -->
       <div class="tab-rolo">
-        <table class="tab">
+        <table class="tab" id="tab_minerados">
           <thead><tr>
             <th>Perfil</th>
-            <th class="tab-num">Posts na conta</th>
+            <th class="tab-marc">Mercado</th>
+            <th class="tab-marc tab-marc-etq">Etiqueta</th>
             <th class="tab-num">Varridos</th>
             <th class="tab-num">Cobertura</th>
             <th>Alcançou até</th>
@@ -101,9 +231,10 @@
             <th class="tab-num">Posts</th>
             <th class="tab-num">Carrosséis</th>
             <th class="tab-num">Acima da régua</th>
+            <th class="tab-baixa">Baixar</th>
             <th>Estado</th>
             <th>Última rodada</th>
-            <th></th>
+            <th class="tab-acao"></th>
           </tr></thead>
           <tbody id="min-corpo"></tbody>
         </table>
@@ -112,99 +243,1961 @@
         Tire uma marcação para alargar a busca.</div>
 
       <div class="pag" id="min-pag" hidden>
-        <span class="pag-quanto">
-          <label for="min-por">Perfis por página</label>
-          <select class="ct-sel" id="min-por">
-            <option>10</option><option>25</option><option>50</option>
-          </select>
-        </span>
-        <span class="pag-nav">
-          <button class="acao" id="min-antes" type="button">Anterior</button>
-          <span class="nota" id="min-onde"></span>
-          <button class="acao" id="min-depois" type="button">Próxima</button>
+        <span>Perfis por página</span>
+        <div class="sel" id="min-por">
+          <button class="sel-gatilho" id="min-porg" type="button"
+                  aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-valor" id="min-porv">10</span>
+            <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="sel-lista" id="min-porl" role="listbox">
+            <div class="sel-grupo" id="min-porgr"></div>
+          </div>
+        </div>
+        <span class="nav">
+          <button id="min-ini" type="button" aria-label="Primeira página">&laquo;</button>
+          <button id="min-ant" type="button" aria-label="Página anterior">&lsaquo;</button>
+          <span class="conta" id="min-conta"></span>
+          <button id="min-prox" type="button" aria-label="Próxima página">&rsaquo;</button>
+          <button id="min-fim" type="button" aria-label="Última página">&raquo;</button>
         </span>
       </div>
     </div>
   </div>
 
 </section>
+
+
+<!-- ============================================================ A FOLHA DE INICIAR
+     Ela existe porque a régua estava escondida: os campos moravam na aba de Baixar, e
+     a esteira nem os lia. Aqui a escolha é feita ANTES de qualquer leitura, é gravada
+     no acervo, e é ela que a esteira usa. -->
+<div class="liv-export" id="ini_folha" hidden>
+  <div class="liv-folha">
+    <h3>Iniciar A Mineração</h3>
+    <p class="nota" id="ini_quantos">nenhum perfil escrito ainda</p>
+
+    <div class="campo-bloco">
+      <label class="campo-rot">Que formatos entram</label>
+      <div class="escolhas">
+        <label class="escolha"><input type="checkbox" id="f_reels" checked><span>Reels</span></label>
+        <label class="escolha"><input type="checkbox" id="f_post" checked><span>Post isolado</span></label>
+        <label class="escolha"><input type="checkbox" id="f_carrossel" checked><span>Carrossel</span></label>
+      </div>
+    </div>
+
+    <!-- ATE ONDE VARRER: E' CONTADO, E NAO PERGUNTADO.
+         Aqui houve um campo para digitar o numero, e ele nao funcionava: quem escreve a
+         regua no acervo e' a ponte, que copia uma lista fixa de campos e descartava esse
+         no caminho. Campo que promete e nao cumpre e' pior do que campo nenhum.
+         O limite agora sai dos formatos marcados, que a ponte copia, e esta linha diz em
+         voz alta o que vai acontecer. -->
+    <div class="campo-bloco">
+      <label class="campo-rot">Até onde a esteira vai</label>
+      <p class="nota" id="ini_ate">—</p>
+    </div>
+
+    <div class="campo-bloco">
+      <label class="campo-rot">O que conta como fora da curva</label>
+      <p class="nota mini">Desempenho é múltiplo da mediana da própria conta. Em 1,5x,
+        entra o post que fez uma vez e meia o que aquele perfil costuma fazer.</p>
+      <label class="escolha larga">
+        <input type="checkbox" id="por_formato" checked>
+        <span>Calcular a mediana <b>separada por formato</b>
+          <small>vídeo vem com contagem de exibição, imagem vem só com curtida:
+            juntar os dois compara réguas diferentes</small></span>
+      </label>
+    </div>
+
+    <div class="campo-bloco" id="cortes_juntos" hidden>
+      <label class="campo-rot" for="corte_unico">Régua única, em vezes a mediana</label>
+      <input type="number" id="corte_unico" value="1.5" step="0.1" min="1" max="100">
+    </div>
+
+    <div class="campo-bloco" id="cortes_separados">
+      <label class="campo-rot">A régua de cada formato</label>
+      <div class="cortes">
+        <label data-de="reels">Reels<input type="number" id="c_reels" value="1.5"
+               step="0.1" min="1" max="100"></label>
+        <label data-de="post">Post<input type="number" id="c_post" value="1.5"
+               step="0.1" min="1" max="100"></label>
+        <label data-de="carrossel">Carrossel<input type="number" id="c_carrossel"
+               value="1.5" step="0.1" min="1" max="100"></label>
+      </div>
+    </div>
+
+    <div class="liv-pe">
+      <span class="nota" id="ini_recado"></span>
+      <button class="acao" id="ini_cancelar" type="button">Cancelar</button>
+      <button class="acao forte" id="ini_vai" type="button">Iniciar</button>
+    </div>
+  </div>
+</div>
+
+<!-- A folha de exportação, fora das abas porque cobre a tela inteira -->
+<div class="liv-export" id="liv_folha" hidden>
+  <div class="liv-folha">
+    <h3>Exportar A Atividade</h3>
+    <p class="nota">Sai em planilha, que abre direto no Excel. Uma linha por evento,
+      com o perfil, a data, o tipo e os números daquela varredura.</p>
+
+    <label class="liv-opcao">
+      <input type="radio" name="exp" value="tudo" checked>
+      <span>Tudo<small>o histórico inteiro, de todos os perfis</small></span>
+    </label>
+    <label class="liv-opcao">
+      <input type="radio" name="exp" value="tela">
+      <span>Só o que está na tela<small id="exp_tela">o que os filtros deixaram</small></span>
+    </label>
+    <label class="liv-opcao">
+      <input type="radio" name="exp" value="periodo">
+      <span>Um período<small>escolha as datas abaixo</small></span>
+    </label>
+    <div class="liv-datas" id="exp_datas">
+      <label>De<input type="date" id="exp_de"></label>
+      <label>Até<input type="date" id="exp_ate"></label>
+    </div>
+
+    <div class="liv-pe">
+      <button class="acao" id="exp_cancelar" type="button">Cancelar</button>
+      <button class="acao forte" id="exp_baixar" type="button">Baixar Planilha</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================================================== A FOLHA DE ETIQUETAR
+
+     ONDE A MARCAÇÃO É FEITA, e por que aqui e não na mineração.
+     Os dois filtros da aba de Baixar precisam de mercado e etiqueta por perfil, e isso
+     não existia em lugar nenhum. Na mineração seria tarde para os perfis já varridos:
+     eles teriam de ser lidos de novo só para ganhar um rótulo. A marcação mora na
+     tabela de Minerados, que é o cadastro dos perfis, e vale para quem já está lá e
+     para quem chegar depois. -->
+<!-- ============================================= MERCADO E ETIQUETA, A FOLHA INTEIRA
+
+     ESCOLHER DE UMA LISTA, E NÃO DIGITAR NO ESCURO.
+     Aqui havia dois campos de texto livre. O de mercado tinha um `datalist`, que é o
+     autocompletar do navegador e some no celular; o de etiquetas era uma linha de nomes
+     separados por vírgula. Os dois têm o mesmo defeito: para marcar o primeiro perfil de
+     um nicho, o nome era digitado no vazio, e "financas" e "finanças" viravam dois
+     nichos diferentes na primeira letra errada. Nada avisava, e o filtro passava a
+     separar o que devia estar junto.
+
+     E NÃO DAVA PARA APAGAR NADA. Um nome só sumia quando o último perfil que o carregava
+     fosse reescrito na mão, um por um.
+
+     O DESENHO É O DA ABA DE CONFIGURAÇÕES DO SOCIAL TRACKER, a pedido do Gabriel em
+     19/08/2026: lista editável com uma linha por item, quantos perfis o usam, o xis que
+     só aparece ao passar o mouse, e a linha de criar encostada no pé. Junto veio a regra
+     que lá nasceu em 14/08: apagar sempre pode, e a pergunta é para onde vão os perfis.
+     Trancar um nome em uso não protege ninguém, só empurra o trabalho para fora da tela.
+
+     O QUE NÃO VEIO: a paleta de vinte e quatro ícones por etiqueta. Lá ela é enfeite da
+     própria lista de configurações, e não chega à pastilha: o `etiqueta_html` de lá
+     desenha sempre o mesmo símbolo. Copiá-la seria trazer superfície sem função. -->
+<div class="liv-export" id="etq_folha" hidden>
+  <div class="liv-folha etq-larga">
+    <h3>Mercado E Etiquetas <span id="etq_quem"></span></h3>
+    <p class="nota">Mercado é um só por perfil, e serve para escolher. Etiqueta é
+      livre e soma: um perfil pode ter várias, e o filtro traz todos os que tiverem
+      qualquer uma das marcadas.</p>
+
+    <div class="campo-bloco">
+      <label class="campo-rot">Mercado deste perfil</label>
+      <div class="psel cfg-sel" id="etq_merc">
+        <button type="button" class="psel-b" aria-haspopup="listbox"
+                aria-expanded="false"><span>Sem Mercado</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="psel-menu" role="listbox"></div>
+      </div>
+    </div>
+
+    <div class="campo-bloco">
+      <label class="campo-rot">Etiquetas deste perfil</label>
+      <!-- CLICAR NA PASTILHA MARCA E DESMARCA. Uma caixa de seleção ao lado de cada nome
+           daria a mesma função e roubaria o desenho da etiqueta, que é o que o olho já
+           reconhece nas outras telas. -->
+      <div class="etq-escolha" id="etq_lista"></div>
+      <p class="nota mini" id="etq_sem_etq" hidden>Nenhuma etiqueta criada ainda.
+        Crie a primeira ali embaixo.</p>
+    </div>
+
+    <div class="liv-pe">
+      <span class="nota" id="etq_recado"></span>
+      <button class="acao" id="etq_cancelar" type="button">Fechar</button>
+      <button class="acao forte" id="etq_vai" type="button">Salvar A Marcação</button>
+    </div>
+
+    <!-- AS DUAS LISTAS, ATRÁS DE UM CLIQUE. Criar e apagar são raros; marcar um perfil é
+         o que se faz toda hora. Abertas por padrão, elas empurrariam para baixo o botão
+         de salvar, que é o que trouxe a pessoa até aqui. -->
+    <details class="etq-gerir">
+      <summary>Criar e apagar mercados e etiquetas</summary>
+      <div class="cfg-duas">
+        <div class="caixa">
+          <div class="cfg-topo"><h3>Mercados</h3>
+            <div class="dir"><span class="cfg-cat-conta" id="cat_n_nicho"></span></div>
+          </div>
+          <div class="cfg-cat" data-o="nicho">
+            <div class="cfg-cat-lista"></div>
+            <div class="cfg-cat-novo">
+              <input type="text" maxlength="28" placeholder="nome do novo mercado">
+              <button type="button" class="cfg-cat-btn">Criar</button>
+            </div>
+            <div class="cfg-cat-diz"></div>
+          </div>
+        </div>
+        <div class="caixa">
+          <div class="cfg-topo"><h3>Etiquetas</h3>
+            <div class="dir"><span class="cfg-cat-conta" id="cat_n_etq"></span></div>
+          </div>
+          <div class="cfg-cat" data-o="etiqueta">
+            <div class="cfg-cat-lista"></div>
+            <div class="cfg-cat-novo">
+              <input type="text" maxlength="28" placeholder="nome da nova etiqueta">
+              <button type="button" class="cfg-cat-btn">Criar</button>
+            </div>
+            <div class="cfg-cat-diz"></div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
 
 
 <!-- ==================================================================== ABA 2 · BAIXAR -->
 <section class="aba" id="aba-baixar" hidden>
 
+  <!-- ================================================ O QUE HÁ PARA BAIXAR
+
+       O TAMANHO DA LEVA NÃO SE DIGITA MAIS: ELE É CONTADO.
+       Havia um campo de quantidade, e ele obrigava a decidir duas coisas para pedir
+       uma: quais perfis e quantos arquivos. Agora a escolha é uma só. Os perfis são
+       marcados na fileira de baixo e a conta aparece sozinha aqui em cima.
+
+       O CARTÃO É FIXO, e não redesenhado a cada volta. Os dois filtros são componentes
+       com comportamento preso ao elemento: reescrever o cartão de vinte e cinco em
+       vinte e cinco segundos apagaria essa ligação, e as listas parariam de abrir. Só
+       a fileira de perfis é redesenhada. -->
   <div class="secao">
     <div class="secao-cab">
-      <h2>Régua</h2>
-      <div class="dir"><span class="nota">vale para os perfis abaixo</span></div>
+      <h2>Material Disponível</h2>
+      <div class="dir"><span class="nota" id="recado_baixar"></span></div>
     </div>
-    <div class="caixa">
-      <h3>O que conta como bom desempenho</h3>
-      <p class="nota">Desempenho é múltiplo da mediana da própria conta, calculada
-        <b>por formato</b>. Vídeo tem contagem de exibição, imagem e carrossel não têm.</p>
-      <div class="linha">
-        <div class="campo">
-          <label>Corte, em vezes a mediana</label>
-          <input type="number" id="corte" value="1.5" step="0.5" min="1">
+
+    <div class="caixa lote-montar">
+      <h3>Montar Uma Leva</h3>
+      <p class="nota">Marque os perfis na fileira abaixo. Sai tudo o que passou da
+        régua naqueles perfis, em ordem de desempenho, e some daqui o que já veio.</p>
+
+      <div class="lote-linha">
+        <div class="lote-campo">
+          <label class="campo-rot">Mercado</label>
+          <div class="sel" id="bx-nicho">
+            <button class="sel-gatilho" id="bx-nichog" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-valor" id="bx-nichov" data-vazio="true">Todos Os Nichos</span>
+              <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="sel-lista" id="bx-nichol" role="listbox">
+              <div class="sel-grupo" id="bx-nichogr"></div>
+            </div>
+          </div>
         </div>
-        <div class="campo">
-          <label>Máximo de arquivos por lote</label>
-          <input type="number" id="quantos" value="150" step="10" min="1">
+
+        <div class="lote-campo">
+          <label class="campo-rot">Etiqueta</label>
+          <div class="autocomplete" id="bx-etq">
+            <div class="autocomplete__trigger" id="bx-etqgatilho" role="combobox"
+                 tabindex="0" aria-haspopup="listbox" aria-expanded="false">
+              <span class="autocomplete__value" id="bx-etqvalor"
+                    data-placeholder="true">Todas as etiquetas</span>
+              <button class="autocomplete__clear-button" id="bx-etqlimpar" type="button"
+                      data-empty="true" aria-label="Limpar as etiquetas">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+              <span class="autocomplete__indicator" id="bx-etqseta" data-open="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m6 9 6 6 6-6"/></svg>
+              </span>
+            </div>
+            <div class="autocomplete__popover" id="bx-etqpop">
+              <div class="autocomplete__busca">
+                <input id="bx-etqq" type="text" autocomplete="off" spellcheck="false"
+                       placeholder="Buscar etiqueta">
+              </div>
+              <div class="list-box" id="bx-etqlista" role="listbox"
+                   aria-multiselectable="true"></div>
+            </div>
+          </div>
         </div>
+
+        <button class="acao forte" id="lote_vai" type="button" disabled>Montar Leva</button>
+      </div>
+
+      <p class="nota" id="recado_lote">Carregando o acervo.</p>
+      <!-- Os dois filtros nascem apagados enquanto não houver o que recortar, e esta
+           linha diz por quê. Controle que não faz nada e não explica é o que já fez
+           esta tela mentir uma vez. -->
+      <p class="nota mini" id="recado_filtros" hidden></p>
+    </div>
+
+    <div class="fileira" id="prontos"><div class="vazio">Carregando.</div></div>
+  </div>
+
+  <!-- ============================================ O REGISTRO DA LEVA, AO VIVO
+
+       Mesmo molde do registro da mineração, e pelo mesmo motivo: entre apertar o botão
+       e o arquivo ficar pronto passam minutos, e sem registro esse silêncio é igual ao
+       silêncio de uma falha. Cada fase do trabalho grava aqui na hora em que acontece.
+
+       AS TRÊS MEDIDAS SÃO DA LEVA DE QUE A CABEÇA FALA, e não somas do histórico. O que
+       interessa ao olhar é este lote: quantos desceram, quantos passaram na limpeza e
+       quantos foram barrados. -->
+  <div class="secao">
+    <div class="secao-cab"><h2>Registro Ao Vivo</h2></div>
+
+    <div class="konsole">
+      <div class="kon-topo">
+        <span class="kon-selo">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+        </span>
+        <div class="kon-quem">
+          <b id="lot_titulo">Nenhuma leva ainda</b>
+          <span id="lot_resumo">Marque os perfis acima e aperte Montar leva.</span>
+        </div>
+        <div class="kon-dir" id="lot_vivo">
+          <span class="kon-vivo"><i></i>parado</span>
+        </div>
+      </div>
+
+      <div class="kon-medidas">
+        <div class="kon-medida evento">
+          <div class="kon-rot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5
+                 5 5-5M5 21h14"/></svg><span>baixados do Instagram</span>
+          </div>
+          <b id="lot_baixados">0</b>
+        </div>
+        <div class="kon-medida">
+          <div class="kon-rot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/>
+            </svg><span>tratados</span>
+          </div>
+          <b id="lot_limpos">0</b>
+        </div>
+        <div class="kon-medida falha">
+          <div class="kon-rot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12"
+                 r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>reprovados</span>
+          </div>
+          <b id="lot_reprovados">0</b>
+        </div>
+      </div>
+
+      <div id="lot_lista"></div>
+      <div class="gal-vazia" id="lot_vazio">Nenhuma leva pedida ainda.</div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- =================================================================== ABA 4 · EDIÇÃO
+
+     TRÊS TELAS, E NÃO UMA. Decisão do Gabriel em 19/08/2026, depois de ver a primeira
+     versão: a escolha da leva estava solta no meio da página do passo 1, misturada com o
+     trilho e com a galeria, e nada dizia por onde começar.
+
+       1. a portaria   nova edição, ou voltar a um rascunho
+       2. a escolha    qual leva vai ser editada, em tela cheia
+       3. a oficina    o passo a passo, com o trilho à esquerda
+
+     Cada uma ocupa a tela sozinha. Escolhida a leva, a oficina entra com o trilho
+     desenhando as barras a partir do zero, e é essa animação que diz "começou".
+
+     O TRILHO É O DO EXEMPLO QUE ELE MANDOU (21st.dev, ScrollRevealContentA): número em
+     cima, uma linha vertical fina que PREENCHE, e ao lado o título e a descrição do
+     passo. Passo por vir fica a meia opacidade. A primeira versão era botão com ícone
+     dentro de um quadrado, que é outra coisa: aquilo é menu, isto é percurso. -->
+<section class="aba" id="aba-editar" hidden>
+
+  <!-- ============================================================ 1 · A PORTARIA -->
+  <div class="ed-porteira" id="ed_portaria">
+    <div class="ed-porteira-in">
+      <h1>Edição</h1>
+      <p class="nota">Cada edição pega uma leva de reels tratados e aplica sobre ela o
+        que você definir. Comece uma nova ou volte para onde parou.</p>
+
+      <button class="ed-comeco" id="ed_nova" type="button">
+        <span class="ed-comeco-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/></svg>
+        </span>
+        <span class="ed-comeco-txt">
+          <b>Iniciar Uma Nova Edição</b>
+          <span>Escolher A Leva E Passar Pelas Etapas</span>
+        </span>
+        <svg class="ed-comeco-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/></svg>
+      </button>
+
+      <div class="ed-rascunhos">
+        <div class="ed-rascunhos-cab">
+          <h3>Rascunhos</h3>
+          <span class="nota" id="ed_rasc_conta"></span>
+        </div>
+        <div id="ed_rasc_lista"></div>
+        <div class="ed-vazio" id="ed_rasc_vazio">Nenhum rascunho guardado. O que você
+          começar fica aqui sozinho, e some só quando você mandar.</div>
       </div>
     </div>
   </div>
 
-  <div class="secao">
-    <div class="secao-cab">
-      <h2>Perfis varridos</h2>
-      <div class="dir"><span class="nota" id="recado_baixar"></span></div>
+  <!-- ============================================================ 2 · A ESCOLHA -->
+  <div class="ed-escolha" id="ed_escolha" hidden>
+    <div class="ed-escolha-in">
+      <button class="ed-voltar" id="ed_volta_portaria" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/></svg>Voltar</button>
+
+      <h1>Qual Leva Você Vai Trabalhar?</h1>
+      <p class="nota">Cada leva é um pacote de reels já baixados e tratados, guardado no
+        seu computador.</p>
+
+      <div class="ed-levas" id="ed_levas"></div>
+      <div class="ed-vazio" id="ed_sem_leva" hidden>Nenhuma leva guardada ainda. Monte
+        uma na aba de Baixar.</div>
     </div>
-    <div id="prontos"><div class="vazio">Nenhum perfil varrido ainda.</div></div>
   </div>
 
-  <div class="secao">
-    <div class="secao-cab"><h2>Lotes montados</h2></div>
-    <div id="lotes"><div class="vazio">Nenhum lote ainda.</div></div>
-  </div>
+  <!-- ============================================================ 3 · A OFICINA -->
+  <div class="ed-tela" id="ed_oficina" hidden>
 
+    <!-- A SAIDA PRECISA EXISTIR E SER OBVIA. Na oficina o cabecalho do sistema sai de
+         cena, e com ele saem os links das outras abas: sem um caminho de volta desenhado
+         aqui, a unica saida seria recarregar a pagina. -->
+    <button class="ed-sair" id="ed_sair" type="button" title="Sair da edição">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      <span>Sair Da Edição</span>
+    </button>
+
+    <aside class="ed-trilho" id="ed_trilho">
+      <button class="ed-voltar mini" id="ed_volta_escolha" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/></svg>Trocar De Leva</button>
+
+      <!-- A ESTRUTURA DE CADA PASSO É A DO EXEMPLO: número, depois uma coluna estreita
+           com a linha que preenche, e ao lado o texto. A altura da barra vem de uma
+           medida escrita no próprio elemento, para a transição do CSS animá-la. -->
+      <div class="ed-ponto ativo" data-passo="1">
+        <div class="ed-ponto-n">01</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt">
+            <h3>Seleção Da Leva</h3>
+            <p id="ed_r1">nenhuma escolhida</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- O RECORTE VEM ANTES DO TEMPLATE, e a ordem é a correção de um erro de desenho.
+           Enquanto o template era o passo 2, o recorte do B-roll acontecia espremido
+           dentro dele e obrigado a caber na proporção da moldura: cada reel põe a
+           filmagem num tamanho diferente, então forçar todos na mesma proporção cortava
+           pedaço de uns e sobrava nos outros. O Gabriel cravou a inversão em 20/08/2026:
+           "a etapa dois vai ser a etapa de recorte", "o que vai ditar como o template vai
+           ser trabalhado agora é o B-roll". -->
+      <div class="ed-ponto" data-passo="2">
+        <div class="ed-ponto-n">02</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt">
+            <h3>Recorte Do B-roll</h3>
+            <p id="ed_r2">o B-roll de cada vídeo</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- O PASSO 3 TEM PASSOS DENTRO DELE, e foi assim que o Gabriel descreveu: "tem
+           várias etapas dentro da etapa de template". Eles só aparecem quando ele está
+           no 3. Fora dele, o trilho volta a ser uma linha por passo, senão a espinha
+           vira um índice de livro. -->
+      <div class="ed-ponto" data-passo="3">
+        <div class="ed-ponto-n">03</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt">
+            <h3>Montagem Da Peça</h3>
+            <p id="ed_r3">nenhum escolhido</p>
+            <ol class="ed-sub" id="ed_sub3">
+              <li data-sub="1"><i></i>Caixas De Texto</li>
+              <li data-sub="2"><i></i>Imagens Do Template</li>
+              <li data-sub="3"><i></i>Escrita Das Frases</li>
+              <li data-sub="4"><i></i>Prévia Do Resultado</li>
+              <li data-sub="5"><i></i>Revisão Peça A Peça</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- O PASSO 4 GANHOU MIOLO EM 23/08/2026. Ele nomeou o passo em 20/08 e deixou
+           vazio; três dias depois disse o que ele faz, e são duas coisas em ordem: "a
+           primeira subetapa é a criação desses textos... a segunda subetapa é subir todos
+           esses arquivos dentro do Drive". Por isso ele tem sub-trilho igual ao passo 3. -->
+      <div class="ed-ponto" data-passo="4">
+        <div class="ed-ponto-n">04</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt">
+            <h3>Legenda E Entrega</h3>
+            <p id="ed_r4">depois da montagem</p>
+            <ol class="ed-sub" id="ed_sub4">
+              <li data-sub="1"><i></i>Descrição Dos Posts</li>
+              <li data-sub="2"><i></i>Envio Para O Drive</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="ed-palco">
+
+      <!-- ---------------------------------------- PASSO 1 · AS PEÇAS DA LEVA -->
+      <div class="ed-etapa" data-passo="1">
+        <!-- O TÍTULO É O NOME DA LEVA E A CONTA DE PEÇAS, e mais nada. Havia uma
+             linha comprida explicando o que era o número de cada peça; ela some junto
+             com o número, que saiu do rodapé das peças. A contagem ganha corpo: é o
+             dado que importa nesta tela. -->
+        <div class="ed-cab">
+          <h2 id="ed_p1_titulo">A Leva</h2>
+          <div class="ed-conta"><b id="ed_p1_n">0</b><span id="ed_p1_qual">peças</span></div>
+        </div>
+
+        <!-- O QUE FOI TIRADO DA LEVA. A linha só aparece quando há alguma coisa fora,
+             porque um contador parado em zero é ruído em cima da galeria. -->
+        <div class="ed-fora-linha" id="ed_fora_linha" hidden>
+          <span id="ed_fora_diz"></span>
+          <button class="acao mini" type="button" id="ed_fora_voltar">Trazer Todas De Volta</button>
+        </div>
+
+        <!-- A PORTA DA PASTA. Ela só aparece quando é preciso: pedir permissão antes de
+             haver o que abrir é pedir por pedir. -->
+        <!-- DOIS ESTADOS, E NÃO UM. A primeira versão tinha só o de escolher, e por
+             isso o Gabriel viu duas vezes seguidas a mesma tela pedindo a pasta, depois
+             de já ter escolhido. São situações diferentes:
+
+               nunca     ele ainda não apontou pasta nenhuma
+               liberar   ele já apontou, e o navegador quer uma confirmação desta sessão
+
+             O navegador guarda QUAL é a pasta, e isso dura. O que ele não guarda de uma
+             visita para a outra é a permissão de ler: a cada vez que a página abre, ela
+             volta para "perguntar". É proteção dele e não dá para desligar por programa.
+             O que dá é não fazer o Gabriel procurar a pasta de novo: no segundo estado é
+             um clique, sem janela de arquivos. -->
+        <div class="caixa ed-porta" id="ed_porta" hidden data-estado="nunca">
+
+          <div class="ed-porta-nunca">
+            <h3>Apontar A Pasta Do Estúdio</h3>
+            <p class="nota">Os vídeos estão no seu computador, e esta tela vem da
+              internet. Por segurança, nenhuma página abre um arquivo do seu disco sem
+              você mandar. Aponte a pasta uma vez: o navegador guarda <b>qual pasta é</b>
+              e não pergunta mais qual. Nada é enviado para lugar nenhum.</p>
+            <p class="ed-caminho">C:\Users\Gabri\Estudio\levas</p>
+            <div class="linha">
+              <button class="acao forte" id="ed_abrir_pasta" type="button">
+                Escolher A Pasta</button>
+            </div>
+          </div>
+
+          <div class="ed-porta-liberar" hidden>
+            <h3>Liberar O Acesso À Pasta</h3>
+            <p class="nota">A pasta já está escolhida e o navegador lembra dela. O que ele
+              não guarda de uma visita para a outra é a <b>permissão de ler</b>: toda vez
+              que a página abre, ela volta para perguntar. É proteção do navegador e não
+              dá para desligar daqui.</p>
+            <p class="nota">Um clique e pronto, sem procurar pasta de novo.</p>
+            <p class="ed-caminho" id="ed_porta_nome"></p>
+            <div class="linha">
+              <button class="acao forte" id="ed_liberar" type="button">
+                Liberar O Acesso</button>
+              <button class="acao" id="ed_trocar_pasta" type="button">
+                Apontar Outra Pasta</button>
+            </div>
+          </div>
+
+          <p class="nota" id="ed_recado_pasta"></p>
+        </div>
+
+        <div class="ed-galeria" id="ed_galeria"></div>
+
+        <!-- AQUI HAVIA UMA BARRA DE RODAPÉ com "41 peças prontas" e um botão de
+             continuar. Saiu por decisão do Gabriel em 19/08/2026, e a razão é boa: quem
+             avança é o trilho da esquerda. Clicar no passo 2 abre o passo 2, clicar no 1
+             volta para o 1, e ponto. Um botão fazendo o que o trilho já faz é um segundo
+             caminho para a mesma coisa, e dois caminhos para uma coisa só sempre acabam
+             discordando. Passo que exigir um aceite terá o botão dele, no lugar dele. -->
+      </div>
+
+      <!-- ---------------------------------------- PASSO 2 · O RECORTE DO B-ROLL
+
+           O QUE ELE FAZ: acha em cada reel o retângulo da filmagem, o B-roll, e grava só
+           ele. O arroba e a legenda de quem postou ficam de fora.
+
+           POR QUE ELE VEM ANTES DO TEMPLATE. Enquanto o recorte morava dentro do passo do
+           template, ele era obrigado a caber na proporção da moldura, e por isso comia
+           pedaço do B-roll. O Gabriel viu isso sorteando vídeo por vídeo: "o enquadramento
+           não está pegando o vídeo inteiro", "tem B-roll que são maiores, B-rolls que são
+           menores". Sem template no caminho não há proporção a obedecer, e sai o B-roll
+           inteiro, do jeito que ele é.
+
+           UM CLIQUE, TODAS AS PEÇAS. Não há aqui um vídeo de cada vez para ajustar na
+           mão: o retângulo é medido em cada peça na hora de gravar. O vídeo desta tela é
+           só para conferir que o método está certo antes de soltar nas cento e sete. -->
+      <div class="ed-etapa" data-passo="2" hidden>
+        <div class="ed-cab">
+          <h2>Recorte Do B-roll</h2>
+          <p class="nota">O sistema mede o retângulo da filmagem em cada vídeo e grava só
+            ele. Confira num exemplo e depois solte na leva inteira.</p>
+        </div>
+
+        <div class="rec-dois">
+          <div class="rec-lado-a">
+            <h4>O Reel, Com O B-roll Marcado</h4>
+            <div class="rec-quadro" id="rec_fonte">
+              <video id="rec_video" preload="metadata" muted playsinline loop></video>
+              <div class="rec-marca" id="rec_marca" hidden></div>
+            </div>
+            <div class="rec-medida" id="rec_med_a"></div>
+          </div>
+
+          <div class="rec-lado-b">
+            <h4>O Que Vai Ser Gravado</h4>
+            <div class="rec-quadro rec-corte" id="rec_saida">
+              <video id="rec_corte" preload="metadata" muted playsinline loop></video>
+            </div>
+            <div class="rec-medida" id="rec_med_b"></div>
+          </div>
+
+          <div class="rec-lado">
+            <div class="rec-bloco">
+              <h4>Conferir</h4>
+              <p class="nota mini" id="rec_diz">medindo…</p>
+              <button class="acao mini" id="rec_sortear" type="button">Ver Outro Reel</button>
+            </div>
+
+            <!-- OS DOIS FORMATOS QUE APARECEM NA LEVA, e a conta vale como aviso: reel
+                 sem card é reel que não tem B-roll separado, e nesse a resposta certa é
+                 gravar o vídeo inteiro. -->
+            <div class="rec-bloco">
+              <h4>O Que Tem Na Leva</h4>
+              <p class="nota mini" id="rec_mistura">ainda não medi a leva toda.</p>
+            </div>
+
+            <div class="rec-bloco">
+              <h4>Pasta De Destino</h4>
+              <p class="ed-caminho" id="rec_caminho"></p>
+              <p class="nota mini">Os vídeos brutos continuam onde estavam, intactos. Ao
+                lado dos recortes fica a ficha dizendo de qual bruto veio cada um.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="apl-pe">
+          <div class="apl-resumo" id="rec_resumo"></div>
+          <button class="acao forte" id="rec_aplicar" type="button">Recortar</button>
+          <div class="apl-feito" id="rec_feito" hidden>
+            <a class="acao" id="rec_pasta" href="#">Abrir A Pasta Dos Recortes</a>
+            <button class="acao forte" id="rec_segue" type="button">
+              Ir Para O Passo 3</button>
+          </div>
+        </div>
+
+        <div class="caixa apl-obra" id="rec_obra" hidden>
+          <div class="apl-obra-topo">
+            <span class="cfg-girando"></span>
+            <b id="rec_obra_txt">recortando</b>
+            <span class="dir" id="rec_obra_tempo"></span>
+          </div>
+          <div class="apl-barra"><i id="rec_barra"></i></div>
+          <p class="nota" id="rec_obra_nota"></p>
+        </div>
+      </div>
+
+      <!-- ---------------------------------------- PASSO 3 · O TEMPLATE, EM QUATRO FASES
+
+           O TEMPLATE NÃO É MAIS UM ARQUIVO QUE SE ESCOLHE, e nem uma tela só. O Gabriel
+           desenhou as quatro fases em 20/08/2026, nesta ordem:
+
+             1. o texto      onde ele fica, com que letra, e o cadeado
+             2. as imagens   logo e PNG, com cadeado de posição
+             3. a IA escreve lê a frase do card e escreve uma nova para cada peça
+             4. os ajustes   a IA acerta tamanho e posição peça a peça, e monta
+
+           A TELA DE SUBIR TEMPLATE PRONTO SAIU. "Eu falei que não tinha mais isso e ainda
+           tá aparecendo. Então remove aquela tela." O que chega do passo 2 é B-roll sobre
+           preto, e o template nasce daí. -->
+      <div class="ed-etapa" data-passo="3" hidden>
+
+        <!-- ................................................ 3.1 · O TEXTO -->
+        <div class="ed-sub-tela" data-sub="1">
+          <div class="ed-cab">
+            <h2>Caixas De Texto</h2>
+            <p class="nota">Onde a escrita fica na peça, com que letra, e o que a IA pode
+              mexer.</p>
+          </div>
+
+          <div class="ed-tres">
+            <aside class="ed-lado">
+              <section class="ed-bloco">
+                <h4>Fundo Da Peça</h4>
+                <div class="ed-cores" id="ed_cores"></div>
+              </section>
+
+              <section class="ed-bloco">
+                <h4>Texto</h4>
+                <button class="acao mini larga" id="ed_add_texto" type="button">
+                  Acrescentar Uma Caixa</button>
+                <ul class="ed-camadas" id="ed_camadas_txt"></ul>
+              </section>
+
+              <section class="ed-bloco">
+                <h4>Reel De Referência</h4>
+                <p class="nota mini" id="ed_broll_diz">nenhum recorte carregado</p>
+                <button class="acao mini larga" id="ed_outro_broll" type="button">
+                  Outro B-roll</button>
+              </section>
+            </aside>
+
+            <div class="ed-meio">
+              <div class="ed-canvas" id="ed_canvas">
+                <video id="ed_broll" preload="metadata" muted playsinline loop></video>
+                <div class="ed-camada" id="ed_camada"></div>
+              </div>
+              <p class="ed-medida" id="ed_medida">1080 por 1920</p>
+            </div>
+
+            <aside class="ed-lado" id="ed_props_txt">
+              <p class="nota mini ed-nada" id="ed_sem_txt">Clique numa caixa de texto da
+                peça para mexer nela.</p>
+
+              <div id="ed_prop_texto" hidden>
+                <section class="ed-bloco">
+                  <h4>O Que Está Escrito</h4>
+                  <textarea id="p_texto" rows="3"></textarea>
+                </section>
+
+                <section class="ed-bloco">
+                  <h4>Letra</h4>
+                  <div class="ed-linha-prop">
+                    <span>fonte</span>
+                    <div class="psel" id="p_fonte"></div>
+                  </div>
+                  <div class="ed-linha-prop">
+                    <span>peso</span>
+                    <div class="psel" id="p_peso"></div>
+                  </div>
+                  <div class="ed-linha-prop">
+                    <span>tamanho</span>
+                    <div class="ed-passo" id="p_tamanho"></div>
+                  </div>
+                  <div class="ed-linha-prop">
+                    <span>alinhar</span>
+                    <div class="ed-botoes" id="p_alinha">
+                      <button type="button" data-a="esquerda" title="à esquerda">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+                      </button>
+                      <button type="button" data-a="centro" title="no centro">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M6 18h12"/></svg>
+                      </button>
+                      <button type="button" data-a="direita" title="à direita">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M10 12h10M7 18h13"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="ed-cores mini" id="p_cores"></div>
+                </section>
+
+                <!-- O CADEADO. "Alguns textos eu posso colocar um cadeado, que é um texto
+                     que a IA não vai escrever. E alguns textos eu deixo em aberto: IA,
+                     quando você for escrever, escreve aqui, com essa fonte." -->
+                <section class="ed-bloco">
+                  <h4>A IA Pode Escrever Aqui?</h4>
+                  <div class="ed-botoes largo" id="p_trava">
+                    <button type="button" data-trava="1">
+                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
+                        rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                      <span>Não, Travado</span></button>
+                    <button type="button" data-trava="0">
+                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
+                        rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>
+                      <span>Sim, Aberto</span></button>
+                  </div>
+                </section>
+
+                <button class="acao mini larga perigo" id="ed_apagar_txt" type="button">
+                  Apagar Esta Caixa</button>
+              </div>
+            </aside>
+          </div>
+
+          <div class="ed-pe">
+            <div class="ed-pe-conta" id="ed_conta_txt"></div>
+            <button class="acao forte" id="ed_vai_imagens" type="button">
+              Seguir Para As Imagens</button>
+          </div>
+        </div>
+
+        <!-- ................................................ 3.2 · AS IMAGENS -->
+        <div class="ed-sub-tela" data-sub="2" hidden>
+          <div class="ed-cab">
+            <h2>Imagens Do Template</h2>
+            <p class="nota">Logo, selo, qualquer PNG. Travar aqui é travar a posição, e
+              não o conteúdo.</p>
+          </div>
+
+          <div class="ed-tres">
+            <aside class="ed-lado">
+              <section class="ed-bloco">
+                <h4>Acrescentar</h4>
+                <label class="ed-solta" id="ed_solta">
+                  <input type="file" id="ed_add_img" accept="image/png,image/jpeg" hidden>
+                  <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/>
+                    <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                  <span>escolher uma imagem</span>
+                </label>
+                <ul class="ed-camadas" id="ed_camadas_img"></ul>
+              </section>
+
+              <section class="ed-bloco">
+                <h4>Reel De Referência</h4>
+                <p class="nota mini" id="ed_broll_diz2">nenhum recorte carregado</p>
+                <button class="acao mini larga" id="ed_outro_broll2" type="button">
+                  Outro B-roll</button>
+              </section>
+            </aside>
+
+            <!-- A TELA DA PEÇA É A MESMA NAS DUAS FASES, e ela é movida para cá em vez
+                 de duplicada. Duas telas seriam dois vídeos tocando, dois desenhos para
+                 manter em dia e uma chance a mais de discordarem entre si. -->
+            <div class="ed-meio" id="ed_meio2"></div>
+
+            <aside class="ed-lado">
+              <p class="nota mini ed-nada" id="ed_sem_img">Clique numa imagem da peça para
+                mexer nela.</p>
+              <div id="ed_prop_img" hidden>
+                <section class="ed-bloco">
+                  <h4>Imagem</h4>
+                  <p class="ed-medida" id="p_img_nome"></p>
+                  <div class="ed-linha-prop">
+                    <span>largura</span>
+                    <div class="ed-passo" id="p_larg"></div>
+                  </div>
+                </section>
+                <section class="ed-bloco">
+                  <h4>A IA Pode Mover?</h4>
+                  <div class="ed-botoes largo" id="p_trava_img">
+                    <button type="button" data-travai="1">
+                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
+                        rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                      <span>Não, Cravada</span></button>
+                    <button type="button" data-travai="0">
+                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
+                        rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>
+                      <span>Sim, Pode</span></button>
+                  </div>
+                </section>
+                <button class="acao mini larga perigo" id="ed_apagar_img" type="button">
+                  Apagar Esta Imagem</button>
+              </div>
+            </aside>
+          </div>
+
+          <div class="ed-pe">
+            <button class="acao" id="ed_volta_texto" type="button">Voltar Ao Texto</button>
+            <div class="ed-pe-conta" id="ed_conta_img"></div>
+            <button class="acao" id="ed_salvar_tpl" type="button">Salvar No Acervo</button>
+            <button class="acao forte" id="ed_vai_ia" type="button">
+              Seguir Para A IA Escrever</button>
+          </div>
+        </div>
+
+        <!-- ................................................ 3.3 · A IA ESCREVE -->
+        <div class="ed-sub-tela" data-sub="3" hidden>
+          <div class="ed-cab">
+            <h2>Escrita Das Frases</h2>
+            <!-- ESTA FASE NAO PERGUNTA NADA, e isso e' conserto. Ela pedia o texto de
+                 cada peca, uma por uma, e o Gabriel viu o absurdo: "eu cheguei na etapa
+                 da IA escrever, e' pra literalmente eu ter apenas a tela de carregamento
+                 da IA escrevendo, algo parecido com o recorte". Entao e' isso: um botao,
+                 uma barra, e no fim as pecas prontas para ele olhar. -->
+            <p class="nota">Ela abre a frase do card original de cada reel, entende o que
+              está escrito e escreve uma equivalente nas caixas que você deixou abertas.
+              Uma passada só, em todas as peças.</p>
+          </div>
+
+          <div class="leg-vazio" id="ia_sem_campo" hidden>
+            <b>Nenhuma caixa aberta no template.</b>
+            <p class="nota">Volte à fase do texto, escolha uma caixa e marque
+              <i>sim, aberto</i>. A IA só escreve nessas.</p>
+          </div>
+
+          <div class="leg-vazio" id="ia_sem_chave" hidden>
+            <b>Nenhuma IA configurada.</b>
+            <p class="nota">A chave, o serviço e o prompt moram na aba de
+              <a href="#config" data-aba="config">Configurações</a>. Configure lá uma vez
+              e esta fase passa a funcionar sozinha.</p>
+          </div>
+
+          <div id="ia_corpo" hidden>
+            <div class="ia-pronta">
+              <div class="ia-pronta-txt">
+                <b id="ia_quem">nenhuma IA configurada</b>
+                <span class="nota mini" id="ia_quanto"></span>
+              </div>
+              <button class="acao forte" id="ia_escrever" type="button">
+                Começar A Escrever</button>
+              <!-- APAGAR O QUE A IA ESCREVEU. Ele fica escondido enquanto não houver
+                   nada escrito, porque botão de apagar o nada é convite a errar. -->
+              <button class="acao mini perigo" id="ia_apagar" type="button" hidden>
+                Apagar O Que A IA Escreveu</button>
+            </div>
+            <p class="nota mini" id="ia_recado"></p>
+
+            <div class="caixa apl-obra" id="ia_obra" hidden>
+              <div class="apl-obra-topo">
+                <span class="cfg-girando"></span>
+                <b id="ia_obra_txt">escrevendo</b>
+                <span class="dir" id="ia_obra_tempo"></span>
+              </div>
+              <div class="apl-barra"><i id="ia_barra"></i></div>
+              <p class="nota" id="ia_obra_nota"></p>
+            </div>
+          </div>
+
+          <div class="ed-pe">
+            <button class="acao" id="ed_volta_imagens" type="button">
+              Voltar Às Imagens</button>
+            <div class="ed-pe-conta" id="ed_conta_ia"></div>
+            <button class="acao forte" id="ed_vai_ajuste" type="button">
+              Ver As Peças Prontas</button>
+          </div>
+        </div>
+
+        <!-- ................................................ 3.4 · OS AJUSTES
+
+             AQUI ELE OLHA E APROVA, e a forma foi decidida por ele em 21/08/2026. A
+             pergunta era se as peças apareciam já fabricadas ou só desenhadas na tela, e
+             a resposta foi: "a tela mostrando como ficou, para no mais tardar eu ajustar
+             na mão, depois clicar em um botão para fabricar".
+
+             POR QUE ISSO IMPORTA: fabricar as 107 antes de ele olhar custa outra rodada
+             inteira de conversão, e cada ajuste depois obrigaria a fabricar tudo de novo.
+             Desenhadas na tela elas aparecem na hora, ele mexe à vontade, e a fabricação
+             acontece uma vez só, no fim, já aprovada. -->
+        <div class="ed-sub-tela" data-sub="4" hidden>
+          <div class="ed-cab">
+            <h2>Prévia Do Resultado</h2>
+            <p class="nota">Todas de uma vez, como vão ficar. É aqui que você vê o
+              conjunto e decide o que precisa de mão. Para mexer numa peça, vá para
+              <b>peça a peça</b>: lá abre uma de cada vez, com a tela inteira para ela.</p>
+          </div>
+
+          <div class="gal-topo">
+            <div class="gal-conta" id="gal_conta"></div>
+            <div class="gal-acoes">
+              <!-- AJUSTAR, E NAO ENCOLHER. Ele foi direto em 23/08/2026: "não era pra
+                   encolher, é pra ajustar". Ver `acertarTexto` no tela.js. -->
+              <button class="acao mini" id="ajs_acertar" type="button">
+                Ajustar O Texto Que Não Coube</button>
+              <!-- A PORTA DA QUINTA SUBETAPA. Pedido dele em 23/08/2026: "não precisa e
+                   não deve aparecer todos de uma vez, o meu PC não tem memória RAM". -->
+              <button class="acao mini" id="ajs_um_a_um" type="button">
+                Ajustar Peça A Peça</button>
+              <button class="acao forte" id="apl_montar" type="button">
+                Fabricar As Peças</button>
+            </div>
+          </div>
+
+          <div class="gal-grade" id="gal_grade"></div>
+
+          <!-- A PECA ABERTA, para acertar uma so'. O que se mexe aqui vale para esta
+               peça e mais nenhuma, e o template continua intacto. -->
+          <div class="gal-fundo" id="gal_fundo" hidden></div>
+          <div class="gal-lupa" id="gal_lupa" hidden>
+            <div class="gal-lupa-cab">
+              <b id="gal_lupa_nome">peça</b>
+              <button class="acao mini" id="gal_lupa_zerar" type="button">
+                Desfazer Os Ajustes Desta Peça</button>
+              <button class="gal-x" id="gal_lupa_fechar" type="button"
+                      aria-label="fechar">&times;</button>
+            </div>
+            <div class="gal-lupa-corpo">
+              <div class="gal-lupa-tela" id="gal_lupa_tela"></div>
+              <aside class="gal-lupa-lado">
+                <div class="gal-lupa-vazio" id="gal_lupa_vazio">
+                  <p class="nota">Clique num texto ou numa imagem da peça para acertar o
+                    tamanho e a posição dela.</p>
+                </div>
+                <div id="gal_lupa_props" hidden>
+                  <section class="ed-bloco">
+                    <h4>Tamanho</h4>
+                    <div class="ed-passo" id="gl_tamanho"></div>
+                  </section>
+                  <section class="ed-bloco">
+                    <h4>Posição</h4>
+                    <div class="ed-passo" id="gl_x"></div>
+                    <div class="ed-passo" id="gl_y"></div>
+                  </section>
+                  <p class="nota mini" id="gl_travado" hidden>Este item está travado no
+                    template. Mexer aqui muda só esta peça.</p>
+                </div>
+                <button class="acao mini larga" id="gl_para_todas" type="button">
+                  Usar Estes Ajustes Em Todas As Peças</button>
+              </aside>
+            </div>
+          </div>
+
+          <div class="ed-pe">
+            <button class="acao" id="ed_volta_ia" type="button">Voltar À IA</button>
+            <div class="apl-resumo" id="apl_resumo"></div>
+            <!-- ESTA CASA E A DE BAIXO EXISTEM PARA A OBRA PODER SE MUDAR.
+
+                 A barra de progresso e o aviso de terminado moravam só aqui, na primeira
+                 olhada. Quem mandava fabricar de dentro do "peça a peça" era jogado para
+                 esta tela para ver o que estava acontecendo, e ele leu isso como defeito,
+                 com razão: "ah, ele volta pra etapa anterior, é? Não entendi, tá meio
+                 bugado. Era pra ele avançar". Agora a obra é que se muda para a fase onde
+                 ele está, e estas casas são de onde ela sai e para onde ela volta. -->
+            <div id="apl_feito_casa">
+              <div class="apl-feito" id="apl_feito" hidden>
+                <a class="acao" id="apl_pasta" href="#">Abrir A Pasta Das Peças</a>
+                <button class="acao forte" id="apl_segue" type="button">
+                  Ir Para O Passo 4</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="apl_obra_casa">
+            <div class="caixa apl-obra" id="apl_obra" hidden>
+              <div class="apl-obra-topo">
+                <span class="cfg-girando"></span>
+                <b id="apl_obra_txt">fabricando</b>
+                <span class="dir" id="apl_obra_tempo"></span>
+              </div>
+              <div class="apl-barra"><i id="apl_barra"></i></div>
+              <p class="nota" id="apl_obra_nota"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ................................................ 3.5 · PEÇA A PEÇA
+
+             UMA DE CADA VEZ, E ESSE É O PONTO. Ele pediu em 23/08/2026, e a razão foi
+             de máquina antes de ser de gosto: "não precisa e não deve também aparecer
+             todos de uma vez, como tá aparecendo agora, porque o meu PC não tem memória
+             RAM, então vai ficar travando muito. Aí tipo faria um por um com a tela
+             dedicada".
+
+             O QUE ELE PODE MEXER AQUI, e que em lugar nenhum antes dava: o texto na mão,
+             a fonte (só nesta peça ou em todas) e o enquadramento do B-roll. O tamanho e
+             a posição já existiam na lupa da olhada geral e vieram junto, para não haver
+             dois lugares de fazer a mesma coisa. -->
+        <div class="ed-sub-tela" data-sub="5" hidden>
+          <!-- A BARRA DE COMANDO, e ela resolve três coisas de uma vez.
+
+               SAIU O NOME DO ARQUIVO. "Não quero que isso fique aparecendo", ele disse, e
+               havia uma segunda razão que nem ele viu: o seletor era um menu com as 92
+               peças listadas pelo nome, e esse menu media 3.183 pixels de altura. Era ELE
+               que empurrava a página inteira para baixo. Medido no navegador, não estimado.
+
+               SUBIRAM OS BOTÕES. Estavam no pé, 68 pixels abaixo da dobra, invisíveis sem
+               rolar. E os nomes eram frases: "Esta está pronta, avançar" é título, não é
+               nome de botão.
+
+               E O QUE IMPORTA GANHOU TAMANHO: em que peça ele está, quantas já assinou e
+               quantas faltam. Era nota de rodapé, em onze pixels cinza. -->
+          <div class="aj-barra">
+            <div class="aj-passo">
+              <button class="aj-seta" id="aj_ant" type="button"
+                      aria-label="peça anterior">&lsaquo;</button>
+              <div class="aj-numero">
+                <b id="aj_conta">1</b>
+                <span id="aj_total">de 92</span>
+              </div>
+              <button class="aj-seta" id="aj_prox" type="button"
+                      aria-label="próxima peça">&rsaquo;</button>
+              <!-- PULAR PARA UMA PEÇA sem precisar de um menu de noventa e duas linhas. -->
+              <label class="aj-ir">ir para
+                <input id="aj_ir" type="number" min="1" step="1" inputmode="numeric">
+              </label>
+            </div>
+
+            <div class="aj-placar">
+              <span class="aj-kpi feita"><b id="aj_kpi_pronta">0</b> prontas</span>
+              <span class="aj-kpi"><b id="aj_kpi_falta">0</b> para ver</span>
+            </div>
+
+            <div class="aj-acoes">
+              <button class="acao mini" id="aj_volta" type="button">Visão Geral</button>
+              <button class="acao mini" id="aj_montar" type="button">Fabricar</button>
+              <button class="acao forte" id="aj_pronta" type="button">Pronta</button>
+            </div>
+          </div>
+          <p class="nota mini aj-recado" id="aj_recado"></p>
+          <div class="aj-corpo">
+            <div class="aj-tela" id="aj_tela"></div>
+
+            <aside class="aj-lado">
+              <!-- O TEXTO NA MÃO. A IA escreve, ele corrige. -->
+              <section class="ed-bloco">
+                <h4>O Texto</h4>
+                <div id="aj_textos"></div>
+                <p class="nota mini" id="aj_sem_texto" hidden>Este molde não tem caixa
+                  aberta para escrever.</p>
+              </section>
+
+              <!-- A FONTE, e a escolha de para quantas peças ela vale. -->
+              <section class="ed-bloco">
+                <h4>A Fonte</h4>
+                <div id="aj_fonte_alvo"></div>
+                <div class="psel" id="aj_fonte"></div>
+                <button class="acao mini larga" id="aj_fonte_todas" type="button">
+                  Usar Esta Fonte Em Todas As Peças</button>
+                <p class="nota mini" id="aj_fonte_sem" hidden>Escolha uma caixa de texto
+                  na peça para trocar a fonte dela.</p>
+              </section>
+
+              <!-- O ENQUADRAMENTO DO B-ROLL. O buraco não sai do lugar: quem anda é a
+                   filmagem por baixo dele. -->
+              <section class="ed-bloco" id="aj_bloco_broll">
+                <h4>O B-roll</h4>
+                <!-- SÃO DUAS COISAS DIFERENTES, e confundi-las foi o defeito.
+
+                     A JANELA é onde o B-roll fica na peça, e se move arrastando. O
+                     CONTEÚDO é que pedaço da filmagem aparece lá dentro, e se escolhe
+                     aproximando e deslizando, nos botões abaixo. Eu tinha feito só o
+                     segundo, e ele disse a diferença com todas as letras: "eu só consigo
+                     mexer dentro do quadrado, eu não consigo mexer todo o quadrado". -->
+                <p class="nota mini" id="aj_broll_dica" hidden>Arraste a filmagem na peça
+                  para mudar a janela de lugar. Os botões abaixo escolhem que pedaço dela
+                  aparece dentro da janela.</p>
+                <div class="ed-passo" id="aj_zoom"></div>
+                <div class="ed-passo" id="aj_bx"></div>
+                <div class="ed-passo" id="aj_by"></div>
+                <button class="acao mini larga" id="aj_broll_todas" type="button">
+                  Usar Este Enquadramento Em Todas</button>
+                <p class="nota mini" id="aj_broll_sem" hidden>Esta peça não tem recorte de
+                  B-roll para reenquadrar.</p>
+              </section>
+
+              <!-- TAMANHO E POSIÇÃO do item escolhido. -->
+              <section class="ed-bloco" id="aj_item" hidden>
+                <h4>Tamanho E Posição</h4>
+                <div class="ed-passo" id="aj_tam"></div>
+                <div class="ed-passo" id="aj_x"></div>
+                <div class="ed-passo" id="aj_y"></div>
+              </section>
+
+              <!-- O ROTULO DIZ O QUE ELE FAZ E SO' ISSO. Ele nao desfaz o texto: nao ha'
+                   original para voltar, porque o texto da IA foi substituido pelo dele. -->
+              <button class="acao mini larga perigo" id="aj_zerar" type="button">
+                Desfazer Os Ajustes Desta Peça</button>
+            </aside>
+          </div>
+
+          <!-- A CASA DA OBRA, NO PÉ DESTA FASE.
+
+               ELA NASCEU LÁ EM CIMA e ele corrigiu na hora: "ele não deveria ficar na
+               parte superior, deveria ficar na parte inferior, tipo acima do rodapé. Eu
+               quero que ele tenha um pouco mais de destaque". No alto ela disputava
+               espaço com a barra de comando e empurrava a peça para baixo; no pé ela é o
+               fim natural da leitura, que é onde uma obra em andamento pertence.
+
+               A barra e o aviso de terminado se mudam para cá quando ele entra nesta
+               fase. Ver `moverAObraPara` no tela.js. -->
+          <div id="aj_obra_casa"></div>
+
+          <!-- ESTA FASE NÃO TEM PÉ, e é de propósito. Os botões subiram para a barra de
+               comando lá em cima, porque no pé eles ficavam abaixo da dobra: medido, 68
+               pixels fora da tela numa janela de 849. Botão que só existe depois de rolar
+               é botão que não existe. "Pronta" continua sendo o que assina e grava na
+               hora, pelo mesmo motivo de antes. -->
+        </div>
+      </div>
+
+
+      <!-- ---------------------------------------- PASSO 4 · A LEGENDA
+
+           O QUE ELE PEDIU, EM 23/08/2026, e são duas subetapas em ordem:
+
+             4.1  "pegar o arquivo, a descrição original do post, apenas adaptá-la.
+                   Depois disso a gente coloca um padrão pra toda a descrição, por
+                   exemplo com CTA, pedindo pra seguir."
+             4.2  "compactar, separar cada vídeo em sua devida pasta... dentro dessa
+                   pasta vai ter tanto o vídeo quanto o arquivo da descrição... upar
+                   dentro de uma pasta do Drive, botar uma nomenclatura específica."
+
+           E DEPOIS DAS DUAS: "a gente voltaria lá pra tabela de minerados e atualizaria
+           aqui: olha, esse perfil aqui foi 100% concluído". Quem faz isso é a 4.2, e só
+           depois de o arquivo ter chegado ao Drive de verdade. -->
+      <div class="ed-etapa" data-passo="4" hidden>
+
+        <!-- .............................................. 4.1 · AS DESCRIÇÕES -->
+        <div class="ed-sub-tela" data-sub="1">
+          <div class="ed-cab">
+            <h2>Descrição Dos Posts</h2>
+            <!-- A MESMA DINÂMICA DA FASE 3, e foi ele quem pediu assim: "pode fazer a
+                 mesma dinâmica que já foi feita anteriormente". Um botão, uma barra, e
+                 no fim os textos prontos para ele olhar. Nada de perguntar peça a peça. -->
+            <p class="nota">Ela abre a legenda original de cada post e escreve uma nova
+              sobre o mesmo assunto, com as palavras dela. Uma passada só, em todas as
+              peças. No fim, o mesmo fecho entra em todas.</p>
+          </div>
+
+          <!-- SEM MONTAGEM NAO HA' ETAPA 4, e a tela precisa dizer isso em vez de
+               abrir em branco. Com a trava do trilho removida, clicar no passo 4 antes
+               de fabricar passou a ser possivel, e uma tela vazia sem explicacao e' a
+               mesma promessa quebrada do botao que nao fazia nada. -->
+          <div class="leg-vazio" id="dsc_sem_pecas" hidden>
+            <b>Esta leva ainda não foi fabricada.</b>
+            <p class="nota">A etapa 4 trabalha em cima das peças prontas. Volte ao
+              <b>passo 3</b>, na primeira olhada, e clique em <b>Fabricar as peças</b>.
+              Se você já fabricou, confira se a pasta do Estúdio está liberada nesta aba.</p>
+          </div>
+
+          <div class="leg-vazio" id="dsc_sem_origem" hidden>
+            <b>Esta leva não guardou a legenda de origem.</b>
+            <p class="nota">Sem a legenda do post original não há o que adaptar. As levas
+              baixadas a partir de 23/08/2026 já trazem essa informação junto.</p>
+          </div>
+
+          <div class="leg-vazio" id="dsc_sem_chave" hidden>
+            <b>Nenhuma IA configurada.</b>
+            <p class="nota">A chave e o serviço moram na aba de
+              <a href="#config" data-aba="config">Configurações</a>. Configure lá uma vez
+              e esta fase passa a funcionar sozinha.</p>
+          </div>
+
+          <div id="dsc_corpo" hidden>
+            <!-- O FECHO É DELE PARA ESCREVER, e é o mesmo em todas as peças. Ele pediu
+                 "um padrão pra toda a descrição, por exemplo com CTA, pedindo pra
+                 seguir". Fica aqui, editável, porque o CTA muda com a campanha e trocar
+                 texto no código para mudar uma frase é o oposto de uma ferramenta. -->
+            <div class="caixa dsc-fecho">
+              <label class="ed-rot" for="dsc_rodape">O Fecho, Igual Em Todas</label>
+              <textarea id="dsc_rodape" class="campo" rows="2"
+                placeholder="Siga para acompanhar."></textarea>
+              <p class="nota mini">Ele entra depois do texto da IA, separado por uma linha
+                em branco. Deixe vazio para não pôr fecho nenhum.</p>
+              <div class="dsc-limite">
+                <label class="ed-rot" for="dsc_max">Tamanho Máximo</label>
+                <input id="dsc_max" class="campo" type="number" min="120" max="2200"
+                  step="10" value="500">
+                <span class="nota mini">caracteres, sem contar o fecho</span>
+              </div>
+            </div>
+
+            <div class="ia-pronta">
+              <div class="ia-pronta-txt">
+                <b id="dsc_quem">nenhuma IA configurada</b>
+                <span class="nota mini" id="dsc_quanto"></span>
+              </div>
+              <button class="acao forte" id="dsc_escrever" type="button">
+                Escrever As Descrições</button>
+              <button class="acao mini perigo" id="dsc_apagar" type="button" hidden>
+                Apagar As Descrições</button>
+            </div>
+            <p class="nota mini" id="dsc_recado"></p>
+
+            <div class="caixa apl-obra" id="dsc_obra" hidden>
+              <div class="apl-obra-topo">
+                <span class="cfg-girando"></span>
+                <b id="dsc_obra_txt">escrevendo</b>
+                <span class="dir" id="dsc_obra_tempo"></span>
+              </div>
+              <div class="apl-barra"><i id="dsc_barra"></i></div>
+              <p class="nota" id="dsc_obra_nota"></p>
+            </div>
+
+            <!-- O QUE ELA ESCREVEU, PARA ELE LER E MEXER. Descrição é o que vai junto do
+                 post; mostrar só a contagem e mandar confiar seria a mesma cegueira da
+                 galeria antes da primeira olhada. -->
+            <div class="dsc-lista" id="dsc_lista"></div>
+          </div>
+
+          <div class="ed-pe">
+            <button class="acao" id="dsc_volta" type="button">Voltar Às Peças</button>
+            <div class="ed-pe-conta" id="dsc_conta"></div>
+            <button class="acao forte" id="dsc_vai_entrega" type="button">
+              Ir Para A Entrega</button>
+          </div>
+        </div>
+
+        <!-- .............................................. 4.2 · A ENTREGA -->
+        <div class="ed-sub-tela" data-sub="2" hidden>
+          <div class="ed-cab">
+            <h2>Envio Para O Drive</h2>
+            <p class="nota">Cada vídeo vai para uma pasta só dele, com a descrição ao
+              lado, e o conjunto sobe para o Drive com o nome da leva.</p>
+          </div>
+
+          <div class="caixa pos-caixa">
+            <h3>A Montagem</h3>
+            <!-- O MOLDE NÃO NASCE COM ZERO. Zero é uma medida, e antes de alguém contar as
+                 peças não há medida nenhuma: o travessão diz "ainda não sei". Um "0" aqui
+                 é lido como resposta, e foi o que a prova `montagem` pegou. -->
+            <div class="pos-n"><b id="pos_n">—</b><span>peças montadas</span></div>
+            <p class="ed-caminho" id="pos_pasta"></p>
+            <div class="linha">
+              <a class="acao" id="pos_abrir" href="#">Abrir A Pasta</a>
+            </div>
+            <p class="nota">Os recortes continuam onde estavam, intactos.</p>
+          </div>
+
+          <!-- O DRIVE, E O ÚNICO PONTO DO SISTEMA QUE DEPENDE DELE. Entrar na conta do
+               Google é coisa que só o dono da conta pode fazer; o resto é daqui. -->
+          <div class="caixa ent-drive" id="ent_drive">
+            <div class="ent-drive-topo">
+              <h3 id="ent_drive_tit">O Drive</h3>
+              <span class="pino" id="ent_drive_pino">conferindo</span>
+            </div>
+            <p class="nota" id="ent_drive_txt">Vendo se a conta já está autorizada.</p>
+            <div class="linha">
+              <button class="acao forte" id="ent_autorizar" type="button" hidden>
+                Autorizar O Drive</button>
+              <a class="acao" id="ent_drive_abrir" href="#" target="_blank" rel="noopener"
+                hidden>Ver A Pasta No Drive</a>
+            </div>
+          </div>
+
+          <div class="caixa ent-caixa">
+            <h3>O Envio</h3>
+            <div class="ent-linha">
+              <span class="ed-rot">O Nome No Drive</span>
+              <b id="ent_nome">leva</b>
+            </div>
+            <div class="ent-linha">
+              <span class="ed-rot">O Que Vai Subir</span>
+              <b id="ent_quantas">0 peças</b>
+            </div>
+            <p class="nota mini" id="ent_aviso"></p>
+            <div class="linha">
+              <button class="acao forte" id="ent_subir" type="button">
+                Empacotar E Subir</button>
+              <button class="acao mini" id="ent_so_pacote" type="button">
+                Só Empacotar Aqui</button>
+            </div>
+          </div>
+
+          <div class="caixa apl-obra" id="ent_obra" hidden>
+            <div class="apl-obra-topo">
+              <span class="cfg-girando"></span>
+              <b id="ent_obra_txt">empacotando</b>
+              <span class="dir" id="ent_obra_tempo"></span>
+            </div>
+            <div class="apl-barra"><i id="ent_barra"></i></div>
+            <p class="nota" id="ent_obra_nota"></p>
+          </div>
+
+          <!-- O QUE ACONTECEU, EM LINHAS, E NAO NUM PARAGRAFO SO'.
+
+               ELE REPROVOU O PARAGRAFO em 24/08/2026: "olha como e' que ta' os titulos,
+               tipo o texto grudado". E estava mesmo: quatro noticias diferentes (subiu,
+               onde caiu, se marcou na tabela, o que sobrou aqui) escritas em corrida
+               dentro de uma frase so'. Para saber se a marca na tabela foi, ele tinha de
+               ler a frase inteira ate' o fim.
+
+               UMA LINHA POR NOTICIA e' o mesmo molde da caixa do envio, logo acima:
+               rotulo a' esquerda, resposta a' direita, o olho desce a coluna. -->
+          <div class="caixa ent-feito" id="ent_feito" hidden>
+            <h3 id="ent_feito_tit">Entregue</h3>
+            <div id="ent_feito_linhas"></div>
+            <div class="linha">
+              <a class="acao" id="ent_feito_pasta" href="#">Abrir A Pasta Daqui</a>
+              <a class="acao" id="ent_feito_drive" href="#" target="_blank"
+                rel="noopener">Ver No Drive</a>
+              <!-- A SAIDA, QUE NAO EXISTIA. Entregue e marcado, nao ha' mais nada para
+                   fazer nesta tela, e ela nao tinha porta: ele ficava parado numa etapa
+                   concluida sem caminho de volta. Pedido dele em 24/08/2026: "deveria
+                   ter um botao aqui pra tipo voltar pra tela de edicao, porque nao faz
+                   sentido continuar aqui". So' aparece quando acabou de verdade. -->
+              <button class="acao forte" id="ent_feito_sair" type="button" hidden>
+                Voltar Para A Edição</button>
+            </div>
+          </div>
+
+          <div class="ed-pe">
+            <button class="acao" id="ent_volta" type="button">
+              Voltar Às Descrições</button>
+            <div class="ed-pe-conta" id="ent_conta"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
 
-<!-- ================================================================ ABA 3 · TRATAMENTO -->
-<section class="aba" id="aba-tratar" hidden>
-  <div class="secao">
-    <div class="por-vir">
-      <div class="por-vir-selo">a construir</div>
-      <h2>Tratamento</h2>
-      <p class="nota">Esta aba ainda não foi desenhada. Abaixo, o que vai morar aqui.</p>
-      <ul class="por-vir-lista">
-        <li>Limpeza completa de metadados de cada arquivo baixado.</li>
-        <li>Conferência automática, arquivo por arquivo, do que sobrou depois da limpeza.</li>
-        <li>Identidade nova para cada peça, para o arquivo deixar de ser o mesmo.</li>
-        <li>Entrega dos arquivos tratados para a aba de Edição.</li>
+<!-- ========================================================== ABA 4 · CONFIGURAÇÕES
+
+     ELA NASCEU AQUI, E NÃO DENTRO DA EDIÇÃO. A chave da IA morava numa gaveta da fase 3,
+     no meio do trabalho, e o Gabriel cortou isso em 21/08/2026: "a função de configuração
+     não deve aparecer dentro do momento de editar, nunca. Era pra ser uma aba no
+     cabeçalho, antes de tudo. É que nem tem agora do Social Tracker".
+
+     E ELA SE ESCREVE COM LETRA MAIÚSCULA. A primeira versão saiu com tudo em caixa baixa,
+     e ele leu na hora: "escreva direito, está tudo minúsculo, nem para começar com a
+     primeira letra maiúscula". O resto do sistema sempre escreveu assim ("Salvar a
+     marcação", "Baixar planilha", "O que vai ser gravado"); era esta aba que estava fora
+     do padrão da casa. -->
+<section class="aba" id="aba-config" hidden>
+  <div class="cfg-corpo">
+    <aside class="cfg-menu">
+      <div class="cfg-menu-topo">
+        <span class="cfg-menu-id"><b>Estúdio</b><span>Configurações</span></span>
+      </div>
+      <div class="cfg-menu-rolo">
+        <div class="cfg-grupo">
+          <span class="cfg-grupo-tit">Escrita</span>
+          <a class="cfg-item" href="#ia" data-cfg="ia"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg><span class="cfg-rot">A IA que escreve</span></span></a>
+        </div>
+        <div class="cfg-grupo">
+          <span class="cfg-grupo-tit">Máquina</span>
+          <a class="cfg-item" href="#motor" data-cfg="motor"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span class="cfg-rot">O motor do recorte</span></span></a>
+          <a class="cfg-item" href="#fontes" data-cfg="fontes"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="cfg-rot">As fontes da peça</span></span></a>
+          <a class="cfg-item" href="#pastas" data-cfg="pastas"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span class="cfg-rot">As pastas</span></span></a>
+        </div>
+      </div>
+      <div class="cfg-menu-pe">
+        <span class="nota mini">Tudo aqui fica neste computador</span>
+      </div>
+    </aside>
+
+    <div class="cfg-conteudo">
+
+      <!-- ................................................................ A IA -->
+      <div class="cfg-pagina cfg-ativa" data-pg="ia">
+        <div class="cfg-pagina-cab">
+          <h2>A IA Que Escreve</h2>
+          <p>A fila de chaves, o prompt, e o que já se gastou hoje.</p>
+        </div>
+
+        <!-- O AVISO FICA NO ALTO. Quando gravar falha, o motivo tem de estar onde o olho
+             esta', e nao numa linha pequena no rodape' da pagina. -->
+        <div class="ia-alerta" id="ia_alerta" hidden></div>
+
+        <!-- ONDE ISTO VAI PARAR, e a caixa existe porque a pergunta foi essa: "tem que
+             verificar se eu alterar ou salvar alguma coisa aqui vai impactar no
+             back-end". Vai, e por um caminho só: este arquivo. Mas o navegador só escreve
+             no disco depois que a pasta é liberada uma vez, e antes disso Guardar não
+             tinha onde gravar e falhava sem explicar. O botão abaixo resolve isso aqui. -->
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Onde Isto É Guardado</h3>
+            <div class="dir"><span class="badge badge-sinal" id="ia_selo_pasta">
+              Pasta não liberada</span></div>
+          </div>
+          <div class="cfg-linhas">
+            <div class="cfg-linha">
+              <div>
+                <div class="cfg-nome">Estudio\ia.json</div>
+                <div class="cfg-desc" id="ia_pasta_desc">É deste arquivo que o
+                  programa deste computador lê a fila de chaves e o prompt, no começo de
+                  cada leva. Quem grava nele é o posto do Estúdio, que sobe junto com o
+                  Windows, e por isso não há pasta a liberar nem permissão a renovar.</div>
+              </div>
+              <div class="dir">
+                <button class="acao" id="ia_liberar" type="button">Liberar A Pasta</button>
+              </div>
+            </div>
+
+            <!-- A PROVA DE QUE CHEGOU DO OUTRO LADO. "Garanta que o que for feito aqui
+                 salva no back-end, impacta diretamente o back-end, porque não pode ser
+                 front-end só bonitinho." Provar a chave aqui na tela prova a chave, e não
+                 prova o caminho. Este botão manda o PROGRAMA abrir o arquivo, montar a
+                 fila e falar com a IA, e traz de volta o que ele conseguiu. -->
+            <div class="cfg-linha">
+              <div>
+                <div class="cfg-nome">O programa lê daqui</div>
+                <div class="cfg-desc">Mande o programa deste computador abrir o arquivo,
+                  montar a fila de chaves e escrever uma frase de verdade. Se ele
+                  responder, o caminho inteiro está de pé: o que você guardou aqui chegou
+                  lá.</div>
+              </div>
+              <div class="dir">
+                <button class="acao" id="ia_provar_back" type="button">
+                  Provar No Programa</button>
+              </div>
+            </div>
+          </div>
+          <p class="nota mini" id="ia_back_diz"></p>
+        </div>
+
+        <!-- O GASTO, SEPARADO POR EMPRESA. Foi o pedido, com as palavras dele:
+             "controle de gastos, visual, para saber o quanto aquela API já gastou,
+             separado por empresa". Uma faixa por empresa, com o número na frente e a
+             barra comparando uma com a outra, para bater o olho e ver quem está pesando.
+
+             CUIDADO COM FALSO POSITIVO, que ele também pediu: a barra compara as empresas
+             ENTRE SI, e não com um teto. Nenhum dos três publica o saldo por programa, e
+             desenhar uma barra "de quanto falta" seria inventar um número. Quando o
+             serviço manda o saldo na resposta, e o Groq manda, ele aparece escrito ao
+             lado, com o número que veio de lá. -->
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Quanto Cada Empresa Já Gastou</h3>
+            <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia2">Hoje</span></div>
+          </div>
+          <div class="gasto" id="ia_gasto"></div>
+          <p class="nota mini">A conta é das frases que saíram deste computador hoje, e
+            zera quando o dia vira. A barra compara as empresas entre si; ela não mede
+            quanto falta para o teto, porque nenhum dos serviços publica esse número.</p>
+        </div>
+
+        <!-- A FILA. "Eu preciso ter um sistema de rotacionamento, caso alguma chave,
+             alguma coisa aqui bata o limite." Então não são duas, principal e reserva:
+             são quantas ele quiser, em ordem.
+
+             CADA LINHA AQUI SÓ MOSTRA. Os campos ficavam soltos dentro da linha, três de
+             cada vez, e ficou apertado e confuso: "na hora de clicar em acrescentar uma
+             chave, deve aparecer uma opção de pop-up". Agora a linha é o resumo do que
+             existe, e mexer numa chave abre a janela lá embaixo. -->
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>A Fila De Chaves</h3>
+            <div class="dir">
+              <span class="badge badge-secondary" id="ia_n_chaves">Nenhuma</span>
+            </div>
+          </div>
+          <div class="ia-fila" id="ia_fila"></div>
+          <div class="ia-fila-pe">
+            <button class="acao" id="ia_add" type="button">Acrescentar Uma Chave</button>
+            <span class="nota mini" id="ia_fila_diz"></span>
+          </div>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Quanto Já Se Gastou</h3>
+            <div class="dir"><span class="badge badge-secondary" id="ia_uso_dia">Hoje</span></div>
+          </div>
+          <div class="cfg-pares cfg-uma cfg-numeros" id="ia_uso"></div>
+          <p class="nota mini">A conta é do que este computador pediu, e não do saldo que
+            sobra lá. Nenhum dos três serviços publica quanto resta por programa; o que dá
+            para saber com certeza é o que saiu daqui e o que voltou recusado.</p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>A Instrução Da IA</h3>
+            <div class="dir">
+              <button class="acao mini" id="ia_prompt_padrao" type="button">
+                Voltar Ao Padrão</button>
+            </div>
+          </div>
+          <textarea id="ia_prompt" rows="11" spellcheck="false"></textarea>
+          <p class="nota mini">Vale para todas as peças e para todas as caixas abertas.
+            Onde estiver <b>{limite}</b> entra o número de caracteres que cabe naquela
+            caixa, calculado da largura dela e do tamanho da letra que você escolheu.</p>
+        </div>
+
+        <div class="cfg-pe">
+          <span class="cfg-recado" id="ia_cfg_recado"></span>
+          <button class="acao forte" id="ia_guardar" type="button">Salvar</button>
+        </div>
+      </div>
+
+      <!-- ............................................................ O MOTOR -->
+      <div class="cfg-pagina" data-pg="motor">
+        <div class="cfg-pagina-cab">
+          <h2>O Motor Do Recorte</h2>
+          <p>Onde o vídeo é convertido, e quanto isso custa de relógio.</p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Onde A Conversão Acontece</h3>
+            <div class="dir"><span class="badge badge-sinal" id="mot_onde">Na placa</span></div>
+          </div>
+          <div class="cfg-linhas">
+            <div class="cfg-linha">
+              <div>
+                <div class="cfg-nome">Na placa de vídeo</div>
+                <div class="cfg-desc">Esta máquina tem Intel Iris Xe, com Quick Sync. O
+                  quadro entra na placa quando é decodificado e só sai de lá já
+                  codificado: ampliar, aplicar a máscara e gravar acontecem os três lá
+                  dentro. Se a placa recusar uma peça, ela volta sozinha para o
+                  processador, sem falhar.</div>
+              </div>
+              <div class="dir"><span class="badge badge-secondary">3 peças por vez</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>O Que Foi Medido</h3>
+            <div class="dir"><span class="badge badge-secondary">21/08/2026</span></div>
+          </div>
+          <div class="cfg-pares cfg-uma cfg-numeros">
+            <div class="cfg-par"><span>Uma peça de 52 s, no processador</span><b>25,0 s</b></div>
+            <div class="cfg-par"><span>A mesma peça, na placa</span><b>15,9 s</b></div>
+            <div class="cfg-par"><span>12 peças em fila, no processador</span><b>3 min 40 s</b></div>
+            <div class="cfg-par"><span>As mesmas 12, três por vez na placa</span><b>2 min 25 s</b></div>
+            <div class="cfg-par"><span>Diferença dentro da janela, de 255</span><b>1,96</b></div>
+          </div>
+          <p class="nota mini">Três por vez é medição, não palpite. As mesmas 12 peças, só
+            a conversão, na placa: uma de cada vez levou 2 min 5 s, três levaram 1 min 48 s
+            e quatro levaram 1 min 49 s. Acima de três quem esgota é o bloco de vídeo da
+            placa, e as peças passam a esperar umas pelas outras.</p>
+        </div>
+
+        <div class="caixa">
+          <div class="cfg-topo"><h3>Glossário</h3><div class="dir"></div></div>
+          <div class="cfg-glossario">
+            <div class="cfg-glo"><div class="cfg-glo-t"><b>Máscara</b></div>
+              <span>O desenho da forma do B-roll, branco onde a filmagem passa e preto no
+                resto. É ela que faz o recorte sair com a borda arredondada igual à do
+                original, em vez de um retângulo reto.</span></div>
+            <div class="cfg-glo"><div class="cfg-glo-t"><b>Moldura</b></div>
+              <span>A mesma forma escrita ao contrário, com furo no meio. A placa cola por
+                cima em vez de multiplicar, e é assim que ela trabalha.</span></div>
+            <div class="cfg-glo"><div class="cfg-glo-t"><b>Quick Sync</b></div>
+              <span>O pedaço da placa Intel que converte vídeo sozinho, sem usar o
+                processador. É o que libera a máquina enquanto a leva roda.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ........................................................... AS FONTES -->
+      <div class="cfg-pagina" data-pg="fontes">
+        <div class="cfg-pagina-cab">
+          <h2>As Fontes Da Peça</h2>
+          <p>As que desenham o reel, e não as que desenham esta tela.</p>
+        </div>
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>Quais Existem</h3>
+            <div class="dir"><span class="badge badge-secondary" id="fon_n">0</span></div>
+          </div>
+          <div class="cfg-mostra" id="fon_lista"></div>
+        </div>
+        <div class="caixa">
+          <div class="cfg-topo"><h3>Por Que A Lista É Esta</h3><div class="dir"></div></div>
+          <p class="nota">Cada uma precisa existir nos dois lados: aqui, para o navegador
+            mostrar enquanto você monta, e no computador, para o programa desenhar na hora
+            de gravar. Fonte que existisse só de um lado faria a peça sair diferente do que
+            você viu na tela.</p>
+          <p class="nota">As nove novas vieram do Google Fonts, licença aberta, sem custo,
+            e estão em <b>Estudio\fontes</b>. As outras já vinham com o Windows, menos a
+            Izmir e a Apple Garamond, que são suas.</p>
+        </div>
+      </div>
+
+      <!-- ........................................................... AS PASTAS -->
+      <div class="cfg-pagina" data-pg="pastas">
+        <div class="cfg-pagina-cab">
+          <h2>As Pastas</h2>
+          <p>Onde cada coisa mora neste computador.</p>
+        </div>
+        <div class="caixa">
+          <div class="cfg-topo">
+            <h3>A Pasta Do Estúdio</h3>
+            <div class="dir"><span class="badge badge-sinal" id="pas_selo">Não liberada</span></div>
+          </div>
+          <div class="cfg-linhas" id="pas_lista"></div>
+          <p class="nota mini">O navegador só enxerga esta pasta depois que você libera o
+            acesso uma vez. Nada sai daqui para lugar nenhum.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================ A JANELA DA CHAVE
+
+     "NA HORA DE CLICAR EM ACRESCENTAR UMA CHAVE, deve aparecer uma opção de pop-up, ao
+     invés disso que você colocou." Antes, acrescentar abria uma linha vazia com três
+     campos espremidos dentro dela, no meio da lista. Aqui a lista só mostra o que existe,
+     e mexer numa chave, ou criar outra, acontece nesta janela.
+
+     ELA MORA FORA DA SEÇÃO DA ABA de propósito, e a razão é a mesma do tira-dúvidas:
+     `.aba` tem animação de entrada com `transform`, e elemento assim vira âncora para
+     quem é `position:fixed`. Posta lá dentro, a janela pararia na altura da seção em vez
+     de ficar centrada na tela. -->
+<div class="pop-fundo" id="ch_fundo" hidden></div>
+<div class="pop" id="ch_pop" hidden role="dialog" aria-modal="true"
+     aria-labelledby="ch_titulo">
+  <div class="pop-cab">
+    <b id="ch_titulo">Acrescentar uma chave</b>
+    <button class="gal-x" id="ch_fechar" type="button" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="pop-corpo">
+    <label class="cfg-campo">
+      <span>Serviço</span>
+      <div class="psel cfg-sel" id="ch_servico"></div>
+    </label>
+    <label class="cfg-campo">
+      <span>Chave da API</span>
+      <input id="ch_chave" type="password" placeholder="Cole a chave aqui"
+             autocomplete="off" spellcheck="false">
+    </label>
+    <!-- O MODELO SE ESCOLHE, NAO SE ESCREVE. "Como assim eu tenho que escrever o nome
+         do modelo? E' pra poder selecionar o modelo, a depender do servico." E a lista
+         nao e' inventada aqui: ela vem do catalogo do proprio servico. -->
+    <label class="cfg-campo">
+      <span>Modelo <i class="ch-quantos" id="ch_quantos"></i></span>
+      <div class="psel cfg-sel" id="ch_modelo"></div>
+    </label>
+    <p class="nota mini" id="ch_onde"></p>
+    <div class="pop-diz" id="ch_diz"></div>
+  </div>
+  <div class="pop-pe">
+    <button class="acao" id="ch_provar" type="button">Provar</button>
+    <button class="acao forte" id="ch_ok" type="button">Acrescentar</button>
+  </div>
+</div>
+
+
+<!-- ============================================================ O TIRA-DÚVIDAS
+
+     ELE MORA FORA DAS ABAS, e quem o esconde nas outras é a troca de aba, no
+     `irPara`. A primeira versão o pôs dentro da seção de Baixar, que é mais simples e
+     não precisaria de programa nenhum. Não funcionou, e o motivo é fino: `.aba` tem
+     animação de entrada com `transform`, e elemento com animação de transform vira
+     âncora para quem é `position:fixed`. A gaveta, que devia ir de topo a rodapé do
+     vidro da tela, parava na altura da seção, com o fundo escuro cortado no meio.
+
+     E O TEXTO É A DOCUMENTAÇÃO DESTA ABA, não um enfeite de ajuda. Tudo o que foi
+     construído aqui, o caminho, a régua, o tratamento, onde o arquivo final para e
+     como a pasta é organizada, estava só na conversa e no comentário dos programas.
+     Nenhum dos dois está aberto quando o Gabriel olha a tela. -->
+<button class="ajuda-bolha" id="faq_abre" type="button" hidden
+        aria-controls="faq_folha" aria-expanded="false"
+        title="Como funciona esta aba">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.1 9a3 3 0 1 1 4.2 2.8c-.8.4-1.3 1.1-1.3 2v.4"/>
+    <path d="M12 17.5h.01"/></svg>
+  <span class="ajuda-bolha-rot">Dúvidas</span>
+</button>
+
+<div class="ajuda-fundo" id="faq_fundo" hidden></div>
+
+<aside class="ajuda-folha" id="faq_folha" hidden aria-label="Como funciona a aba de baixar">
+  <div class="ajuda-cab">
+    <div>
+      <h2>Como Funciona Esta Aba</h2>
+      <p class="nota">Do clique no perfil até o arquivo tratado no seu computador.</p>
+    </div>
+    <button class="ajuda-fecha" id="faq_fecha" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <div class="ajuda-corpo">
+
+    <!-- O CAMINHO INTEIRO EM QUATRO PASSOS, antes de qualquer pergunta. Quem abre um
+         tira-dúvidas sem saber a forma da coisa fica lendo resposta solta. -->
+    <div class="ajuda-trilho">
+      <div class="ajuda-passo"><b>1 · Baixar</b>
+        <span>A esteira puxa do Instagram os reels que passaram da régua.</span></div>
+      <div class="ajuda-passo"><b>2 · Tratar</b>
+        <span>Cada arquivo perde todo o metadado e passa por conferência.</span></div>
+      <div class="ajuda-passo"><b>3 · Entregar</b>
+        <span>O que passou vira um pacote só, e o que reprovou é apagado.</span></div>
+      <div class="ajuda-passo"><b>4 · Guardar</b>
+        <span>O pacote desce para uma pasta no seu computador, de dez em dez minutos.</span></div>
+    </div>
+
+    <h3 class="ajuda-grupo">Montar A Leva</h3>
+
+    <details class="ajuda-item">
+      <summary>Como eu peço uma leva?</summary>
+      <div><p>Marque os perfis na fileira de cartões. Cada cartão traz a logo do
+      perfil e, no rodapé, quantos reels dele estão prontos para descer. A conta se
+      soma sozinha, e o botão <b>Montar leva</b> dispara.</p>
+      <p>Não há campo de quantidade. Ele existia e obrigava duas decisões para um
+      pedido só: quais perfis e quantos arquivos. Agora a decisão é uma.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>O que é a régua, e quem escolhe?</summary>
+      <div><p>É o corte de desempenho. Um post entra na leva quando o alcance dele é
+      pelo menos <b>1,5 vez a mediana do próprio perfil, no próprio formato</b>.</p>
+      <p>Desempenho nunca é número absoluto: um perfil que faz 40 mil de média e
+      entrega 300 mil estourou; um que faz 2 milhões e entrega 800 mil foi mal. E a
+      mediana tem que ser por formato, porque vídeo vem com contagem de exibição e
+      imagem vem só com curtida, que são duas escalas diferentes.</p>
+      <p>Quem escolhe é você, na aba de Mineração, ao iniciar a varredura. A escolha
+      fica gravada e é dela que a leva lê.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Baixa só reels?</summary>
+      <div><p>Sim. Imagem e carrossel são varridos, contados e entram na conta da
+      régua, mas não descem. O tratamento de metadado é de vídeo, e a página dark
+      publica vídeo.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Para que servem os filtros de mercado e etiqueta?</summary>
+      <div><p>Para recortar a fileira quando ela tiver dezenas de perfis: mostrar só o
+      que é de um nicho, ou só o que carrega certa etiqueta.</p>
+      <p>Quem preenche os dois é você, na <b>tabela da aba de Mineração</b>: as colunas
+      <i>Mercado</i> e <i>Etiqueta</i> são clicáveis, e o clique abre a folha de
+      marcação. Perfil sem marcação nenhuma aparece na fileira do mesmo jeito.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Um perfil sumiu da fileira. Perdi alguma coisa?</summary>
+      <div><p>Não: ele sumiu porque veio inteiro. A fileira mostra o que <b>falta</b>
+      baixar, e por isso encolhe a cada leva em vez de repetir sempre os mesmos
+      cartões.</p>
+      <p>O controle de quem já desceu é a coluna <b>Baixar</b> da tabela de Mineração.
+      Ela diz, por perfil: <i>a baixar</i>, <i>em curso</i>, <i>pela metade</i>,
+      <i>concluído</i> ou <i>guardado</i>, com o número embaixo.</p></div>
+    </details>
+
+    <h3 class="ajuda-grupo">O Tratamento</h3>
+
+    <details class="ajuda-item">
+      <summary>O que exatamente é apagado do arquivo?</summary>
+      <div><p>Metadado de vídeo não é uma coisa só, são três camadas, e limpar uma
+      deixa as outras duas de pé:</p>
+      <ol class="ajuda-lista">
+        <li><b>As etiquetas de formato e de faixa</b>: data de criação, programa que
+        gerou, codificador, título, idioma.</li>
+        <li><b>O nome do manipulador de cada faixa</b>, que sobrevive à limpeza comum e
+        fica gravado como <i>VideoHandler</i> e <i>SoundHandler</i>.</li>
+        <li><b>A casca vazia de dados</b> que a própria ferramenta escreve de volta ao
+        gravar, com a assinatura <i>mdirappl</i> dentro. Ela é retirada depois,
+        byte a byte.</li>
+      </ol>
+      <p>Isto foi medido em 18/08/2026 nos oito reels da leva 2. O comando conhecido
+      para limpar metadado não limpa: ele <b>assina</b>, deixando o nome e a versão do
+      programa no arquivo.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>O vídeo perde qualidade no tratamento?</summary>
+      <div><p>Não perde nada. A imagem e o som são copiados sem serem recodificados, e
+      a conferência tira a impressão digital das duas faixas antes e depois: se um
+      único byte de imagem ou de som mudasse, o arquivo seria reprovado.</p>
+      <p>Custo medido: <b>0,17 segundo por arquivo</b>.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>E se um arquivo não ficar limpo?</summary>
+      <div><p>Ele é <b>apagado ali mesmo</b> e não entra no pacote. Cada arquivo sai
+      com um laudo próprio, e a contagem de reprovados aparece no registro ao vivo,
+      junto de baixados e tratados.</p>
+      <p>A conferência é feita duas vezes: uma na esteira, outra quando o pacote chega
+      ao seu computador. Não é desconfiança do passo anterior, é que conferir de novo
+      custa dois centésimos de segundo por arquivo.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>A limpeza garante alcance no Instagram?</summary>
+      <div><p>Não, e é melhor saber disso do que acreditar no contrário. O Instagram
+      <b>recodifica todo vídeo enviado</b>: o metadado do seu arquivo não chega do
+      outro lado, e o que ele lê é o que está gravado na imagem e no som, marca-d'água,
+      arroba na tela, voz.</p>
+      <p>A limpeza vale pelo que ela é: o arquivo que você guarda, edita e reenvia não
+      carrega a origem colada nele. É higiene de material, não alavanca de alcance.</p></div>
+    </details>
+
+    <h3 class="ajuda-grupo">Onde O Material Fica</h3>
+
+    <details class="ajuda-item">
+      <summary>Onde para a versão final?</summary>
+      <div><p>Numa pasta fixa no seu computador:</p>
+      <p class="ajuda-caminho">C:\Users\Gabri\Estudio\levas\leva-<i>N</i></p>
+      <p>Uma subpasta por leva, e <i>N</i> é o número dela. Dentro ficam só os reels já
+      tratados e conferidos, prontos para editar.</p>
+      <p>A pasta fica <b>fora do OneDrive</b> de propósito: Área de Trabalho,
+      Documentos e Imagens sobem para a nuvem sozinhos, e uma leva de um perfil inteiro
+      pesa de 440 MB a 2,7 GB. Em duas levas sua cota estouraria.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Como o pacote chega até lá?</summary>
+      <div><p>Sozinho. Uma tarefa agendada roda de <b>dez em dez minutos</b>, olha se
+      alguma leva ficou pronta, e traz. Você não precisa clicar em nada.</p>
+      <p>Quando ela chega, o registro da leva ganha o último passo, <i>guardado</i>, e
+      a tabela de Mineração passa a mostrar essa palavra na coluna Baixar. Enquanto ele
+      não aparece, o material só existe na esteira.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>O material fica guardado para sempre na esteira?</summary>
+      <div><p>Não. O pacote da esteira vence em <b>catorze dias</b> e some. A máquina
+      que monta a leva é criada para o trabalho e destruída no fim.</p>
+      <p>A pasta do seu computador é o único lugar permanente. Ela tem um
+      <i>LEIA.txt</i> dentro dizendo isso, para o caso de alguém achar que é lixo.</p></div>
+    </details>
+
+    <h3 class="ajuda-grupo">Tempo, Tamanho E Custo</h3>
+
+    <details class="ajuda-item">
+      <summary>Quanto tempo demora uma leva?</summary>
+      <div><p>Medido em 19/08/2026, com os 41 reels da Vinci Society, 441 MB:</p>
+      <ul class="ajuda-lista">
+        <li>baixar os 41 arquivos: <b>78 s</b></li>
+        <li>preparar a ferramenta de vídeo: <b>12 s</b></li>
+        <li>tratar os 41: <b>6 s</b></li>
+        <li>montar o pacote: <b>7 s</b></li>
       </ul>
-      <p class="nota" style="margin-top:14px">Já medido e valendo para esta aba: apagar
-        metadado com o comando padrão <b>não basta</b>. O codificador reescreve a própria
-        assinatura depois, no arquivo e nas duas faixas. Por isso a conferência é
-        obrigatória, e não opcional.</p>
-    </div>
-  </div>
-</section>
+      <p>Perto de <b>dois minutos</b> no total. Um reel pesa em média 13,6 MB, então
+      dá para estimar qualquer leva por aí.</p></div>
+    </details>
 
+    <details class="ajuda-item">
+      <summary>Quanto isso custa?</summary>
+      <div><p>Zero, em todas as camadas. O acervo é público, e para repositório público
+      o GitHub não cobra nem o tempo de máquina nem o espaço dos pacotes.</p></div>
+    </details>
 
-<!-- =================================================================== ABA 4 · EDIÇÃO -->
-<section class="aba" id="aba-editar" hidden>
-  <div class="secao">
-    <div class="por-vir">
-      <div class="por-vir-selo">a construir</div>
-      <h2>Edição</h2>
-      <p class="nota">Esta aba ainda não foi desenhada, e o desenho dela ainda não foi
-        definido com você.</p>
-      <ul class="por-vir-lista">
-        <li>Aplicação do template da página em lote.</li>
-        <li>Título e legenda por peça.</li>
-      </ul>
-    </div>
+    <details class="ajuda-item">
+      <summary>E se uma leva falhar no meio?</summary>
+      <div><p>O registro fecha marcando a falha, e nada é dado como baixado: os reels
+      daquele perfil continuam na fileira, com o mesmo número, prontos para serem
+      pedidos de novo.</p>
+      <p>O que já tinha descido antes daquela falha não é baixado outra vez. A conta do
+      que veio é por reel, não por leva.</p></div>
+    </details>
+
+    <details class="ajuda-item">
+      <summary>Por que o registro parece parado às vezes?</summary>
+      <div><p>A tela lê o acervo de vinte e cinco em vinte e cinco segundos, e passa a
+      ler de seis em seis enquanto uma leva está correndo. Entre uma linha e outra do
+      registro pode haver um passo comprido de verdade: montar um pacote grande é o
+      mais demorado deles.</p>
+      <p>Todo passo que espera escreve uma linha antes de começar a esperar. Se você
+      vir mais de dois minutos de silêncio absoluto, alguma coisa travou.</p></div>
+    </details>
+
   </div>
-</section>
+</aside>
