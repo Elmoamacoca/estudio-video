@@ -52,14 +52,77 @@ jobs:
       # A CONFERENCIA ANTES DE QUALQUER COISA. Ela importa os programas e roda os
       # caminhos principais: um nome perdido numa reescrita para aqui, e nao com as
       # vinte maquinas ja' no ar e os perfis parados.
+      #
+      # A saida fica guardada num arquivo: quando a conferencia reprova, e' dela que
+      # sai o motivo escrito na saude, com as falhas reais em vez de frase generica.
+      # O `pipefail` preserva a reprovacao, que o `tee` sozinho engoliria.
       - name: Conferir os programas
-        run: python conferir.py
+        run: |
+          set -o pipefail
+          python conferir.py 2>&1 | tee conferencia.txt
 
       - id: olhar
         run: |
           FALTA=$(python -c "import rodada; print(len(rodada.pendentes(rodada.contas_pedidas())))")
           echo "perfis com pagina por ler: $FALTA"
           echo "falta=$FALTA" >> "$GITHUB_OUTPUT"
+
+      # NENHUMA REPROVACAO MORRE CALADA. Em 24/08/2026 este portao reprovou 26 rodadas
+      # seguidas ("tela.js pede id que a pagina nao tem") e nada apareceu na tela: os
+      # elos nem subiam, o fechar rodava como sempre, e a esteira passou o dia inteiro
+      # parada em silencio. Agora a reprovacao vira registro datado no acervo
+      # (dados/saude.json), com o motivo tirado da propria saida da conferencia.
+      - name: Registrar a reprovacao na saude
+        if: failure()
+        run: |
+          python - "${{ github.run_number }}" <<'PY'
+          import json, pathlib, sys, time
+          # o motivo e' a saida real da conferencia, e nao uma frase pronta: quem abrir
+          # a saude precisa saber O QUE reprovou sem cacar o log dentro do GitHub
+          arq = pathlib.Path("conferencia.txt")
+          texto = arq.read_text(encoding="utf-8", errors="replace") if arq.exists() else ""
+          linhas = [l.strip() for l in texto.splitlines() if l.strip()]
+          motivo = " | ".join(linhas[-6:]) if linhas else "a conferencia caiu sem deixar saida"
+          if linhas and linhas[-1].endswith("tudo passou"):
+              # a conferencia em si passou, entao quem caiu foi o passo de olhar a
+              # fila; escrever as linhas verdes aqui seria carimbar motivo falso
+              motivo = "a conferencia passou; a falha foi no passo seguinte, o de olhar a fila"
+          pathlib.Path("dados").mkdir(exist_ok=True)
+          # O CARIMBO MESCLA, NAO SOBRESCREVE: a saude e' um arquivo so' com dois
+          # assuntos (o veredito do fiscal e o diario de eventos que o rodada e o
+          # resgate escrevem). Regravar do zero apagaria o diario dos outros.
+          alvo = pathlib.Path("dados/saude.json")
+          try:
+              atual = json.loads(alvo.read_text(encoding="utf-8"))
+              if not isinstance(atual, dict):
+                  atual = {}
+          except Exception:
+              atual = {}
+          atual.update({
+              "fiscal": "reprovou",
+              "motivo": motivo[:900],
+              "quando": int(time.time()),
+              "rodada": int(sys.argv[1]),
+          })
+          alvo.write_text(json.dumps(atual, ensure_ascii=False, indent=1),
+                          encoding="utf-8")
+          PY
+          git config user.name "esteira"
+          git config user.email "esteira@users.noreply.github.com"
+          git add dados/saude.json
+          if git diff --staged --quiet; then
+            echo "a saude ja dizia isso"
+            exit 0
+          fi
+          git commit -m "fiscal reprovou a rodada ${{ github.run_number }}"
+          # a mesma disputa de escrita dos elos, com a mesma espera embaralhada
+          for tentativa in 1 2 3 4 5 6 7 8; do
+            if git pull --rebase --autostash origin main --quiet && git push --quiet; then
+              echo "saude gravada na tentativa $tentativa"; exit 0
+            fi
+            sleep $(( (RANDOM % 7) + 3 ))
+          done
+          echo "nao consegui gravar a saude apos oito tentativas; a proxima rodada regrava"
 
   elo:
     needs: conferir
@@ -126,8 +189,8 @@ jobs:
           # sem argumentos: a regua vem de dados/regua.json, escolhida na tela
           python selecionar.py
           python atividade.py "${{ github.run_number }}"
-          python - <<'PY'
-          import json, pathlib, time
+          python - "${{ github.run_number }}" "${{ needs.conferir.result }}" <<'PY'
+          import json, pathlib, sys, time
           # ACERVO VAZIO E' ESTADO VALIDO, e nao erro. Depois de zerar os dados em 17/08
           # este passo quebrou inteiro procurando um arquivo que ainda nao existia, e a
           # rodada inteira foi dada como falha mesmo com as vinte maquinas tendo lido.
@@ -153,6 +216,26 @@ jobs:
                   "atualizado": int(time.time())}
           pathlib.Path("dados/fila.json").write_text(
               json.dumps(fila, ensure_ascii=False, indent=1), encoding="utf-8")
+          # A SAUDE DA RODADA. O fiscal passou e a rodada fechou: fica carimbado, com
+          # hora e numero, que a esteira esta' viva. Quando o fiscal reprova, quem
+          # grava a saude e' o proprio trabalho `conferir`, e este carimbo NAO passa
+          # por cima: `fechar` roda com always() mesmo com o portao fechado, e um
+          # "ok" cego aqui apagaria justamente o registro da reprovacao.
+          if len(sys.argv) > 2 and sys.argv[2] == "success":
+              # mescla pela mesma razao do carimbo de reprovacao: o diario de
+              # eventos que mora no mesmo arquivo e' dos outros escritores
+              alvo = pathlib.Path("dados/saude.json")
+              try:
+                  atual = json.loads(alvo.read_text(encoding="utf-8"))
+                  if not isinstance(atual, dict):
+                      atual = {}
+              except Exception:
+                  atual = {}
+              atual.update({"fiscal": "ok", "quando": int(time.time()),
+                            "rodada": int(sys.argv[1])})
+              atual.pop("motivo", None)
+              alvo.write_text(json.dumps(atual, ensure_ascii=False, indent=1),
+                              encoding="utf-8")
           PY
       - name: Publicar
         run: |
@@ -173,30 +256,121 @@ jobs:
         #   2. so emenda se ESTA rodada trouxe post novo. Se nao trouxe nada, o
         #      Instagram esta fechado para os enderecos de agora, e insistir e'
         #      desperdicio: o horario marcado tenta de novo mais tarde.
+        #
+        # E uma excecao de proposito, o VIGIA: a trava 2 deixava o perfil que nao
+        # avancou NADA esperando o cron em silencio, sem ninguem contando as vezes.
+        # Perfil pendente cuja prova de vida nao muda ha 2 rodadas re-emenda mesmo
+        # sem post novo, com "tentativa N" escrita na ficha dele e um teto de
+        # reapresentacoes por dia para nao virar laco.
         run: |
-          python - <<'PY' > veredito.txt
-          import json, pathlib, subprocess
+          python - "${{ needs.conferir.result }}" <<'PY' > veredito.txt
+          import json, pathlib, subprocess, sys, time
+          def ler(caminho, padrao):
+              a = pathlib.Path(caminho)
+              if not a.exists():
+                  return padrao
+              try:
+                  return json.loads(a.read_text(encoding="utf-8"))
+              except Exception:
+                  return padrao
           # perfil em releitura conta como pela metade: ele esta' marcado como
           # completo e continua tendo pagina para ler.
-          def falta(a):
-              d = json.loads(a.read_text(encoding="utf-8"))
+          def falta(d):
               return (not d.get("completo")) or d.get("relendo")
           pasta = pathlib.Path("dados/perfis")
-          pendentes = sum(1 for a in pasta.glob("*.json") if falta(a)) if pasta.exists() else 0
+          perfis = {a.stem: ler(a, {}) for a in pasta.glob("*.json")} if pasta.exists() else {}
+          pendentes = [c for c, d in perfis.items() if falta(d)]
           # quantos commits de elo entraram nos ultimos 30 minutos
           r = subprocess.run(["git", "log", "--since=30.minutes", "--oneline", "--grep=^vaga"],
                              capture_output=True, text=True)
           avancou = len([l for l in r.stdout.splitlines() if l.strip()])
-          print(f"{pendentes} {avancou}")
+
+          # O VIGIA. A prova de vida de um perfil e' o carimbo `atualizado` do arquivo
+          # dele, que toda vaga regrava ao tocar o perfil: se ele nao mudou de uma
+          # rodada para a outra, nada aconteceu ali, nem pagina lida, nem releitura.
+          # Duas rodadas assim e o perfil esta' travado. A memoria de uma rodada para
+          # a outra vive em dados/vigia.json, gravada no fim deste passo.
+          TETO_DO_DIA = 12
+          vigia = ler("dados/vigia.json", {})
+          # o dia e' o do relogio da maquina (UTC): o teto e' valvula de seguranca,
+          # e nao precisa de fuso certo para cumprir o papel
+          hoje = time.strftime("%Y-%m-%d", time.gmtime())
+          if vigia.get("dia") != hoje:
+              vigia["dia"] = hoje
+              vigia["tentativas"] = 0
+          memoria = vigia.get("perfis") or {}
+          travados, agora_perfis = [], {}
+          for c in pendentes:
+              prova = int(perfis[c].get("atualizado") or 0)
+              antes = memoria.get(c) or {}
+              paradas = int(antes.get("paradas") or 0) + 1 if prova == antes.get("prova", -1) else 0
+              agora_perfis[c] = {"prova": prova, "paradas": paradas}
+              if paradas >= 2:
+                  travados.append(c)
+          vigia["perfis"] = agora_perfis
+
+          reapresenta = 0
+          fiscal_passou = len(sys.argv) > 1 and sys.argv[1] == "success"
+          tentativas = int(vigia.get("tentativas") or 0)
+          # o vigia so' age quando a regra normal nao vai agir (nenhum elo gravou) e o
+          # fiscal passou: reapresentar uma esteira reprovada no portao so' queimaria
+          # as tentativas do dia repetindo a mesma falha.
+          if fiscal_passou and not avancou and travados and tentativas < TETO_DO_DIA:
+              vigia["tentativas"] = tentativas + 1
+              reapresenta = 1
+              try:
+                  import atividade
+                  agora = int(time.time())
+                  for c in travados:
+                      livro = atividade.carregar(c)
+                      atividade.anotar(livro, "vigia", agora,
+                                       f"Vigia Reapresentou A Esteira: Sem Avanço Há "
+                                       f"{agora_perfis[c]['paradas']} rodadas, tentativa "
+                                       f"{vigia['tentativas']} de {TETO_DO_DIA} no dia")
+                      atividade.gravar(livro)
+                      # o contador zera ao reapresentar: sem isto, o perfil que segue
+                      # travado dispararia em TODA rodada e o teto do dia acabaria em
+                      # uma hora. Zerado, ele espera mais 2 rodadas entre tentativas.
+                      agora_perfis[c]["paradas"] = 0
+                  atividade.reconstruir_indice()
+              except Exception as e:
+                  # a reapresentacao vale mais que a anotacao: se a ficha nao deu,
+                  # o erro fica no log e a esteira e' reapresentada mesmo assim
+                  print(f"vigia nao conseguiu anotar na ficha: {type(e).__name__}: {e}",
+                        file=sys.stderr)
+          pathlib.Path("dados/vigia.json").write_text(
+              json.dumps(vigia, ensure_ascii=False, indent=1), encoding="utf-8")
+          print(f"{len(pendentes)} {avancou} {reapresenta}")
           PY
-          read PENDENTES AVANCOU < veredito.txt
-          echo "perfis pela metade: $PENDENTES | elos que gravaram nesta rodada: $AVANCOU"
+          read PENDENTES AVANCOU VIGIA < veredito.txt
+          echo "perfis pela metade: $PENDENTES | elos que gravaram nesta rodada: $AVANCOU | vigia reapresenta: $VIGIA"
           if [ "$PENDENTES" -gt 0 ] && [ "$AVANCOU" -gt 0 ]; then
             curl -s -o /dev/null -w "proxima rodada chamada: %{http_code}\n" \
+              -X POST -H "Content-Type: application/json" \
+              "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}'
+          elif [ "$VIGIA" -gt 0 ]; then
+            curl -s -o /dev/null -w "vigia reapresentou a esteira: %{http_code}\n" \
               -X POST -H "Content-Type: application/json" \
               "https://estudio-ponte.gabrieltorres.workers.dev/varrer" -d '{}'
           elif [ "$PENDENTES" -eq 0 ]; then
             echo "tudo varrido, a esteira descansa"
           else
-            echo "nenhum elo gravou: o Instagram esta fechado agora, tento no horario marcado"
+            echo "nenhum elo gravou e o vigia nao reapresentou: tento no horario marcado"
           fi
+          # o que o vigia escreveu (contadores e fichas) precisa sobreviver a rodada;
+          # a gravacao vem DEPOIS da emenda para um soluco de git nao engolir o curl
+          git config user.name "esteira"
+          git config user.email "esteira@users.noreply.github.com"
+          git add dados/
+          if git diff --staged --quiet; then
+            echo "vigia sem nada novo para gravar"
+            exit 0
+          fi
+          git commit -m "vigia da rodada ${{ github.run_number }}"
+          for tentativa in 1 2 3 4 5 6 7 8; do
+            if git pull --rebase --autostash origin main --quiet && git push --quiet; then
+              echo "vigia gravado na tentativa $tentativa"; exit 0
+            fi
+            sleep $(( (RANDOM % 7) + 3 ))
+          done
+          echo "nao consegui gravar o vigia apos oito tentativas; a proxima rodada reconta"
