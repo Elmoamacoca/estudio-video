@@ -13,6 +13,12 @@
    "tipo": "aguardando",
    "gravidade": "aviso",
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (www.instagram.com Respondeu 401; i.instagram.com Respondeu Sem Os Dados Do Perfil); A Esteira Vai Tentar Pelos IPs Dela"
+  },
+  {
+   "quando": 1787622115,
+   "tipo": "aguardando",
+   "gravidade": "aviso",
+   "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (www.instagram.com Respondeu 401; i.instagram.com Respondeu Sem Os Dados Do Perfil); A Esteira Vai Tentar Pelos IPs Dela"
   }
  ]
 }
