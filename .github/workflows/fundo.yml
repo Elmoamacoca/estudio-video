@@ -7,7 +7,7 @@ on:
     inputs:
       conta:
         description: "perfil"
-        default: "brandsdecoded__"
+        default: ""
       teto:
         description: "ate quantas paginas tentar"
         default: "30"

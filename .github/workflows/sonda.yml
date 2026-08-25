@@ -9,7 +9,7 @@ on:
     inputs:
       conta:
         description: "perfil a sondar"
-        default: "brandsdecoded__"
+        default: ""
 
 jobs:
   sondar:

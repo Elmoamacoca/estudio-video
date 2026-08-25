@@ -144,7 +144,12 @@ VIAS = [
 ]
 
 if __name__ == "__main__":
-    conta = sys.argv[1] if len(sys.argv) > 1 else "brandsdecoded__"
+    # Ver a nota do fundo.py: padrao de perfil real vira resto de mudanca. Depois da
+    # limpeza dos minerados, rodar sem argumento voltaria a bater num perfil que saiu
+    # da lista, entao aqui se pede a conta em vez de assumir uma.
+    conta = sys.argv[1] if len(sys.argv) > 1 else ""
+    if not conta.strip():
+        raise SystemExit("diga o perfil: python sonda.py <conta>")
     print(f"sonda em @{conta}\n")
     for nome, f in VIAS:
         st, d = f(conta)
