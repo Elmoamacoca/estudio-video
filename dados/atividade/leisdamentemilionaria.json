@@ -39,6 +39,18 @@
     "total": 204,
     "publicacoes": 398
    }
+  },
+  {
+   "quando": 1787630331,
+   "tipo": "sem_leitura",
+   "gravidade": "aviso",
+   "texto": "Nenhuma Página Veio (Reels): Recusa 401 Do Instagram. A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa 1.",
+   "detalhe": {
+    "seguidas": 1,
+    "vaga": 4,
+    "caminho": "reels",
+    "resposta": "reels: recusou (401)"
+   }
   }
  ]
 }
