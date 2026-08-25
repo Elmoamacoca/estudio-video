@@ -80,9 +80,9 @@
    "carrosseis": 0,
    "acima": 180,
    "baixaveis": 128,
-   "baixados": 0,
+   "baixados": 128,
    "reprovados": 0,
-   "restam": 128
+   "restam": 0
   },
   {
    "conta": "startse",
