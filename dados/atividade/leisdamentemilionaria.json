@@ -51,6 +51,36 @@
     "caminho": "reels",
     "resposta": "reels: recusou (401)"
    }
+  },
+  {
+   "quando": 1787630895,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 191 reels novos, 395 no total",
+   "detalhe": {
+    "rodada": 294,
+    "maquinas": 1,
+    "gravacoes": 1,
+    "passos": [
+     {
+      "quando": 1787630784,
+      "maquina": "vaga 17"
+     }
+    ],
+    "novos": 191,
+    "total": 395,
+    "publicacoes": 398
+   }
+  },
+  {
+   "quando": 1787630895,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os reels deste perfil: 395 no total",
+   "detalhe": {
+    "total": 395,
+    "publicacoes": 398
+   }
   }
  ]
 }

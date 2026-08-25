@@ -1,7 +1,7 @@
 {
  "prontas": 500,
- "avaliados": 2226,
- "ultima_rodada": 1787630201,
+ "avaliados": 2417,
+ "ultima_rodada": 1787630896,
  "perfis": [
   {
    "conta": "blankpartners",
@@ -21,10 +21,10 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 254,
-   "baixaveis": 153,
+   "baixaveis": 131,
    "baixados": 0,
    "reprovados": 0,
-   "restam": 153
+   "restam": 131
   },
   {
    "conta": "brandsdecoded__",
@@ -46,10 +46,10 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 95,
-   "baixaveis": 47,
+   "baixaveis": 46,
    "baixados": 0,
    "reprovados": 0,
-   "restam": 47
+   "restam": 46
   },
   {
    "conta": "leisdamentemilionaria",
@@ -58,21 +58,21 @@
    "seguidores": 112865,
    "mercado": null,
    "etiquetas": [],
-   "atualizado": 1787630089,
+   "atualizado": 1787630784,
    "publicacoes": 398,
-   "lidos": 204,
-   "completo": false,
+   "lidos": 395,
+   "completo": true,
    "relendo": false,
-   "mais_antigo": 1752710462,
+   "mais_antigo": 1735763300,
    "mais_novo": 1787529762,
-   "reels": 204,
+   "reels": 395,
    "imagens": 0,
    "carrosseis": 0,
-   "acima": 91,
-   "baixaveis": 80,
+   "acima": 180,
+   "baixaveis": 128,
    "baixados": 0,
    "reprovados": 0,
-   "restam": 80
+   "restam": 128
   },
   {
    "conta": "startse",
@@ -115,9 +115,9 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 112,
-   "baixaveis": 93,
-   "baixados": 89,
-   "reprovados": 4,
+   "baixaveis": 86,
+   "baixados": 83,
+   "reprovados": 3,
    "restam": 0
   },
   {
@@ -138,10 +138,10 @@
    "imagens": 180,
    "carrosseis": 9,
    "acima": 196,
-   "baixaveis": 95,
+   "baixaveis": 79,
    "baixados": 0,
    "reprovados": 0,
-   "restam": 95
+   "restam": 79
   },
   {
    "conta": "vinci.society",
@@ -163,8 +163,8 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 41,
-   "baixaveis": 32,
-   "baixados": 32,
+   "baixaveis": 30,
+   "baixados": 30,
    "reprovados": 0,
    "restam": 0
   }

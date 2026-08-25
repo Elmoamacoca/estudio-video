@@ -1,8 +1,92 @@
 {
  "itens": [
   {
+   "origem": "@leisdamentemilionaria",
+   "indice": 2022.2,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 1960.7,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 1958.09,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 1787.31,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 1646.27,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 1304.34,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 793.69,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 648.47,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 579.34,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 510.31,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 500.56,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 498.65,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 498.61,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@blankpartners",
    "indice": 474.43,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 468.83,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -13,8 +97,26 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@leisdamentemilionaria",
+   "indice": 410.67,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@upflip",
    "indice": 373.07,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 337.24,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 336.63,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -26,31 +128,19 @@
   },
   {
    "origem": "@leisdamentemilionaria",
-   "indice": 317.09,
+   "indice": 325.65,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@leisdamentemilionaria",
-   "indice": 307.44,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 307.03,
+   "indice": 323.74,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@thenews.business",
    "indice": 283.62,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 280.26,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -68,13 +158,37 @@
   },
   {
    "origem": "@leisdamentemilionaria",
-   "indice": 258.14,
+   "indice": 257.08,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
    "indice": 248.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 244.24,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 243.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 242.45,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 235.02,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -86,13 +200,55 @@
   },
   {
    "origem": "@leisdamentemilionaria",
-   "indice": 204.53,
+   "indice": 210.54,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 209.07,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 205.57,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 201.55,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 199.22,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 196.33,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@upflip",
    "indice": 190.43,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 187.77,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 182.81,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -109,8 +265,32 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@leisdamentemilionaria",
+   "indice": 159.28,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 157.36,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@blankpartners",
    "indice": 153.82,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 151.51,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 149.22,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -121,8 +301,32 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@leisdamentemilionaria",
+   "indice": 144.24,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@blankpartners",
    "indice": 144.04,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 142.03,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 141.95,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@leisdamentemilionaria",
+   "indice": 138.21,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -134,7 +338,7 @@
   },
   {
    "origem": "@leisdamentemilionaria",
-   "indice": 124.45,
+   "indice": 118.56,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -145,221 +349,17 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@blankpartners",
-   "indice": 111.37,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
    "origem": "@leisdamentemilionaria",
-   "indice": 101.68,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 101.68,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@upflip",
-   "indice": 100.03,
+   "indice": 112.13,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@blankpartners",
-   "indice": 92.07,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 90.84,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 86.74,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 81.71,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 80.02,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 78.49,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 78.34,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 78.19,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 78.18,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 77.02,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 73.51,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 73.28,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@upflip",
-   "indice": 67.52,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 66.28,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 64.39,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 60.84,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@upflip",
-   "indice": 60.34,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@upflip",
-   "indice": 59.59,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 54.68,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 54.08,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 52.88,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 52.78,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 52.47,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 52.22,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 51.97,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 51.55,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 51.06,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 50.76,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 50.75,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 50.18,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 47.77,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 47.56,
+   "indice": 111.37,
    "etapa": "reels",
    "situacao": "selecionada"
   }
  ],
- "atualizado": 1787630201
+ "atualizado": 1787630896
 }
