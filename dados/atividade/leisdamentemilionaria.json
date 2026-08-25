@@ -12,6 +12,18 @@
     "seguidores": 113000,
     "total": 0
    }
+  },
+  {
+   "quando": 1787687442,
+   "tipo": "sem_leitura",
+   "gravidade": "aviso",
+   "texto": "Nenhuma Página Veio (Reels): Recusa 401 Do Instagram. A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa 1.",
+   "detalhe": {
+    "seguidas": 1,
+    "vaga": 1,
+    "caminho": "reels",
+    "resposta": "reels: recusou (401)"
+   }
   }
  ]
 }
