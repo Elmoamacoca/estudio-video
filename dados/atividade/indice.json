@@ -3,20 +3,21 @@
   {
    "conta": "leisdamentemilionaria",
    "nome": "Mente Milionária",
+   "rotulo": "reels",
    "primeiro": 1787629501,
-   "ultimo": 1787629501,
-   "eventos": 1,
+   "ultimo": 1787630201,
+   "eventos": 3,
    "falhas": 0,
-   "avisos": 0,
-   "ultimo_tipo": "identificado",
-   "lidos": 0,
-   "publicacoes": 398,
+   "avisos": 1,
+   "ultimo_tipo": "varredura",
+   "lidos": 204,
+   "publicacoes": 0,
    "completo": false
   },
   {
    "conta": "upflip",
    "nome": "UpFlip",
-   "rotulo": "publicações",
+   "rotulo": "reels",
    "primeiro": 1787623137,
    "ultimo": 1787625272,
    "eventos": 10,
@@ -30,7 +31,7 @@
   {
    "conta": "startse",
    "nome": null,
-   "rotulo": "publicações",
+   "rotulo": "reels",
    "primeiro": 1787622096,
    "ultimo": 1787622464,
    "eventos": 6,
@@ -44,7 +45,7 @@
   {
    "conta": "thenews.business",
    "nome": "the news business",
-   "rotulo": "publicações",
+   "rotulo": "reels",
    "primeiro": 1787176012,
    "ultimo": 1787177420,
    "eventos": 4,
@@ -52,13 +53,13 @@
    "avisos": 0,
    "ultimo_tipo": "concluido",
    "lidos": 267,
-   "publicacoes": 2542,
+   "publicacoes": 0,
    "completo": true
   },
   {
    "conta": "blankpartners",
    "nome": "Blank Partners",
-   "rotulo": "publicações",
+   "rotulo": "reels",
    "primeiro": 1787076365,
    "ultimo": 1787080298,
    "eventos": 9,
@@ -66,13 +67,13 @@
    "avisos": 1,
    "ultimo_tipo": "concluido",
    "lidos": 737,
-   "publicacoes": 1678,
+   "publicacoes": 0,
    "completo": true
   },
   {
    "conta": "brandsdecoded__",
    "nome": "BrandsDecoded®️ | Conteúdo & Cultura",
-   "rotulo": "publicações",
+   "rotulo": "reels",
    "primeiro": 1787076371,
    "ultimo": 1787077500,
    "eventos": 5,
@@ -80,13 +81,13 @@
    "avisos": 1,
    "ultimo_tipo": "concluido",
    "lidos": 294,
-   "publicacoes": 2256,
+   "publicacoes": 0,
    "completo": true
   },
   {
    "conta": "vinci.society",
    "nome": "Vinci",
-   "rotulo": "publicações",
+   "rotulo": "reels",
    "primeiro": 1787074280,
    "ultimo": 1787074569,
    "eventos": 2,
@@ -98,5 +99,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787629505
+ "atualizado": 1787630201
 }

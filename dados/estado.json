@@ -1,7 +1,7 @@
 {
  "prontas": 500,
- "avaliados": 2211,
- "ultima_rodada": 1787627149,
+ "avaliados": 2226,
+ "ultima_rodada": 1787630201,
  "perfis": [
   {
    "conta": "blankpartners",
@@ -21,10 +21,10 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 254,
-   "baixaveis": 168,
+   "baixaveis": 153,
    "baixados": 0,
    "reprovados": 0,
-   "restam": 168
+   "restam": 153
   },
   {
    "conta": "brandsdecoded__",
@@ -46,10 +46,33 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 95,
-   "baixaveis": 55,
+   "baixaveis": 47,
    "baixados": 0,
    "reprovados": 0,
-   "restam": 55
+   "restam": 47
+  },
+  {
+   "conta": "leisdamentemilionaria",
+   "nome": "Mente Milionária",
+   "avatar": "https://scontent-gig4-2.cdninstagram.com/v/t51.2885-19/473721876_1061382365746547_6962557560447314247_n.jpg?stp=dst-jpg_s320x320_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby40NDMuYzIifQ&_nc_ht=scontent-gig4-2.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gEvlpKnC_aLsf3jEcbInYtm4MnxXt_P0mkHGzfFnCx4FFyWd5L7TGrHiseT159loHI&_nc_ohc=p44WJfePuKsQ7kNvwFgV9wZ&_nc_gid=gcoWLVkpOU1G4ohtVgww_g&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AQF9Ohcl9S0jDIUc_xT84vGRMMZQvkjSfvWP-qDESpp7yA&oe=6A92E60F&_nc_sid=8b3546",
+   "seguidores": 112865,
+   "mercado": null,
+   "etiquetas": [],
+   "atualizado": 1787630089,
+   "publicacoes": 398,
+   "lidos": 204,
+   "completo": false,
+   "relendo": false,
+   "mais_antigo": 1752710462,
+   "mais_novo": 1787529762,
+   "reels": 204,
+   "imagens": 0,
+   "carrosseis": 0,
+   "acima": 91,
+   "baixaveis": 80,
+   "baixados": 0,
+   "reprovados": 0,
+   "restam": 80
   },
   {
    "conta": "startse",
@@ -92,8 +115,8 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 112,
-   "baixaveis": 95,
-   "baixados": 91,
+   "baixaveis": 93,
+   "baixados": 89,
    "reprovados": 4,
    "restam": 0
   },
@@ -114,11 +137,11 @@
    "reels": 618,
    "imagens": 180,
    "carrosseis": 9,
-   "acima": 257,
-   "baixaveis": 115,
+   "acima": 196,
+   "baixaveis": 95,
    "baixados": 0,
    "reprovados": 0,
-   "restam": 115
+   "restam": 95
   },
   {
    "conta": "vinci.society",
@@ -140,8 +163,8 @@
    "imagens": 0,
    "carrosseis": 0,
    "acima": 41,
-   "baixaveis": 34,
-   "baixados": 34,
+   "baixaveis": 32,
+   "baixados": 32,
    "reprovados": 0,
    "restam": 0
   }
