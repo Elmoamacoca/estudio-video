@@ -57,9 +57,9 @@
    "texto": "Leva entregue: 180 peças tratadas, 180 saíram da fileira."
   },
   {
-   "quando": 1787689326,
+   "quando": 1787689329,
    "tipo": "buscando",
-   "texto": "Trazendo o pacote da esteira para o seu computador: 0 MB de 786 MB."
+   "texto": "Trazendo o pacote da esteira para o seu computador: 1 MB de 786 MB."
   }
  ]
 }
