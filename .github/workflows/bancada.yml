@@ -9,7 +9,7 @@ jobs:
         run: |
           echo "nucleos: $(nproc)"
           grep "model name" /proc/cpuinfo | head -1
-          free -h | head -2
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg > /dev/null
           ffmpeg -version | head -1
       - name: encode-um
         run: |
