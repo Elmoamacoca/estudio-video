@@ -15,13 +15,13 @@
    "texto": "Régua aplicada: 395 avaliados, 180 acima da régua."
   },
   {
-   "quando": 1787689249,
+   "quando": 1787689259,
    "tipo": "baixa",
    "conta": "leisdamentemilionaria",
-   "texto": "151 de 180 baixados.",
-   "feitos": 151,
+   "texto": "180 de 180 baixados. Conta concluída.",
+   "feitos": 180,
    "total": 180,
-   "concluida": false
+   "concluida": true
   }
  ]
 }
