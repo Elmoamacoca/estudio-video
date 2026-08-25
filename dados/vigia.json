@@ -1,5 +1,10 @@
 {
  "dia": "2026-08-25",
  "tentativas": 0,
- "perfis": {}
+ "perfis": {
+  "leisdamentemilionaria": {
+   "prova": 1787630089,
+   "paradas": 0
+  }
+ }
 }
