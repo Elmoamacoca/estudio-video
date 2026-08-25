@@ -8,19 +8,19 @@
   },
   {
    "origem": "@upflip",
-   "indice": 453.13,
+   "indice": 405.39,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@upflip",
-   "indice": 344.13,
+   "indice": 351.42,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@upflip",
-   "indice": 287.28,
+   "indice": 307.88,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -33,6 +33,12 @@
   {
    "origem": "@blankpartners",
    "indice": 264.2,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 257.02,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -50,19 +56,13 @@
   },
   {
    "origem": "@upflip",
-   "indice": 200.51,
+   "indice": 179.38,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@upflip",
-   "indice": 172.7,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@upflip",
-   "indice": 171.93,
+   "indice": 154.51,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -73,8 +73,20 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@upflip",
+   "indice": 153.81,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@blankpartners",
    "indice": 144.04,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 137.98,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -97,14 +109,14 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@upflip",
-   "indice": 105.32,
+   "origem": "@brandsdecoded__",
+   "indice": 101.68,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
-   "origem": "@brandsdecoded__",
-   "indice": 101.68,
+   "origem": "@upflip",
+   "indice": 94.22,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -145,20 +157,38 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@upflip",
-   "indice": 71.09,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
    "origem": "@blankpartners",
    "indice": 66.28,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
+   "origem": "@upflip",
+   "indice": 65.58,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 63.6,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@thenews.business",
    "indice": 60.84,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 56.84,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 56.14,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -235,6 +265,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@upflip",
+   "indice": 44.3,
+   "etapa": "post",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@vinci.society",
    "indice": 43.53,
    "etapa": "reels",
@@ -254,7 +290,13 @@
   },
   {
    "origem": "@upflip",
-   "indice": 39.91,
+   "indice": 41.01,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 39.27,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -267,6 +309,12 @@
   {
    "origem": "@blankpartners",
    "indice": 37.42,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@upflip",
+   "indice": 36.85,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -289,77 +337,29 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@upflip",
+   "indice": 35.7,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@blankpartners",
    "indice": 35.65,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
-   "origem": "@blankpartners",
-   "indice": 35.03,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 33.84,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 33.46,
+   "origem": "@upflip",
+   "indice": 35.36,
    "etapa": "reels",
    "situacao": "selecionada"
   },
   {
    "origem": "@upflip",
-   "indice": 29.81,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 28.52,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 27.78,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thenews.business",
-   "indice": 26.96,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 25.69,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@brandsdecoded__",
-   "indice": 25.6,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@blankpartners",
-   "indice": 25.09,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@vinci.society",
-   "indice": 24.91,
+   "indice": 35.3,
    "etapa": "reels",
    "situacao": "selecionada"
   }
  ],
- "atualizado": 1787623870
+ "atualizado": 1787624570
 }

@@ -5,12 +5,12 @@
    "nome": "UpFlip",
    "rotulo": "publicações",
    "primeiro": 1787623137,
-   "ultimo": 1787623870,
-   "eventos": 6,
+   "ultimo": 1787624570,
+   "eventos": 8,
    "falhas": 0,
-   "avisos": 5,
-   "ultimo_tipo": "sem_avanco",
-   "lidos": 336,
+   "avisos": 6,
+   "ultimo_tipo": "varredura",
+   "lidos": 636,
    "publicacoes": 0,
    "completo": false
   },
@@ -85,5 +85,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787623870
+ "atualizado": 1787624570
 }
