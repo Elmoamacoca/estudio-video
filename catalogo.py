@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import sys
+import os
 import time
 from pathlib import Path
 
@@ -58,6 +59,17 @@ def ler() -> dict:
     try:
         d = json.loads(ARQUIVO.read_text(encoding="utf-8"))
     except Exception:
+        # CATALOGO ILEGIVEL NAO VIRA CATALOGO VAZIO EM SILENCIO: a proxima gravacao
+        # apagaria todos os nomes criados por causa de um arquivo truncado. A copia
+        # fica guardada ao lado e o aviso sai em voz alta; os nomes em uso voltam
+        # pelo sincronizar (auditoria de 25/08/2026).
+        try:
+            ARQUIVO.replace(ARQUIVO.with_suffix(".json.bak"))
+            print(f"AVISO: o catalogo estava ilegivel; guardei a copia em "
+                  f"{ARQUIVO.name}.bak e recomeco. Rode o sincronizar para "
+                  "recuperar os nomes em uso.")
+        except OSError:
+            pass
         return vazio()
     d.setdefault("nichos", [])
     d.setdefault("etiquetas", [])
@@ -67,7 +79,11 @@ def ler() -> dict:
 def gravar(d: dict) -> None:
     d["atualizado"] = int(time.time())
     ARQUIVO.parent.mkdir(parents=True, exist_ok=True)
-    ARQUIVO.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    # ESCRITA ATOMICA: queda no meio de um write_text truncava o catalogo, e a
+    # leitura seguinte o daria como vazio, levando os nomes embora.
+    tmp = ARQUIVO.with_name(ARQUIVO.name + ".novo")
+    tmp.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    os.replace(tmp, ARQUIVO)
 
 
 def normal(nome: str) -> str:
