@@ -1,0 +1,12 @@
+{
+ "conta": "upflip",
+ "nome": null,
+ "eventos": [
+  {
+   "quando": 1787623137,
+   "tipo": "aguardando",
+   "gravidade": "aviso",
+   "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (www.instagram.com Respondeu 401; i.instagram.com Respondeu 400); A Esteira Vai Tentar Pelos IPs Dela"
+  }
+ ]
+}
