@@ -178,14 +178,22 @@ def limpar(entrada: Path, saida: Path) -> dict:
     t0 = time.time()
     # A FALTA DO FFMPEG E' RECADO, E NAO PILHA DE ERRO. Ela ja' derrubou um lote inteiro
     # com um rastro de vinte linhas de Python que nao diz o que fazer.
+    # `ambiente: True` SEPARA A FALHA PASSAGEIRA DA REPROVA DE VERDADE. A reprova de
+    # conteudo (sobra, marca, midia que mudou) e' deterministica e bane o reel com
+    # razao; falha de ambiente (ffmpeg ausente, disco cheio) bania reel bom para
+    # sempre por um aperto passageiro (auditoria de 25/08/2026). Quem le a marca e'
+    # o fechar() do registro, que pula o banimento das pecas de ambiente.
     if not shutil.which("ffmpeg"):
-        return {"arquivo": entrada.name, "limpo": False,
+        return {"arquivo": entrada.name, "limpo": False, "ambiente": True,
                 "erro": "o ffmpeg nao esta instalado nesta maquina"}
     saida.parent.mkdir(parents=True, exist_ok=True)
     r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(entrada)]
                        + LIMPEZA + [str(saida)], capture_output=True, text=True)
     if r.returncode != 0 or not saida.exists():
-        return {"arquivo": entrada.name, "limpo": False,
+        de_ambiente = any(s in (r.stderr or "") for s in
+                          ("No space left", "Permission denied",
+                           "Read-only file system"))
+        return {"arquivo": entrada.name, "limpo": False, "ambiente": de_ambiente,
                 "erro": (r.stderr or "o ffmpeg falhou").strip()[:200]}
     casca = sem_udta(saida)
     laudo = auditar(saida)
@@ -321,8 +329,10 @@ if __name__ == "__main__":
             diario.passo(int(leva), "tratando",
                          f"{feitos} de {len(arquivos)} tratados.")
             diario.empurrar(f"leva {leva}: tratando")
-        except Exception:
-            pass
+        except Exception as e:                                      # noqa: BLE001
+            # O AVISO QUE MORREU DEIXA UMA LINHA NO LOG, como o baixar ja' faz: a
+            # tela congelada em "tratando 0 de N" precisa de uma pista em algum lugar.
+            print(f"  (o registro da tela nao aceitou o avanco: {type(e).__name__})")
 
     # QUATRO LIMPEZAS DE CADA VEZ. O custo por arquivo e' quase todo de subprocesso
     # (o ffmpeg da copia e os resumos md5), que roda fora do Python e solta o
@@ -344,7 +354,9 @@ if __name__ == "__main__":
             try:
                 laudo = fut.result()
             except Exception as e:
-                laudo = {"arquivo": arq.name, "limpo": False,
+                # EXCECAO NO GRUPO E' AMBIENTE (ffprobe sumido, disco, memoria), e
+                # nao veredito sobre o conteudo: a peca nao pode ser banida por isso.
+                laudo = {"arquivo": arq.name, "limpo": False, "ambiente": True,
                          "erro": f"{type(e).__name__}: {e}"}
             laudo["arquivo"] = arq.name
             resultados[i] = laudo
