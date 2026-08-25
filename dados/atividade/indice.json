@@ -4,10 +4,10 @@
    "conta": "startse",
    "nome": null,
    "primeiro": 1787622096,
-   "ultimo": 1787622096,
-   "eventos": 1,
+   "ultimo": 1787622106,
+   "eventos": 2,
    "falhas": 0,
-   "avisos": 1,
+   "avisos": 2,
    "ultimo_tipo": "aguardando",
    "lidos": 0,
    "publicacoes": 0,
@@ -70,5 +70,5 @@
    "completo": true
   }
  ],
- "atualizado": 1787622099
+ "atualizado": 1787622108
 }
