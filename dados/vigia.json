@@ -1,5 +1,10 @@
 {
  "dia": "2026-08-25",
  "tentativas": 0,
- "perfis": {}
+ "perfis": {
+  "upflip": {
+   "prova": 1787623861,
+   "paradas": 0
+  }
+ }
 }
