@@ -24,6 +24,26 @@
     "caminho": "reels",
     "resposta": "reels: recusou (401)"
    }
+  },
+  {
+   "quando": 1787688118,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 227 reels novos, 227 no total",
+   "detalhe": {
+    "rodada": 314,
+    "maquinas": 1,
+    "gravacoes": 1,
+    "passos": [
+     {
+      "quando": 1787688106,
+      "maquina": "vaga 20"
+     }
+    ],
+    "novos": 227,
+    "total": 227,
+    "publicacoes": 398
+   }
   }
  ]
 }

@@ -1,7 +1,31 @@
 {
- "prontas": 0,
- "avaliados": 0,
- "ultima_rodada": 1787686652,
- "perfis": [],
+ "prontas": 105,
+ "avaliados": 227,
+ "ultima_rodada": 1787688118,
+ "perfis": [
+  {
+   "conta": "leisdamentemilionaria",
+   "nome": "Mente Milionária",
+   "avatar": "https://scontent-gig4-1.cdninstagram.com/v/t51.2885-19/473721876_1061382365746547_6962557560447314247_n.jpg?stp=dst-jpg_s320x320_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby40NDMuYzIifQ&_nc_ht=scontent-gig4-1.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gEt6qMMlZ3-clzJcDlRn0OF0X0cIMEAt4toN8_3Uh7otKt9XFgZQctPZ68_LP2IkxU&_nc_ohc=p44WJfePuKsQ7kNvwHPvIpi&_nc_gid=8qHT2aHooeOuybKXlahQPQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_AQFJ53ka-KursqnHlZFIS8y72-zXFoaw0n85WvvynywALA&oe=6A93C70F&_nc_sid=8b3546",
+   "seguidores": 113000,
+   "mercado": null,
+   "etiquetas": [],
+   "atualizado": 1787688106,
+   "publicacoes": 398,
+   "lidos": 227,
+   "completo": false,
+   "relendo": false,
+   "mais_antigo": 1750464241,
+   "mais_novo": 1787529762,
+   "reels": 227,
+   "imagens": 0,
+   "carrosseis": 0,
+   "acima": 105,
+   "baixaveis": 105,
+   "baixados": 0,
+   "reprovados": 0,
+   "restam": 105
+  }
+ ],
  "hoje": null
 }
