@@ -19,15 +19,19 @@ Então cada vaga escolhe o perfil pela sua posição:
 """
 from __future__ import annotations
 
+import io
 import json
 import os
+import re
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
+from contextlib import redirect_stdout
 from pathlib import Path
 
+import atividade
 from minerar import (CABECALHO, PASTA, abre_pelo_arroba, limpa_post,
                      pagina_de_reels, grava)
 
@@ -153,20 +157,29 @@ def ja_basta(estado: dict, r: dict) -> bool:
     return sum(1 for p in posts if p.get("formato") in formatos) >= alvo
 
 
-def _uma_pagina(uid: str, marcador: str | None) -> dict | None:
+def _uma_pagina(uid: str, marcador: str | None) -> tuple[dict | None, str]:
+    """Uma página do feed, e junto o que veio quando nada veio.
+
+    A segunda coisa devolvida é a resposta da recusa (código HTTP ou nome da queda de
+    rede). Antes ela morria impressa no log do Actions, que ninguém lê; agora o ramo
+    de falha a leva para o livro do perfil.
+    """
     rabo = f"&max_id={marcador}" if marcador else ""
+    motivos = []
     for dominio in ("www.instagram.com", "i.instagram.com"):
         url = f"https://{dominio}/api/v1/feed/user/{uid}/?count=12{rabo}"
         try:
             req = urllib.request.Request(url, headers=CABECALHO)
             with urllib.request.urlopen(req, timeout=25) as r:
-                return json.loads(r.read())
+                return json.loads(r.read()), ""
         except urllib.error.HTTPError as e:
             print(f"  {dominio} recusou ({e.code})")
+            motivos.append(f"{dominio} recusou ({e.code})")
         except Exception as e:
             print(f"  {dominio} falhou ({type(e).__name__})")
+            motivos.append(f"{dominio} falhou ({type(e).__name__})")
         time.sleep(2)
-    return None
+    return None, "; ".join(motivos)
 
 
 def contas_pedidas() -> list[str]:
@@ -344,6 +357,115 @@ def bater_ponto(conta: str, estado: dict, vaga: int) -> None:
     }, ensure_ascii=False), encoding="utf-8")
 
 
+# ------------------------------------------------------------- os ramos de falha
+#
+# TODO ERRO VIRA EVENTO, escrito na hora pela própria vaga.
+#
+# POR QUE ISTO EXISTE: em 24/08/2026 a esteira falhou 26 rodadas seguidas e NADA
+# apareceu na tela. O livro de atividade é escrito pela máquina de fechamento, e o
+# fechamento só sabe do que deixou marca no acervo: quando nenhuma vaga avança, não
+# há marca nenhuma, e a falha total fica com a mesma cara do descanso. O dono do
+# sistema perdeu dias com esse silêncio.
+#
+# Então cada ramo de falha grava seu evento datado em dados/atividade/<conta>.json,
+# dizendo o que tentou, que resposta veio e qual é o próximo passo automático. Quem
+# leva o arquivo para o acervo é o passo "Guardar o avanco" do fluxo, o mesmo git
+# add de dados/ que já guarda o resto.
+
+# a rede de segurança do fim do arquivo precisa saber de quem era a vez
+_CONTA_DA_VEZ = None
+
+
+def _segurando_a_fala(func, *args, **kw):
+    """Chama a função segurando o que ela imprime; devolve (resultado, fala).
+
+    POR QUE: o código da recusa (401, 429) nasce dentro do minerar, que o imprime no
+    log e devolve só None. O minerar é arquivo de outra frente, então segurar a fala
+    é o jeito de levar o código até o livro sem mexer lá. A fala é reimpressa aqui na
+    hora, e o log do Actions continua contando a mesma história de sempre.
+    """
+    prosa = io.StringIO()
+    try:
+        with redirect_stdout(prosa):
+            resultado = func(*args, **kw)
+    finally:
+        fala = prosa.getvalue()
+        if fala:
+            print(fala, end="")
+    return resultado, fala
+
+
+def _resumo_da_resposta(fala: str) -> str:
+    """O que o Instagram respondeu, em poucas palavras, a partir do que foi impresso.
+
+    Se a outra frente mudar as palavras do minerar, o pior caso é este resumo virar
+    "Sem Resposta": o evento continua saindo, só menos específico, e a fala crua vai
+    junto no detalhe de qualquer jeito.
+    """
+    # as falas do minerar trazem o codigo ora entre parenteses, ora como "HTTP 404":
+    # os dois formatos contam, senao a recusa vira um "Sem Resposta" generico
+    codigos = sorted(set(re.findall(r"\((\d{3})\)", fala)
+                         + re.findall(r"HTTP (\d{3})", fala)))
+    if codigos:
+        return "Recusa " + " E ".join(codigos) + " Do Instagram"
+    if "login" in fala:
+        return "Endereço Gasto, Pediu Login"
+    if "rede" in fala or "falhou" in fala:
+        return "Falha De Rede"
+    return "Sem Resposta"
+
+
+def anotar_abertura_falhada(conta: str, vaga: int, fala: str) -> None:
+    """A identificação que não passou vira evento, e a tentativa vira contador.
+
+    O contador (tentativas_id) fica no próprio livro do perfil e sobe a cada
+    tentativa, de qualquer vaga: é dele que o cartão tira o "Tentativa N". Quando a
+    abertura enfim passa, o main() zera o campo e o cartão volta ao normal.
+    """
+    livro = atividade.carregar(conta)
+    tentativa = int(livro.get("tentativas_id") or 0) + 1
+    livro["tentativas_id"] = tentativa
+    atividade.anotar_de_novo(
+        livro, "falha_abertura", int(time.time()),
+        f"Abertura Pelo Arroba Não Passou: {_resumo_da_resposta(fala)}. "
+        f"A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa {tentativa}.",
+        tentativa=tentativa, vaga=vaga, resposta=fala.strip()[-280:] or None)
+    atividade.gravar(livro)
+
+
+def anotar_vaga_sem_leitura(conta: str, vaga: int, caminho: str, fala: str) -> None:
+    """A vaga que não conseguiu ler página nenhuma deixa isso escrito, com a resposta.
+
+    Uma vaga de mãos vazias é rotina do rodízio de endereços; a rodada INTEIRA de
+    mãos vazias é o silêncio que custou dias. O evento cobre os dois casos: enquanto
+    outras vagas avançam, ele é um aviso que a varredura seguinte deixa para trás;
+    quando ninguém avança, ele é o único sinal vivo, datado e com contador subindo.
+    """
+    livro = atividade.carregar(conta)
+    ev = livro["eventos"]
+    seguidas = 1
+    if ev and ev[-1].get("tipo") == "sem_leitura":
+        seguidas = int((ev[-1].get("detalhe") or {}).get("seguidas") or 0) + 1
+    atividade.anotar_de_novo(
+        livro, "sem_leitura", int(time.time()),
+        f"Nenhuma Página Veio ({caminho.capitalize()}): {_resumo_da_resposta(fala)}. "
+        f"A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa {seguidas}.",
+        seguidas=seguidas, vaga=vaga, caminho=caminho,
+        resposta=fala.strip()[-280:] or None)
+    atividade.gravar(livro)
+
+
+def anotar_estouro(conta: str, vaga: int, erro: str) -> None:
+    """O estouro sem tratamento vira evento no livro do perfil da vez."""
+    livro = atividade.carregar(conta)
+    atividade.anotar_de_novo(
+        livro, "estouro", int(time.time()),
+        f"A Vaga Estourou No Meio Do Trabalho: {erro}. "
+        f"A Próxima Rodada Tenta De Novo Em Até 30 Min.",
+        vaga=vaga, erro=erro)
+    atividade.gravar(livro)
+
+
 def main() -> int:
     vaga = int(os.environ.get("VAGA", "1"))
     contas = contas_pedidas()
@@ -361,6 +483,8 @@ def main() -> int:
     posicao = (vaga - 1) % len(fila)
     voltas = (vaga - 1) // len(fila)
     conta = fila[posicao]
+    global _CONTA_DA_VEZ
+    _CONTA_DA_VEZ = conta
 
     if voltas:
         espera = voltas * PASSO_DA_ESCADA
@@ -398,10 +522,21 @@ def main() -> int:
     # perfil junto dos doze primeiros posts. Uma chamada faz o que antes eram duas
     # etapas e uma reza.
     if not estado.get("perfil"):
-        aberto = abre_pelo_arroba(conta, prazo=time.time() + 45)
+        aberto, fala = _segurando_a_fala(abre_pelo_arroba, conta,
+                                         prazo=time.time() + 45)
         if not aberto:
+            # ESTE RAMO MORRIA CALADO: a recusa ficava só no log da máquina, e um
+            # perfil recém-colado passava rodadas sem uma linha na tela. Agora cada
+            # tentativa fica no livro, com a resposta e o contador que o cartão mostra.
+            anotar_abertura_falhada(conta, vaga, fala)
             print(f"[{conta}] a abertura não passou nesta vaga. A próxima tenta.")
             return 0
+        # A ABERTURA PASSOU: o contador de tentativas zera aqui, senão o cartão
+        # continuaria dizendo "Tentativa N" para um perfil que já entrou.
+        livro = atividade.carregar(conta)
+        if livro.get("tentativas_id"):
+            livro["tentativas_id"] = 0
+            atividade.gravar(livro)
         if aberto.get("vazio"):
             # sai da fila com motivo escrito, em vez de ser tentado para sempre
             estado["perfil"] = {"conta": conta, "id": None, "nome": None,
@@ -439,9 +574,14 @@ def main() -> int:
     # reels puros, doze por página. No perfil medido, um ganho de vinte e quatro vezes.
     if so_reels(r) and not relendo:
         while paginas < PAGINAS_POR_VAGA:
-            d = pagina_de_reels(estado["perfil"]["id"], estado.get("marcador_reels"))
+            d, fala = _segurando_a_fala(pagina_de_reels, estado["perfil"]["id"],
+                                        estado.get("marcador_reels"))
             if d is None:
+                # SÓ A VAGA DE MÃOS VAZIAS VIRA EVENTO. A recusa DEPOIS de uma página
+                # lida é o fim natural da vaga (medido: o corte vem na terceira
+                # leitura), e anotá-la pintaria de aviso um sistema trabalhando certo.
                 if paginas == 0:
+                    anotar_vaga_sem_leitura(conta, vaga, "reels", fala)
                     print(f"[{conta}] endereço desta vaga já estava gasto (reels)")
                 break
             paginas += 1
@@ -473,9 +613,12 @@ def main() -> int:
     # DUAS PÁGINAS POR VAGA, e não uma. Medido: o corte vem na terceira leitura.
     while paginas < PAGINAS_POR_VAGA:
         marcador = estado.get("marcador_novo") if relendo else estado.get("marcador")
-        j = _uma_pagina(estado["perfil"]["id"], marcador)
+        j, fala = _uma_pagina(estado["perfil"]["id"], marcador)
         if j is None:
+            # mesmo critério do caminho dos reels: recusa depois de página lida é o
+            # fim natural da vaga, e só a vaga de mãos vazias fica escrita no livro
             if paginas == 0:
+                anotar_vaga_sem_leitura(conta, vaga, "feed", fala)
                 print(f"[{conta}] endereço desta vaga já estava gasto")
             break
         paginas += 1
@@ -540,4 +683,28 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # A REDE DE SEGURANÇA DA VAGA. Um estouro sem tratamento encerrava o programa com
+    # erro, o passo seguinte do fluxo (o git add de dados/) era PULADO, e a falha
+    # inteira sumia com ele: sobrava o vermelho no log do Actions, que ninguém lê.
+    # Aqui o estouro vira evento no livro do perfil da vez (ou na saúde geral, quando
+    # a vez ainda não tinha dono), e a vaga sai com código zero DE PROPÓSITO, para o
+    # passo que grava o acervo rodar e levar o evento junto.
+    try:
+        raise SystemExit(main())
+    except SystemExit:
+        raise
+    except Exception as e:
+        erro = f"{type(e).__name__}: {e}"
+        print(f"vaga estourou: {erro}")
+        try:
+            if _CONTA_DA_VEZ:
+                anotar_estouro(_CONTA_DA_VEZ, int(os.environ.get("VAGA", "1")), erro)
+            else:
+                atividade.anotar_saude(
+                    f"Uma Vaga Da Esteira Estourou Antes De Escolher Perfil: {erro}. "
+                    f"A Próxima Rodada Tenta De Novo Em Até 30 Min.",
+                    vaga=int(os.environ.get("VAGA", "1")), erro=erro)
+        except Exception as e2:
+            # até a rede de segurança pode falhar; que fique ao menos no log
+            print(f"não consegui anotar o estouro: {type(e2).__name__}: {e2}")
+        raise SystemExit(0)
