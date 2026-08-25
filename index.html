@@ -3049,6 +3049,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   <div class="ct-painel" id="sub-p-minerar">
 
     <div class="secao">
+      <!-- O AVISO DE SAÚDE DA ESTEIRA. Em 24/08/2026 o fiscal reprovou 26 rodadas
+           seguidas e a tela não mostrou NADA: falha silenciosa é o defeito mais caro
+           deste sistema. Quando dados/saude.json disser que o fiscal reprovou, esta
+           faixa acende com o motivo, a rodada e a hora; sem o arquivo, ela não
+           aparece, porque estado não se inventa. Quem a preenche é o `avisarSaude`. -->
+      <div class="ia-alerta ruim" id="saude_aviso" hidden></div>
       <div class="secao-cab">
         <h2>Situação</h2>
         <div class="dir"><span class="nota" id="carga"></span></div>
@@ -5246,7 +5252,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
              4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3
              7.7l2.8-2.8"/></svg></a>
     </div>
-    <p class="rodape-linha" id="rodape_linha">Estúdio</p>
   </div>
 </footer>
 
@@ -5853,6 +5858,20 @@ function parado(id, texto) {
 const HORAS_NO_RITMO = 3, HORAS_ATE_MORTO = 26;
 let ultimaColeta = null;
 
+/* A SAÚDE DA ESTEIRA, escrita pelo fiscal dela no acervo (`dados/saude.json`).
+   Em 24/08/2026 o fiscal reprovou 26 rodadas seguidas e o selo continuou verde,
+   porque a régua dele era só a idade da última rodada FECHADA: rodada que reprova
+   também carimba hora, e o selo lia o carimbo sem ler o veredito. Agora o veredito
+   manda: fiscal reprovando, o selo cai para o vermelho na hora, com o motivo.
+   Arquivo ausente é nulo, e nulo não muda nada: estado não se inventa. */
+let SAUDE = null;
+
+/** O motivo do fiscal, curto o bastante para caber no selo do topo. */
+function motivoCurto(m) {
+  const s = String(m || "o fiscal reprovou a rodada").trim();
+  return s.length > 60 ? s.slice(0, 57).trimEnd() + "…" : s;
+}
+
 function quanto(h) {
   if (h < 0.017) return "agora";
   if (h < 1) return Math.round(h * 60) + " min";
@@ -5863,6 +5882,14 @@ function quanto(h) {
 function selar(estado) {
   if (estado && estado.ultima_rodada) ultimaColeta = estado.ultima_rodada;
   const selo = $("estado"), rotulo = selo.querySelector(".rotulo");
+  // O VEREDITO DO FISCAL VENCE O RELÓGIO. Uma rodada reprovada fechou há minutos e
+  // por isso é "fresca" para a régua de idade, mas fresca e podre ao mesmo tempo:
+  // sem esta linha, o selo dizia "ao vivo" com a esteira quebrando a cada meia hora.
+  if (SAUDE && SAUDE.fiscal === "reprovou") {
+    selo.className = "status offline";
+    rotulo.textContent = "Esteira Parada: " + motivoCurto(SAUDE.motivo);
+    return;
+  }
   if (estado === null && ultimaColeta === null) {
     selo.className = "status offline";
     rotulo.textContent = "sem resposta";
@@ -5890,6 +5917,24 @@ function selar(estado) {
   }
 }
 setInterval(() => selar(null), 15000);
+
+/* O AVISO DA ABA DE MINERAÇÃO quando o fiscal reprova. O selo do topo é pequeno e
+   corta o motivo; aqui ele sai inteiro, com a rodada e a hora, no alto da aba onde o
+   olho chega primeiro. Aviso que depende de a pessoa ir até ele não é aviso. */
+function avisarSaude() {
+  const aviso = $("saude_aviso");
+  if (!aviso) return;
+  const parada = SAUDE && SAUDE.fiscal === "reprovou";
+  aviso.hidden = !parada;
+  if (!parada) return;
+  const pedacos = ["Esteira Parada: "
+    + String(SAUDE.motivo || "o fiscal reprovou a rodada").trim()];
+  if (SAUDE.rodada) pedacos.push(`rodada ${SAUDE.rodada}`);
+  if (SAUDE.quando) pedacos.push(`reprovada em ${dataHora(SAUDE.quando)}`);
+  // texto como TEXTO, e não como marcação: o motivo vem de arquivo do acervo, e
+  // conteúdo de arquivo montado dentro de HTML é como se abre buraco numa tela.
+  aviso.textContent = pedacos.join(" · ");
+}
 
 /* ---------------------------------------------------------------- registro ao vivo */
 const NOMES = { queued: "na fila", in_progress: "trabalhando", success: "pronto",
@@ -6340,7 +6385,10 @@ const filtrando = () => {
 const PESO = {
   sem_avanco: "aviso", limite: "aviso", aguardando: "aviso", vazio: "aviso",
 };
-const pesoDe = e => PESO[e.tipo] || (e.tipo ? "evento" : (e.gravidade || "evento"));
+/* TIPO DESCONHECIDO HERDA A GRAVIDADE GRAVADA NO EVENTO, e nao um neutro mudo: o
+   resgate da VPS e o vigia escrevem tipos novos com a gravidade dentro, e pintar
+   falha deles de "evento" esconderia exatamente o que a lei manda mostrar. */
+const pesoDe = e => PESO[e.tipo] || e.gravidade || "evento";
 
 const TIPOS = {
   aguardando: "aguardando identificação",
@@ -6369,6 +6417,23 @@ function haQuanto(ts) {
                 : `há ${Math.round(d / 30)} ${d < 60 ? "mês" : "meses"}`;
 }
 
+/** Só a hora, para carimbo dentro de frase: "último sinal às 14:32". */
+function horaCurta(ts) {
+  return new Date(ts * 1000).toLocaleTimeString("pt-BR",
+    { hour: "2-digit", minute: "2-digit" });
+}
+
+/* QUANDO A ESTEIRA ACORDA DE NOVO. O relógio dela é de meia em meia hora, no minuto
+   cheio, e o card de quem espera diz a hora da próxima batida em vez de pedir fé:
+   "esperando" sem prazo é o mesmo silêncio que escondeu 24 horas de esteira parada
+   em 24/08/2026. */
+function proximaRodadaAs() {
+  const d = new Date();
+  d.setSeconds(0, 0);
+  d.setMinutes(d.getMinutes() < 30 ? 30 : 60);
+  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
 /* ------------------------------------------------------------- o que acontece AGORA
 
    Cada vaga da esteira deixa um bilhete de duzentos bytes com onde a varredura está
@@ -6378,6 +6443,19 @@ function haQuanto(ts) {
    POR QUE NÃO LER O ARQUIVO DO PERFIL: ele tem o mesmo número e passa de 2 MB depois de
    algumas rodadas. Ninguém baixa isso de dez em dez segundos para ver um contador. */
 const BATIMENTOS = new Map();
+
+/* O BILHETE SÓ SUSTENTA "AGORA" ENQUANTO É FRESCO.
+
+   Cada bilhete traz o carimbo de hora no campo `quando`, escrito pela esteira a cada
+   página lida. Em 24/08/2026 a esteira falhou 26 rodadas seguidas no fiscal e a tela
+   continuou dizendo "varrendo agora" em cima de bilhetes de horas atrás: afirmação de
+   presente sustentada por evidência morta, que é a falha silenciosa mais cara deste
+   sistema. A régua: bilhete com mais de cinco minutos não sustenta "minerando" nenhum.
+   O número lido continua valendo, porque aconteceu de verdade; o que o bilhete velho
+   perde é o direito de afirmar o presente. */
+const VALIDADE_DO_BILHETE = 5 * 60;
+const bilheteFresco = b =>
+  !!b && (Date.now() / 1000 - (b.quando || 0)) < VALIDADE_DO_BILHETE;
 
 async function ouvirBatimentos() {
   const ativos = LIVRO.filter(c => !c.completo);
@@ -6416,12 +6494,22 @@ function linhaDoAgora(b) {
   // vagas, passam minutos entre uma página e outra. A linha dizia só "varrendo agora" e
   // a hora congelada logo ao lado, e a leitura óbvia era que tinha travado.
   const paradoHa = Math.round((Date.now() / 1000) - (b.quando || 0));
+  // MAS SILÊNCIO LONGO TAMBÉM NÃO É TRABALHO. Passados cinco minutos sem bilhete novo,
+  // a linha para de explicar o revezamento e diz a única coisa que pode provar: não há
+  // sinal, e a última prova de vida tem hora marcada. O ponto sai do verde pulsante
+  // junto, porque a bolinha piscando afirma vida tanto quanto o texto.
+  const semSinal = !b.completo && !bilheteFresco(b);
+  if (semSinal) ln.className = "liv-ev aviso liv-agora";
   ln.querySelector(".oque > b").textContent = b.completo
     ? "Leitura encerrada, aguardando o fechamento da rodada"
-    : paradoHa > 90
-      ? `Varredura em curso: última página há ${Math.round(paradoHa / 60)} min. `
-        + "As vagas se revezam, e a que volta sem página é endereço já usado."
-      : `Varrendo agora: a esteira está buscando ${rotuloDosFormatos(b)} deste perfil`;
+    : semSinal
+      ? `Sem Sinal Da Esteira Há ${Math.max(1, Math.round(paradoHa / 60))} Min: `
+        + `o último sinal gravado é das ${horaCurta(b.quando || 0)}. `
+        + `A próxima rodada acorda às ${proximaRodadaAs()}`
+      : paradoHa > 90
+        ? `Varredura em curso: última página há ${Math.round(paradoHa / 60)} min. `
+          + "As vagas se revezam, e a que volta sem página é endereço já usado."
+        : `Varrendo agora: a esteira está buscando ${rotuloDosFormatos(b)} deste perfil`;
   return ln;
 }
 
@@ -6451,14 +6539,15 @@ async function aoVivo() {
   // cartão logo abaixo dizendo "varrendo agora, 24 de 2.252". Duas frases contrárias na
   // mesma tela, e a errada era a de cima.
   await ouvirBatimentos();
-  // DEZ MINUTOS DE JANELA, e não três. As vagas se escalonam de cinquenta em cinquenta
-  // segundos quando caem todas no mesmo perfil, e boa parte delas ainda volta de mãos
-  // vazias porque o endereço de saída daquela máquina já tinha sido gasto. O bilhete
-  // então fica parado por minutos com a esteira trabalhando normalmente, e três minutos
-  // de janela declaravam a esteira morta no meio do serviço.
+  // A JANELA É A MESMA RÉGUA DO CARD, cinco minutos. Já foi dez, e a diferença criava
+  // a contradição de sempre em roupa nova: o card dizia "sem sinal há 6 min" e o
+  // cabeçalho, com o MESMO bilhete velho, anunciava "uma máquina buscando reels".
+  // Duas frases contrárias na mesma tela, uma régua só resolve. E declarar morte cedo
+  // demais não acontece: sem bilhete fresco, o ramo seguinte ainda afirma leitura
+  // pelos elos em andamento no GitHub, que é evidência viva de outra fonte.
   const segundos = Date.now() / 1000;
   const batendo = [...BATIMENTOS.values()]
-    .filter(b => !b.completo && (segundos - (b.quando || 0)) < 600);
+    .filter(b => !b.completo && (segundos - (b.quando || 0)) < VALIDADE_DO_BILHETE);
 
   let d = null;
   try {
@@ -6676,9 +6765,15 @@ function desenhaLivro() {
     // fim da rodada; o bilhete, a cada página. Um perfil entrando agora tem capa dizendo
     // zero e bilhete dizendo cento e trinta e dois.
     const b = BATIMENTOS.get(bruto.conta);
+    // "VIVO" SÓ COM BILHETE FRESCO. O número lido continua valendo, porque aconteceu;
+    // a afirmação de presente é que exige carimbo de hora dentro do prazo. Bilhete
+    // velho rebaixa o card para "sem sinal", com a hora do último sinal, em vez de um
+    // "varrendo agora" que ninguém pode provar.
     const c = b && b.quando > (bruto.ultimo || 0)
       ? { ...bruto, lidos: b.lidos, publicacoes: b.publicacoes || bruto.publicacoes,
-          modo: b.modo, completo: b.completo, ultimo: b.quando, vivo: !b.completo }
+          modo: b.modo, completo: b.completo, ultimo: b.quando,
+          vivo: !b.completo && bilheteFresco(b),
+          semSinal: !b.completo && !bilheteFresco(b) ? (b.quando || 0) : 0 }
       : bruto;
     const grave = c.falhas ? "falha" : c.avisos ? "aviso" : "";
     // O TOTAL DE PUBLICAÇÕES É OPCIONAL. O caminho que abre o perfil (o feed pedido
@@ -6716,10 +6811,25 @@ function desenhaLivro() {
         <span class="liv-id">
           <span class="liv-nome"><b>${c.nome
             || (c.aguardando ? "Perfil ainda não identificado" : "sem nome no perfil")}</b>
-            <span class="liv-etq">${TIPOS[c.ultimo_tipo] || c.ultimo_tipo
-              || "na fila"}</span></span>
+            <span class="liv-etq">${
+              // O CARD PROVISÓRIO TEM NOME DE FILA, e não de identificação: conta que
+              // só existe na lista de origem ainda não foi tocada pela esteira, e o
+              // rótulo diz exatamente em que degrau ela está.
+              c.aguardando ? "Na Fila, Esperando A Esteira"
+              : TIPOS[c.ultimo_tipo] || c.ultimo_tipo || "na fila"}</span></span>
           <span class="liv-sub">@${c.conta} · ${
             c.vivo ? '<b class="liv-vivo">varrendo agora</b>'
+            // SEM SINAL NOVO NO PRAZO, o card rebaixa a afirmação sozinho: diz há
+            // quanto tempo a esteira calou e a hora datada do último sinal.
+            : c.semSinal
+              ? `Sem Sinal Da Esteira Há ${
+                  Math.max(1, Math.round((Date.now() / 1000 - c.semSinal) / 60))
+                } Min · último sinal às ${horaCurta(c.semSinal)} · próxima rodada às ${proximaRodadaAs()}`
+            // O CARD DA FILA DIZ AS DUAS PONTAS DO TEMPO: quando a conta entrou (a hora
+            // gravada no fontes.json) e quando a esteira acorda de novo. Sem prazo,
+            // "esperando" é o mesmo silêncio que escondeu a esteira parada por 24 horas.
+            : c.naFila
+              ? `na fila desde ${horaCurta(c.naFila)} · a esteira acorda às ${proximaRodadaAs()}`
             // sem marca de tempo nenhuma, "há" quanto tempo daria meio século
             : c.ultimo ? haQuanto(c.ultimo)
             : "esperando a esteira abrir"}${
@@ -7105,7 +7215,7 @@ async function atualizar() {
   // seria pisca-pisca: quem já viu o dado não precisa ver que ele está sendo conferido.
   if (primeiraCarga) carregando("carga", "Buscando o acervo", "onda");
 
-  const [estado, sel, fontes, retratos, livro, lotes, cat] = await Promise.all([
+  const [estado, sel, fontes, retratos, livro, lotes, cat, saude] = await Promise.all([
     ler("dados/estado.json"), ler("dados/selecao.json"), ler("dados/fontes.json"),
     // arquivo à parte: o do perfil varrido passa de 1 MB e a via de leitura corta ali
     ler("dados/retratos.json"),
@@ -7115,11 +7225,17 @@ async function atualizar() {
     ler("dados/lotes/indice.json"),
     // as duas listas do sistema. Vêm só com os nomes: quantos perfis usam cada um é
     // conta que a própria tela faz, porque ela já tem todos os perfis na mão.
-    ler("dados/catalogo.json")]);
+    ler("dados/catalogo.json"),
+    // o veredito do fiscal sobre a última rodada: é ele que derruba o selo do topo
+    ler("dados/saude.json")]);
 
   if (primeiraCarga) { parado("carga", ""); primeiraCarga = false; }
   if (cat) CATALOGO = cat;
+  // O VEREDITO ENTRA ANTES DO SELO, porque o selo lê a saúde ao pintar. Arquivo
+  // ausente vira nulo e nada muda: estado não se inventa, nem para o bem.
+  SAUDE = saude;
   selar(estado);
+  avisarSaude();
 
   // a seleção é quem calcula os números da tabela; o estado é a cópia dela
   const perfis = (sel && sel.perfis) || (estado && estado.perfis) || [];
@@ -7140,15 +7256,9 @@ async function atualizar() {
   $("n_baixados").textContent = num(((lotes && lotes.lotes) || [])
     .reduce((a, b) => a + (b.limpos || 0), 0));
 
-  // a linha do rodapé conta o que ele tem de útil: quantos perfis e desde quando
-  const quandoRodou = estado && estado.ultima_rodada
-    ? new Date(estado.ultima_rodada * 1000).toLocaleString("pt-BR",
-        { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
-    : null;
-  $("rodape_linha").textContent = perfis.length
-    ? `${perfis.length} ${perfis.length === 1 ? "perfil minerado" : "perfis minerados"}`
-      + (quandoRodou ? ` · última rodada em ${quandoRodou}` : "")
-    : "nenhum perfil minerado ainda";
+  // AQUI MORAVA A LINHA DO RODAPÉ ("N perfis minerados · última rodada em ..."), e ela
+  // saiu por decisão do dono em 24/08/2026. O elemento saiu junto, na montagem do
+  // `montar.py`: contagem de situação no pé da página repetia o painel lá de cima.
 
   // O CAMPO NÃO É MAIS PREENCHIDO COM O QUE JÁ FOI MINERADO.
   // Aqui ele era reabastecido com a lista inteira do sistema a cada 25 segundos. O
@@ -7188,12 +7298,21 @@ async function atualizar() {
   // o cartão diz enquanto falta.
   const doLivro = (livro && livro.contas) || [];
   const comFicha = new Set(doLivro.map(c => c.conta));
+  // A HORA DA FILA VEM DO PRÓPRIO FONTES.JSON, do campo `atualizado`, que a gravação
+  // da lista carimba. É a única marca de tempo que uma conta sem ficha tem, e o card
+  // provisório a mostra em vez de um "esperando" sem data: dado sem carimbo de hora
+  // não afirma nada nesta tela. Ele vem como texto de data, e a conta abaixo o
+  // transforma em segundos; se vier torto, cai em zero e o card volta ao texto neutro.
+  const naFila = fontes && fontes.atualizado
+    ? Math.floor(new Date(fontes.atualizado).getTime() / 1000) || 0
+    : 0;
   const aguardando = ((fontes && fontes.contas) || [])
     .map(c => String(c).trim().replace(/^@/, ""))
     .filter(c => c && !comFicha.has(c))
     .map(conta => ({ conta, nome: null, primeiro: 0, ultimo: 0, eventos: 0,
                      falhas: 0, avisos: 0, ultimo_tipo: "aguardando",
-                     lidos: 0, publicacoes: 0, completo: false, aguardando: true }));
+                     lidos: 0, publicacoes: 0, completo: false, aguardando: true,
+                     naFila }));
   LIVRO = [...aguardando, ...doLivro];
   // O RÓTULO SÓ DEPOIS DA LISTA CHEGAR. Calculado antes, ele lia a lista da volta
   // anterior: na primeira carga a lista está vazia, e o painel abria dizendo
