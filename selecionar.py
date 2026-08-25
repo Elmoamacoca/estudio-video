@@ -13,6 +13,7 @@ premia o formato errado.
 from __future__ import annotations
 
 import json
+import os
 import statistics
 import sys
 from pathlib import Path
@@ -150,8 +151,19 @@ def selecionar(r: dict | None = None) -> dict:
 
     todos: list[dict] = []
     perfis: list[dict] = []
+    pulados: list[str] = []
     for arq in sorted(PASTA.glob("*.json")):
-        dados = json.loads(arq.read_text(encoding="utf-8"))
+        # UM PERFIL ILEGIVEL NAO DERRUBA A SELECAO INTEIRA. Um arquivo truncado por
+        # queda no meio da escrita matava a selecao toda com JSONDecodeError, a
+        # esteira parava, e o motivo ficava escondido; o catalogo ja' pulava o
+        # corrompido, a selecao nao (auditoria de 25/08/2026). O pulado e' contado e
+        # dito em voz alta, nunca engolido.
+        try:
+            dados = json.loads(arq.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            pulados.append(arq.name)
+            print(f"  AVISO: pulei o perfil ilegivel {arq.name} ({e})")
+            continue
         if not dados.get("perfil"):
             continue
         posts_todos = dados.get("posts", [])
@@ -245,6 +257,7 @@ def selecionar(r: dict | None = None) -> dict:
         "criterio": criterio,
         "perfis": perfis,
         "avaliados": len(todos),
+        "pulados": pulados,
         "itens": escolhidos,
     }
 
@@ -263,7 +276,11 @@ if __name__ == "__main__":
 
     saida = selecionar(r)
     SAIDA.parent.mkdir(parents=True, exist_ok=True)
-    SAIDA.write_text(json.dumps(saida, ensure_ascii=False, indent=1), encoding="utf-8")
+    # A ESCRITA E' ATOMICA: quem le a selecao e' o baixar, e um write cortado no meio
+    # deixava um JSON truncado que estourava a leva seguinte (auditoria 25/08/2026).
+    tmp = SAIDA.with_name(SAIDA.name + ".novo")
+    tmp.write_text(json.dumps(saida, ensure_ascii=False, indent=1), encoding="utf-8")
+    os.replace(tmp, SAIDA)
 
     como = ("por formato " + ", ".join(f"{f} {r['cortes'][f]}x" for f in r["formatos"]
                                        if f in r["cortes"])
