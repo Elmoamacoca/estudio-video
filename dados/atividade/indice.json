@@ -5,15 +5,15 @@
    "nome": "Mente Milionária",
    "rotulo": "reels",
    "primeiro": 1787687417,
-   "ultimo": 1787688118,
-   "eventos": 3,
+   "ultimo": 1787688813,
+   "eventos": 6,
    "falhas": 0,
-   "avisos": 1,
-   "ultimo_tipo": "varredura",
-   "lidos": 227,
+   "avisos": 2,
+   "ultimo_tipo": "concluido",
+   "lidos": 395,
    "publicacoes": 0,
-   "completo": false
+   "completo": true
   }
  ],
- "atualizado": 1787688118
+ "atualizado": 1787688813
 }

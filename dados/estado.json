@@ -1,7 +1,7 @@
 {
- "prontas": 105,
- "avaliados": 227,
- "ultima_rodada": 1787688118,
+ "prontas": 180,
+ "avaliados": 395,
+ "ultima_rodada": 1787688813,
  "perfis": [
   {
    "conta": "leisdamentemilionaria",
@@ -10,21 +10,21 @@
    "seguidores": 113000,
    "mercado": null,
    "etiquetas": [],
-   "atualizado": 1787688106,
+   "atualizado": 1787688702,
    "publicacoes": 398,
-   "lidos": 227,
-   "completo": false,
+   "lidos": 395,
+   "completo": true,
    "relendo": false,
-   "mais_antigo": 1750464241,
+   "mais_antigo": 1735763300,
    "mais_novo": 1787529762,
-   "reels": 227,
+   "reels": 395,
    "imagens": 0,
    "carrosseis": 0,
-   "acima": 105,
-   "baixaveis": 105,
+   "acima": 180,
+   "baixaveis": 180,
    "baixados": 0,
    "reprovados": 0,
-   "restam": 105
+   "restam": 180
   }
  ],
  "hoje": null
