@@ -17,6 +17,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 CABECALHO = {"User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -149,34 +150,62 @@ def main(cru: str) -> int:
         except Exception as e:
             print(f"  (o registro da tela nao aceitou o avanco: {type(e).__name__})")
 
+    # TRES DOWNLOADS DE CADA VEZ, DENTRO DA MESMA CONTA. O servidor de midia nao
+    # compartilha o teto da leitura (a medicao de 16/08/2026 la' em cima: 11 MB em 1
+    # segundo, sem corte), e o custo por arquivo e' quase todo espera de rede, entao
+    # tres juntos cortam o relogio de leva grande por ate' tres. Tres, e nao mais, por
+    # gentileza: acima disso ninguem mediu, e acordar um teto novo do servidor de
+    # midia custaria a leva inteira.
+    #
+    # O DESENHO E' O DO RECORTE NA OFICINA: o trabalhador so' baixa e devolve; quem
+    # soma contador, imprime, monta o registro e avisa a tela e' o laco de fora, um
+    # por vez. E o registro sai na ordem da selecao, nao na ordem de chegada, porque
+    # a ordem de desempenho e' a que as etapas seguintes leem.
+    TRES_JUNTOS = 3
     n = 0
     for conta, lista in fila.items():
         feitos = 0
         print(f"\n-- @{conta}: {len(lista)} arquivos")
         avisar(conta, 0, len(lista))
-        for item in lista:
-            n += 1
+        baixados_da_conta: dict[int, tuple] = {}
+        por_baixar = []
+        for j, item in enumerate(lista):
             nome = f"{item['indice']:07.2f}x_{item['conta']}_{item['codigo']}.mp4"
             caminho = DESTINO / nome
             if caminho.exists():
+                n += 1
                 print(f"  [{n}/{len(itens)}] ja tinha: {nome}")
                 continue
+            por_baixar.append((j, item, nome, caminho))
 
-            sucesso, tam, erro = baixa_um(item["arquivo"], caminho)
-            if sucesso:
-                ok += 1
-                feitos += 1
-                total_bytes += tam
-                registro.append({**{k: item[k] for k in
-                                   ("codigo", "conta", "formato", "indice", "views",
-                                    "curtidas", "comentarios", "duracao", "data",
-                                    "legenda", "endereco")},
-                                 "arquivo_local": nome, "bytes": tam})
-                print(f"  [{n}/{len(itens)}] ok {tam // 1024} KB  {nome}")
-                avisar(conta, feitos, len(lista))
-            else:
-                falhas += 1
-                print(f"  [{n}/{len(itens)}] FALHOU ({erro})  {item['endereco']}")
+        with ThreadPoolExecutor(max_workers=TRES_JUNTOS) as piscina:
+            futuros = {piscina.submit(baixa_um, item["arquivo"], caminho): (j, item, nome)
+                       for j, item, nome, caminho in por_baixar}
+            for fut in as_completed(futuros):
+                j, item, nome = futuros[fut]
+                n += 1
+                try:
+                    sucesso, tam, erro = fut.result()
+                except Exception as e:
+                    sucesso, tam, erro = False, 0, type(e).__name__
+                if sucesso:
+                    ok += 1
+                    feitos += 1
+                    total_bytes += tam
+                    baixados_da_conta[j] = (item, nome, tam)
+                    print(f"  [{n}/{len(itens)}] ok {tam // 1024} KB  {nome}")
+                    avisar(conta, feitos, len(lista))
+                else:
+                    falhas += 1
+                    print(f"  [{n}/{len(itens)}] FALHOU ({erro})  {item['endereco']}")
+
+        for j in sorted(baixados_da_conta):
+            item, nome, tam = baixados_da_conta[j]
+            registro.append({**{k: item[k] for k in
+                               ("codigo", "conta", "formato", "indice", "views",
+                                "curtidas", "comentarios", "duracao", "data",
+                                "legenda", "endereco")},
+                             "arquivo_local": nome, "bytes": tam})
         avisar(conta, feitos, len(lista), fim=True)
 
     gasto = time.time() - t0
