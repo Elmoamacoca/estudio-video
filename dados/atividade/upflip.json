@@ -83,6 +83,68 @@
     "total": 636,
     "publicacoes": 0
    }
+  },
+  {
+   "quando": 1787625272,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 171 publicações novos, 807 no total",
+   "detalhe": {
+    "rodada": 291,
+    "maquinas": 9,
+    "gravacoes": 9,
+    "passos": [
+     {
+      "quando": 1787624601,
+      "maquina": "vaga 1"
+     },
+     {
+      "quando": 1787624637,
+      "maquina": "vaga 2"
+     },
+     {
+      "quando": 1787624673,
+      "maquina": "vaga 3"
+     },
+     {
+      "quando": 1787624709,
+      "maquina": "vaga 4"
+     },
+     {
+      "quando": 1787624744,
+      "maquina": "vaga 5"
+     },
+     {
+      "quando": 1787624777,
+      "maquina": "vaga 6"
+     },
+     {
+      "quando": 1787624814,
+      "maquina": "vaga 7"
+     },
+     {
+      "quando": 1787624842,
+      "maquina": "vaga 8"
+     },
+     {
+      "quando": 1787624881,
+      "maquina": "vaga 9"
+     }
+    ],
+    "novos": 171,
+    "total": 807,
+    "publicacoes": 0
+   }
+  },
+  {
+   "quando": 1787625272,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Varredura concluída: 807 publicações",
+   "detalhe": {
+    "total": 807,
+    "publicacoes": 0
+   }
   }
  ]
 }
