@@ -171,11 +171,67 @@ const sóQuemResponde = p => p.then(x => (x.tem || x.sumiu) ? x : new Promise(()
 const SEM_PONTE = new Set(["dados/selecao.json", "dados/estado.json",
                            "dados/retratos.json", "dados/fontes.json"]);
 
+/* DEPOIS DE ESCREVER, O ENDEREÇO CRU MENTE POR CINCO MINUTOS, E ESSE ERA O ATRASO.
+
+   MEDIDO EM 25/08/2026, direto no cabeçalho do `raw.githubusercontent.com`:
+   `Cache-Control: max-age=300`, e `X-Cache: HIT` mesmo quando o pedido vai com
+   `Cache-Control: no-cache`. A borda da Fastly serve a cópia dela e não pergunta nada
+   ao GitHub. Ou seja: gravar e reler pelo endereço cru devolve o passado por até cinco
+   minutos, e nenhuma quantidade de voltas de vinte e cinco segundos conserta isso,
+   porque toda volta bate na mesma cópia guardada.
+
+   O QUE O GABRIEL VIU: ele adicionou um perfil, a ponte gravou o cartão no mesmo
+   segundo (conferido no acervo), e a tela ficou minutos sem mostrar cartão nenhum.
+   A ponte lê pela via de programação do GitHub, que não tem essa borda e sempre traz o
+   agora. Então, na janela em que o passado ainda está sendo servido, estes três
+   arquivos pequenos vêm SÓ pela ponte, com autoridade, e não por corrida.
+
+   SÃO SÓ OS TRÊS QUE DESENHAM O CARTÃO, e todos foram medidos rápidos na ponte:
+   `fontes.json` 0,84 s, a capa do livro 0,42 s e os retratos 0,53 s. O `selecao.json`,
+   que leva trinta segundos por lá, continua fora e continua na corrida. */
+const SO_PELA_PONTE = new Set(["dados/fontes.json", "dados/atividade/indice.json",
+                               "dados/retratos.json"]);
+const VALIDADE_DO_CRU = 300 * 1000;
+let ESCRITA_ATE = 0;
+const escritaRecente = () => Date.now() < ESCRITA_ATE;
+const acabeiDeEscrever = () => { ESCRITA_ATE = Date.now() + VALIDADE_DO_CRU + 30000; };
+
 async function ler(caminho) {
   // O CAMINHO DE DENTRO SOBREVIVE. Antes ficava só o nome do arquivo, e pedir
   // `dados/atividade/vinci.society.json` virava `dados/vinci.society.json`, que não
   // existe. O livro de atividade mora em pasta própria e precisa da pasta.
   const dentro = caminho.replace(/^dados\//, "");
+
+  // A JANELA DA VERDADE. Fora dela nada muda: a corrida continua valendo, porque a
+  // borda só atrapalha quando alguém acabou de gravar. Se a ponte não responder aqui,
+  // o pedido cai no caminho de sempre em vez de a tela ficar sem dado.
+  //
+  // COM CORTE DE TEMPO, PORQUE AQUI NÃO HÁ CORRIDA PARA SALVAR. Na corrida lá embaixo
+  // a ponte pendurada é só uma perdedora; aqui a tela espera SÓ ela, e um `fetch` que
+  // abre e nunca responde não resolve nem rejeita. Sem o corte, esta leitura seguraria
+  // o `Promise.all` da volta inteira e a tela congelava, que é pior do que o atraso que
+  // este trecho veio consertar.
+  // O BILHETE DE ANDAMENTO ENTRA NA MESMA REGRA ENQUANTO HÁ QUEM O ESCREVA.
+  //
+  // Ele é reescrito por cada vaga da esteira, de meio em meio minuto, e é ELE que
+  // sustenta a frase "varrendo agora". Lido pelo endereço cru, chega com até cinco
+  // minutos de atraso, e cinco minutos é justamente a validade do bilhete: a tela
+  // declarava "Sem Sinal Da Esteira Há 5 Min" com dezenove vagas gravando naquele
+  // instante, conferido nos commits do acervo em 25/08/2026. Com a esteira parada o
+  // bilhete não muda, e aí a cópia guardada está certa: só se paga a ponte quando há
+  // rodada no ar, e são duzentos bytes por perfil ativo.
+  const bilheteDeQuemTrabalha = caminho.startsWith("dados/andamento/") && ESTEIRA_NO_AR;
+
+  if (((SO_PELA_PONTE.has(caminho) && escritaRecente()) || bilheteDeQuemTrabalha)
+      && !ponteDeCama()) {
+    const corte = new AbortController();
+    const t = setTimeout(() => corte.abort(), PACIENCIA);
+    const p = await pegarDaPonte(dentro, corte.signal).finally(() => clearTimeout(t));
+    if (p.tem) { ponteFirme(); return p.d; }
+    if (p.sumiu) { ponteFirme(); return null; }
+    ponteTropecou();
+  }
+
   const daFonte = pegarDaFonte(caminho);
 
   // COM A PONTE DE CAMA, NEM SE BATE NA PORTA DELA. Abrir o pedido só para ele ficar
@@ -247,6 +303,10 @@ async function mandar(rota, corpo) {
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || d.erro) throw new Error(d.erro || "a esteira não respondeu, tente de novo");
+  // TODA ORDEM QUE PASSA POR AQUI ESCREVE NO ACERVO, e a partir deste instante o
+  // endereço cru passa a servir o passado. A janela abre aqui, uma vez só, para
+  // qualquer ordem: não vale confiar na memória de quem escreveu o próximo botão.
+  acabeiDeEscrever();
   return d;
 }
 
@@ -844,6 +904,33 @@ function medir(eventos) {
 const POR_LEVA = 10;
 let LIVRO = [], livroMostra = POR_LEVA, livroTipo = "", livroDesde = 0;
 const HISTORICOS = new Map();
+
+/* O CARTÃO NASCE NO CLIQUE, e não na leitura que vem depois.
+
+   Mesmo com a leitura já vindo fresca pela ponte, entre apertar Iniciar e o acervo
+   responder passam SEGUNDOS: a ponte ainda vai perguntar quem é o perfil ao Instagram,
+   e essa consulta sozinha demora. Nesse buraco a lista não mostrava nada, e a leitura
+   óbvia de uma lista vazia é que o clique não funcionou.
+
+   É o mesmo remédio já usado no registro de lotes: pediu, tem cartão. O cartão local
+   vive até a leitura trazer o de verdade, e aí some, porque o verdadeiro tomou o lugar
+   dele. Ele não inventa número nenhum: nasce dizendo que está na fila, e só ganha nome
+   e contagem quando a própria resposta da ponte os traz. */
+const PEDIDAS = new Map();
+
+function anotarPedida(conta, dados) {
+  const cartao = {
+    conta, nome: null, primeiro: 0, ultimo: 0, eventos: 0, falhas: 0, avisos: 0,
+    ultimo_tipo: "aguardando", lidos: 0, publicacoes: 0, completo: false,
+    aguardando: true, naFila: Math.floor(Date.now() / 1000),
+    // ESTE CARTÃO NÃO PEDE INSISTÊNCIA. Quem decide a quem insistir é a lista de
+    // verdade, que chega em seguida; sem esta marca, o cartão local dispararia uma
+    // segunda identificação do mesmo perfil enquanto a primeira ainda está no ar.
+    local: true, ...(dados || {}),
+  };
+  PEDIDAS.set(conta, cartao);
+  LIVRO = [cartao, ...LIVRO.filter(c => c.conta !== conta)];
+}
 /* QUAIS CARTÕES ESTÃO ABERTOS, guardado fora do desenho.
 
    A lista inteira é reescrita a cada volta dos relógios, e a mais rápida delas roda de
@@ -932,6 +1019,25 @@ function proximaRodadaAs() {
   return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
+/* MAS O RELÓGIO DE MEIA EM MEIA HORA NÃO É A HISTÓRIA INTEIRA, E DIZER SÓ ELE ASSUSTA.
+
+   A esteira EMENDA A PRÓPRIA RODADA: o último passo do fluxo (`Emendar a proxima
+   rodada`) chama a ponte assim que a rodada fecha, e a seguinte sobe em segundos. As
+   travas são duas, e só elas: emenda se ainda há perfil pela metade E se esta rodada
+   trouxe post novo. Se não trouxe nada, o Instagram fechou para os endereços de agora e
+   insistir é desperdício, então o horário marcado tenta mais tarde.
+
+   CONFERIDO NO ACERVO em 25/08/2026: a rodada 314 subiu às 19:50 pela tela, e a 315
+   subiu às 20:02, logo no fim dela, por emenda e não por horário. O relógio de trinta
+   minutos é o PISO de quando ela volta se tudo parar, não o ritmo de trabalho.
+
+   Enquanto a tela mostrava só o horário, a leitura óbvia era "vou esperar meia hora
+   para minerar um perfil", que não é o que acontece. Aqui ela diz o que está valendo. */
+let ESTEIRA_NO_AR = false;
+const quandoAEsteiraVolta = () => ESTEIRA_NO_AR
+  ? "a esteira está no ar agora"
+  : `a esteira emenda ao fim de cada rodada, ou às ${proximaRodadaAs()} se parar`;
+
 /* ------------------------------------------------------------- o que acontece AGORA
 
    Cada vaga da esteira deixa um bilhete de duzentos bytes com onde a varredura está
@@ -1008,7 +1114,13 @@ function linhaDoAgora(b) {
     : semSinal
       ? `Sem Sinal Da Esteira Há ${Math.max(1, Math.round(paradoHa / 60))} Min: `
         + `o último sinal gravado é das ${horaCurta(b.quando || 0)}. `
-        + `A próxima rodada acorda às ${proximaRodadaAs()}`
+        // COM A RODADA NO AR, "sem sinal" É ESPERA DE VAGA, E NÃO ESTEIRA MORTA. As
+        // vinte máquinas se revezam e a que pega endereço já usado volta sem página:
+        // mandar esperar meia hora nessa hora é conselho errado, e assusta.
+        + (ESTEIRA_NO_AR
+            ? "A rodada está no ar agora: as vagas se revezam, e a que volta sem página "
+              + "é endereço já usado."
+            : `A esteira emenda ao fim de cada rodada, ou às ${proximaRodadaAs()} se parar`)
       : paradoHa > 90
         ? `Varredura em curso: última página há ${Math.round(paradoHa / 60)} min. `
           + "As vagas se revezam, e a que volta sem página é endereço já usado."
@@ -1059,6 +1171,13 @@ async function aoVivo() {
   } catch (e) { /* sem sinal agora: o relógio tenta de novo em quinze segundos */ }
 
   if (d && !d.erro) {
+    // QUEM SABE SE A ESTEIRA ESTÁ NO AR É ESTA RESPOSTA, e ela vem pela ponte, que
+    // pergunta ao GitHub na hora. Duas partes da tela dependem disso: o texto que fala
+    // da próxima rodada (dizer só o horário fixo com a esteira trabalhando é assustar
+    // à toa) e a leitura do bilhete, que precisa vir fresca enquanto há quem o escreva.
+    // Sem resposta, o valor anterior fica: silêncio da ponte não é prova de esteira
+    // parada, e trocar um pelo outro é a mentira que este arquivo inteiro combate.
+    ESTEIRA_NO_AR = !!d.rodando;
     const elos = Array.isArray(d.elos) ? d.elos : [];
     const emPe = e => ANDANDO.has(e.situacao);
     const lendo = elos.filter(e => /^elo/.test(e.nome || "") && emPe(e));
@@ -1205,7 +1324,10 @@ async function insistirIdentificacao() {
   // é justamente quando o perfil precisa ser identificado sozinho. Quem limita o gasto é
   // o teto de tentativas, que já basta: vinte e cinco chamadas e acabou.
   if (insistindo) return;
-  const alvos = LIVRO.filter(c => c.aguardando).map(c => c.conta)
+  // CARTÃO DO CLIQUE NÃO ENTRA AQUI. Ele existe para preencher os segundos em que a
+  // resposta ainda está no ar; insistir sobre ele seria pedir a mesma identificação
+  // duas vezes ao mesmo tempo. Quem manda nesta lista é a leitura de verdade.
+  const alvos = LIVRO.filter(c => c.aguardando && !c.local).map(c => c.conta)
     .filter(c => (TENTATIVAS.get(c) || 0) < TETO_TENTATIVAS);
   if (!alvos.length) return;
 
@@ -1235,7 +1357,7 @@ async function insistirIdentificacao() {
 let relogioDaInsistencia = null;
 function marcarProximaTentativa() {
   clearTimeout(relogioDaInsistencia);
-  const esperando = LIVRO.filter(c => c.aguardando);
+  const esperando = LIVRO.filter(c => c.aguardando && !c.local);
   if (!esperando.length) return;
   const voltas = Math.max(...esperando.map(c => TENTATIVAS.get(c.conta) || 0));
   if (voltas >= TETO_TENTATIVAS) return;
@@ -1331,12 +1453,12 @@ function desenhaLivro() {
             : c.semSinal
               ? `Sem Sinal Da Esteira Há ${
                   Math.max(1, Math.round((Date.now() / 1000 - c.semSinal) / 60))
-                } Min · último sinal às ${horaCurta(c.semSinal)} · próxima rodada às ${proximaRodadaAs()}`
+                } Min · último sinal às ${horaCurta(c.semSinal)} · ${quandoAEsteiraVolta()}`
             // O CARD DA FILA DIZ AS DUAS PONTAS DO TEMPO: quando a conta entrou (a hora
             // gravada no fontes.json) e quando a esteira acorda de novo. Sem prazo,
             // "esperando" é o mesmo silêncio que escondeu a esteira parada por 24 horas.
             : c.naFila
-              ? `na fila desde ${horaCurta(c.naFila)} · a esteira acorda às ${proximaRodadaAs()}`
+              ? `na fila desde ${horaCurta(c.naFila)} · ${quandoAEsteiraVolta()}`
             // sem marca de tempo nenhuma, "há" quanto tempo daria meio século
             : c.ultimo ? haQuanto(c.ultimo)
             : "esperando a esteira abrir"}${
@@ -1821,14 +1943,22 @@ async function atualizar() {
   const naFila = fontes && fontes.atualizado
     ? Math.floor(new Date(fontes.atualizado).getTime() / 1000) || 0
     : 0;
-  const aguardando = ((fontes && fontes.contas) || [])
-    .map(c => String(c).trim().replace(/^@/, ""))
-    .filter(c => c && !comFicha.has(c))
+  const naLista = ((fontes && fontes.contas) || [])
+    .map(c => String(c).trim().replace(/^@/, "")).filter(Boolean);
+
+  // O CARTÃO LOCAL MORRE QUANDO O DE VERDADE CHEGA, e não por relógio. Enquanto a
+  // conta não aparece nem na lista de origem nem na capa do livro, o cartão do clique
+  // continua de pé: some por ter sido substituído, nunca por prazo vencido.
+  const chegaram = new Set([...comFicha, ...naLista]);
+  for (const c of [...PEDIDAS.keys()]) if (chegaram.has(c)) PEDIDAS.delete(c);
+
+  const aguardando = naLista
+    .filter(c => !comFicha.has(c))
     .map(conta => ({ conta, nome: null, primeiro: 0, ultimo: 0, eventos: 0,
                      falhas: 0, avisos: 0, ultimo_tipo: "aguardando",
                      lidos: 0, publicacoes: 0, completo: false, aguardando: true,
                      naFila }));
-  LIVRO = [...aguardando, ...doLivro];
+  LIVRO = [...PEDIDAS.values(), ...aguardando, ...doLivro];
   // O RÓTULO SÓ DEPOIS DA LISTA CHEGAR. Calculado antes, ele lia a lista da volta
   // anterior: na primeira carga a lista está vazia, e o painel abria dizendo
   // "publicações varridas" numa varredura de carrossel, corrigindo-se 25 segundos
@@ -2000,6 +2130,11 @@ $("ini_vai").onclick = async () => {
   }
   $("ini_vai").disabled = true;
   $("ini_cancelar").disabled = true;
+  // PEDIU, TEM CARTÃO, E ANTES DE QUALQUER IDA À REDE. Daqui até a resposta da ponte
+  // passam segundos, porque ela ainda vai perguntar quem é o perfil ao Instagram; sem
+  // isto, a lista abaixo continua vazia durante todo esse tempo.
+  contas.forEach(c => anotarPedida(c));
+  desenhaLivro();
   // A ESPERA ACONTECE AQUI DENTRO, que é onde o Gabriel está olhando. Identificar cada
   // perfil no Instagram leva alguns segundos, e a folha sem sinal parecia travada.
   carregando("ini_recado", contas.length === 1 ? "Identificando o perfil"
@@ -2029,6 +2164,21 @@ $("ini_vai").onclick = async () => {
       entraram = entraram.concat((outra.novos || []).filter(n => n.ok));
       teimosos = (outra.novos || []).filter(n => !n.ok).map(n => n.conta);
     }
+
+    // A PRÓPRIA RESPOSTA JÁ TRAZ O QUE FALTAVA NO CARTÃO, e ela é mais nova que
+    // qualquer leitura: quem foi identificado ganha nome e contagem agora, e quem foi
+    // barrado por já estar no banco perde o cartão do clique, senão apareceria duas
+    // vezes, uma como pedido e outra como perfil de verdade.
+    for (const c of barrados) {
+      PEDIDAS.delete(c);
+      LIVRO = LIVRO.filter(x => !(x.local && x.conta === c));
+    }
+    const agoraSeg = Math.floor(Date.now() / 1000);
+    for (const n of entraram)
+      anotarPedida(n.conta, { aguardando: false, ultimo_tipo: "identificado",
+                              publicacoes: n.publicacoes || 0, eventos: 1,
+                              primeiro: agoraSeg, ultimo: agoraSeg });
+    desenhaLivro();
 
     // A ESTEIRA É CHAMADA MESMO SEM IDENTIFICAÇÃO. Quem entrou na lista de origem é
     // trabalho pendente para ela, e as vinte máquinas dela têm vinte endereços de saída
