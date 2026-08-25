@@ -5802,6 +5802,17 @@ async function mandar(rota, corpo) {
   await postoDePe();
   const cab = { "Content-Type": "application/json" };
   if (CASA_INFO && CASA_INFO.ponte) cab["X-Estudio-Ponte"] = CASA_INFO.ponte;
+  else if (POSTO_DE_PE && CASA_INFO && CASA_INFO.sessao === "vencida") {
+    /* QUEM SABE O MOTIVO DIZ O MOTIVO. Sem estes dois desvios, a ponte responderia
+       "abra a tela pelo endereço do Estúdio" para quem JÁ está nela, que é conselho
+       inútil. Aqui a tela conhece o estado do posto e fala do que dá para fazer. */
+    throw new Error("A sessão desta página venceu, e é ela que autoriza esta ordem. "
+      + "Recarregue a página e entre com a senha; nada foi perdido.");
+  } else if (!POSTO_DE_PE) {
+    throw new Error("O posto do Estúdio não atende, e é ele que guarda a senha desta "
+      + "ordem. Ele volta sozinho em até cinco minutos; recarregue a página e tente "
+      + "de novo.");
+  }
   const r = await fetch(PONTE + rota, {
     method: "POST", headers: cab,
     body: JSON.stringify(corpo || {}),

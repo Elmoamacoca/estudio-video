@@ -222,37 +222,54 @@ def limpar(entrada: Path, saida: Path) -> dict:
     return laudo
 
 
+def resumos_das_trilhas(arq: Path) -> dict:
+    """Os resumos de cada trilha do arquivo, por tipo, numa passada so'.
+
+    UMA CHAMADA POR ARQUIVO, E NAO UMA POR TRILHA (fecho de 25/08/2026). O `-f md5`
+    resume o que o mapa escolher, entao imagem e som custavam duas chamadas por
+    arquivo, quatro por comparacao. O `-f streamhash` resume TODAS as trilhas de uma
+    vez e devolve uma linha por trilha, no formato `0,v,MD5=...`.
+
+    MEDIDO NA VPS, 25/08/2026, com oito reels reais, cache quente e a ordem alternada
+    em tres rodadas: 5,1 / 6,5 / 6,0 s numa chamada contra 6,0 / 8,2 / 11,2 s em duas.
+    A primeira medicao, com cache frio, dizia o CONTRARIO (11,4 contra 8,2): esta
+    maquina tem vizinho e a mesma carga varia quase o dobro entre rodadas, entao aqui
+    so' vale medida repetida e alternada.
+
+    E O VEREDITO E' O MESMO, conferido nos 276 arquivos das levas 28, 29 e 30: para
+    cada um, o resumo da imagem e o do som saem identicos aos das chamadas antigas.
+    Zero divergencia.
+
+    REEL SEM TRILHA DE AUDIO NAO E' DEFEITO (auditoria de 22/08/2026): num reel mudo o
+    mapa "0:a" nao casava com trilha nenhuma, o ffmpeg saia em erro com a saida vazia,
+    e o vazio reprovava o reel, que era apagado e banido por uma trilha que ele nunca
+    teve. Aqui isso se resolve sozinho: o mudo nao tem a linha do som, dos dois lados,
+    e as duas fichas continuam iguais.
+    """
+    r = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", str(arq),
+                        "-map", "0", "-c", "copy", "-f", "streamhash",
+                        "-hash", "md5", "-"], capture_output=True, text=True)
+    achados = {}
+    for linha in (r.stdout or "").splitlines():
+        partes = linha.split(",")
+        if len(partes) >= 3:
+            achados[partes[1]] = partes[2].strip()
+    return achados
+
+
 def mesma_midia(a: Path, b: Path) -> bool:
     """A imagem e o som saem iguais? Compara o resumo das trilhas, e nao o do arquivo.
 
     O resumo do arquivo inteiro muda de qualquer jeito, porque o cabecalho mudou. O que
     precisa ficar igual e' o que se ve e o que se ouve.
     """
-    def resumo(arq, qual):
-        r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(arq), "-map", qual,
-                            "-c", "copy", "-f", "md5", "-"], capture_output=True, text=True)
-        # REEL SEM TRILHA DE AUDIO NAO E' DEFEITO. Auditoria de 22/08/2026: num reel
-        # mudo, o mapa "0:a" nao casa com trilha nenhuma, o ffmpeg sai em erro com a
-        # saida vazia, e o vazio derrubava a comparacao ali embaixo: o reel era
-        # reprovado com laudo errado, apagado e banido por uma trilha que ele nunca
-        # teve. A ausencia vira o marcador "ausente", distinto do vazio de falha
-        # real: ausente dos dois lados combina e a limpeza segue normal; o vazio
-        # continua reprovando, porque vazio e' o ffmpeg quebrando por outro motivo,
-        # e dos dois lados ele combinaria por engano.
-        if "matches no streams" in (r.stderr or ""):
-            return "ausente"
-        return r.stdout.strip()
-    # CADA RESUMO SAI UMA VEZ SO'. A primeira versao comparava com a expressao inteira
-    # dentro do all(), e cada lado era calculado de novo a cada aparicao: seis chamadas
-    # de ffmpeg onde quatro bastavam, e o resumo e' o custo dominante da limpeza (0,4 s
-    # dos 0,5 s por arquivo). Guardar em variavel corta um terco do relogio da etapa
-    # com o MESMO veredito.
-    for q in ("0:v", "0:a"):
-        da_entrada = resumo(a, q)
-        da_saida = resumo(b, q)
-        if not da_entrada or da_entrada != da_saida:
-            return False
-    return True
+    da_entrada = resumos_das_trilhas(a)
+    da_saida = resumos_das_trilhas(b)
+    # FICHA VAZIA E' O FFMPEG QUEBRANDO, e nao arquivo sem trilha: vazia dos dois lados
+    # combinaria por engano e daria a limpeza por boa sem ninguem ter conferido nada.
+    if not da_entrada or not da_saida:
+        return False
+    return da_entrada == da_saida
 
 
 def conferir_pasta(pasta: Path) -> int:
