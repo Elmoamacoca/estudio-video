@@ -42,6 +42,14 @@
    "quando": 1787631943,
    "tipo": "tratando",
    "texto": "73 de 128 tratados."
+  },
+  {
+   "quando": 1787631956,
+   "tipo": "limpeza",
+   "conta": "leisdamentemilionaria",
+   "texto": "128 tratados.",
+   "aprovados": 128,
+   "reprovados": 0
   }
  ]
 }
