@@ -2,5 +2,13 @@
  "fiscal": "ok",
  "quando": 1787627149,
  "rodada": 292,
- "eventos": []
+ "eventos": [
+  {
+   "quando": 1787628752,
+   "origem": "resgate",
+   "gravidade": "aviso",
+   "texto": "O Resgate Em Casa Está Esperando A Conta Descartável: Entre No Instagram No Navegador E Rode 'python casa.py --entrar' Uma Vez"
+  }
+ ],
+ "atualizado": 1787628752
 }
