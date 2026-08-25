@@ -679,11 +679,18 @@ def main() -> int:
         # recebe carrossel, e o resto passa sem deixar rastro.
         pedidos = formatos_pedidos(r)
         entraram = 0
+        desconhecidos = 0
         for bruto in j.get("items", []):
             p = limpa_post(bruto)
             if not p["codigo"] or p["codigo"] in vistos:
                 continue
             vistos.add(p["codigo"])
+            # DESCONHECIDO CONTA ANTES DO FILTRO DE FORMATO. A parada da releitura
+            # confundia "pagina inteira ja' conhecida" com "pagina sem nada do formato
+            # pedido": uma pagina de 12 carrosseis novos zerava `entraram` e encerrava
+            # a releitura com reels novos ainda na pagina seguinte (auditoria de
+            # 25/08/2026). Quem diz "dali pra tras e' historico" e' o desconhecido.
+            desconhecidos += 1
             if p.get("formato") not in pedidos:
                 continue
             estado["posts"].append(p)
@@ -699,7 +706,8 @@ def main() -> int:
             # histórico que já está guardado, e continuar seria reler o acervo inteiro
             # para não achar nada. É isso que a torna barata: quem posta uma vez por dia
             # gasta uma leitura, e não duzentas.
-            if entraram == 0 or not j.get("more_available") or not estado["marcador_novo"]:
+            if (desconhecidos == 0 or not j.get("more_available")
+                    or not estado["marcador_novo"]):
                 estado["relendo"] = False
                 print(f"[{conta}] RELEITURA ENCERRADA, {entraram} posts novos")
                 break
@@ -720,6 +728,12 @@ def main() -> int:
         return 0
 
     estado["atualizado"] = int(time.time())
+    # A REGUA DA EPOCA FICA NO ESTADO: e' dela que o fechamento tira rotulo, meta e
+    # contagem deste perfil. Sem isto, mudar a regua para varrer OUTRO perfil
+    # reetiquetava retroativamente a capa de todos (auditoria de 25/08/2026).
+    estado["regua_da_epoca"] = {"rotulo": rotulo_dos_formatos(r),
+                                "alvo": (r or {}).get("alvo"),
+                                "formatos": sorted(formatos_pedidos(r))}
     grava(conta, estado)
     bater_ponto(conta, estado, vaga)
 
