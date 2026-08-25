@@ -205,13 +205,46 @@ def acha_broll(video: Path) -> dict | None:
         # peca final, dentro da folga que a rampa das pontas ja' da'.
         vao = dur * (fim - ini)
         taxa = QUADROS_DO_BROLL / vao if vao > 0 else 1.0
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{dur * ini:.3f}",
-                        "-t", f"{vao:.3f}", "-i", str(video),
-                        "-vf", f"fps={taxa:.6f},scale={LARGURA_DA_ANALISE}:-1",
-                        "-frames:v", str(QUADROS_DO_BROLL),
-                        str(fora / "%02d.png")], capture_output=True)
-        for alvo in sorted(fora.glob("*.png")):
-            quadros.append(np.asarray(Image.open(alvo).convert("RGB"), dtype=np.int16))
+
+        def extrair(por_chave: bool) -> list:
+            for velho in fora.glob("*.png"):
+                velho.unlink()
+            # POR QUADRO-CHAVE, e a diferenca e' de trinta e duas vezes. Pedir quadros em
+            # instantes ARBITRARIOS obriga o ffmpeg a decodificar o trecho inteiro (uns
+            # 2.040 quadros de 720x1280) para jogar 2.028 fora. Medido em 25/08/2026 com
+            # `-threads 1`: 12,37 s de processador por peca do jeito antigo contra 0,39 s
+            # por quadro-chave. Numa leva de 180 sao 37 minutos contra 1,2.
+            # E O RESULTADO E' O MESMO: a busca do ffmpeg ja' encostava no quadro-chave
+            # mais proximo, entao pedir o instante exato era pagar caro por nada.
+            antes = (["-skip_frame", "nokey"] if por_chave else [])
+            ritmo = (["-fps_mode", "passthrough"] if por_chave else [])
+            # OS FILTROS VAO NUM `-vf` SO'. Dois `-vf` na mesma linha nao se somam: o
+            # ffmpeg obedece o ULTIMO e joga o primeiro fora calado. Escrito em dois, o
+            # caminho de reserva perdia o `fps` e devolvia doze quadros COLADOS, do mesmo
+            # instante; sem diferenca entre eles, a semente de movimento dava zero coluna
+            # e a peca voltava sem medida nenhuma. Pego em 25/08/2026 nos dois videos
+            # curtos da leva 31 que caem na reserva por terem so' dois quadros-chave.
+            filtros = f"scale={LARGURA_DA_ANALISE}:-1"
+            if not por_chave:
+                filtros = f"fps={taxa:.6f}," + filtros
+            subprocess.run(["ffmpeg", "-v", "error", "-y", *antes,
+                            "-ss", f"{dur * ini:.3f}", "-t", f"{vao:.3f}",
+                            "-i", str(video), *ritmo,
+                            "-vf", filtros,
+                            "-frames:v", str(QUADROS_DO_BROLL),
+                            str(fora / "%02d.png")], capture_output=True)
+            saiu = []
+            for alvo in sorted(fora.glob("*.png")):
+                saiu.append(np.asarray(Image.open(alvo).convert("RGB"), dtype=np.int16))
+            return saiu
+
+        quadros = extrair(True)
+        # VIDEO POBRE DE QUADRO-CHAVE CAI NO CAMINHO ANTIGO. Peca curta, ou codificada com
+        # um quadro-chave so', devolve menos de tres amostras: ai' vale pagar a decodificacao
+        # inteira, que e' lenta mas sempre entrega. Sem esta volta, esses videos passariam a
+        # devolver None e o recorte deles viraria "video inteiro" em silencio.
+        if len(quadros) < 3:
+            quadros = extrair(False)
         if len(quadros) < 3:
             return None
 
@@ -245,7 +278,47 @@ def acha_broll(video: Path) -> dict | None:
         # e' lisa: card preto cravado aceita desvio pequeno como sinal.
         tol = max(10, liso * 2 + 8)
         dif = np.abs(p - cor).max(axis=3).max(axis=0)
-        janela = (dif > tol) | mexe
+
+        # 3b ..... O FUNDO DO CARD E' O QUE SE ALCANCA A PARTIR DA BORDA DO QUADRO, e nao
+        # tudo que se PARECE com a cor dele. Este era o defeito que o Gabriel viu em
+        # 25/08/2026 num reel de card BRANCO: "o recorte e' muito mal feito".
+        #
+        # POR QUE A COR SOZINHA NAO SERVE. O `dif` mede distancia ate' UMA cor, entao a cor
+        # do card escolhe qual metade da escala de tons da filmagem fica invisivel. Com card
+        # branco (253) a faixa cega e' de 243 a 255, que e' onde moram ceu estourado, parede
+        # clara e CAIXA DE LEGENDA QUEIMADA dentro do proprio video. Com card preto (2) a
+        # faixa cega e' de 0 a 12, onde so' vive sombra profunda. Medido nos arquivos da
+        # leva 31: 27,66% dos pixels da filmagem sao claros contra 1,22% escuros, uma razao
+        # de 21 vezes. O mesmo limite nas duas pontas destroi vinte vezes mais de um lado, e
+        # o A/B com o MESMO video provou: 19,5% da filmagem lida como fundo com card claro
+        # contra 0,0% com card escuro, e o recorte perdendo 26,9% da altura.
+        #
+        # E O MOVIMENTO NAO RESGATA, porque o que colide com card branco (caixa de legenda,
+        # cartela, marca d agua) e' justamente o conteudo PARADO: os dois sinais falham no
+        # mesmo pixel, ao mesmo tempo, e o buraco vira corte.
+        #
+        # O QUE DECIDE AGORA E' O CAMINHO. Card e' moldura: o fundo dele encosta na borda do
+        # quadro. Uma ilha clara DENTRO da filmagem nao encosta em borda nenhuma, porque a
+        # filmagem a cerca dos quatro lados. Entao um ponto so' e' fundo quando da' para
+        # chegar nele vindo de uma das quatro bordas andando sempre por pontos com cara de
+        # fundo. A conta sai em quatro somas acumuladas, sem laco.
+        parecido = (dif <= tol) & ~mexe
+        avulso = ~parecido
+        # PONTO SOLTO NAO BARRA CAMINHO. Ruido de compressao pinta pontos fora da cor do
+        # card no meio do fundo chapado; contados um a um, eles fechariam a passagem e o
+        # fundo inteiro viraria filmagem. So' barra quem tem companhia ao lado.
+        companhia = np.zeros_like(avulso)
+        companhia[:, :-1] |= avulso[:, 1:]
+        companhia[:, 1:] |= avulso[:, :-1]
+        companhia[:-1, :] |= avulso[1:, :]
+        companhia[1:, :] |= avulso[:-1, :]
+        barra = (avulso & companhia).astype(np.int32)
+        FOLGA = 3          # pontos barrados que o caminho ainda atravessa
+        deu = np.cumsum(barra, axis=1) <= FOLGA
+        deu |= np.cumsum(barra[:, ::-1], axis=1)[:, ::-1] <= FOLGA
+        deu |= np.cumsum(barra, axis=0) <= FOLGA
+        deu |= np.cumsum(barra[::-1, :], axis=0)[::-1, :] <= FOLGA
+        janela = ~deu
 
         # 4 ..... a janela e' o TRECHO CONTINUO de linhas cheias em volta da semente, mais
         # a RAMPA das pontas. Um limite so' era fragil pelos dois lados: limite alto parava
@@ -274,6 +347,29 @@ def acha_broll(video: Path) -> dict | None:
         # comia um pedaco da lateral.
         x0, x1 = trecho(janela[y0:y1 + 1].mean(axis=0), cx, 0.15, beira=0.04)
         y0, y1 = trecho(janela[:, x0:x1 + 1].mean(axis=1), cy, 0.30)
+
+        # 4b ..... PONTA CHAPADA E PARADA NAO E' FILMAGEM, e isto mata as faixas claras que
+        # apareciam dos dois lados do recorte. Elas vem de card de DUAS tintas (cinza claro
+        # por fora, branco por dentro, o caso do print de 25/08/2026): a cor de referencia
+        # sai so' da margem de cima e de baixo, entao o corpo do card fica longe demais dela
+        # e passa por filmagem. Medido no sintetico: vaza a partir de 8 niveis de diferenca
+        # entre as duas tintas, e paleta clara empilha tons vizinhos (#FFFFFF contra #F2F2F2
+        # sao 13 niveis) enquanto card escuro costuma ser um preto chapado so'.
+        #
+        # Filmagem de verdade tem textura ou muda de quadro para quadro. Fila de pontos que
+        # e' a mesma cor em TODOS os quadros e em toda a sua extensao e' preenchimento, nao
+        # imagem, e por isso encolhe. O teto de oito guarda o miolo: nunca come a peca.
+        def so_tinta(bloco) -> bool:
+            return float((bloco.max(axis=(0, 1)) - bloco.min(axis=(0, 1))).max()) <= 10
+
+        while x1 - x0 > 8 and so_tinta(p[:, y0:y1 + 1, x0, :]):
+            x0 += 1
+        while x1 - x0 > 8 and so_tinta(p[:, y0:y1 + 1, x1, :]):
+            x1 -= 1
+        while y1 - y0 > 8 and so_tinta(p[:, y0, x0:x1 + 1, :]):
+            y0 += 1
+        while y1 - y0 > 8 and so_tinta(p[:, y1, x0:x1 + 1, :]):
+            y1 -= 1
 
         if (y1 - y0 + 1) * (x1 - x0 + 1) > 0.92 * alt * lar:
             return inteiro                          # tomou o quadro quase todo: sem card

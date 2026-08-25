@@ -4164,8 +4164,10 @@ let REC_ACHADO = null;             // o B-roll medido nela
 let REC_OBRA = null;               // o pedido de recorte em curso
 
 async function entrarNoRecorte() {
-  $("rec_caminho").textContent = "recortes/leva-"
-    + (EDIT_LEVA ? EDIT_LEVA.numero : "") + ", na casa do Estúdio";
+  // A PASTA DE DESTINO SAIU DA TELA em 25/08/2026, por decisão do dono: "não preciso
+  // mais saber disso, já que tudo agora está indo para a VPS". Quando a casa era o disco
+  // dele, o caminho respondia "onde vou achar isso depois?"; com uma casa só, a pergunta
+  // não existe mais e a linha era mobília.
   await procurarRecortes();
   desenhaRecortado();
   resumoDoRecorte();
@@ -4194,6 +4196,10 @@ async function verOutroReel() {
   const v = $("rec_video"), corte = $("rec_corte");
   $("rec_diz").textContent = "medindo…";
   $("rec_marca").hidden = true;
+  // A PROMESSA NASCE AQUI FORA porque ela é colhida lá embaixo, depois do `try`. Dentro
+  // dele, `const` fica presa ao bloco e a colheita daria erro de nome, que o `node
+  // --check` não pega: ele confere gramática, não escopo.
+  let medida = Promise.resolve(null);
   try {
     const u = await urlDaMidia(lista[i], pastaDaLeva());
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
@@ -4205,6 +4211,15 @@ async function verOutroReel() {
     corte.crossOrigin = "anonymous";
     v.dataset.url = u;
     v.src = u; corte.src = u;
+    // A MEDIDA SAI JUNTO COM O VIDEO, e nao depois dele. As duas esperas nao dependem
+    // uma da outra: o posto mede lendo o disco dele, e o navegador abre o arquivo pela
+    // rede. Enfileiradas, somavam; lado a lado, vale a mais demorada das duas.
+    //
+    // E A DO VIDEO E' A MAIOR, por um detalhe do arquivo: o indice do mp4 (o `moov`)
+    // fica no FIM, depois dos dados, entao o navegador pede o comeco, ve o tamanho e
+    // precisa de um SEGUNDO pedido no fim so' para saber onde cada quadro mora. Medido
+    // em 25/08/2026 neste caminho: de 1,6 a 4,2 s so' para abrir.
+    medida = medirOBroll(lista[i]);
     // O "MEDINDO" TEM PRAZO. Vídeo que o navegador não decodifica (arquivo pela
     // metade, codec que ele não lê) pode nunca disparar `loadedmetadata` nem o
     // `error`: esta espera ficava pendurada e o passo 2 dizia "medindo…" para
@@ -4220,9 +4235,13 @@ async function verOutroReel() {
         () => { clearTimeout(prazo); ok(false); }, { once: true });
     });
     if (!abriu) {
-      $("rec_diz").textContent = "este vídeo não abre: não consegui ler nem o começo "
-        + "dele, o arquivo pode estar corrompido. Clique em Ver Outro Reel para "
-        + "conferir o método com outra peça.";
+      // O RECADO NAO CHUTA CULPADO. Ele acusava o arquivo de estar estragado, e em
+      // 25/08/2026 o Gabriel viu essa frase com o CABO DA INTERNET desconectado: o
+      // arquivo estava inteiro do outro lado. Daqui nao da' para separar arquivo ruim
+      // de ligacao caida, entao o recado diz as duas e manda conferir a mais provavel.
+      $("rec_diz").textContent = "não consegui abrir este vídeo aqui. Pode ser a ligação "
+        + "com a casa do Estúdio, ou o próprio arquivo. Confira a internet e clique em "
+        + "Ver Outro Reel.";
       return;
     }
   } catch (e) {
@@ -4231,7 +4250,7 @@ async function verOutroReel() {
   }
   v.play().catch(() => {});
   corte.play().catch(() => {});
-  REC_ACHADO = await acharBrollAqui(v);
+  REC_ACHADO = await medida;
   desenhaRecorteExemplo();
 }
 
@@ -4666,14 +4685,56 @@ $("rec_segue").onclick = () => irParaPasso(3);
    quadro lido no canvas é o anterior, e a análise mede a mesma imagem dez vezes. */
 function irNoTempo(v, t) {
   return new Promise(ok => {
-    const pronto = () => { v.removeEventListener("seeked", pronto); ok(); };
-    v.addEventListener("seeked", pronto);
+    let venceu = true;
+    const pronto = () => { v.removeEventListener("seeked", chegou); ok(venceu); };
+    const chegou = () => { venceu = false; pronto(); };
+    v.addEventListener("seeked", chegou);
     v.currentTime = t;
     // O PRAZO SUBIU DE 1,8 s PARA 5 s em 25/08/2026: com o vídeo vindo da casa da VPS
     // em pedaços, o salto de quadro pode esperar a rede, e o prazo curto fazia a
     // análise ler o mesmo quadro várias vezes numa ligação lenta.
-    setTimeout(pronto, 5000);           // vídeo que não busca não trava a análise
+    //
+    // E AGORA ELE DIZ QUE VENCEU, em vez de mentir por omissão. Quando o prazo estourava,
+    // a análise seguia em frente e desenhava o quadro ANTERIOR no canvas: dois quadros
+    // iguais, máscara de movimento encolhida, janela errada, e nada disso aparecia na
+    // tela. Medido em 25/08/2026 num navegador sem aceleração: CINCO dos dez saltos
+    // bateram no teto numa rodada só, e o recorte torto passou por medida boa.
+    setTimeout(pronto, 5000);
   });
+}
+
+/* QUEM MEDE E' QUEM GRAVA, e a tela só pergunta.
+
+   O QUE ACONTECIA ATE' 25/08/2026: a aba media o vídeo DENTRO do navegador, com dez
+   saltos no arquivo, um por quadro de análise. Medido num Chrome de verdade contra a
+   casa da VPS: cada clique em Ver Outro Reel virava DEZESSEIS pedidos e baixava 6,95 MB
+   de um arquivo de 7,58 MB, para amostrar dez quadros de 160 por 284 pontos. E o piso
+   do caminho é a distância, não o byte: com ping de 184 ms, dez idas e voltas custam
+   4,18 s nem que a carga fosse zero. Eram os cinco a dez segundos que o Gabriel
+   cronometrou.
+
+   Agora é uma pergunta só ao posto, que tem o arquivo no disco e o ffmpeg do lado.
+
+   E ISSO MATA A SEGUNDA IMPLEMENTAÇÃO. O mesmo algoritmo vivia em dois lugares, no
+   `oficina.py` que GRAVA e aqui, que só conferia. Duas contas do mesmo número é a
+   receita de elas discordarem, e esta tela podia estar mostrando um retângulo diferente
+   do que ia ser gravado. O medidor local abaixo continua existindo para UM caso: a pasta
+   liberada pelo navegador, plano B de quando o posto está fora, onde não há caminho para
+   o posto medir. */
+async function medirOBroll(item) {
+  // PASTA DO NAVEGADOR NÃO TEM CAMINHO NA CASA: aí o jeito é medir aqui mesmo.
+  if (item && item.h) return acharBrollAqui($("rec_video"));
+  try {
+    const onde = pastaDaLeva() + "/" + item.nome;
+    const r = await fetch(POSTO + "/broll?onde=" + encodeURIComponent(onde),
+                          { cache: "no-store" });
+    const d = await r.json().catch(() => ({}));
+    // NÃO MEDIR NÃO É TELA CHEIA: nulo aqui faz o `desenhaRecorteExemplo` dizer que não
+    // conseguiu, em vez de afirmar que o reel não tem card. Trava 2 do CLAUDE.md.
+    return (r.ok && d.tem && d.d) ? d.d : null;
+  } catch (e) {
+    return null;
+  }
 }
 
 /* A JANELA DO B-ROLL, aqui no navegador, pelo mesmo método do `oficina.py`.
@@ -4704,7 +4765,11 @@ async function acharBrollAqui(v) {
     // parada. Visto na tela antes de ir para o ar.
     const INI = 0.15, FIM = 0.88;
     for (let i = 0; i < N; i++) {
-      await irNoTempo(v, v.duration * (INI + (FIM - INI) * (i + 0.5) / N));
+      // SALTO QUE NÃO CHEGOU DERRUBA A MEDIDA INTEIRA. Ver a nota no `irNoTempo`: seguir
+      // com o quadro anterior devolve um retângulo errado com cara de certo, e é melhor
+      // dizer que não deu do que mostrar medida inventada.
+      if (await irNoTempo(v, v.duration * (INI + (FIM - INI) * (i + 0.5) / N)))
+        return null;
       g.drawImage(v, 0, 0, LARG, ALT);
       quadros.push(g.getImageData(0, 0, LARG, ALT).data);
     }
