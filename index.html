@@ -6784,28 +6784,32 @@ function desenhaLivro() {
     // O TOTAL DE PUBLICAÇÕES É OPCIONAL. O caminho que abre o perfil (o feed pedido
     // pelo arroba) não informa quantas publicações a conta tem, e isso não atrapalha
     // varrer: sem o total, mostra-se o que foi lido, sem fração inventada.
-    const cob = c.publicacoes ? Math.round(100 * c.lidos / c.publicacoes) : null;
-    // EM VARREDURA DE REELS, A CONTA E' DE REELS. Comparar contra o total de
-    // publicacoes do perfil fazia a tela dizer "72 de 2.254", numeros de duas coisas
-    // diferentes, e a leitura obvia era que estava varrendo o perfil inteiro de novo.
     const nome = rotuloDosFormatos(b, bruto);
+    // POR FORMATO, O TOTAL DE PUBLICAÇÕES NÃO É O TOTAL DAQUELE FORMATO. O
+    // @leisdamentemilionaria tem 398 publicações, mas isso soma posts e carrosséis; o
+    // Instagram não diz quantos REELS o perfil tem. Mostrar "132 de 398 reels (33%)" é a
+    // conta errada que assusta, ainda por cima com o mesmo card dizendo "398 publicações"
+    // no evento logo abaixo. Só se conta contra o total quando se varre TUDO
+    // ("publicações"); filtrando formato, mostra-se o lido daquele formato, sem
+    // denominador nem porcentagem, que seriam contra o total errado.
+    const contraOTotal = nome === "publicações" && !!c.publicacoes;
     // A esteira para ao ATINGIR o alvo, e a última página costuma passar dele: pedir
     // duzentos e trazer duzentos e quatro é o normal. Mostrar "102%" faz parecer conta
-    // errada, quando é a coisa tendo dado certo.
-    // VARREDURA ENCERRADA NÃO MOSTRA PORCENTAGEM DE MEIO CAMINHO. Um perfil com cento e
-    // seis reels no total fecha em 53% do alvo de duzentos, e "53%" lido sozinho parece
-    // varredura pela metade quando na verdade acabaram os reels do perfil.
-    const quanto = cob === null
-      ? (c.lidos ? `${num(c.lidos)} ${nome} lidos`
-         // sem número nenhum e já encerrado: é conta fechada ou sem publicação, e a
-         // linha precisa dizer isso. Antes ficava só "há 2 min · 1 registro", que não
-         // informa nada sobre o motivo de não haver nada.
-         : c.ultimo_tipo === "vazio" ? "sem publicação pública"
+    // errada, então a porcentagem só existe no caminho contra o total.
+    const cob = contraOTotal ? Math.round(100 * c.lidos / c.publicacoes) : null;
+    const quanto = !c.lidos
+      // sem número nenhum: conta fechada, sem publicação, ou ainda nada varrido.
+      ? (c.ultimo_tipo === "vazio" ? "sem publicação pública"
          : c.completo ? "nada a varrer" : "")
+      : !contraOTotal
+        // por formato (ou sem total conhecido): só o que foi lido daquele formato.
+        ? `${num(c.lidos)} ${nome}${c.completo ? `, acabaram os ${nome} do perfil` : " lidos"}`
+      // VARREDURA ENCERRADA NÃO MOSTRA PORCENTAGEM DE MEIO CAMINHO: um perfil que fecha
+      // em 53% do alvo só acabou os reels dele, não parou no meio.
       : c.completo
         ? (cob >= 100 ? `${num(c.lidos)} ${nome}, alvo de ${num(c.publicacoes)} cumprido`
                       : `${num(c.lidos)} ${nome}, acabaram os ${nome} do perfil`)
-        : `${num(c.lidos)} de ${num(c.publicacoes)} ${nome} (${cob}%)`;
+      : `${num(c.lidos)} de ${num(c.publicacoes)} ${nome} (${cob}%)`;
     // A MARCA DE ABERTO NASCE JUNTO COM O CARTÃO.
     // Aplicá-la depois, no laço lá de baixo, fazia o cartão nascer fechado e abrir no
     // quadro seguinte: de dez em dez segundos ele piscava na cara de quem estava lendo.
