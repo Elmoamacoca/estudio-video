@@ -1,7 +1,7 @@
 {
  "prontas": 180,
  "avaliados": 395,
- "ultima_rodada": 1787688813,
+ "ultima_rodada": 1787690181,
  "perfis": [
   {
    "conta": "leisdamentemilionaria",
@@ -22,9 +22,9 @@
    "carrosseis": 0,
    "acima": 180,
    "baixaveis": 180,
-   "baixados": 0,
+   "baixados": 180,
    "reprovados": 0,
-   "restam": 180
+   "restam": 0
   }
  ],
  "hoje": null
