@@ -37,6 +37,14 @@
    "quando": 1787689275,
    "tipo": "tratando",
    "texto": "1 de 180 tratados."
+  },
+  {
+   "quando": 1787689282,
+   "tipo": "limpeza",
+   "conta": "leisdamentemilionaria",
+   "texto": "180 tratados.",
+   "aprovados": 180,
+   "reprovados": 0
   }
  ]
 }
