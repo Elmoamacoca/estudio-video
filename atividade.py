@@ -42,6 +42,16 @@ GRAVIDADE = {
     "limite": "aviso",
     "sem_avanco": "aviso",
     "lote": "evento",
+    # OS RAMOS DE FALHA DA PROPRIA VAGA, escritos pelo rodada.py na hora em que doem.
+    # Em 24/08/2026 a esteira falhou 26 rodadas seguidas e NADA apareceu na tela: a
+    # falha total nao deixa marca no acervo, entao o fechamento nao tinha o que anotar.
+    # A abertura que nao passa e o estouro sao falha, porque travam o perfil; a pagina
+    # que nao veio e' aviso, porque o rodizio de enderecos torna isso rotina.
+    "falha_abertura": "falha",
+    "sem_leitura": "aviso",
+    "estouro": "falha",
+    # o vigia reapresentando perfil travado e' anomalia, nao andamento normal
+    "vigia": "aviso",
 }
 
 
@@ -83,6 +93,54 @@ def anotar(livro: dict, tipo: str, quando: int, texto: str, **detalhe) -> None:
         "texto": texto,
         **({"detalhe": detalhe} if detalhe else {}),
     })
+
+
+def anotar_de_novo(livro: dict, tipo: str, quando: int, texto: str, **detalhe) -> None:
+    """Como o anotar, mas o mesmo tropeço repetido atualiza a última linha em vez de
+    empilhar outra.
+
+    POR QUE: os ramos de falha escrevem a cada vaga, e são vinte vagas por rodada,
+    quarenta e oito rodadas por dia. Uma linha por tentativa levaria o livro ao teto
+    de 1 MB da via de leitura em poucos dias, o mesmo teto que já quebrou o salvar uma
+    vez. Vale a regra da casa: a ficha só ganha linha nova quando a situação muda.
+    Enquanto é o mesmo tropeço, a linha existente ganha a hora nova, o texto novo e o
+    contador que sobe, então cada tentativa continua datada e visível.
+    """
+    ev = livro["eventos"]
+    if ev and ev[-1].get("tipo") == tipo:
+        e = ev[-1]
+        e["quando"] = int(quando)
+        e["texto"] = texto
+        if detalhe:
+            e["detalhe"] = {**(e.get("detalhe") or {}), **detalhe}
+        return
+    anotar(livro, tipo, quando, texto, **detalhe)
+
+
+SAUDE = Path("dados/saude.json")
+
+
+def anotar_saude(texto: str, **detalhe) -> None:
+    """Falha que não tem perfil para chamar de seu fica na saúde geral, datada.
+
+    É o destino do estouro que acontece antes de a vaga escolher um perfil: sem conta,
+    não há livro onde escrever, e sem este arquivo a falha morria só no log do Actions.
+    Ficam as últimas cinquenta, para o arquivo não crescer para sempre.
+    """
+    d = {"eventos": []}
+    if SAUDE.exists():
+        try:
+            d = json.loads(SAUDE.read_text(encoding="utf-8"))
+        except Exception:
+            d = {"eventos": []}
+    d["eventos"] = (d.get("eventos") or [])[-49:] + [{
+        "quando": int(time.time()),
+        "texto": texto,
+        **({"detalhe": detalhe} if detalhe else {}),
+    }]
+    d["atualizado"] = int(time.time())
+    SAUDE.parent.mkdir(parents=True, exist_ok=True)
+    SAUDE.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 def gravacoes(conta: str, depois: int) -> list[tuple[int, str]]:
@@ -393,6 +451,12 @@ def reconstruir_indice() -> dict:
             "falhas": sum(1 for e in ev if peso(e) == "falha"),
             "avisos": sum(1 for e in ev if peso(e) == "aviso"),
             "ultimo_tipo": ev[-1]["tipo"],
+            # O CONTADOR DE TENTATIVAS DE ABERTURA vai na capa porque e' a capa que os
+            # cartoes leem: com ele aqui, o cartao mostra "Tentativa N" sem abrir o
+            # livro. Ele so' aparece enquanto ha' fila de tentativas em curso; quando a
+            # abertura passa, o rodada.py zera o campo e ele some daqui.
+            **({"tentativas_id": int(livro.get("tentativas_id") or 0)}
+               if livro.get("tentativas_id") else {}),
             **estado_perfil,
         })
     contas.sort(key=lambda c: c["ultimo"], reverse=True)
