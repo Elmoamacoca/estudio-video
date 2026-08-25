@@ -6458,7 +6458,14 @@ const bilheteFresco = b =>
   !!b && (Date.now() / 1000 - (b.quando || 0)) < VALIDADE_DO_BILHETE;
 
 async function ouvirBatimentos() {
-  const ativos = LIVRO.filter(c => !c.completo);
+  /* SO' SE PEDE BILHETE DE QUEM A ESTEIRA JA' TOCOU. Perfil recem-aceito (na fila,
+     identificado pela nuvem ou tocado so' pelo resgate, sem página lida) ainda nao
+     tem bilhete NENHUM, e pedir por ele enchia o console de 404 legitimo, o ruido
+     que ensina a ignorar vermelho. Ate' a primeira pagina lida, o card ja' conta a
+     verdade pela ficha do livro; o bilhete assume dali em diante. */
+  const PRE_ESTEIRA = new Set(["aguardando", "identificado", "resgate"]);
+  const ativos = LIVRO.filter(c => !c.completo && !c.naFila
+    && !(!(c.lidos > 0) && PRE_ESTEIRA.has(c.ultimo_tipo)));
   if (!ativos.length) return;
   await Promise.all(ativos.map(async c => {
     const b = await ler(`dados/andamento/${c.conta}.json`);
