@@ -50,6 +50,11 @@
    "texto": "128 tratados.",
    "aprovados": 128,
    "reprovados": 0
+  },
+  {
+   "quando": 1787631958,
+   "tipo": "entrega",
+   "texto": "Montando o pacote para entrega. Um lote grande leva alguns minutos aqui."
   }
  ]
 }
