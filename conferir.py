@@ -39,16 +39,26 @@ except ImportError:
     ONDE_ESTA_A_FOLHA = AQUI / "estilo.css"
     PECAS_DA_TELA = []
 
+# TODO PROGRAMA QUE RODA NO AR ENTRA AQUI. fundo, resgate, guardar, drive, posto e
+# vaga_edicao entraram em 25/08/2026: eles rodam na VPS ou nas vagas e ficavam fora
+# da varredura, o mesmo filme do fundo/atividade de 22/08 (o que vive nos dois mundos
+# sem vigia quebra no ar sem aviso). A varredura de nomes e' barata e roda em ambos.
 PROGRAMAS = ["minerar.py", "rodada.py", "selecionar.py", "atividade.py",
              "baixar.py", "limpar.py", "registro.py", "etiquetar.py",
-             "catalogo.py", "oficina.py"]
+             "catalogo.py", "oficina.py",
+             "fundo.py", "resgate.py", "guardar.py", "drive.py", "posto.py",
+             "vaga_edicao.py"]
 
 
 def nomes_perdidos(caminho: str) -> list[str]:
     """Constantes usadas e nunca definidas. E' o que uma reescrita desastrada deixa."""
     arvore = ast.parse(pathlib.Path(caminho).read_text(encoding="utf-8"))
-    definidos = {n.id for x in ast.walk(arvore) if isinstance(x, ast.Assign)
-                 for n in x.targets if isinstance(n, ast.Name)}
+    # TODO ALVO DE ATRIBUICAO CONTA, e nao so' o `X = 1` simples: `LARGURA, ALTURA =
+    # 1080, 1920` (tupla), `for X in`, `with ... as X` e `X: int = 1` definem nome do
+    # mesmo jeito, e a versao antiga os dava como perdidos, barrando publicacao boa.
+    # Trava que grita a' toa e' trava que se aprende a desligar.
+    definidos = {n.id for n in ast.walk(arvore)
+                 if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)}
     definidos |= {f.name for f in ast.walk(arvore)
                   if isinstance(f, (ast.FunctionDef, ast.AsyncFunctionDef))}
     definidos |= {(a.asname or a.name).split(".")[0] for i in ast.walk(arvore)
