@@ -31,7 +31,12 @@ def uma(url):
 
 
 if __name__ == "__main__":
-    conta = sys.argv[1] if len(sys.argv) > 1 else "brandsdecoded__"
+    # SEM PADRAO DE PERFIL, desde 25/08/2026: o padrao era um arroba de verdade, e
+    # depois da limpeza dos minerados rodar sem argumento voltaria a bater num perfil
+    # que saiu da lista. Sem conta, a ferramenta diz como se usa e para.
+    conta = sys.argv[1] if len(sys.argv) > 1 else ""
+    if not conta.strip():
+        raise SystemExit("diga o perfil: python fundo.py <conta> [espera] [teto]")
     espera = float(sys.argv[2]) if len(sys.argv) > 2 else 3.0
     teto = int(sys.argv[3]) if len(sys.argv) > 3 else 30
 
