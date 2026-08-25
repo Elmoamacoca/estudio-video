@@ -28,6 +28,9 @@ try:
     ONDE_ESTA_A_TELA = caminhos.TELA
     ONDE_ESTA_O_PROGRAMA = caminhos.MOLDE_PROGRAMA
     ONDE_ESTA_A_FOLHA = caminhos.MOLDE_ESTILO
+    # DE ONDE SAEM OS IDS QUE A PAGINA TEM. Na bancada e' a propria pagina montada,
+    # que e' o artefato de verdade e a prova mais forte.
+    FONTES_DOS_IDS = [caminhos.TELA]
     # AS PECAS DE QUE A TELA NASCE. So' existem na bancada: no acervo o `index.html` ja'
     # chega montado, e comparar data la' nao quer dizer nada.
     PECAS_DA_TELA = [caminhos.MOLDE_PROGRAMA, caminhos.MOLDE_CORPO,
@@ -37,6 +40,14 @@ except ImportError:
     ONDE_ESTA_A_TELA = AQUI / "index.html"
     ONDE_ESTA_O_PROGRAMA = AQUI / "tela.js"
     ONDE_ESTA_A_FOLHA = AQUI / "estilo.css"
+    # NO ACERVO OS IDS SAEM DO MOLDE MAIS O MONTADOR, desde 25/08/2026. O `index.html`
+    # saiu do acervo: ele nao servia mais ninguem la' (quem serve a tela e' o posto da
+    # VPS) e era o que deixava a interface INTEIRA montada e clicavel em endereco
+    # publico. A trava dos ids continua com a mesma forca, porque a pagina nasce
+    # exatamente destes dois: o `corpo.html` traz 384 ids e o `montar.py` traz os 3 da
+    # casca (`estado`, `fora_de_casa`, `fora_ir`). Conferido: os 294 ids que o
+    # `tela.js` pede estao todos nesta soma.
+    FONTES_DOS_IDS = [AQUI / "corpo.html", AQUI / "montar.py"]
     PECAS_DA_TELA = []
 
 # TODO PROGRAMA QUE RODA NO AR ENTRA AQUI. fundo, resgate, guardar, drive, posto e
@@ -157,10 +168,14 @@ def main() -> int:
 
     # E OS ELEMENTOS QUE A TELA PEDE E A PAGINA NAO TEM. `$("x")` de um id que nao existe
     # devolve nulo, e a linha seguinte estoura do mesmo jeito.
-    indice = ONDE_ESTA_A_TELA
-    if tela.exists() and indice.exists():
+    # O TEXTO DA PAGINA, VENHA DE ONDE VIER. Na bancada e' o `index.html` montado; no
+    # acervo e' a soma do molde com o montador, que e' de onde a pagina nasce. As duas
+    # travas abaixo (ids pedidos e `hidden` que nao esconde) leem daqui.
+    fontes = [f for f in FONTES_DOS_IDS if f.exists()]
+    pagina = "\n".join(f.read_text(encoding="utf-8") for f in fontes)
+    if tela.exists() and fontes:
         import re
-        ids = set(re.findall(r'id="([^"]+)"', indice.read_text(encoding="utf-8")))
+        ids = set(re.findall(r'id="([^"]+)"', pagina))
         js = tela.read_text(encoding="utf-8")
         faltam = sorted({p for p in re.findall(r'\$\("([A-Za-z0-9_]+)"\)', js)
                          if p not in ids})
@@ -183,9 +198,8 @@ def main() -> int:
     # e nunca li o `display` que a tela aplica de verdade. Conferir a intencao em vez do
     # resultado e' o mesmo que nao conferir.
     folha = ONDE_ESTA_A_FOLHA
-    if indice.exists() and folha.exists():
+    if fontes and folha.exists():
         import re
-        pagina = indice.read_text(encoding="utf-8")
         css = folha.read_text(encoding="utf-8")
         # A CONTA E' POR ELEMENTO, E NAO POR CLASSE SOLTA, e isto e' conserto de um
         # alarme falso da primeira versao desta trava. Um elemento costuma ter mais de uma
