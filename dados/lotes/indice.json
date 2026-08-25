@@ -1,6 +1,19 @@
 {
  "lotes": [
   {
+   "numero": 30,
+   "inicio": 1787631678,
+   "estado": "em curso",
+   "baixados": 0,
+   "limpos": 0,
+   "reprovados": 0,
+   "mb": 0,
+   "execucao": "32808630529",
+   "contas": [
+    "leisdamentemilionaria"
+   ]
+  },
+  {
    "numero": 29,
    "inicio": 1787177531,
    "estado": "pronto",
@@ -32,5 +45,5 @@
    "guardado": true
   }
  ],
- "atualizado": 1787177748
+ "atualizado": 1787631678
 }

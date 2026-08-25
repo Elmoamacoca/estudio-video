@@ -1,0 +1,13 @@
+{
+ "numero": 30,
+ "passos": [
+  {
+   "quando": 1787631678,
+   "tipo": "escolha",
+   "texto": "Escolhidos: @leisdamentemilionaria",
+   "contas": [
+    "leisdamentemilionaria"
+   ]
+  }
+ ]
+}
