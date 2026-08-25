@@ -37,8 +37,12 @@ def aplicar(cru: str) -> int:
 
     partes = (cru[len(MARCA):].split("|") + ["", ""])[:3]
     conta = limpo(partes[0]).lstrip("@").lower()
-    mercado = limpo(partes[1])
-    etiquetas = [limpo(e) for e in partes[2].split(";") if limpo(e)]
+    # UMA NORMALIZACAO SO', a do catalogo. O perfil gravava o nome cru e o catalogo o
+    # nome normalizado (espaco repetido colapsado, teto de letras): um espaco duplo
+    # criava o nicho fantasma que o filtro por igualdade nunca acha (auditoria de
+    # 25/08/2026). Quem decide a forma do nome e' o catalogo, para os dois lados.
+    mercado = catalogo.normal(limpo(partes[1]))
+    etiquetas = [catalogo.normal(limpo(e)) for e in partes[2].split(";") if limpo(e)]
 
     arq = PASTA / f"{conta}.json"
     if not conta or not arq.exists():
