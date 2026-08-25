@@ -28,6 +28,12 @@
   <div class="ct-painel" id="sub-p-minerar">
 
     <div class="secao">
+      <!-- O AVISO DE SAÚDE DA ESTEIRA. Em 24/08/2026 o fiscal reprovou 26 rodadas
+           seguidas e a tela não mostrou NADA: falha silenciosa é o defeito mais caro
+           deste sistema. Quando dados/saude.json disser que o fiscal reprovou, esta
+           faixa acende com o motivo, a rodada e a hora; sem o arquivo, ela não
+           aparece, porque estado não se inventa. Quem a preenche é o `avisarSaude`. -->
+      <div class="ia-alerta ruim" id="saude_aviso" hidden></div>
       <div class="secao-cab">
         <h2>Situação</h2>
         <div class="dir"><span class="nota" id="carga"></span></div>
