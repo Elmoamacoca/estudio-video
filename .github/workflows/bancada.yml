@@ -1,0 +1,23 @@
+name: bancada
+on: workflow_dispatch
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: maquina
+        run: |
+          echo "nucleos: $(nproc)"
+          grep "model name" /proc/cpuinfo | head -1
+          free -h | head -2
+          ffmpeg -version | head -1
+      - name: encode-um
+        run: |
+          /usr/bin/time -v ffmpeg -hide_banner -loglevel error -nostdin -f lavfi -i testsrc=duration=8:size=1080x1350:rate=30 -c:v libx264 -preset veryfast -f null - 2>&1 | grep -E "Elapsed|Percent of CPU"
+      - name: encode-dois-juntos
+        run: |
+          t0=$(date +%s)
+          ffmpeg -hide_banner -loglevel error -nostdin -f lavfi -i testsrc=duration=8:size=1080x1350:rate=30 -c:v libx264 -preset veryfast -f null - &
+          ffmpeg -hide_banner -loglevel error -nostdin -f lavfi -i testsrc=duration=8:size=1080x1350:rate=30 -c:v libx264 -preset veryfast -f null - &
+          wait
+          echo "dois juntos: $(( $(date +%s) - t0 )) s"
