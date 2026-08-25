@@ -9038,11 +9038,39 @@ async function mostrarPecas() {
   if (!EDIT_LEVA) return;
   const gal = $("ed_galeria");
 
+  // O POSTO PRIMEIRO, desde 25/08/2026: com a casa na VPS, o disco de quem olha nem tem
+  // os arquivos. A pasta liberada do navegador virou o plano B de quando o posto está
+  // fora, e é só nesse caso que o cartão da porta volta a aparecer.
+  if (await postoDePe()) {
+    $("ed_porta").hidden = true;
+    gal.innerHTML = '<div class="ed-carregando">abrindo a pasta da leva</div>';
+    try {
+      const r = await noPosto(`/pecas?leva=${EDIT_LEVA.numero}`);
+      if (!r.tem) {
+        gal.innerHTML = `<div class="ed-carregando">a pasta leva-${EDIT_LEVA.numero} `
+          + "ainda não está na casa do Estúdio. O guardar busca a leva pronta de minuto "
+          + "em minuto; espere um pouco e tente de novo.</div>";
+        return;
+      }
+      EDIT_PECAS = (r.nomes || []).map(nome => ({ nome }));
+      EDIT_PECAS.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
+      await procurarRecortes();
+      await procurarMontagem();
+      desenhaPecas();
+      await tentarRetomar();
+      salvarRascunho();
+    } catch (e) {
+      gal.innerHTML = `<div class="ed-carregando">não consegui ler a leva na casa do `
+        + `Estúdio: ${e.message}</div>`;
+    }
+    return;
+  }
+
   if (!TEM_PORTA) {
     $("ed_porta").hidden = false;
     $("ed_abrir_pasta").disabled = true;
-    parado("ed_recado_pasta", "este navegador não sabe abrir pasta. No Chrome ou no "
-      + "Edge funciona; no Firefox, ainda não.");
+    parado("ed_recado_pasta", "o posto do Estúdio não está atendendo, e este navegador "
+      + "não sabe abrir pasta como plano B. Recarregue a página em um minuto.");
     return;
   }
 
@@ -9113,7 +9141,7 @@ function desenhaPecas() {
   $("ed_p1_qual").textContent = valendo === 1 ? "peça" : "peças";
   $("ed_fora_linha").hidden = !fora;
   if (fora) {
-    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pelo recorte, nem pela IA, nem pela montagem. O arquivo continua no computador.`;
+    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pelo recorte, nem pela IA, nem pela montagem. O arquivo continua guardado na casa do Estúdio.`;
   }
 
   // O VÍDEO CARREGA SÓ O CABEÇALHO, e o quadro mostrado é o do segundo e meio. Pedir os
@@ -9148,8 +9176,8 @@ function desenhaPecas() {
   async function abrirPeca(v) {
     if (v.src) return;
     try {
-      const f = await EDIT_PECAS[Number(v.dataset.arquivo)].h.getFile();
-      v.src = URL.createObjectURL(f) + "#t=1.5";
+      v.src = await urlDaMidia(EDIT_PECAS[Number(v.dataset.arquivo)], pastaDaLeva())
+        + "#t=1.5";
     } catch (err) { /* arquivo sumiu da pasta desde a leitura */ }
   }
 
@@ -9243,7 +9271,7 @@ function contaDaLeva() {
   $("ed_p1_qual").textContent = valendo === 1 ? "peça" : "peças";
   $("ed_fora_linha").hidden = !fora;
   if (fora) {
-    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pelo recorte, nem pela IA, nem pela montagem. O arquivo continua no computador.`;
+    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pelo recorte, nem pela IA, nem pela montagem. O arquivo continua guardado na casa do Estúdio.`;
   }
 }
 
@@ -9373,6 +9401,9 @@ document.addEventListener("click", async ev => {
   if (!ev.target.closest("#aba-editar") && !ev.target.closest('[data-aba="editar"]')) return;
   desenhaRascunhos();
   if (EDIT_PASTA || !TEM_PORTA || JA_PEDIU_A_PASTA) return;
+  // COM O POSTO DE PÉ NÃO HÁ PASTA A PEDIR: quem enxerga o disco é ele. A caixinha de
+  // permissão só volta a aparecer no plano B, quando o posto está fora.
+  if (await postoDePe()) return;
   const cracha = CRACHA_NA_MAO || await pegarCracha();
   if (!cracha) return;                    // nunca apontou: o cartão pede, não o clique
   JA_PEDIU_A_PASTA = true;
@@ -9442,7 +9473,8 @@ async function entrarNoRecorte() {
   desenhaRecortado();
   resumoDoRecorte();
   if (!EDIT_PECAS.length) {
-    $("rec_diz").textContent = "libere a pasta do Estúdio no passo 1 para eu poder medir.";
+    $("rec_diz").textContent = "as peças da leva ainda não chegaram: volte ao passo 1 "
+      + "para as abrir, e então eu meço.";
     return;
   }
   // A PECA DO EXEMPLO TEM DE CONTINUAR NA LEVA. Se ele tirou justamente essa no passo
@@ -9466,8 +9498,7 @@ async function verOutroReel() {
   $("rec_diz").textContent = "medindo…";
   $("rec_marca").hidden = true;
   try {
-    const f = await lista[i].h.getFile();
-    const u = URL.createObjectURL(f);
+    const u = await urlDaMidia(lista[i], pastaDaLeva());
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
     v.dataset.url = u;
     v.src = u; corte.src = u;
@@ -9573,7 +9604,37 @@ async function procurarRecortes() {
   // antes de conferir se dava para conferir, e aí bastava a pasta não estar liberada
   // naquele instante para o passo 3 destravar o passo 4 e depois trancá-lo de novo. O
   // que se sabe só é substituído depois de olhar de verdade na pasta.
-  if (!EDIT_LEVA || !EDIT_RAIZ) return;
+  if (!EDIT_LEVA) return;
+  // O POSTO PRIMEIRO, desde 25/08/2026: com a casa na VPS, os recortes moram lá. A
+  // resposta dele é "olhar de verdade": só ela substitui o que se sabe. Ficha ilegível
+  // volta como erro (500) e cai no catch, sem apagar nada, pela mesma regra de sempre.
+  if (await postoDePe()) {
+    let r = null;
+    try { r = await noPosto(`/recortes?leva=${EDIT_LEVA.numero}`); }
+    catch (e) { return; }
+    EDIT_RECORTES = [];
+    RECORTADO = null;
+    const nomeDaLeva = "leva-" + EDIT_LEVA.numero;
+    if (!r.tem || !r.ficha || !(r.nomes || []).length) return;
+    SEM_FRASE = null;
+    try {
+      const sem = new Set();
+      const onde = new Map();
+      for (const x of (r.ficha.pecas || [])) {
+        if (!x.frase) sem.add(x.arquivo);
+        if (x.broll && typeof x.broll.y === "number") onde.set(x.arquivo, x.broll);
+      }
+      SEM_FRASE = sem;
+      BROLL_DE = onde;
+    } catch (e) { SEM_FRASE = null; BROLL_DE = null; }
+    const doPosto = (r.nomes || []).map(n => ({ nome: n }));
+    doPosto.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
+    EDIT_RECORTES = doPosto;
+    RECORTADO = { pecas: doPosto.length, pasta: nomeDaLeva,
+                  onde: "recortes/" + nomeDaLeva };
+    return;
+  }
+  if (!EDIT_RAIZ) return;
   const raiz = await pastaDo("recortes", false);
   if (!raiz) return;
   EDIT_RECORTES = [];
@@ -9696,13 +9757,6 @@ $("rec_aplicar").onclick = async () => {
        `pedirPasta` E' QUEM SABE DESFAZER ISSO: ela reconhece o cracha velho e abre a
        janela de arquivos na pasta certa. Chamada de dentro do clique, ainda tem o gesto
        do usuario na mao, que e' o que o navegador exige para abrir essa janela. */
-    let pedidos = await pastaDo("pedidos", true);
-    if (!pedidos) {
-      await pedirPasta();
-      pedidos = await pastaDo("pedidos", true);
-    }
-    if (!pedidos) throw new Error("a pasta do Estúdio ainda não está liberada. Aponte a pasta Estudio, a que tem levas, recortes e pedidos dentro.");
-    await pastaDo("recortes", true);
     const id = "r" + Date.now();
     const pedido = {
       id, tipo: "recorte", leva: EDIT_LEVA.numero,
@@ -9715,17 +9769,31 @@ $("rec_aplicar").onclick = async () => {
       // por isso nao existe recorte dela para as fases seguintes usarem.
       pecas: pecas1().map(p => ({ arquivo: p.nome }))
     };
-    const h = await pedidos.getFileHandle(id + ".json", { create: true });
-    const w = await h.createWritable();
-    await w.write(JSON.stringify(pedido, null, 1));
-    await w.close();
+    // O POSTO PRIMEIRO, desde 25/08/2026: este era um dos dois pedidos que só sabiam a
+    // pasta, e com a casa na VPS a pasta desta máquina não leva a lugar nenhum. O plano
+    // B da pasta continua, com o resgate do crachá velho que já custou uma tarde.
+    if (await postoDePe()) {
+      await noPosto("/pedido", pedido);
+    } else {
+      let pedidos = await pastaDo("pedidos", true);
+      if (!pedidos) {
+        await pedirPasta();
+        pedidos = await pastaDo("pedidos", true);
+      }
+      if (!pedidos) throw new Error("o posto do Estúdio está fora e a pasta não está liberada. Recarregue a página em um minuto e tente de novo.");
+      await pastaDo("recortes", true);
+      const h = await pedidos.getFileHandle(id + ".json", { create: true });
+      const w = await h.createWritable();
+      await w.write(JSON.stringify(pedido, null, 1));
+      await w.close();
+    }
 
     REC_OBRA = { id, desde: Date.now(), total: pecas1().length, relogio: null };
     $("rec_obra").hidden = false;
     document.querySelector("#rec_obra .cfg-girando").style.display = "";
     $("rec_obra_txt").textContent = "pedido deixado";
     $("rec_obra_nota").textContent = "o recorte começa em até um minuto, que é o passo do "
-      + "programa que faz esse trabalho aqui no computador.";
+      + "programa que faz esse trabalho na casa do Estúdio.";
     REC_OBRA.relogio = setInterval(olharORecorte, 3000);
     olharORecorte();
   } catch (e) {
@@ -9753,20 +9821,31 @@ async function olharORecorte() {
       const viu = REC_OBRA.jaViu;
       return pararORecorte(viu
         ? "perdi o contato com o programa no meio do recorte. Recarregue a página (F5): o que ele já recortou está na pasta."
-        : "o programa deste computador não pegou o pedido em três minutos. Confira se a tarefa Estúdio - montar edições está ligada.");
+        : "a oficina do Estúdio não pegou o pedido em três minutos. Confira se ela está de pé (a passagem de montar edições, de minuto em minuto).");
     }
     $("rec_obra_txt").textContent = "sem contato com o programa";
     $("rec_obra_nota").textContent = porque + " Continuo tentando; o recorte pode estar acontecendo mesmo assim.";
   };
 
-  const p = await pastaDo("pedidos", false);
-  if (!p) return semContato("A pasta do Estúdio não está liberada nesta aba.");
+  // O ANDAMENTO VEM DO POSTO desde 25/08/2026, como nas fases mais novas; a pasta
+  // liberada é o plano B de quando ele está fora.
   let d = null;
-  try {
-    const f = await (await p.getFileHandle(REC_OBRA.id + ".andamento.json")).getFile();
-    d = JSON.parse(await f.text());
-  } catch (e) {
-    return semContato("Não consegui ler o andamento: " + (e.message || e) + ".");
+  if (await postoDePe()) {
+    try {
+      const r = await noPosto("/pedido?id=" + REC_OBRA.id);
+      d = r.tem ? r.d : null;
+    } catch (e) {
+      return semContato("Não consegui ler o andamento: " + (e.message || e) + ".");
+    }
+  } else {
+    const p = await pastaDo("pedidos", false);
+    if (!p) return semContato("O posto está fora e a pasta do Estúdio não está liberada nesta aba.");
+    try {
+      const f = await (await p.getFileHandle(REC_OBRA.id + ".andamento.json")).getFile();
+      d = JSON.parse(await f.text());
+    } catch (e) {
+      return semContato("Não consegui ler o andamento: " + (e.message || e) + ".");
+    }
   }
   if (!d) return semContato("O programa ainda não pegou o pedido.");
   REC_OBRA.mudo = 0;
@@ -10191,6 +10270,16 @@ function coresNovo(alvo, valor, aoEscolher) {
 /* ---------------------------------------------------------- o acervo */
 
 async function lerAcervo() {
+  // O POSTO PRIMEIRO, desde 25/08/2026: o acervo mora na casa, e a casa está na VPS. A
+  // pasta liberada segue de plano B. Nos dois mundos vale a mesma tolerância: acervo
+  // novo em folha não tem ficha ainda, e isso é lista vazia, não erro.
+  if (await postoDePe()) {
+    try {
+      const r = await noPosto("/acervo");
+      ACERVO.itens = (r.tem && r.d && Array.isArray(r.d.itens)) ? r.d.itens : [];
+      return true;
+    } catch (e) { ACERVO.itens = []; return null; }
+  }
   const p = await pastaDo("templates", true);
   if (!p) { ACERVO.itens = []; return null; }
   try {
@@ -10202,6 +10291,12 @@ async function lerAcervo() {
 }
 
 async function gravarAcervo() {
+  // PELO POSTO A CONFERÊNCIA É DELE: ele grava inteiro, relê o disco e responde com o
+  // que ficou. Falha vira erro aqui, nunca silêncio.
+  if (await postoDePe()) {
+    await noPosto("/acervo", { itens: ACERVO.itens });
+    return;
+  }
   const p = await pastaDo("templates", true);
   if (!p) return;
   const h = await p.getFileHandle("templates.json", { create: true });
@@ -10211,15 +10306,44 @@ async function gravarAcervo() {
 }
 
 async function arquivoDoAcervo(nome) {
+  if (!nome) return null;
+  // O ARQUIVO VEM DO POSTO como um Blob com a hora de modificação colada, porque quem
+  // compara rascunho com acervo (tentarRetomar) olha o `lastModified` dele.
+  if (await postoDePe()) {
+    try {
+      const r = await fetch(urlDoArquivo("templates/" + nome), { cache: "no-store" });
+      if (!r.ok) return null;
+      const b = await r.blob();
+      b.lastModified = Date.parse(r.headers.get("Last-Modified") || "") || 0;
+      return b;
+    } catch (e) { return null; }
+  }
   const p = await pastaDo("templates", false);
-  if (!p || !nome) return null;
+  if (!p) return null;
   try { return await (await p.getFileHandle(nome)).getFile(); }
   catch (e) { return null; }
 }
 
 async function guardarNoAcervo(nome, dado) {
+  // PELO POSTO O ARQUIVO VIAJA EM BASE64, porque a caixa dele fala JSON; e a prova de
+  // gravado é o tamanho que o disco devolveu, nunca o eco do que foi mandado.
+  if (await postoDePe()) {
+    const bytes = typeof dado === "string"
+      ? new TextEncoder().encode(dado)
+      : new Uint8Array(dado instanceof ArrayBuffer
+          ? dado : await new Response(dado).arrayBuffer());
+    let cru = "";
+    for (let i = 0; i < bytes.length; i += 32768) {
+      cru += String.fromCharCode.apply(null, bytes.subarray(i, i + 32768));
+    }
+    const r = await noPosto("/guardar-no-acervo", { nome, dado64: btoa(cru) });
+    if (r.bytes !== bytes.length) {
+      throw new Error(`gravei ${bytes.length} bytes e o disco devolveu ${r.bytes}`);
+    }
+    return nome;
+  }
   const p = await pastaDo("templates", true);
-  if (!p) throw new Error("a pasta do Estúdio não está liberada");
+  if (!p) throw new Error("o posto está fora e a pasta do Estúdio não está liberada");
   const h = await p.getFileHandle(nome, { create: true });
   const w = await h.createWritable();
   await w.write(dado);
@@ -10541,9 +10665,8 @@ async function trocarBroll(i) {
   }
   ED_BROLL_I = i;
   try {
-    const f = await EDIT_RECORTES[i].h.getFile();
+    const u = await urlDaMidia(EDIT_RECORTES[i], pastaDosRecortes());
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
-    const u = URL.createObjectURL(f);
     v.dataset.url = u;
     v.src = u;
     // A MASCARA ENTRA AQUI, e e' o conserto da cor de fundo que nao mudava. O recorte e'
@@ -11186,6 +11309,28 @@ async function noPosto(rota, corpo) {
   try { d = await r.json(); } catch (e) { /* resposta sem corpo */ }
   if (!r.ok) throw new Error(d.erro || `o posto do Estúdio respondeu ${r.status}`);
   return d;
+}
+
+/* A MÍDIA PELO POSTO, desde 25/08/2026. Com a casa na VPS, vídeo, máscara e imagem não
+   moram mais no disco de quem olha: quem os serve é o posto, pela rota /arquivo, em
+   pedaços. A pasta liberada continua valendo como plano B de quando o posto está fora,
+   e por isso cada peça carrega OU o `h` (o crachá do arquivo local) OU só o `nome` (e
+   aí o posto serve). Revogar uma URL de posto não faz nada, e não precisa fazer. */
+function urlDoArquivo(rel) {
+  return POSTO + "/arquivo?onde=" + encodeURIComponent(rel);
+}
+
+/** A URL de um vídeo ou imagem de peça: crachá local quando há, posto quando não. */
+async function urlDaMidia(item, pastaRel) {
+  if (item && item.h) return URL.createObjectURL(await item.h.getFile());
+  return urlDoArquivo(pastaRel + "/" + item.nome);
+}
+
+/** A pasta (relativa à casa) de onde saem as peças do passo em curso. */
+function pastaDaLeva() { return "levas/leva-" + EDIT_LEVA.numero; }
+function pastaDosRecortes() { return "recortes/leva-" + EDIT_LEVA.numero; }
+function pastaDasPecas3() {
+  return EDIT_RECORTES.length ? pastaDosRecortes() : pastaDaLeva();
 }
 
 /* O RECADO DE QUANDO O POSTO NÃO ATENDE, e ele precisa dizer o endereço certo.
@@ -12278,15 +12423,51 @@ function desenhaOMotor() {
 
 async function desenhaAsPastas() {
   const selo = $("pas_selo"), lista = $("pas_lista");
+  const quadros = [
+    ["levas", "Os reels baixados, ainda inteiros"],
+    ["recortes", "O B-roll de cada reel, já em 1080 por 1920"],
+    ["edicoes", "As peças montadas, prontas para publicar"],
+    ["templates", "Os templates guardados"],
+    ["fontes", "As fontes que o programa usa para desenhar o texto"],
+    ["pedidos", "A fila entre esta tela e o programa da casa"],
+  ];
+  const pintar = (rotulo, de) => {
+    lista.innerHTML = quadros.map(([nome, diz]) => {
+      const selo2 = de(nome);
+      return '<div class="cfg-linha"><div><div class="cfg-nome">Estudio\\' + nome
+        + '</div><div class="cfg-desc">' + diz + '</div></div><div class="dir">'
+        + '<span class="badge badge-secondary">' + selo2 + "</span></div></div>";
+    }).join("");
+    selo.textContent = rotulo;
+  };
+  // O POSTO PRIMEIRO, desde 25/08/2026: quem conta é quem enxerga o disco da casa. E a
+  // contagem tem três estados por pasta, como manda a regra da leitura: contei, não
+  // existe, e NÃO CONSEGUI CONTAR.
+  if (await postoDePe()) {
+    try {
+      const r = await noPosto("/contagem");
+      pintar("Na casa do Estúdio", nome => {
+        const p = (r.pastas || {})[nome];
+        if (!p || p.estado === "nao_existe") return "Não existe";
+        if (p.estado !== "ok") return "Não consegui contar";
+        return num(p.itens) + (p.itens === 1 ? " item" : " itens");
+      });
+    } catch (e) {
+      selo.textContent = "Não consegui ler";
+      lista.innerHTML = '<div class="cfg-linha"><div><div class="cfg-nome">'
+        + 'Não consegui contar as pastas</div><div class="cfg-desc">'
+        + escapa(e.message || String(e)) + '</div></div></div>';
+    }
+    return;
+  }
   if (!EDIT_RAIZ) {
     selo.textContent = "Não liberada";
     lista.innerHTML = '<div class="cfg-linha"><div><div class="cfg-nome">'
-      + 'A pasta ainda não foi liberada</div><div class="cfg-desc">Abra a aba de Edição e '
-      + 'libere a pasta do Estúdio uma vez. O navegador só enxerga o disco com essa '
-      + 'permissão, e ela vale para tudo que o sistema grava.</div></div></div>';
+      + 'O posto está fora e a pasta não foi liberada</div><div class="cfg-desc">Espere '
+      + 'um minuto e recarregue a página; ou abra a aba de Edição e libere a pasta do '
+      + 'Estúdio, que é o plano B para o navegador enxergar o disco.</div></div></div>';
     return;
   }
-  selo.textContent = "Liberada";
   const contar = async nome => {
     try {
       const d = await EDIT_RAIZ.getDirectoryHandle(nome);
@@ -12295,24 +12476,12 @@ async function desenhaAsPastas() {
       return n;
     } catch (e) { return null; }
   };
-  const quadros = [
-    ["levas", "Os reels baixados, ainda inteiros"],
-    ["recortes", "O B-roll de cada reel, já em 1080 por 1920"],
-    ["edicoes", "As peças montadas, prontas para publicar"],
-    ["templates", "Os templates guardados"],
-    ["fontes", "As fontes que o programa usa para desenhar o texto"],
-    ["pedidos", "A fila entre esta tela e o programa deste computador"],
-  ];
-  const linhas = [];
-  for (const [nome, diz] of quadros) {
-    const n = await contar(nome);
-    linhas.push('<div class="cfg-linha"><div><div class="cfg-nome">Estudio\\' + nome
-      + '</div><div class="cfg-desc">' + diz + '</div></div><div class="dir">'
-      + '<span class="badge badge-secondary">'
-      + (n === null ? "Não existe" : num(n) + (n === 1 ? " item" : " itens"))
-      + "</span></div></div>");
-  }
-  lista.innerHTML = linhas.join("");
+  const contados = {};
+  for (const [nome] of quadros) contados[nome] = await contar(nome);
+  pintar("Liberada", nome => {
+    const n = contados[nome];
+    return n === null ? "Não existe" : num(n) + (n === 1 ? " item" : " itens");
+  });
 }
 
 /* ============================================ FASE 4 · AS PEÇAS PRONTAS
@@ -12388,6 +12557,20 @@ const MASCARAS = new Map();       // arquivo -> endereço da máscara já virada
 async function mascaraDe(nome) {
   if (MASCARAS.has(nome)) return MASCARAS.get(nome);
   let url = null;
+  // O POSTO PRIMEIRO, desde 25/08/2026: a máscara mora na casa, ao lado do recorte. A
+  // resposta 404 é peça de tela cheia, que não tem máscara e nem precisa.
+  if (await postoDePe()) {
+    try {
+      const r = await fetch(urlDoArquivo(pastaDosRecortes() + "/_mascaras/"
+        + nome.replace(/\.[^.]+$/, ".png")));
+      if (r.ok) {
+        const b = await r.blob();
+        url = MASCARA_POR_LUZ ? URL.createObjectURL(b) : await alfaDaMascara(b);
+      }
+    } catch (e) { url = null; }
+    MASCARAS.set(nome, url);
+    return url;
+  }
   try {
     const raiz = await pastaDo("recortes", false);
     const pasta = await (await raiz.getDirectoryHandle("leva-" + EDIT_LEVA.numero))
@@ -12697,8 +12880,7 @@ async function acenderPeca(v) {
   const p = pecas3()[Number(v.dataset.arq)];
   if (!p) return;
   try {
-    const f = await p.h.getFile();
-    v.src = URL.createObjectURL(f) + "#t=1.5";
+    v.src = await urlDaMidia(p, pastaDasPecas3()) + "#t=1.5";
     // A MASCARA VESTE A CAIXA, e nao o video: e' a janela que tem forma, e ela fica
     // parada enquanto a filmagem se reenquadra por dentro.
     vestirMascara(v.parentElement || v, await mascaraDe(p.nome));
@@ -13744,21 +13926,34 @@ $("apl_montar").onclick = async () => {
   if (!alvos.length) return;
   $("apl_montar").disabled = true;
   try {
-    // O MESMO BECO DO PASSO 2, e a mesma saida. Ver a nota em `rec_aplicar`.
-    let pedidos = await pastaDo("pedidos", true);
-    let edicoes = await pastaDo("edicoes", true);
-    if (!pedidos || !edicoes) {
-      await pedirPasta();
-      pedidos = await pastaDo("pedidos", true);
-      edicoes = await pastaDo("edicoes", true);
+    // O POSTO PRIMEIRO, desde 25/08/2026: este era o outro pedido que só sabia a
+    // pasta. O nome livre em `edicoes` passa a sair de quem enxerga o disco de
+    // verdade, para duas abas não poderem escolher o mesmo destino.
+    let destino = null, qual = 1;
+    if (await postoDePe()) {
+      // O TEMPLATE DA BANCADA VAI PARA O ACERVO ANTES DE MONTAR, porque quem monta lê
+      // do disco. Sem esta gravação, montar um template recém-mexido usaria a versão
+      // anterior e a peça sairia diferente do que ele viu na tela.
+      await guardarNoAcervo(TPL.id + ".json", JSON.stringify(TPL, null, 1));
+      const livre = await noPosto(`/nome-livre?base=leva-${EDIT_LEVA.numero}`);
+      destino = livre.nome;
+      qual = livre.n;
+    } else {
+      // O MESMO BECO DO PASSO 2, e a mesma saida. Ver a nota em `rec_aplicar`.
+      let pedidos = await pastaDo("pedidos", true);
+      let edicoes = await pastaDo("edicoes", true);
+      if (!pedidos || !edicoes) {
+        await pedirPasta();
+        pedidos = await pastaDo("pedidos", true);
+        edicoes = await pastaDo("edicoes", true);
+      }
+      if (!pedidos || !edicoes) throw new Error("o posto do Estúdio está fora e a "
+        + "pasta não está liberada. Recarregue a página em um minuto e tente de novo.");
+      await guardarNoAcervo(TPL.id + ".json", JSON.stringify(TPL, null, 1));
+      const livre = await nomeLivre(edicoes, `leva-${EDIT_LEVA.numero}`);
+      destino = livre.nome;
+      qual = livre.n;
     }
-    if (!pedidos || !edicoes) throw new Error("a pasta do Estúdio ainda não está "
-      + "liberada. Aponte a pasta Estudio, a que tem levas, recortes e pedidos dentro.");
-    // O TEMPLATE DA BANCADA VAI PARA O ACERVO ANTES DE MONTAR, porque quem monta lê do
-    // disco. Sem esta gravação, montar um template recém-mexido usaria a versão anterior
-    // e a peça sairia diferente do que ele viu na tela.
-    await guardarNoAcervo(TPL.id + ".json", JSON.stringify(TPL, null, 1));
-    const { nome: destino, n: qual } = await nomeLivre(edicoes, `leva-${EDIT_LEVA.numero}`);
 
     const id = "p" + Date.now();
     const pedido = {
@@ -13788,17 +13983,14 @@ $("apl_montar").onclick = async () => {
         return p;
       })
     };
-    const h = await pedidos.getFileHandle(`${id}.json`, { create: true });
-    const w = await h.createWritable();
-    await w.write(JSON.stringify(pedido, null, 1));
-    await w.close();
+    await deixarPedido(pedido);
 
     OBRA = { id, desde: Date.now(), total: alvos.length, qual, relogio: null };
     $("apl_obra").hidden = false;
     document.querySelector("#apl_obra .cfg-girando").style.display = "";
     $("apl_obra_txt").textContent = "pedido deixado";
     $("apl_obra_nota").textContent = "a montagem começa em até um minuto, que é o passo "
-      + "do programa que faz esse trabalho aqui no computador.";
+      + "do programa que faz esse trabalho na casa do Estúdio.";
     OBRA.relogio = setInterval(olharAObra, 3000);
     olharAObra();
   } catch (e) {
@@ -13838,23 +14030,36 @@ async function olharAObra() {
     $("apl_obra_nota").textContent = porque + " Continuo tentando; a montagem pode estar acontecendo mesmo assim.";
   };
 
-  const p = await pastaDo("pedidos", false);
-  if (!p) return semContato("A pasta do Estúdio não está liberada nesta aba.");
+  // O ANDAMENTO VEM DO POSTO desde 25/08/2026; a pasta liberada é o plano B. Nos dois
+  // mundos, andamento que ainda não existe é FILA, e não defeito: o programa que monta
+  // olha a fila de minuto em minuto, e a paciência de oitenta segundos logo abaixo é
+  // quem decide quando a ausência vira assunto.
   let d = null;
-  try {
-    const f = await (await p.getFileHandle(`${OBRA.id}.andamento.json`)).getFile();
-    d = JSON.parse(await f.text());
-  } catch (e) {
-    /* ARQUIVO QUE AINDA NÃO EXISTE NÃO É DEFEITO, É FILA.
-
-       O QUE ELE VIU: "Não consegui ler o andamento: A requested file or directory could
-       not be found at the time an operation was processed." Isso é o recado do sistema
-       para um arquivo que ainda não foi criado, e ele não foi criado porque o programa
-       que monta olha a fila DE MINUTO EM MINUTO. Nos primeiros sessenta segundos a
-       ausência do arquivo é o estado normal, e mostrá-la como erro em inglês faz
-       procurar defeito onde não há. */
-    if (!e || e.name !== "NotFoundError")
+  if (await postoDePe()) {
+    try {
+      const r = await noPosto("/pedido?id=" + OBRA.id);
+      d = r.tem ? r.d : null;
+    } catch (e) {
       return semContato("Não consegui ler o andamento: " + (e.message || e) + ".");
+    }
+  } else {
+    const p = await pastaDo("pedidos", false);
+    if (!p) return semContato("O posto está fora e a pasta do Estúdio não está liberada nesta aba.");
+    try {
+      const f = await (await p.getFileHandle(`${OBRA.id}.andamento.json`)).getFile();
+      d = JSON.parse(await f.text());
+    } catch (e) {
+      /* ARQUIVO QUE AINDA NÃO EXISTE NÃO É DEFEITO, É FILA.
+
+         O QUE ELE VIU: "Não consegui ler o andamento: A requested file or directory
+         could not be found at the time an operation was processed." Isso é o recado do
+         sistema para um arquivo que ainda não foi criado, e ele não foi criado porque o
+         programa que monta olha a fila DE MINUTO EM MINUTO. Nos primeiros sessenta
+         segundos a ausência do arquivo é o estado normal, e mostrá-la como erro em
+         inglês faz procurar defeito onde não há. */
+      if (!e || e.name !== "NotFoundError")
+        return semContato("Não consegui ler o andamento: " + (e.message || e) + ".");
+    }
   }
   if (!d) {
     OBRA.mudo = (OBRA.mudo || 0) + 1;
@@ -14023,7 +14228,20 @@ async function deixarPedido(pedido) {
    107 pecas trazia o passo 4 dizendo "0 pecas montadas", com as 107 na pasta ao lado.
    Zero e' um numero, e numero na tela e' medido, nao deduzido. Trava 2 do CLAUDE.md. */
 async function procurarMontagem() {
-  if (!EDIT_LEVA || !EDIT_RAIZ) return;
+  if (!EDIT_LEVA) return;
+  // O POSTO PRIMEIRO, desde 25/08/2026: as edições moram na casa, e a casa está na
+  // VPS. O passo da sequência (leva-N, leva-N (2)...) é o mesmo nos dois mundos.
+  if (await postoDePe()) {
+    try {
+      const r = await noPosto(`/montagem?leva=${EDIT_LEVA.numero}`);
+      if (!r.tem) return;
+      MONTADO = { pecas: (r.nomes || []).length, pasta: r.pasta,
+                  arquivos: (r.nomes || []).slice().sort(),
+                  onde: "edicoes/" + r.pasta };
+    } catch (e) { /* sem olhar de verdade, nada se apaga */ }
+    return;
+  }
+  if (!EDIT_RAIZ) return;
   const raiz = await pastaDo("edicoes", false);
   if (!raiz) return;
   // O MESMO FORMATO DO `nomeLivre` E DO `abrir.py`: leva-N, leva-N (2), leva-N (3).
@@ -14063,11 +14281,20 @@ async function lerAOrigem() {
   ORIGEM_DA_PECA.clear();
   if (!EDIT_LEVA) return;
   try {
-    const levas = await pastaDo("levas", false);
-    if (!levas) return;
-    const pasta = await levas.getDirectoryHandle(`leva-${EDIT_LEVA.numero}`);
-    const f = await (await pasta.getFileHandle("_lote.json")).getFile();
-    const d = JSON.parse(await f.text());
+    let d = null;
+    // O POSTO PRIMEIRO, desde 25/08/2026: o `_lote.json` mora na leva, e a leva na casa.
+    if (await postoDePe()) {
+      const r = await fetch(urlDoArquivo(pastaDaLeva() + "/_lote.json"),
+        { cache: "no-store" });
+      if (!r.ok) return;
+      d = await r.json();
+    } else {
+      const levas = await pastaDo("levas", false);
+      if (!levas) return;
+      const pasta = await levas.getDirectoryHandle(`leva-${EDIT_LEVA.numero}`);
+      const f = await (await pasta.getFileHandle("_lote.json")).getFile();
+      d = JSON.parse(await f.text());
+    }
     for (const x of (d.itens || [])) {
       if (x.arquivo_local) {
         ORIGEM_DA_PECA.set(x.arquivo_local, {
@@ -14098,7 +14325,8 @@ function mostrarAMontagem() {
     // NÃO SEI NÃO É ZERO. Ver a nota em `procurarMontagem`.
     $("pos_n").textContent = "—";
     $("pos_pasta").textContent = "Não achei nenhuma montagem desta leva na pasta de "
-      + "edições. Se você montou, confira se a pasta do Estúdio está liberada nesta aba.";
+      + "edições. Se você montou agora, espere a montagem terminar; se o posto estiver "
+      + "fora, confira se a pasta do Estúdio está liberada nesta aba.";
     delete $("pos_abrir").dataset.abrir;
     return;
   }
@@ -14738,7 +14966,11 @@ document.addEventListener("click", ev => {
    nao tem, e alarme que soa onde nao ha' fogo e' alarme que se aprende a ignorar. */
 const ABAS_QUE_PRECISAM_DO_DISCO = ["editar", "config"];
 function cuidarDaFaixaDeFora() {
-  if (EM_CASA || !$("fora_de_casa")) return;
+  // A CASA PROPRIA TAMBEM E' CASA, desde 25/08/2026: servida pelo posto (em 127.0.0.1
+  // ou na VPS atras do Caddy), a tela fala com quem a serviu, e nao ha' faixa a
+  // mostrar. A faixa e' so' das moradas sem posto proprio: a vitrine do GitHub Pages e
+  // a pagina aberta de arquivo.
+  if (POSTO === location.origin || !$("fora_de_casa")) return;
   const aba = (location.hash || "#minerar").slice(1);
   $("fora_ir").href = CASA_DO_ESTUDIO + "/" + (location.hash || "");
   $("fora_de_casa").hidden = !ABAS_QUE_PRECISAM_DO_DISCO.includes(aba);
