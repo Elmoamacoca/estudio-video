@@ -86,14 +86,35 @@ def capa(numero: int, **campos) -> None:
 
 
 def empurrar(recado: str) -> None:
-    """Grava no acervo agora, e nao no fim. Falha aqui nao derruba o lote."""
+    """Grava no acervo agora, e nao no fim. Falha aqui nao derruba o lote.
+
+    O REBASE QUE CONFLITA E' DESTRAVADO NA HORA, e isso e' conserto da auditoria de
+    25/08/2026: a esteira e a leva reescrevem os mesmos arquivos de dados, e um
+    `pull --rebase` parado em conflito deixava o repositorio PRESO em rebase; dai'
+    em diante todo empurrao falhava em silencio, o diario calava e a leva seguinte
+    rebaixava reels ja' entregues. Agora o conflito aborta o rebase e tenta de novo
+    com espera; o commit local ja' foi feito, entao nada se perde: o proximo
+    empurrao que passar leva tudo junto.
+    """
     for cmd in (["git", "config", "user.name", "esteira"],
                 ["git", "config", "user.email", "esteira@users.noreply.github.com"],
                 ["git", "add", "dados/"],
-                ["git", "commit", "-m", recado],
-                ["git", "pull", "--rebase", "--autostash", "origin", "main"],
-                ["git", "push"]):
+                ["git", "commit", "-m", recado]):
         subprocess.run(cmd, capture_output=True, timeout=180)
+    for volta in range(3):
+        puxa = subprocess.run(["git", "pull", "--rebase", "--autostash",
+                               "origin", "main"], capture_output=True, timeout=180)
+        if puxa.returncode != 0:
+            subprocess.run(["git", "rebase", "--abort"],
+                           capture_output=True, timeout=60)
+            time.sleep(1 + volta * 2)
+            continue
+        if subprocess.run(["git", "push"], capture_output=True,
+                          timeout=180).returncode == 0:
+            return
+        time.sleep(1 + volta * 2)
+    print(f"  (o acervo recusou o empurrao tres vezes: '{recado}' fica no commit "
+          "local e sobe junto com o proximo que passar)")
 
 
 # --------------------------------------------------------------------- as cinco fases
@@ -276,7 +297,14 @@ def fechar(numero: int, entregue: bool) -> None:
     reg = ler(LOTE, {}).get("itens", [])
     laudos = ler(LIMPEZA, {}).get("laudos", [])
     aprovados = {x["arquivo"] for x in laudos if x.get("limpo")}
-    caidos = {x["arquivo"] for x in laudos if not x.get("limpo")}
+    # FALHA DE AMBIENTE NAO E' REPROVA DE CONTEUDO. A reprova deterministica (sobra
+    # de metadado, midia que mudou) bane o reel com razao: baixar de novo da' no
+    # mesmo. Ja' a falha de ambiente (disco cheio, ffmpeg ausente) e' passageira, e
+    # bani-la queimava reels bons para sempre por um aperto de disco (auditoria de
+    # 25/08/2026). O laudo marca `ambiente` e o banimento pula essas pecas: elas
+    # ficam sem marca nenhuma e voltam para a fileira sozinhas.
+    caidos = {x["arquivo"] for x in laudos
+              if not x.get("limpo") and not x.get("ambiente")}
     feitos = ler(BAIXADOS, {})
     maus = ler(REPROVADOS, {})
     env = ler(ENVIADOS, {})
