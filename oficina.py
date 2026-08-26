@@ -1410,9 +1410,20 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
     feitos = falhas = cards = 0
     cegas = 0          # nao deu para olhar o video: nao e' tela cheia, e' nao sei
     resultados = [None] * len(pecas)
+    # UMA LETRA POR PECA, e e' isto que a barra da tela desenha. Ate' 25/08/2026 o
+    # andamento so' mandava contagem, entao a barra era uma tarja que enchia e o Gabriel
+    # nao gostava dela. Com uma marca por peca a barra diz de uma vez QUANTAS sao,
+    # quantas ja' foram e QUAIS deram problema, sem texto ao lado.
+    #
+    # SAO CENTO E OITENTA LETRAS numa leva de cento e oitenta pecas: cabe folgado no
+    # arquivo que ja' se reescreve a cada peca, e nao ha' o que economizar aqui.
+    #   .  ainda nao chegou a vez        c  recortada pelo card
+    #   v  sem card, foi o video inteiro  ?  nao consegui olhar o video
+    #   f  falhou
+    marcas = ["."] * len(pecas)
     andamento(pid, {"id": pid, "tipo": "recorte", "total": len(pecas), "feitos": 0,
                     "falhas": 0, "atual": "", "fim": False, "segundos": 0,
-                    "juntas": juntas})
+                    "juntas": juntas, "marcas": "".join(marcas)})
 
     # O TRABALHO DE UMA PECA MORA EM `recortar_uma`, la' em cima, fora desta funcao:
     # e' a mesma rotina que a vaga da esteira roda (vaga_edicao.py), para o recorte
@@ -1421,23 +1432,29 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
         futuros = {piscina.submit(recortar_uma, origem, destino, p, tela): i
                    for i, p in enumerate(pecas)}
         for pronto in as_completed(futuros):
+            onde = futuros[pronto]
             nome, achado, laudo, modo = pronto.result()
-            resultados[futuros[pronto]] = (nome, achado, laudo, modo)
+            resultados[onde] = (nome, achado, laudo, modo)
             if laudo.get("erro"):
                 falhas += 1
+                marcas[onde] = "f"
                 print(f"  {feitos + falhas}/{len(pecas)} {nome}: {laudo['erro']}")
             else:
                 feitos += 1
                 if modo == "card":
                     cards += 1
+                    marcas[onde] = "c"
                 elif modo == "nao consegui olhar":
                     cegas += 1     # ver a nota em `modo`, mais acima
+                    marcas[onde] = "?"
+                else:
+                    marcas[onde] = "v"
                 print(f"  {feitos + falhas}/{len(pecas)} {nome}: {modo}, "
                       f"{laudo['segundos']}s, {laudo['bytes'] / 1e6:.1f} MB")
             andamento(pid, {"id": pid, "tipo": "recorte", "total": len(pecas),
                             "feitos": feitos, "falhas": falhas, "atual": nome,
                             "fim": False, "segundos": round(time.time() - t0),
-                            "juntas": juntas})
+                            "juntas": juntas, "marcas": "".join(marcas)})
             renovar_tranca()   # leva local longa nao pode envelhecer a propria tranca
 
     # A FICHA SAI NA ORDEM DO PEDIDO, e nao na ordem em que as pecas terminaram. Com
@@ -1469,7 +1486,7 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
     andamento(pid, {"id": pid, "tipo": "recorte", "total": len(pecas), "feitos": feitos,
                     "falhas": falhas, "atual": "", "fim": True, "segundos": gasto,
                     "pasta": str(destino), "cards": cards, "cegas": cegas,
-                    "diario": diario})
+                    "marcas": "".join(marcas), "diario": diario})
     arquivar(caminho, p, feitos, falhas, gasto)
     print(f"  {feitos} recortadas, {falhas} falharam, {gasto//60} min {gasto%60} s"
           f"  ({cards} com card, {feitos - cards - cegas} de tela cheia,"

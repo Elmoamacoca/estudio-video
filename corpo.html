@@ -704,13 +704,21 @@
     <!-- A SAIDA PRECISA EXISTIR E SER OBVIA. Na oficina o cabecalho do sistema sai de
          cena, e com ele saem os links das outras abas: sem um caminho de volta desenhado
          aqui, a unica saida seria recarregar a pagina. -->
-    <button class="ed-sair" id="ed_sair" type="button" title="Sair da edição">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      <span>Sair Da Edição</span>
-    </button>
+    <!-- ELE SEGUE O PADRAO DOS OUTROS desde 25/08/2026: "o botao de sair de edicao deve
+         seguir o mesmo padrao de botao, qualquer botao que esteja na aba de edicao". -->
+    <div class="ed-sair">
+      <button class="btn" id="ed_sair" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Sair Da Edição</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+    </div>
 
     <aside class="ed-trilho" id="ed_trilho">
+      <!-- O PUXADOR. Fechada, a trilha guarda so' a coluna dos numeros, e o passo em que
+           ele esta' continua visivel: e' a unica coisa que ela precisa dizer quando esta'
+           fora do caminho. O estado fica guardado no navegador. -->
+      <button class="ed-puxador" id="ed_puxador" type="button"
+              title="Recolher a trilha" aria-label="Recolher a trilha">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
       <button class="ed-voltar mini" id="ed_volta_escolha" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round">
@@ -891,65 +899,58 @@
             ele. Confira num exemplo e depois solte na leva inteira.</p>
         </div>
 
-        <div class="rec-dois">
-          <div class="rec-lado-a">
-            <h4>O Reel, Com O B-roll Marcado</h4>
+        <!-- O DESENHO QUE ELE APROVOU em 25/08/2026: os dois reels grandes e no meio da
+             tela, o rotulo em cima de cada um, e embaixo os dois botoes, sem mais nada.
+             Sairam o rodape' de medidas ("o reel tem 720 por 1280"), a descricao do card
+             e a coluna lateral de 250 pixels. -->
+        <div class="rec-par">
+          <div class="rec-lado">
+            <div class="rec-rotulo" id="rec_rot_a">Reel</div>
             <div class="rec-quadro" id="rec_fonte">
               <video id="rec_video" preload="metadata" muted playsinline loop></video>
               <div class="rec-marca" id="rec_marca" hidden></div>
             </div>
-            <div class="rec-medida" id="rec_med_a"></div>
-          </div>
-
-          <div class="rec-lado-b">
-            <h4>O Que Vai Ser Gravado</h4>
-            <div class="rec-quadro rec-corte" id="rec_saida">
-              <video id="rec_corte" preload="metadata" muted playsinline loop></video>
-            </div>
-            <div class="rec-medida" id="rec_med_b"></div>
           </div>
 
           <div class="rec-lado">
-            <div class="rec-bloco">
-              <h4>Conferir</h4>
-              <p class="nota mini" id="rec_diz">medindo…</p>
-              <button class="acao mini" id="rec_sortear" type="button">Ver Outro Reel</button>
+            <div class="rec-rotulo">Recorte</div>
+            <div class="rec-quadro rec-corte" id="rec_saida">
+              <video id="rec_corte" preload="metadata" muted playsinline loop></video>
             </div>
-
-            <!-- OS DOIS FORMATOS QUE APARECEM NA LEVA, e a conta vale como aviso: reel
-                 sem card é reel que não tem B-roll separado, e nesse a resposta certa é
-                 gravar o vídeo inteiro. -->
-            <div class="rec-bloco">
-              <h4>O Que Tem Na Leva</h4>
-              <p class="nota mini" id="rec_mistura">ainda não medi a leva toda.</p>
-            </div>
-
-            <!-- A PASTA DE DESTINO SAIU em 25/08/2026, por decisao do dono: "nao
-                 preciso mais saber disso, ja que tudo agora esta indo para a VPS".
-                 Quando a casa era o disco dele, o caminho respondia "onde vou achar isso
-                 depois?"; com uma casa so, a pergunta nao existe e a linha era mobilia.
-                 A garantia que importava continua dita no bloco de conferir: o bruto nao
-                 e' tocado. -->
           </div>
         </div>
 
-        <div class="apl-pe">
-          <div class="apl-resumo" id="rec_resumo"></div>
-          <button class="acao forte" id="rec_aplicar" type="button">Recortar</button>
+        <!-- SO' APARECE QUANDO HA' O QUE DIZER: problema ou "medindo". A descricao de
+             sucesso saiu por pedido dele, mas tela muda nao volta a existir aqui. -->
+        <p class="rec-diz" id="rec_diz"></p>
+
+        <div class="rec-acoes">
+          <button class="btn grande" id="rec_sortear" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ver Outro Reel</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+          <button class="btn grande brasa" id="rec_aplicar" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Recortar</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
           <div class="apl-feito" id="rec_feito" hidden>
-            <a class="acao" id="rec_pasta" href="#">Abrir A Pasta Dos Recortes</a>
-            <button class="acao forte" id="rec_segue" type="button">
-              Ir Para O Passo 3</button>
+            <a class="btn" id="rec_pasta" href="#"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Abrir A Pasta Dos Recortes</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            <button class="btn brasa" id="rec_segue" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ir Para O Passo 3</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
           </div>
         </div>
 
+        <!-- A BARRA NOVA: uma marca por peca. Ver a nota do `.rec-tiras` no estilo. -->
         <div class="caixa apl-obra" id="rec_obra" hidden>
           <div class="apl-obra-topo">
-            <span class="cfg-girando"></span>
             <b id="rec_obra_txt">recortando</b>
             <span class="dir" id="rec_obra_tempo"></span>
           </div>
-          <div class="apl-barra"><i id="rec_barra"></i></div>
+          <div class="rec-conta">
+            <b id="rec_feitas">0</b><span id="rec_de">de 0 peças recortadas</span>
+            <span class="agora" id="rec_atual"></span>
+          </div>
+          <div class="rec-tiras" id="rec_tiras"></div>
+          <div class="rec-selos">
+            <span><i class="card"></i>Recortadas <b id="rec_s_card">0</b></span>
+            <span><i class="cheio"></i>Sem Card, Vídeo Inteiro <b id="rec_s_cheio">0</b></span>
+            <span><i class="falhou"></i>Não Abriram <b id="rec_s_falhou">0</b></span>
+            <span>Correndo Há <b id="rec_s_tempo">0s</b></span>
+            <span>Falta <b id="rec_s_falta">calculando</b></span>
+          </div>
           <p class="nota" id="rec_obra_nota"></p>
         </div>
       </div>

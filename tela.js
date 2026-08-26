@@ -4193,6 +4193,7 @@ async function verOutroReel() {
       i = Math.floor(Math.random() * lista.length);
   }
   REC_NOME = lista[i].nome;
+  rotuloDoReel(REC_NOME);
   const v = $("rec_video"), corte = $("rec_corte");
   $("rec_diz").textContent = "medindo…";
   $("rec_marca").hidden = true;
@@ -4285,22 +4286,26 @@ function desenhaRecorteExemplo() {
   // arredondada, o canto sai arredondado aqui como sai no arquivo.
   c.style.clipPath = recorteEmForma(b);
 
-  const cabe = Math.min(TELA.w / lar, TELA.h / alt);
-  $("rec_med_a").textContent = "o reel tem " + lar + " por " + alt;
-  $("rec_med_b").textContent = "a peça sai em " + TELA.w + " por " + TELA.h
-    + (cabe === 1 ? "" : ", com o bruto ampliado " + cabe.toFixed(1) + " vez"
-       + (cabe >= 2 ? "es" : ""));
+  // O RODAPE DE MEDIDAS SAIU em 25/08/2026: "esse rodape' que voce colocou, reels tem
+  // tanto e a peca sai por tanto, nao quero isso". A medida nao mudava decisao nenhuma
+  // dele; quem precisa dela e' o programa, que a tem de outro jeito.
   // NÃO CONSEGUI MEDIR NÃO É TELA CHEIA. O `acharBrollAqui` devolve nulo em várias
   // falhas de leitura (vídeo que não decodifica, quadro que não chega no prazo), e
   // afirmar "não tem card" a partir do nulo era inventar. Quem mede de verdade é a
   // oficina, na hora de gravar; esta tela é só conferência. Trava 2 do CLAUDE.md.
-  $("rec_diz").innerHTML = !REC_ACHADO
-    ? "não consegui medir este vídeo daqui. Quem mede de verdade é a oficina, na hora "
-      + "de gravar; clique em Ver Outro Reel para conferir o método com outra peça."
-    : b.modo === "card"
-      ? "achei o card: o recorte pega <b>só a filmagem</b>, sem o arroba e sem a legenda."
-      : "este reel <b>não tem card</b>: a filmagem ocupa o quadro inteiro, então é ele "
-        + "inteiro que vai ser gravado.";
+  /* A DESCRICAO DE SUCESSO SAIU, e a linha ficou. O pedido foi direto: "achei o card,
+     so' a filmagem, sem a marca de quem postou: nao entendi que porra de descricao e'
+     essa? Remove isso". Ela contava, em palavra, o que os dois videos ao lado ja'
+     mostram.
+
+     O QUE NAO PODE SUMIR E' O PROBLEMA. Quando nao da' para medir, o desenho da direita
+     fica igual ao da esquerda e nada na tela diz por que: e' tela muda, que e' o defeito
+     que este projeto passou dois dias cacando. Entao a linha aparece so' aqui. */
+  const diz = $("rec_diz");
+  diz.classList.toggle("ruim", !REC_ACHADO);
+  diz.textContent = REC_ACHADO ? "" :
+    "não consegui medir este vídeo daqui. Quem mede de verdade é a oficina, na hora de "
+    + "gravar; clique em Ver Outro Reel para conferir o método com outra peça.";
 }
 
 /** A forma do B-roll como recorte de CSS: desce pela borda esquerda e volta pela direita. */
@@ -4439,19 +4444,31 @@ function desenhaRecortado() {
   // fases seguintes. O nome do arquivo atravessa a leva inteira, então ele é a chave.
   const temRec = new Set(EDIT_RECORTES.map(r => r.nome));
   const faltam = tem ? pecas1().filter(p => !temRec.has(p.nome)).length : 0;
+  /* A CONTA DAS TIRADAS MUDOU DE LUGAR, e nao sumiu. Ela morava numa linha de resumo no
+     meio do passo 2, que saiu em 25/08/2026 junto com as outras descricoes. A licao que
+     ela guardava e' de 22/08 e continua valendo: ele tirou treze reels, o passo 1 passou
+     a dizer 94 e o passo 2 seguia oferecendo "107 pecas para recortar", e a frase foi
+     "voce nao disse que havia arrumado?". Aqui, na linha do passo 2 da trilha, a
+     informacao fica onde se olha para saber em que pe' esta' cada passo, sem voltar a ser
+     bloco de texto no meio da tela. */
+  // CADA UMA CUIDA DO SEU ESTADO: aqui mora o "ja' recortou", e o "falta recortar" mora
+  // no `resumoDoRecorte`, logo abaixo. Escritas as duas no mesmo lugar, a que roda antes
+  // apagava a outra e a linha saia dizendo "o B-roll de cada video" com tres pecas na
+  // leva, que e' o passo 2 encolhendo calado de novo.
   const r2 = $("ed_r2");
-  if (r2) r2.textContent = tem
-    ? num(RECORTADO.pecas) + (RECORTADO.pecas === 1 ? " recorte pronto" : " recortes prontos")
-      + (faltam ? `, ${num(faltam)} sem recorte` : "")
-    : "o B-roll de cada vídeo";
+  if (r2 && tem) {
+    r2.textContent = num(RECORTADO.pecas)
+      + (RECORTADO.pecas === 1 ? " recorte pronto" : " recortes prontos")
+      + (faltam ? `, ${num(faltam)} sem recorte` : "");
+  }
   $("rec_aplicar").hidden = tem && !faltam;
   if (faltam) {
-    $("rec_aplicar").textContent = `Recortar as ${num(faltam)} que faltaram`;
+    dizNoBotao("rec_aplicar", `Recortar As ${num(faltam)} Que Faltaram`);
   }
   $("rec_feito").hidden = !tem;
   if (!tem) return;
-  $("rec_resumo").innerHTML = "<b>" + num(RECORTADO.pecas) + "</b> "
-    + (RECORTADO.pecas === 1 ? "recorte pronto" : "recortes prontos");
+  // A LINHA DE RESUMO SAIU com a descricao: a contagem ja' esta' escrita no proprio
+  // botao e no passo 2 da trilha, e repetida aqui era a terceira copia do mesmo numero.
   $("rec_pasta").dataset.abrir = RECORTADO.onde;
 }
 
@@ -4470,13 +4487,137 @@ function resumoDoRecorte() {
      liberada. Toda conta que ele le' sai do filtro. */
   const n = pecas1().length;
   const fora = EDIT_PECAS.length - n;
-  $("rec_resumo").innerHTML = "<b>" + num(n) + "</b> "
-    + (n === 1 ? "peça" : "peças") + " para recortar"
-    + (fora ? `<span class="nota"> · ${num(fora)} ${fora === 1 ? "tirada" : "tiradas"}`
-              + " da leva no passo 1</span>" : "");
-  $("rec_aplicar").textContent = "Recortar "
-    + (n === 1 ? "a peça" : "as " + num(n) + " peças");
+  // O NUMERO MORA NO BOTAO, e num lugar so'. Ele diz o que vai acontecer e quanta coisa
+  // e', que e' tudo o que a linha de resumo dizia antes de sair.
+  dizNoBotao("rec_aplicar", "Recortar " + (n === 1 ? "A Peça" : "As " + num(n) + " Peças"));
   $("rec_aplicar").disabled = !n;
+  /* E A CONTA DAS TIRADAS VAI PARA A LINHA DO PASSO 2 NA TRILHA. Ela morava numa linha
+     de resumo no meio da tela, que saiu em 25/08/2026 com as outras descricoes. A licao
+     que ela guarda e' de 22/08: ele tirou treze reels, o passo 1 passou a dizer 94 e o
+     passo 2 seguia oferecendo "107 pecas para recortar", e a frase foi "voce nao disse
+     que havia arrumado?". Na trilha ela fica onde se olha para saber o pe' de cada
+     passo, sem voltar a ser bloco de texto no meio do caminho. */
+  const r2 = $("ed_r2");
+  if (r2) {
+    r2.textContent = !n ? "o B-roll de cada vídeo"
+      : num(n) + (n === 1 ? " peça" : " peças")
+        + (fora ? `, ${num(fora)} ${fora === 1 ? "tirada" : "tiradas"} no passo 1` : "");
+  }
+}
+
+
+/* ============================================ A BARRA DO RECORTE: UMA MARCA POR PECA
+
+   O PEDIDO DELE, em 25/08/2026: "faca a proposta de como vai ficar a barra de
+   carregamento, porque as barras que tem agora dentro do sistema de edicao eu nao to'
+   curtindo". Uma tarja que enche diz UMA coisa, a fracao. Uma marca por peca diz tres de
+   uma vez: quantas sao, quantas ja' foram e QUAIS deram problema.
+
+   O DESENHO SO' E' POSSIVEL PORQUE O MOTOR PASSOU A CONTAR PECA A PECA. O andamento
+   ganhou o campo `marcas`, uma letra por peca, escrito pelo `oficina.py` a cada uma que
+   fecha: `.` ainda nao, `c` recortada pelo card, `v` sem card (video inteiro), `?` nao
+   consegui olhar, `f` falhou. Sem isso a barra so' saberia contagem, e a cor da falha
+   nao teria onde pousar.
+
+   AS PECAS NAO ACABAM EM ORDEM, e a barra nao finge que acabam: com varias rodando
+   juntas, a terceira fecha antes da primeira, e a marca acende no lugar DELA na leva.
+   Por isso nao existe "ponta viva" aqui: ponta viva seria afirmar uma posicao que nao
+   existe. Quem prova vida e' o campo que anda e o relogio ao lado. */
+const MARCA_DA_PECA = { c: "card", v: "cheio", "?": "cega", f: "falhou" };
+
+function desenhaTiras(d) {
+  const tiras = $("rec_tiras");
+  if (!tiras) return;
+  const total = Number(d.total) || (REC_OBRA && REC_OBRA.total) || 0;
+  if (!total) return;
+  // A BARRA SO' SE REMONTA QUANDO O TAMANHO MUDA: reconstruir 180 elementos de tres em
+  // tres segundos jogaria fora a transicao de cor de cada marca, que e' o que faz a
+  // barra parecer viva em vez de piscar inteira.
+  if (tiras.children.length !== total) {
+    tiras.innerHTML = "";
+    for (let i = 0; i < total; i++) tiras.appendChild(document.createElement("i"));
+  }
+  const marcas = String(d.marcas || "");
+  const conta = { card: 0, cheio: 0, cega: 0, falhou: 0 };
+  let feitas = 0;
+  for (let i = 0; i < total; i++) {
+    const classe = MARCA_DA_PECA[marcas[i]] || "";
+    if (tiras.children[i].className !== classe) tiras.children[i].className = classe;
+    if (classe) { conta[classe]++; feitas++; }
+  }
+  /* MOTOR VELHO NAO MANDA `marcas`, e a barra nao pode ficar vazia por isso. Sem o
+     campo, ela pinta as primeiras `feitos` de verde: e' menos verdade (perde QUAIS
+     falharam) mas continua sendo o avanco certo, e nao um retangulo morto. */
+  if (!marcas && d.feitos) {
+    const ate = Math.min(total, Number(d.feitos) || 0);
+    for (let i = 0; i < ate; i++) tiras.children[i].className = "card";
+    feitas = ate;
+    conta.card = ate;
+  }
+  tiras.classList.toggle("andando", !d.fim);
+
+  $("rec_feitas").textContent = num(feitas);
+  $("rec_de").textContent = " de " + num(total)
+    + (total === 1 ? " peça recortada" : " peças recortadas");
+  $("rec_atual").textContent = d.fim ? "" : (d.atual || "");
+  $("rec_s_card").textContent = num(conta.card);
+  $("rec_s_cheio").textContent = num(conta.cheio + conta.cega);
+  $("rec_s_falhou").textContent = num(conta.falhou);
+
+  const seg = Number(d.segundos) || 0;
+  $("rec_s_tempo").textContent = emTempo(seg);
+  // FALTA QUANTO SO' DEPOIS DA PRIMEIRA PECA: dividir por zero devolveria infinito, e
+  // "falta Infinity" e' pior do que nao dizer nada.
+  $("rec_s_falta").textContent = d.fim ? "acabou"
+    : (feitas && seg ? emTempo(Math.round(seg / feitas * (total - feitas)))
+                     : "calculando");
+}
+
+/** Segundos em palavra curta, para caber ao lado do numero. */
+function emTempo(s) {
+  if (s < 60) return Math.round(s) + "s";
+  const m = Math.floor(s / 60);
+  return m + " min " + Math.round(s % 60) + "s";
+}
+
+/* ====================================================== A TRILHA QUE RECOLHE
+
+   "Aquela barra daquela timeline deveria ser aquele tipo de timeline que eu consigo
+   fechar e abrir, tipo esconder e abrir, porque ai' eu consigo deixar essa tela aqui
+   centralizada."  25/08/2026.
+
+   O ESTADO MORA NO NAVEGADOR, e nao no rascunho da leva: ele e' preferencia de quem
+   olha, e nao dado do trabalho. Rascunho e' por leva; isto vale para todas. E o `try`
+   existe porque navegador com armazenamento bloqueado ATIRA ao ler, e uma preferencia
+   de tela nao pode derrubar a oficina. */
+const CHAVE_DA_TRILHA = "estudio.trilho.fechado";
+
+function pintarTrilha(fechado) {
+  const tela = document.querySelector("#ed_oficina .ed-tela") || $("ed_oficina");
+  if (tela) tela.classList.toggle("trilho-fechado", fechado);
+  const b = $("ed_puxador");
+  if (b) {
+    const dizer = fechado ? "Abrir a trilha" : "Recolher a trilha";
+    b.title = dizer;
+    b.setAttribute("aria-label", dizer);
+  }
+}
+
+function lembrarDaTrilha() {
+  let fechado = false;
+  try { fechado = localStorage.getItem(CHAVE_DA_TRILHA) === "1"; } catch (e) {}
+  pintarTrilha(fechado);
+}
+
+if ($("ed_puxador")) {
+  $("ed_puxador").onclick = () => {
+    let fechado = false;
+    try { fechado = localStorage.getItem(CHAVE_DA_TRILHA) === "1"; } catch (e) {}
+    fechado = !fechado;
+    try { localStorage.setItem(CHAVE_DA_TRILHA, fechado ? "1" : "0"); } catch (e) {}
+    pintarTrilha(fechado);
+  };
+  lembrarDaTrilha();
 }
 
 /* ---------------------------------------------------------- deixar o pedido
@@ -4542,7 +4683,7 @@ $("rec_aplicar").onclick = async () => {
 
     REC_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null };
     $("rec_obra").hidden = false;
-    document.querySelector("#rec_obra .cfg-girando").style.display = "";
+    desenhaTiras({ total: alvos.length, marcas: "", fim: false });
     $("rec_obra_txt").textContent = "pedido deixado";
     $("rec_obra_nota").textContent = "o recorte começa em até um minuto, que é o passo do "
       + "programa que faz esse trabalho na casa do Estúdio.";
@@ -4614,7 +4755,7 @@ async function olharORecorte() {
   }
   if (d.erro) return pararORecorte("não deu: " + d.erro);
   const feitos = d.feitos || 0, total = d.total || REC_OBRA.total;
-  $("rec_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
+  desenhaTiras(d);
   if (!d.fim) {
     // A ESTEIRA APARECE COMO ESTEIRA, e não como "recortando 1 de 107" com dezesseis
     // vagas trabalhando em paralelo (auditoria de 25/08/2026).
@@ -4644,8 +4785,7 @@ async function olharORecorte() {
   // O GIRO PARA QUANDO ACABA. Ele continuava rodando com os 107 recortes prontos na
   // pasta, e um símbolo de carregando em cima de um trabalho terminado diz que ainda
   // falta alguma coisa. Terminou, é aviso parado.
-  document.querySelector("#rec_obra .cfg-girando").style.display = "none";
-  $("rec_barra").style.width = "100%";
+  desenhaTiras(d);
   const cards = d.cards || 0;
   $("rec_obra_txt").textContent = feitos
     + (feitos === 1 ? " recorte pronto" : " recortes prontos")
@@ -4653,10 +4793,9 @@ async function olharORecorte() {
   // A CONTA TEM DE FECHAR, E "NAO CONSEGUI OLHAR" NAO E' "TELA CHEIA". O programa passou
   // a separar os dois; aqui a tela mostra os tres, para o numero do meio parar de
   // engordar com peca que ninguem conseguiu medir.
-  const cegas = Number(d.cegas || 0);
-  $("rec_mistura").innerHTML = "<b>" + cards + "</b> com card, <b>"
-    + Math.max(0, feitos - cards - cegas) + "</b> de tela cheia"
-    + (cegas ? ", <b>" + cegas + "</b> que não consegui medir" : "") + ".";
+  // A CONTA DOS TRES ESTADOS VIVE NA PROPRIA BARRA desde 25/08/2026, com uma cor cada:
+  // recortada pelo card, sem card (video inteiro) e a que nao abriu. O bloco de texto
+  // que dizia a mesma coisa saiu junto com a coluna lateral.
   await procurarRecortes();
   desenhaRecortado();
   // O BOTÃO VOLTA À VIDA NO FIM: com falhas, o desenhaRecortado o deixa visível
@@ -4680,6 +4819,36 @@ function pararORecorte(recado) {
 $("rec_segue").onclick = () => irParaPasso(3);
 
 /* ------------------------------------------------- ajudantes do passo 2 */
+
+/* O TEXTO DO BOTAO ANIMADO MORA DENTRO DELE, e nao nele.
+
+   O `.btn` da edicao tem quatro filhos (o circulo que engole, duas setas e o texto), e
+   `botao.textContent = "..."` APAGA os quatro e deixa so' a palavra: o botao continua
+   funcionando e perde a animacao inteira, calado. Como so' o passo 2 troca o texto de um
+   botao em tempo de uso, o desvio vive aqui. */
+function dizNoBotao(id, texto) {
+  const b = $(id);
+  if (!b) return;
+  const dentro = b.querySelector(".txt");
+  if (dentro) dentro.textContent = texto;
+  else b.textContent = texto;
+}
+
+/* O ROTULO DO REEL LEVA O ARROBA DE QUEM POSTOU, por pedido dele em 25/08/2026: "voce
+   pode trocar esses titulos para tipo, o reel, ai' bota o arroba do Instagram". O nome do
+   arquivo de leva e' `0001.50x_conta_CODIGO.mp4`, entao a conta e' o miolo. Quando o nome
+   nao segue o molde, fica so' "Reel": inventar arroba errado e' pior que nao ter. */
+function rotuloDoReel(nome) {
+  const alvo = $("rec_rot_a");
+  if (!alvo) return;
+  // O SUBLINHADO VAI ENTRE COLCHETES de proposito. Colado no parenteses, o conferidor
+  // casa le' a expressao como CHAMADA de uma funcao chamada `x_` e reprova o arquivo
+  // inteiro. `x[_](` casa exatamente o mesmo e nao parece chamada de nada.
+  const m = /^[\d.]+x[_](.+)[_][^_]+\.mp4$/i.exec(String(nome || ""));
+  alvo.innerHTML = m
+    ? 'Reel <span class="arroba">@' + m[1].replace(/[<>&]/g, "") + "</span>"
+    : "Reel";
+}
 
 /* PULA PARA UM INSTANTE DO VÍDEO E ESPERA ELE CHEGAR LÁ. Sem esperar o `seeked`, o
    quadro lido no canvas é o anterior, e a análise mede a mesma imagem dez vezes. */
@@ -8843,7 +9012,10 @@ async function tentarRetomar() {
     REC_OBRA = { id: vigias.rec.id, desde: vigias.rec.desde || Date.now(),
                  total: vigias.rec.total || 0, relogio: null };
     $("rec_obra").hidden = false;
-    document.querySelector("#rec_obra .cfg-girando").style.display = "";
+    // O GIRADOR SAIU DAQUI com a barra nova: quem prova vida agora e' a marca que acende
+    // e o relogio que anda. Esta linha ficou apontando para um elemento que nao existe
+    // mais e derrubava a retomada do vigia inteira, calada, depois do F5.
+    desenhaTiras({ total: REC_OBRA.total, marcas: "", fim: false });
     $("rec_obra_txt").textContent = "trabalho em curso, vigia retomada";
     REC_OBRA.relogio = setInterval(olharORecorte, 3000);
     olharORecorte();
