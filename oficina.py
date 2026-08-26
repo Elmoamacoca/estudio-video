@@ -261,6 +261,9 @@ def acha_broll(video: Path) -> dict | None:
         if not len(lin) or not len(col):
             return None
         y0, y1, x0, x1 = int(lin[0]), int(lin[-1]), int(col[0]), int(col[-1])
+        # A SEMENTE FICA GUARDADA: e' o unico pedaco que se sabe estar DENTRO da
+        # filmagem, e por isso e' o muro que nenhuma retracao pode atravessar.
+        sy0, sy1, sx0, sx1 = y0, y1, x0, x1
 
         # 2 ..... a cor do card, tirada da margem de cima e da de baixo. Sao as duas que
         # num card sao SEMPRE fundo: o arroba mora no alto e o retangulo nunca encosta na
@@ -348,6 +351,69 @@ def acha_broll(video: Path) -> dict | None:
         x0, x1 = trecho(janela[y0:y1 + 1].mean(axis=0), cx, 0.15, beira=0.04)
         y0, y1 = trecho(janela[:, x0:x1 + 1].mean(axis=1), cy, 0.30)
 
+        # 4c ..... O RECORTE E' O TRECHO VIVO E CONTINUO EM VOLTA DA SEMENTE, e nao tudo
+        # que nao tem a cor do card. E' o conserto do "que bizarrice e' essa" de
+        # 25/08/2026: card com um PAINEL interno de tinta quase igual, a filmagem morando
+        # na parte de cima dele e um VAZIO enorme embaixo. Medido no proprio reel: as
+        # linhas da filmagem tem movimento em 100% da largura e amplitude 253; as do
+        # vazio tem movimento zero, detalhe zero e amplitude 13 a 16, ACIMA do teto de 10
+        # da regua de chapa, entao a retracao de chapa nao andava um passo. E dentro do
+        # vazio ainda MORA UM ENFEITE QUE SE MEXE, separado da filmagem por vinte linhas
+        # mortas: regua de cor nenhuma o tira, continuidade tira.
+        #
+        # LINHA VIVA e' a que tem janela quase cheia (filmagem de verdade da' 100%, e a
+        # continuidade do caminho protege ate' o miolo parado, tipo cortina ou parede,
+        # porque ele nao se alcanca da borda), OU movimento, OU detalhe de imagem. Do
+        # centro da semente anda-se para as duas pontas atravessando vao morto de ate'
+        # oito linhas; o que fica do outro lado de um vao maior nao e' filmagem, e'
+        # enfeite do card.
+        meio_q = cinza[cinza.shape[0] // 2]
+        detalhe = np.zeros_like(mexe)
+        detalhe[:, 1:] = np.abs(np.diff(meio_q, axis=1)) > 12
+
+        def correr(centro, beira, viva) -> int:
+            passo = 1 if beira >= centro else -1
+            fim, vao, i = centro, 0, centro
+            while i != beira + passo:
+                if viva(i):
+                    fim, vao = i, 0
+                else:
+                    vao += 1
+                    if vao > 8:
+                        break
+                i += passo
+            return fim
+
+        # E A AMPLITUDE E' O QUE SALVA A FILMAGEM PARADA. Medido no A/B contra a leva
+        # inteira: sem ela, 34 caixas BOAS encolheram, porque a caixa de legenda
+        # queimada (branca, encostada na borda da filmagem) rouba a janela da linha, e
+        # parada e sem detalhe a linha morria. So' que essas linhas tem letra preta
+        # sobre caixa branca: amplitude 200 e mais. O vazio do painel fica em 13 a 16.
+        # O teto de 24 separa os dois com folga para os dois lados.
+        def linha_viva(l) -> bool:
+            m = max(2, (x1 - x0) // 32)
+            faixa = p[:, l, x0 + m:x1 + 1 - m, :]
+            return (janela[l, x0:x1 + 1].mean() >= 0.90
+                    or mexe[l, x0:x1 + 1].mean() >= 0.02
+                    or detalhe[l, x0:x1 + 1].mean() >= 0.02
+                    or float((faixa.max(axis=(0, 1))
+                              - faixa.min(axis=(0, 1))).max()) > 24)
+
+        y0 = correr(cy, y0, linha_viva)
+        y1 = correr(cy, y1, linha_viva)
+
+        def coluna_viva(c) -> bool:
+            m = max(2, (y1 - y0) // 32)
+            faixa = p[:, y0 + m:y1 + 1 - m, c, :]
+            return (janela[y0:y1 + 1, c].mean() >= 0.90
+                    or mexe[y0:y1 + 1, c].mean() >= 0.02
+                    or detalhe[y0:y1 + 1, c].mean() >= 0.02
+                    or float((faixa.max(axis=(0, 1))
+                              - faixa.min(axis=(0, 1))).max()) > 24)
+
+        x0 = correr(cx, x0, coluna_viva)
+        x1 = correr(cx, x1, coluna_viva)
+
         # 4b ..... PONTA CHAPADA E PARADA NAO E' FILMAGEM, e isto mata as faixas claras que
         # apareciam dos dois lados do recorte. Elas vem de card de DUAS tintas (cinza claro
         # por fora, branco por dentro, o caso do print de 25/08/2026): a cor de referencia
@@ -362,14 +428,49 @@ def acha_broll(video: Path) -> dict | None:
         def so_tinta(bloco) -> bool:
             return float((bloco.max(axis=(0, 1)) - bloco.min(axis=(0, 1))).max()) <= 10
 
-        while x1 - x0 > 8 and so_tinta(p[:, y0:y1 + 1, x0, :]):
-            x0 += 1
-        while x1 - x0 > 8 and so_tinta(p[:, y0:y1 + 1, x1, :]):
-            x1 -= 1
-        while y1 - y0 > 8 and so_tinta(p[:, y0, x0:x1 + 1, :]):
-            y0 += 1
-        while y1 - y0 > 8 and so_tinta(p[:, y1, x0:x1 + 1, :]):
-            y1 -= 1
+        # E A FAIXA CHAPADA PODE MORAR ATRAS DE UMA DIVISORIA. No reel visto em
+        # 25/08/2026 a' noite, o card tem um PAINEL interno de outra tinta clara com uma
+        # linha de borda fina: a janela engolia o painel inteiro (a tinta dele fica longe
+        # da cor da margem) e a retracao parava na PRIMEIRA linha, porque a linha de
+        # borda tem contraste. O recorte saia com um vazio gigante embaixo da filmagem:
+        # 12,7% da mascara caia em fundo, medido na bancada. A retracao agora atravessa
+        # divisoria de ate' quatro linhas quando ha' faixa chapada do outro lado, e para
+        # de verdade no que tem textura de filmagem. O muro e' a semente: o que se mexe
+        # e' filmagem, e nela a retracao nao entra.
+        def recuar(beira, muro, chapada) -> int:
+            passo = 1 if muro >= beira else -1
+            novo, salto, i = beira, 0, beira
+            while i != muro:
+                if chapada(i):
+                    novo, salto = i + passo, 0
+                else:
+                    salto += 1
+                    if salto > 4:
+                        break
+                i += passo
+            return novo
+
+        # A CHAPA SE JULGA PELO MIOLO da linha, e nao por ela inteira: toda linha do
+        # painel CRUZA as bordas verticais da moldura, entao com a linha inteira nenhuma
+        # delas parece chapada e a retracao nao anda um passo. Fora as pontas, o que
+        # sobra do painel e' tinta pura, e ai' a chapa aparece.
+        def linha_chapada(l) -> bool:
+            m = max(2, (x1 - x0) // 32)
+            return so_tinta(p[:, l, x0 + m:x1 + 1 - m, :])
+
+        def coluna_chapada(c) -> bool:
+            m = max(2, (y1 - y0) // 32)
+            return so_tinta(p[:, y0 + m:y1 + 1 - m, c, :])
+
+        # DE CIMA E DE BAIXO PRIMEIRO: morto o vazio do painel na altura, as colunas
+        # que sobram sao tinta pura na faixa da filmagem, e a largura fecha certa.
+        # OS MUROS FICAM DENTRO DA CAIXA APARADA: a semente pode conter o enfeite que o
+        # 4c acabou de tirar, e um muro fora da caixa mandaria a retracao ANDAR PARA
+        # FORA, devolvendo o que ja' caiu.
+        y0 = recuar(y0, max(sy0, y0), linha_chapada)
+        y1 = recuar(y1, min(sy1, y1), linha_chapada)
+        x0 = recuar(x0, max(sx0, x0), coluna_chapada)
+        x1 = recuar(x1, min(sx1, x1), coluna_chapada)
 
         if (y1 - y0 + 1) * (x1 - x0 + 1) > 0.92 * alt * lar:
             return inteiro                          # tomou o quadro quase todo: sem card

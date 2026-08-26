@@ -908,7 +908,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   cursor:pointer;transition:color .14s}
 .ed-voltar:hover{color:var(--ink)}
 .ed-voltar svg{width:15px;height:15px}
-.ed-voltar.mini{margin-bottom:18px;font-size:12px}
+.ed-voltar.mini{margin-bottom:18px;font-size:12px;white-space:nowrap;padding-left:2px}
 .ed-levas{display:flex;flex-direction:column;gap:10px}
 /* A LEVA COMO LINHA LARGA, e não como cartãozinho quadrado: o Gabriel achou a primeira
    versão feia, e ela era mesmo. Um cartão de duzentos pixels com quatro linhas de texto
@@ -992,7 +992,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    porque o circulo e' o mesmo verde nos dois temas. */
 .btn.brasa:hover{color:#FFFFFF}
 .btn.brasa:hover .seta{stroke:#FFFFFF}
-.btn.grande{font-size:15px;padding:15px 32px;--desl:12px}
+.btn.grande{font-size:15px;padding:15px 34px;--desl:12px}
 .btn.grande .seta{width:16px;height:16px}
 .btn[disabled]{opacity:.45;pointer-events:none}
 /* QUEM PEDIU MENOS MOVIMENTO QUER MENOS MOVIMENTO: o botao continua respondendo, com a
@@ -1002,24 +1002,30 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 }
 
 /* ---------------------------------------------------------- 3 · a oficina */
-.ed-tela{display:grid;grid-template-columns:266px 1fr;gap:34px;align-items:start;
+.ed-tela{display:grid;grid-template-columns:250px 1fr;gap:34px;align-items:start;
   transition:grid-template-columns .42s cubic-bezier(.23,1,.32,1),
              gap .42s cubic-bezier(.23,1,.32,1)}
-/* A TRILHA RECOLHE, e o miolo ocupa o que sobra.
+/* O TRILHO E' O DO DESENHO APROVADO EM 25/08/2026, e a espinha nao volta.
 
-   O PEDIDO DELE, em 25/08/2026: "aquela barra daquela timeline deveria ser aquele tipo
-   de timeline que eu consigo fechar e abrir, tipo esconder e abrir, porque ai' eu
-   consigo deixar essa tela aqui centralizada". Fechada, sobra a coluna dos numeros: o
-   passo em que ele esta' continua visivel, que e' a unica coisa que a trilha precisa
-   dizer quando esta' fora do caminho.
+   A ESPINHA (numeros de 26 pixels, barra vertical que preenche, passos esticados pela
+   altura inteira do vidro) nasceu do rabisco dele em 19/08. Em 25/08 ele aprovou um
+   desenho novo para o passo 2 e, na conferencia ao vivo, comparou a tela com a imagem:
+   "nao ta' nada igual a' imagem de referencia que voce havia proposto". A referencia
+   agora e' o desenho: um trilho compacto, uma linha por passo, bolinha numerada com o
+   nome ao lado, e so' o passo de agora aceso em brasa.
 
-   O ESTADO MORA NO NAVEGADOR, e por isso a tela abre do jeito que ele deixou. */
-.ed-tela.trilho-fechado{grid-template-columns:62px 1fr;gap:20px}
-.ed-tela.trilho-fechado .ed-ponto-txt,
-.ed-tela.trilho-fechado .ed-voltar span{opacity:0;pointer-events:none}
-.ed-tela.trilho-fechado .ed-ponto-n{margin-left:0;text-align:center}
-.ed-tela.trilho-fechado .ed-voltar{padding-left:0;justify-content:center}
-.ed-puxador{width:30px;height:30px;flex:0 0 auto;margin-bottom:14px;border-radius:9px;
+   A TRILHA RECOLHE, e o miolo ocupa o que sobra. Fechada, ela guarda a coluna das
+   bolinhas: o passo em que ele esta' continua visivel, que e' a unica coisa que ela
+   precisa dizer quando esta' fora do caminho. O estado mora no navegador.
+
+   A BOLINHA NAO SAI DO LUGAR quando a trilha fecha: a coluna dos numeros e' fixa, o
+   texto desbota e a largura encolhe por cima dele. Recolher que reposiciona tudo
+   parece outra tela; recolher que so' apaga o texto parece a mesma tela respirando. */
+.ed-tela.trilho-fechado{grid-template-columns:64px 1fr;gap:20px}
+.ed-tela.trilho-fechado .ed-ponto-corpo,
+.ed-tela.trilho-fechado .ed-voltar,
+.ed-tela.trilho-fechado .ed-porvir{opacity:0;pointer-events:none}
+.ed-puxador{width:30px;height:30px;flex:0 0 auto;margin:0 0 18px 2px;border-radius:9px;
   border:1px solid var(--rule-solid);background:var(--paper-2);color:var(--muted);
   cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
   align-self:flex-start;transition:border-color .2s,color .2s}
@@ -1027,73 +1033,50 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-puxador:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .ed-puxador svg{width:15px;height:15px;
   transition:transform .42s cubic-bezier(.23,1,.32,1)}
-.ed-tela.trilho-fechado .ed-puxador{align-self:center}
 .ed-tela.trilho-fechado .ed-puxador svg{transform:rotate(180deg)}
-.ed-ponto-txt,.ed-voltar span{transition:opacity .28s}
-/* O TRILHO É TÃO ALTO QUANTO O VIDRO, e gruda enquanto a galeria rola por baixo.
-   Sem a altura fixa, `flex:1` nos passos não tem o que dividir e a espinha volta
-   a ser a caixinha de canto que o Gabriel reprovou duas vezes. */
-.ed-trilho{position:sticky;top:88px;display:flex;flex-direction:column;
-  height:calc(100vh - 150px);min-height:420px}
-/* O TRILHO É UMA ESPINHA QUE DESCE A TELA INTEIRA.
-
-   Terceira tentativa, e é a do rabisco que o Gabriel mandou em 19/08/2026: uma linha
-   vertical longa correndo pela lateral esquerda, com os números espalhados por ela, um
-   perto do topo, o seguinte mais abaixo, e assim por diante.
-
-   AS DUAS ANTERIORES ERRARAM O TAMANHO, não o desenho. A primeira era botão com ícone
-   num quadrado, que é menu. A segunda já tinha a linha que preenche, mas comprimida no
-   alto: dois passos dentro de duzentos e cinquenta pixels leem como uma caixinha de
-   canto, não como percurso. O que faz a coisa virar percurso é ela ocupar o caminho.
-
-   Por isso cada passo tem `flex:1`: eles dividem a altura do vidro entre si, e a linha
-   de um encosta na do outro, formando uma espinha contínua do topo ao pé da tela. */
-/* O PASSO NUNCA ENCOLHE ABAIXO DO QUE ELE TEM DENTRO.
-
-   ERA `flex:1` SECO, que e' `flex:1 1 0%`: o `1` do meio manda encolher, e o trilho
-   tinha altura travada em `100vh - 78px` dividida em quatro. Quando o passo 3 ganhou a
-   quinta subetapa, o conteudo passou a pedir 210 pixels num espaco de 184, e as 26 de
-   diferenca foram parar EM CIMA do passo 4: "peca a peca" escrito por cima de "04 A
-   legenda". Medido no navegador, nao estimado.
-
-   `flex:1 0 auto` MANTEM O CRESCER E TIRA O ENCOLHER. O trilho continua distribuindo a
-   sobra entre os quatro passos, mas nenhum deles fica menor do que precisa. */
-.ed-ponto{display:flex;flex-direction:column;cursor:pointer;opacity:.4;flex:1 0 auto;
-  min-height:0;transition:opacity .22s}
-.ed-ponto.ativo{opacity:1}
-.ed-ponto-n{margin:0 0 10px 24px;font-size:26px;font-weight:800;letter-spacing:-.03em;
-  color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
-.ed-ponto-corpo{display:flex;gap:18px;flex:1;min-height:0}
-/* A BARRA: um trilho apagado e, por cima, o preenchido, cuja altura é a medida do
-   avanço. Ela cresce com o passo, então numa tela alta ela fica longa mesmo. */
-.ed-barra{position:relative;flex:0 0 2px;width:2px;align-self:stretch;min-height:70px}
-.ed-barra i{position:absolute;inset:0;background:var(--rule-solid);border-radius:2px;
-  transform-origin:top}
-.ed-barra b{position:absolute;top:0;left:0;width:2px;border-radius:2px;
-  background:var(--accent);transition:height .42s cubic-bezier(.16,1,.3,1)}
-.ed-ponto-txt{padding-bottom:20px}
-.ed-ponto-txt h3{margin:-4px 0 3px;font-size:16px;font-weight:700;letter-spacing:-.01em}
-.ed-ponto-txt p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
-/* A ENTRADA NA OFICINA: a linha DESENHA de cima para baixo, e os passos aparecem atrás
-   dela. Não é enfeite, é o que separa "escolhi a leva" de "comecei a editar". */
-@keyframes ed-linha{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-@keyframes ed-sobe{from{opacity:0;transform:translateY(18px)}
-                   to{opacity:.4;transform:none}}
-@keyframes ed-sobe-ativo{from{opacity:0;transform:translateY(18px)}
+.ed-ponto-corpo,.ed-voltar span,.ed-porvir{transition:opacity .28s}
+/* O TRILHO GRUDA E SEPARA: ele acompanha a rolagem, e o fio da direita e' a divisa
+   entre o percurso e o palco. O `overflow:hidden` e' o que faz o fechar funcionar:
+   os nomes tem `nowrap`, entao quem os corta e' a largura da coluna. */
+.ed-trilho{position:sticky;top:88px;display:flex;flex-direction:column;gap:2px;
+  height:calc(100vh - 150px);min-height:420px;overflow:hidden;
+  border-right:1px solid var(--rule-solid)}
+/* UMA LINHA POR PASSO: bolinha de 30 com o numero, nome ao lado, estado embaixo.
+   So' o passo de AGORA fica aceso; os vencidos guardam o numero em tinta cheia. */
+.ed-ponto{display:flex;align-items:flex-start;gap:14px;padding:10px 12px 10px 2px;
+  cursor:pointer;opacity:.42;flex:0 0 auto;transition:opacity .22s}
+.ed-ponto:hover{opacity:.75}
+.ed-ponto.agora{opacity:1}
+.ed-ponto-n{flex:0 0 30px;width:30px;height:30px;display:flex;align-items:center;
+  justify-content:center;margin:0;font-size:13px;font-weight:800;line-height:1;
+  color:var(--soft);font-variant-numeric:tabular-nums;border-radius:50%;
+  border:1.5px solid transparent;transition:color .25s,border-color .25s}
+.ed-ponto.ativo .ed-ponto-n{color:var(--ink)}
+.ed-ponto.agora .ed-ponto-n{color:var(--accent);border-color:var(--accent)}
+.ed-ponto-corpo{display:block;flex:1;min-width:0}
+/* A BARRA VERTICAL DA ESPINHA MORREU COM ELA. O elemento continua no HTML porque o
+   programa ainda escreve a altura nele; quem o tira de cena e' esta linha. */
+.ed-barra{display:none}
+.ed-ponto-txt{padding:0}
+.ed-ponto-txt h3{margin:1px 0 2px;font-size:13.5px;font-weight:700;
+  letter-spacing:-.01em;color:var(--ink);white-space:nowrap}
+.ed-ponto-txt p{margin:0;font-size:11.5px;line-height:1.5;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* A ENTRADA NA OFICINA: os passos sobem um atras do outro. E' o que separa "escolhi
+   a leva" de "comecei a editar". */
+@keyframes ed-sobe{from{opacity:0;transform:translateY(14px)}
+                   to{opacity:.42;transform:none}}
+@keyframes ed-sobe-ativo{from{opacity:0;transform:translateY(14px)}
                          to{opacity:1;transform:none}}
-.ed-trilho.entrou .ed-barra i{animation:ed-linha .38s cubic-bezier(.16,1,.3,1) both}
 .ed-trilho.entrou .ed-ponto{animation:ed-sobe .34s cubic-bezier(.16,1,.3,1) both}
-.ed-trilho.entrou .ed-ponto.ativo{animation-name:ed-sobe-ativo}
-.ed-trilho.entrou .ed-ponto:nth-of-type(1) .ed-barra i{animation-delay:.05s}
+.ed-trilho.entrou .ed-ponto.agora{animation-name:ed-sobe-ativo}
 .ed-trilho.entrou .ed-ponto:nth-of-type(2){animation-delay:.06s}
-.ed-trilho.entrou .ed-ponto:nth-of-type(2) .ed-barra i{animation-delay:.30s}
 .ed-trilho.entrou .ed-ponto:nth-of-type(3){animation-delay:.12s}
-.ed-trilho.entrou .ed-ponto:nth-of-type(3) .ed-barra i{animation-delay:.55s}
+.ed-trilho.entrou .ed-ponto:nth-of-type(4){animation-delay:.18s}
 @media(prefers-reduced-motion:reduce){
-  .ed-trilho.entrou .ed-ponto,.ed-trilho.entrou .ed-barra i{animation:none}
-  .ed-barra b{transition:none}
+  .ed-trilho.entrou .ed-ponto{animation:none}
 }
-.ed-porvir{margin:6px 0 0 20px;padding-top:14px;border-top:1px dashed var(--rule-solid);
+.ed-porvir{margin:6px 0 0 2px;padding-top:14px;border-top:1px dashed var(--rule-solid);
   font-size:11.5px;line-height:1.5;color:var(--soft)}
 /* O CABECALHO ABRE ESPACO PARA O BOTAO DE SAIR, que flutua no canto de cima. Sem esta
    folga, a segunda linha do texto corre POR BAIXO dele: visto na conferencia de
@@ -1182,9 +1165,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-conta span{font-size:14px;color:var(--muted)}
 @media(max-width:900px){
   .ed-tela{grid-template-columns:1fr}
-  .ed-trilho{position:static;margin-bottom:24px}
-  .ed-barra{min-height:44px}
-  .ed-ponto-txt{padding-bottom:16px}
+  .ed-trilho{position:static;margin-bottom:24px;height:auto;min-height:0;
+    border-right:0;overflow:visible}
 }
 /* ================================================ O MODO FOCADO DA OFICINA
 
@@ -1212,6 +1194,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    não da página. */
 .ed-focado .ed-tela{min-height:100vh;padding:26px clamp(20px,3vw,44px) 60px;
   grid-template-columns:250px 1fr;gap:40px;position:relative}
+/* O MODO FOCADO REPETE AS COLUNAS, e por vir DEPOIS na folha ele ganhava do
+   trilho-fechado no empate de especificidade: o texto da trilha desbotava e a coluna
+   continuava larga, que e' exatamente a trilha "esquisita" que o Gabriel viu em
+   25/08/2026. Quem fecha por cima do focado e' esta linha. */
+.ed-focado .ed-tela.trilho-fechado{grid-template-columns:64px 1fr;gap:20px}
 /* A ENTRADA: tudo sobe junto, e é isto que diz "começou". Sem ela a troca de tela é um
    pisca, e a oficina parece que já estava aberta o tempo todo. */
 @keyframes ed-entra{from{opacity:0;transform:translateY(20px)}
@@ -1436,10 +1423,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .rec-quadro{position:relative;width:clamp(190px,21vw,300px);aspect-ratio:9/16;
   height:auto;border-radius:12px;overflow:hidden;background:var(--paper-2);
   border:1px solid var(--rule-solid)}
-.rec-quadro video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+.rec-quadro video,.rec-quadro canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
   background:transparent}
 .rec-corte{background:#000;border-color:#000}
-.rec-corte video{inset:0;width:100%;height:100%;object-fit:contain}
+.rec-corte video,.rec-corte canvas{inset:0;width:100%;height:100%;object-fit:contain}
 .rec-marca{position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,.66);
   border:2px solid #FFFFFF;border-radius:6px;pointer-events:none}
 .rec-marca[hidden]{display:none}
@@ -1453,7 +1440,49 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    defeito que este projeto passou dois dias caçando. */
 .rec-diz{margin:0;text-align:center;font-size:13px;color:var(--muted);min-height:0}
 .rec-diz:empty{display:none}
-.rec-diz.ruim{color:var(--vermelho)}
+/* O AVISO DE PROBLEMA E' UM CARTAO COM SIMBOLO, nao um rodape. Pedido dele em
+   26/08/2026, ao ver a frase perdida embaixo dos videos: "deveria aparecer com um
+   pouco mais de destaque... bota um card, bota um simbolo de alerta. So' a frase
+   solta ali nao e' legal". */
+.rec-diz.ruim{display:flex;align-items:center;gap:12px;width:fit-content;max-width:64ch;
+  margin:0 auto;padding:13px 20px;text-align:left;font-size:13.5px;font-weight:600;
+  color:var(--vermelho);border-radius:12px;
+  border:1px solid color-mix(in srgb, var(--vermelho) 45%, transparent);
+  background:color-mix(in srgb, var(--vermelho) 10%, transparent)}
+.rec-diz.ruim::before{content:"!";flex:0 0 22px;width:22px;height:22px;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;border-radius:50%;
+  border:1.5px solid currentColor;font-weight:800;font-size:13px}
+
+/* ============================================== O MEDINDO VIROU COISA QUE SE VE
+
+   O PEDIDO DELE, em 25/08/2026: "deveria ter uma barra de carregamento ou algum sistema
+   de carregamento mais claro". O recado de texto era uma palavra parada; agora o proprio
+   quadro do recorte mostra a procura: uma linha brasa desce e sobe enquanto o sistema
+   busca o retangulo da filmagem, com um rotulo dizendo o que acontece. Chegou a medida,
+   a varredura some e entra o resultado. */
+/* ENQUANTO MEDE, O CRU NAO APARECE: o lado direito mostrando o video inteiro com a
+   varredura por cima dizia que o recorte tinha dado errado antes de ter acontecido.
+   Preto com a linha correndo e' espera; video cheio no lado do recorte e' resposta. */
+.rec-quadro.medindo video,.rec-quadro.medindo canvas{visibility:hidden}
+/* AS DUAS ESPERAS TEM NOME: enquanto o video desce pela rede, a varredura corre no
+   quadro da ESQUERDA dizendo "Abrindo O Reel"; aberta a imagem, ela corre so' na
+   direita, medindo. Antes a primeira espera era tela preta calada, e ele chamou de
+   bugado exatamente o que era silencio ("nem aparece medindo o reel nem nada"). */
+.rec-quadro.medindo.abrindo::after{content:"Abrindo O Reel"}
+.rec-quadro.medindo::before{content:"";position:absolute;left:7%;right:7%;top:8%;
+  height:2px;border-radius:2px;background:var(--accent);opacity:.95;z-index:2;
+  box-shadow:0 0 16px 2px color-mix(in srgb, var(--accent) 55%, transparent);
+  animation:rec-varre 1.5s cubic-bezier(.45,0,.55,1) infinite alternate}
+@keyframes rec-varre{from{top:8%}to{top:calc(92% - 2px)}}
+.rec-quadro.medindo::after{content:"Medindo O Reel";position:absolute;left:50%;
+  bottom:12px;transform:translateX(-50%);z-index:2;font-size:11px;font-weight:700;
+  white-space:nowrap;color:var(--ink);padding:5px 12px;border-radius:999px;
+  border:1px solid var(--rule-solid);
+  background:color-mix(in srgb, var(--paper) 82%, transparent);
+  backdrop-filter:blur(4px)}
+@media (prefers-reduced-motion: reduce){
+  .rec-quadro.medindo::before{animation:none;top:50%}
+}
 
 /* =========================================== A BARRA DO RECORTE: UMA MARCA POR PECA
 

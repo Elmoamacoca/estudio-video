@@ -3519,8 +3519,13 @@ $("ed_nova").onclick = () => {
   mostrarTela("escolha");
 };
 $("ed_volta_portaria").onclick = () => mostrarTela("portaria");
-$("ed_sair").onclick = () => { salvarRascunho(); mostrarTela("portaria"); };
+$("ed_sair").onclick = () => {
+  salvarRascunho();
+  try { localStorage.removeItem("estudio.leva.aberta"); } catch (e) {}
+  mostrarTela("portaria");
+};
 $("ed_volta_escolha").onclick = () => {
+  try { localStorage.removeItem("estudio.leva.aberta"); } catch (e) {}
   desenhaLevasDaEdicao(ULTIMO_INDICE);
   mostrarTela("escolha");
 };
@@ -3583,6 +3588,11 @@ async function entrarNaOficina(passo, rasc) {
   // A saída suave continua valendo para os outros caminhos, onde não há nada carregando
   // atrás. Aqui não: clicou na leva, a oficina está lá.
   mostrarTela("oficina", true);
+  /* A LEVA ABERTA FICA ANOTADA NO NAVEGADOR, e e' ela que o F5 reabre sozinho: ele
+     deu F5 no meio do recorte e a tela o largou na portaria, sem leva e sem status
+     ("saiu da pagina que eu estava"). Sair da edicao ou trocar de leva desanota. */
+  try { localStorage.setItem("estudio.leva.aberta", String(EDIT_LEVA.numero)); }
+  catch (e) {}
   $("ed_r1").textContent = `leva ${EDIT_LEVA.numero}`;
   $("ed_p1_titulo").textContent = `Leva ${EDIT_LEVA.numero}`;
   $("ed_p1_n").textContent = num(EDIT_LEVA.limpos || 0);
@@ -4116,6 +4126,24 @@ document.addEventListener("click", async ev => {
 
 desenhaRascunhos();
 
+/* O F5 VOLTA PARA A LEVA ABERTA, no passo em que ele estava, com os vigias armados.
+   O caminho e' o MESMO do cartao de rascunho da portaria; a unica diferenca e' que
+   ninguem precisa clicar. So' age na aba de edicao e so' quando ha' leva anotada. */
+async function retomarLevaAberta() {
+  if ((location.hash || "").slice(1) !== "editar") return;
+  let n = null;
+  try { n = Number(localStorage.getItem("estudio.leva.aberta")) || null; }
+  catch (e) {}
+  if (!n || EDIT_LEVA || ENCERRADAS.has(n)) return;
+  const todos = (await listarRascunhos()) || [];
+  const r = todos.find(x => x.leva === n);
+  if (!r) return;
+  EDIT_RASCUNHO = r;
+  EDIT_LEVA = (LOTES || []).find(l => l.numero === n) || { numero: n };
+  await entrarNaOficina(r.passo || 1, r);
+}
+retomarLevaAberta().catch(() => {});
+
 /* ------------------------------------------------------------------- a partida
 
    OS RELÓGIOS SÃO LIGADOS ANTES DA PRIMEIRA PINTURA, de propósito.
@@ -4160,6 +4188,7 @@ atualizar().then(aoVivo);
    o passo 2 mostraria como exemplo justamente uma peca que ele acabou de descartar, ou
    trocaria de exemplo sozinho sem ninguem ter pedido. O nome do arquivo nao se desloca. */
 let REC_NOME = "";                 // qual peça está sendo conferida
+let REC_PROXIMO = "";              // o reel que o posto já está medindo de antemão
 let REC_ACHADO = null;             // o B-roll medido nela
 let REC_OBRA = null;               // o pedido de recorte em curso
 
@@ -4187,6 +4216,14 @@ async function verOutroReel() {
   const lista = pecas1();
   if (!lista.length) return;
   let i = Math.floor(Math.random() * lista.length);
+  // O SORTEIO PREFERE QUEM JA' FOI MEDIDO. O clique anterior deixou o posto medindo um
+  // reel de antemao; se ele ainda esta' na leva, e' ele que entra, e a espera da medida
+  // some. Se ele saiu da leva no passo 1, o sorteio comum decide.
+  if (REC_PROXIMO && REC_PROXIMO !== REC_NOME) {
+    const j = lista.findIndex(x => x.nome === REC_PROXIMO);
+    if (j >= 0) i = j;
+  }
+  REC_PROXIMO = "";
   if (lista.length > 1) {
     let voltas = 0;
     while (lista[i].nome === REC_NOME && voltas++ < 30)
@@ -4194,8 +4231,15 @@ async function verOutroReel() {
   }
   REC_NOME = lista[i].nome;
   rotuloDoReel(REC_NOME);
-  const v = $("rec_video"), corte = $("rec_corte");
-  $("rec_diz").textContent = "medindo…";
+  const v = $("rec_video");
+  // O MEDINDO DEIXOU DE SER PALAVRA E VIROU VARREDURA, pedido de 25/08/2026. E desde
+  // 26/08 ha' DUAS esperas com nome: "Abrindo O Reel" na esquerda enquanto o video
+  // desce pela rede, e "Medindo O Reel" na direita ate' a medida chegar. As classes tem
+  // de desligar em TODOS os fins possiveis, senao a varredura roda para sempre.
+  $("rec_diz").textContent = "";
+  $("rec_diz").classList.remove("ruim");
+  $("rec_fonte").classList.add("medindo", "abrindo");
+  $("rec_saida").classList.add("medindo");
   $("rec_marca").hidden = true;
   // A PROMESSA NASCE AQUI FORA porque ela é colhida lá embaixo, depois do `try`. Dentro
   // dele, `const` fica presa ao bloco e a colheita daria erro de nome, que o `node
@@ -4209,9 +4253,8 @@ async function verOutroReel() {
     // posto já ecoa o cabeçalho de origem para as telas conhecidas; em mesma origem o
     // atributo é inofensivo.
     v.crossOrigin = "anonymous";
-    corte.crossOrigin = "anonymous";
     v.dataset.url = u;
-    v.src = u; corte.src = u;
+    v.src = u;
     // A MEDIDA SAI JUNTO COM O VIDEO, e nao depois dele. As duas esperas nao dependem
     // uma da outra: o posto mede lendo o disco dele, e o navegador abre o arquivo pela
     // rede. Enfileiradas, somavam; lado a lado, vale a mais demorada das duas.
@@ -4236,6 +4279,8 @@ async function verOutroReel() {
         () => { clearTimeout(prazo); ok(false); }, { once: true });
     });
     if (!abriu) {
+      $("rec_fonte").classList.remove("medindo", "abrindo");
+      $("rec_saida").classList.remove("medindo");
       // O RECADO NAO CHUTA CULPADO. Ele acusava o arquivo de estar estragado, e em
       // 25/08/2026 o Gabriel viu essa frase com o CABO DA INTERNET desconectado: o
       // arquivo estava inteiro do outro lado. Daqui nao da' para separar arquivo ruim
@@ -4246,13 +4291,28 @@ async function verOutroReel() {
       return;
     }
   } catch (e) {
+    $("rec_fonte").classList.remove("medindo", "abrindo");
+    $("rec_saida").classList.remove("medindo");
     $("rec_diz").textContent = "não consegui abrir este arquivo.";
     return;
   }
+  $("rec_fonte").classList.remove("medindo", "abrindo");
   v.play().catch(() => {});
-  corte.play().catch(() => {});
   REC_ACHADO = await medida;
+  $("rec_saida").classList.remove("medindo");
   desenhaRecorteExemplo();
+
+  /* A DEMORA DO MEDINDO, vista por ele em 25/08/2026: "so' to' achando bem lento". A
+     medida do posto leva um a quatro segundos por video na primeira vez, e ZERO nas
+     seguintes, porque o posto guarda por arquivo. Entao o proximo sorteado ja' fica
+     escolhido AGORA, e o posto mede enquanto ele ainda olha este; o clique seguinte
+     acha a medida pronta. A resposta morre aqui: o ganho e' so' esquentar a guarda. */
+  const resto = lista.filter(x => x.nome !== REC_NOME);
+  if (resto.length) {
+    const px = resto[Math.floor(Math.random() * resto.length)];
+    REC_PROXIMO = px.nome;
+    esquentarAMedida(px);
+  }
 }
 
 /* O ESPELHO EXATO DO QUE O `oficina.py` GRAVA: o mesmo retângulo, na esquerda marcado
@@ -4262,12 +4322,22 @@ function desenhaRecorteExemplo() {
   const v = $("rec_video");
   const lar = v.videoWidth || 1080, alt = v.videoHeight || 1920;
   const b = REC_ACHADO || { x: 0, y: 0, w: 1, h: 1, modo: "tela cheia" };
+  /* AS FRACOES DA MEDIDA SAO DO QUADRO DO VIDEO, e o quadro da tela e' 9:16 com
+     `object-fit:contain`: video fora de 9:16 aparece com faixas, e uma porcentagem
+     aplicada ao ELEMENTO cai na faixa, nao no video. A marca e o recorte ficavam
+     deslocados e menores exatamente nos reels fora da medida. A caixa do conteudo
+     converte: primeiro onde o video mora dentro do quadro, depois a fracao dentro
+     do video. */
+  const qa = TELA.w / TELA.h, va = lar / alt;
+  const cw = va >= qa ? 1 : va / qa;
+  const ch = va >= qa ? qa / va : 1;
+  const ce = (1 - cw) / 2, ct = (1 - ch) / 2;
   const m = $("rec_marca");
   m.hidden = false;
-  m.style.left = (b.x * 100) + "%";
-  m.style.top = (b.y * 100) + "%";
-  m.style.width = (b.w * 100) + "%";
-  m.style.height = (b.h * 100) + "%";
+  m.style.left = ((ce + b.x * cw) * 100) + "%";
+  m.style.top = ((ct + b.y * ch) * 100) + "%";
+  m.style.width = (b.w * cw * 100) + "%";
+  m.style.height = (b.h * ch * 100) + "%";
 
   /* O LADO DIREITO É A PEÇA DE REELS INTEIRA, e não o retângulo recortado. O Gabriel
      corrigiu isso em 20/08/2026: "era pra pegar o formato do reel e só jogar um fundo
@@ -4278,13 +4348,18 @@ function desenhaRecorteExemplo() {
   saida.style.width = "";
   saida.style.height = "";
   saida.style.aspectRatio = TELA.w + "/" + TELA.h;
-  c.style.width = "100%";
-  c.style.height = "100%";
-  c.style.left = "0";
-  c.style.top = "0";
-  // O RECORTE APARECE PELA FORMA DELE, e não por um retângulo: se a borda do card é
-  // arredondada, o canto sai arredondado aqui como sai no arquivo.
-  c.style.clipPath = recorteEmForma(b);
+  /* O ESPELHO NAO BAIXA UMA SEGUNDA COPIA DO VIDEO. Ele era um segundo <video> com o
+     mesmo endereco: o navegador abria OUTRA descarga do mesmo arquivo, e numa conexao
+     de casa ela ficava para tras: a medida chegava, a marca aparecia na esquerda e a
+     direita seguia PRETA, calada. Visto ao vivo em 26/08/2026. Agora a direita e' uma
+     PINTURA do video da esquerda, quadro a quadro, com a forma medida por cima: uma
+     descarga so', os dois lados sempre no mesmo instante. A caixa do conteudo continua
+     valendo: o desenho ocupa o lugar exato do quadro do video. */
+  c.style.width = (cw * 100) + "%";
+  c.style.height = (ch * 100) + "%";
+  c.style.left = (ce * 100) + "%";
+  c.style.top = (ct * 100) + "%";
+  pintarOEspelho(v, c, b, lar, alt);
 
   // O RODAPE DE MEDIDAS SAIU em 25/08/2026: "esse rodape' que voce colocou, reels tem
   // tanto e a peca sai por tanto, nao quero isso". A medida nao mudava decisao nenhuma
@@ -4308,24 +4383,59 @@ function desenhaRecorteExemplo() {
     + "gravar; clique em Ver Outro Reel para conferir o método com outra peça.";
 }
 
-/** A forma do B-roll como recorte de CSS: desce pela borda esquerda e volta pela direita. */
-function recorteEmForma(b) {
+/** A forma do B-roll como caminho de desenho: desce pela borda esquerda e volta
+    pela direita. Canto arredondado sai arredondado, como sai no arquivo gravado. */
+function formaDoRecorte(b, lar, alt) {
+  const forma = new Path2D();
   const linhas = b.linhas;
-  if (!linhas || !linhas.length)
-    return "inset(" + (b.y * 100) + "% " + ((1 - b.x - b.w) * 100) + "% "
-      + ((1 - b.y - b.h) * 100) + "% " + (b.x * 100) + "%)";
-  // UM PONTO A CADA POUCAS LINHAS BASTA. O contorno tem uma linha por pixel da análise, e
-  // um `clip-path` com trezentos pares é peso à toa para uma curva que o olho lê igual.
-  const passo = Math.max(1, Math.round(linhas.length / 40));
+  if (!linhas || !linhas.length) {
+    forma.rect(b.x * lar, b.y * alt, b.w * lar, b.h * alt);
+    return forma;
+  }
+  // UM PONTO A CADA POUCAS LINHAS BASTA: o contorno tem uma linha por pixel da analise,
+  // e um caminho com trezentos pares e' peso a' toa para uma curva que o olho le igual.
+  const passo = Math.max(1, Math.round(linhas.length / 60));
   const esq = [], dir = [];
   for (let i = 0; i < linhas.length; i += passo) {
     if (!linhas[i]) continue;
-    const y = ((b.y + b.h * (i + 0.5) / linhas.length) * 100).toFixed(2) + "%";
-    esq.push((linhas[i][0] * 100).toFixed(2) + "% " + y);
-    dir.push((linhas[i][1] * 100).toFixed(2) + "% " + y);
+    const y = (b.y + b.h * (i + 0.5) / linhas.length) * alt;
+    esq.push([linhas[i][0] * lar, y]);
+    dir.push([linhas[i][1] * lar, y]);
   }
-  if (esq.length < 2) return "inset(0)";
-  return "polygon(" + esq.concat(dir.reverse()).join(",") + ")";
+  if (esq.length < 2) {
+    forma.rect(b.x * lar, b.y * alt, b.w * lar, b.h * alt);
+    return forma;
+  }
+  forma.moveTo(esq[0][0], esq[0][1]);
+  for (let i = 1; i < esq.length; i++) forma.lineTo(esq[i][0], esq[i][1]);
+  for (let i = dir.length - 1; i >= 0; i--) forma.lineTo(dir[i][0], dir[i][1]);
+  forma.closePath();
+  return forma;
+}
+
+/* O PINTOR DO ESPELHO. Um laco por quadro do video: limpa, recorta pela forma medida e
+   desenha o quadro da esquerda. A GERACAO mata o laco antigo quando outro reel assume:
+   sem ela, dois lacos pintariam o mesmo quadro com formas de reels diferentes. */
+let ESPELHO_GERACAO = 0;
+function pintarOEspelho(v, c, b, lar, alt) {
+  const minha = ++ESPELHO_GERACAO;
+  c.width = lar;
+  c.height = alt;
+  const g = c.getContext("2d");
+  const forma = formaDoRecorte(b, lar, alt);
+  const pinta = () => {
+    if (minha !== ESPELHO_GERACAO) return;
+    g.clearRect(0, 0, lar, alt);
+    g.save();
+    g.clip(forma);
+    try { g.drawImage(v, 0, 0, lar, alt); } catch (e) {}
+    g.restore();
+    // O LACO ACOMPANHA OS QUADROS DO VIDEO quando o navegador sabe avisar deles; nos
+    // que nao sabem, pinta a cada poucos quadros de tela, que para conferencia basta.
+    if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(() => pinta());
+    else setTimeout(() => requestAnimationFrame(pinta), 40);
+  };
+  pinta();
 }
 
 $("rec_sortear").onclick = () => verOutroReel();
@@ -4689,6 +4799,10 @@ $("rec_aplicar").onclick = async () => {
       + "programa que faz esse trabalho na casa do Estúdio.";
     REC_OBRA.relogio = setInterval(olharORecorte, 3000);
     olharORecorte();
+    // O VIGIA VAI PARA O RASCUNHO NA HORA. Sem esta linha, um F5 logo depois do
+    // clique perdia o pedido: a esteira trabalhava e a tela voltava muda, que foi
+    // exatamente o que o Gabriel viu em 26/08/2026.
+    salvarRascunho();
   } catch (e) {
     $("rec_aplicar").disabled = false;
     $("rec_obra").hidden = false;
@@ -4904,6 +5018,16 @@ async function medirOBroll(item) {
   } catch (e) {
     return null;
   }
+}
+
+/** Pede ao posto a medida de um reel que AINDA nao esta' na tela, so' para ele
+    guardar. Pela pasta do navegador nao ha' o que esquentar: a medida e' local. */
+function esquentarAMedida(item) {
+  if (!item || item.h) return;
+  try {
+    const onde = pastaDaLeva() + "/" + item.nome;
+    fetch(POSTO + "/broll?onde=" + encodeURIComponent(onde)).catch(() => {});
+  } catch (e) {}
 }
 
 /* A JANELA DO B-ROLL, aqui no navegador, pelo mesmo método do `oficina.py`.
@@ -9155,6 +9279,7 @@ $("apl_montar").onclick = async () => {
       + "do programa que faz esse trabalho na casa do Estúdio.";
     OBRA.relogio = setInterval(olharAObra, 3000);
     olharAObra();
+    salvarRascunho();          // o vigia sobrevive ao F5; mesma razao do recorte
   } catch (e) {
     $("apl_montar").disabled = false;
     $("apl_obra").hidden = false;
@@ -9986,6 +10111,7 @@ async function pedirEntrega(subir) {
     const olhar = olharOPedido(ENT_OBRA, andouAEntrega, terminouAEntrega);
     ENT_OBRA.relogio = setInterval(olhar, 3000);
     olhar();
+    salvarRascunho();          // o vigia sobrevive ao F5; mesma razao do recorte
   } catch (e) {
     parado("ent_aviso", e.message);
     $("ent_subir").disabled = $("ent_so_pacote").disabled = false;

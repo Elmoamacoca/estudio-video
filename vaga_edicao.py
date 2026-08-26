@@ -46,6 +46,24 @@ def baixar(base: str, ficha: str, rel: str, destino: Path) -> None:
         shutil.copyfileobj(r, f, 1024 * 256)
 
 
+def avisar(base: str, ficha: str, numero: int, marcas: str, atual: str) -> None:
+    """Conta a' casa o andamento DESTA fatia, peca a peca, para a barra andar AO VIVO.
+
+    A COLHEITA SO' CHEGA NO FIM DA VAGA, e ate' la' a tela ficava parada em zero por
+    dez minutos: o Gabriel viu e cobrou ("deve mostrar AO VIVO"). O aviso e' de
+    cortesia: falhou, a vaga segue trabalhando, e a colheita continua sendo a unica
+    autoridade sobre o resultado."""
+    try:
+        corpo = json.dumps({"marcas": marcas, "atual": atual}).encode("utf-8")
+        req = urllib.request.Request(f"{base}/sinal/{ficha}/{numero}", data=corpo,
+                                     headers={"Content-Type": "application/json"})
+        if SEGREDO:
+            req.add_header("X-Estudio-Vaga", SEGREDO)
+        urllib.request.urlopen(req, timeout=8).read()
+    except Exception:                                               # noqa: BLE001
+        pass
+
+
 def _manifesto(base: str, ficha: str) -> dict:
     req = urllib.request.Request(f"{base}/retirada/{ficha}/_manifesto")
     if SEGREDO:
@@ -79,6 +97,7 @@ def main() -> int:
     # o que houver ate' ali: um pacote sem laudo travava a colheita do despacho inteiro
     # (auditoria de 25/08/2026), porque o colhedor nao sabia contar essa fatia nem
     # desistir dela. Com o laudo sempre presente, fatia incompleta e' fatia contada.
+    sinais = ""
     try:
         if tipo == "recorte":
             origem = CASA_LOCAL / "levas" / pasta
@@ -106,6 +125,12 @@ def main() -> int:
                     ficha_pecas.append(oficina.ficha_da_peca(nome, achado, laudo, modo))
                     print(f"  {feitos + falhas}/{len(fatia)} {nome}: {modo}, "
                           f"{laudo['segundos']}s")
+                # A LETRA DESTA PECA VAI PARA A CASA NA HORA, com o mesmo alfabeto
+                # da barra da tela: c=card, v=cheio, ?=nao consegui olhar, f=falhou.
+                sinais += ("f" if laudo.get("erro")
+                           else "c" if modo == "card"
+                           else "?" if modo == "nao consegui olhar" else "v")
+                avisar(base, ficha, numero, sinais, nome)
                 # O DISCO DA VAGA E' PEQUENO E EMPRESTADO: o bruto ja' usado sai na hora.
                 (origem / nome).unlink(missing_ok=True)
         else:
@@ -149,6 +174,8 @@ def main() -> int:
                     feitos += 1
                     print(f"  {feitos + falhas}/{len(fatia)} {nome}: "
                           f"{laudo['segundos']}s")
+                sinais += "f" if laudo.get("erro") else "c"
+                avisar(base, ficha, numero, sinais, nome)
                 (CASA_LOCAL / rel_video).unlink(missing_ok=True)
     finally:
         (SAIDA).mkdir(parents=True, exist_ok=True)
