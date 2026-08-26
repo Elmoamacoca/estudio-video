@@ -768,11 +768,12 @@
             <h3>Montagem Da Peça</h3>
             <p id="ed_r3">nenhum escolhido</p>
             <ol class="ed-sub" id="ed_sub3">
-              <li data-sub="1"><i></i>Caixas De Texto</li>
-              <li data-sub="2"><i></i>Imagens Do Template</li>
-              <li data-sub="3"><i></i>Escrita Das Frases</li>
-              <li data-sub="4"><i></i>Prévia Do Resultado</li>
-              <li data-sub="5"><i></i>Revisão Peça A Peça</li>
+              <li data-sub="1"><i></i>Modelo Do Template</li>
+              <li data-sub="2"><i></i>Caixas De Texto</li>
+              <li data-sub="3"><i></i>Imagens Do Template</li>
+              <li data-sub="4"><i></i>Escrita Das Frases</li>
+              <li data-sub="5"><i></i>Prévia Do Resultado</li>
+              <li data-sub="6"><i></i>Revisão Peça A Peça</li>
             </ol>
           </div>
         </div>
@@ -927,31 +928,46 @@
         <div class="rec-acoes">
           <button class="btn grande" id="rec_sortear" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ver Outro Reel</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
           <button class="btn grande brasa" id="rec_aplicar" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Recortar</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-          <div class="apl-feito" id="rec_feito" hidden>
-            <a class="btn" id="rec_pasta" href="#"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Abrir A Pasta Dos Recortes</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
-            <button class="btn brasa" id="rec_segue" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ir Para O Passo 3</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-          </div>
         </div>
 
         <!-- A BARRA NOVA: uma marca por peca. Ver a nota do `.rec-tiras` no estilo. -->
         <div class="caixa apl-obra" id="rec_obra" hidden>
-          <div class="apl-obra-topo">
-            <b id="rec_obra_txt">recortando</b>
-            <span class="dir" id="rec_obra_tempo"></span>
+          <!-- O MIOLO VIVO fica num embrulho proprio para poder SUMIR de uma vez na
+               animacao do fecho, dando lugar ao selo de verificado logo abaixo. -->
+          <div class="rec-vivo" id="rec_vivo">
+            <div class="apl-obra-topo">
+              <b id="rec_obra_txt">recortando</b>
+              <span class="dir" id="rec_obra_tempo"></span>
+            </div>
+            <div class="rec-conta">
+              <b id="rec_feitas">0</b><span id="rec_de">de 0 peças recortadas</span>
+              <span class="agora" id="rec_atual"></span>
+            </div>
+            <div class="rec-tiras" id="rec_tiras"></div>
+            <div class="rec-selos">
+              <span><i class="card"></i>Recortadas <b id="rec_s_card">0</b></span>
+              <span><i class="cheio"></i>Sem Card, Vídeo Inteiro <b id="rec_s_cheio">0</b></span>
+              <span><i class="falhou"></i>Não Abriram <b id="rec_s_falhou">0</b></span>
+              <span>Correndo Há <b id="rec_s_tempo">0s</b></span>
+              <span>Falta <b id="rec_s_falta">calculando</b></span>
+            </div>
+            <p class="nota" id="rec_obra_nota"></p>
           </div>
-          <div class="rec-conta">
-            <b id="rec_feitas">0</b><span id="rec_de">de 0 peças recortadas</span>
-            <span class="agora" id="rec_atual"></span>
+          <!-- O SELO DO FECHO: "quero uma animacao, que toda essa barra suma e fique
+               apenas um simbolo de verificado informando que esta 100% pronta". -->
+          <div class="rec-fecho" id="rec_fecho" hidden>
+            <svg class="ok" viewBox="0 0 52 52" aria-hidden="true">
+              <circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 14-15"/></svg>
+            <b id="rec_fecho_txt"></b>
           </div>
-          <div class="rec-tiras" id="rec_tiras"></div>
-          <div class="rec-selos">
-            <span><i class="card"></i>Recortadas <b id="rec_s_card">0</b></span>
-            <span><i class="cheio"></i>Sem Card, Vídeo Inteiro <b id="rec_s_cheio">0</b></span>
-            <span><i class="falhou"></i>Não Abriram <b id="rec_s_falhou">0</b></span>
-            <span>Correndo Há <b id="rec_s_tempo">0s</b></span>
-            <span>Falta <b id="rec_s_falta">calculando</b></span>
-          </div>
-          <p class="nota" id="rec_obra_nota"></p>
+        </div>
+
+        <!-- OS BOTOES DO FIM MORAM ABAIXO DA CAIXA DO ANDAMENTO, e nao junto dos
+             reels: "esses dois botoes devem ficar abaixo dessa tela onde faz o
+             carregamento" (26/08/2026). -->
+        <div class="apl-feito rec-adiante" id="rec_feito" hidden>
+          <a class="btn" id="rec_pasta" href="#"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Abrir A Pasta Dos Recortes</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+          <button class="btn brasa" id="rec_segue" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ir Para O Passo 3</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
         </div>
       </div>
 
@@ -971,7 +987,65 @@
       <div class="ed-etapa" data-passo="3" hidden>
 
         <!-- ................................................ 3.1 · O TEXTO -->
+        <!-- ........................................ 3.1 · O MODELO DO TEMPLATE
+
+             O QUE ELE PEDIU, em 26/08/2026: "a primeira subetapa é escolher o modelo de
+             template... poder upar templates e já ter um catálogo ali de templates que eu
+             vou estar upando, não é pra você criar, que eu vou estar upando. E eu escolho
+             ali, pra essa leva, qual é o template".
+
+             O DESENHO E' O QUE ELE APROVOU no mesmo dia, a proposta do PAR: os dois
+             quadros grandes lado a lado, o mesmo desenho do passo 2, com a arte crua a'
+             esquerda e a peca ja' vestida a' direita. "gostei desse, aprovado".
+
+             A ARTE E' A MOLDURA, e o recorte do passo 2 entra DENTRO da janela dela. O
+             canto arredondado vem do proprio desenho da arte, porque a moldura cobre a
+             filmagem: por isso nao ha' controle de raio em lugar nenhum desta tela. -->
         <div class="ed-sub-tela" data-sub="1">
+          <div class="ed-cab">
+            <h2>Modelo Do Template</h2>
+            <p class="nota" id="mp_recado">A arte escolhida veste a leva inteira.</p>
+          </div>
+
+          <div class="ed-tres mp-tres">
+            <aside class="ed-lado">
+              <section class="ed-bloco">
+                <h4>Minhas Artes</h4>
+                <!-- COM TETO: sem ele a pilha cresce a cada arte subida e empurra a
+                     coluna para fora da tela. -->
+                <ul class="ed-camadas mp-lista" id="mp_lista"></ul>
+              </section>
+
+              <section class="ed-bloco">
+                <button class="acao mini larga" type="button" id="mp_subir">Subir Arte</button>
+                <input type="file" id="mp_arquivo" accept="image/png,image/jpeg,image/webp"
+                       multiple hidden>
+              </section>
+            </aside>
+
+            <div class="ed-meio">
+              <div class="rec-par" id="mp_par">
+                <div class="rec-lado">
+                  <div class="rec-rotulo">A Arte</div>
+                  <div class="rec-quadro mp-quadro" id="mp_arte"></div>
+                </div>
+                <div class="rec-lado">
+                  <div class="rec-rotulo">A Peça Montada</div>
+                  <div class="rec-quadro mp-quadro" id="mp_peca">
+                    <video id="mp_video" preload="metadata" muted playsinline loop></video>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rec-acoes">
+                <button class="btn grande" id="mp_outra" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ver Outra Peça</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+                <button class="btn grande brasa" id="mp_usar" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Usar Nesta Leva</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ed-sub-tela" data-sub="2" hidden>
           <div class="ed-cab">
             <h2>Caixas De Texto</h2>
             <p class="nota">Onde a escrita fica na peça, com que letra, e o que a IA pode
@@ -1080,7 +1154,7 @@
         </div>
 
         <!-- ................................................ 3.2 · AS IMAGENS -->
-        <div class="ed-sub-tela" data-sub="2" hidden>
+        <div class="ed-sub-tela" data-sub="3" hidden>
           <div class="ed-cab">
             <h2>Imagens Do Template</h2>
             <p class="nota">Logo, selo, qualquer PNG. Travar aqui é travar a posição, e
@@ -1154,7 +1228,7 @@
         </div>
 
         <!-- ................................................ 3.3 · A IA ESCREVE -->
-        <div class="ed-sub-tela" data-sub="3" hidden>
+        <div class="ed-sub-tela" data-sub="4" hidden>
           <div class="ed-cab">
             <h2>Escrita Das Frases</h2>
             <!-- ESTA FASE NAO PERGUNTA NADA, e isso e' conserto. Ela pedia o texto de
@@ -1226,7 +1300,7 @@
              inteira de conversão, e cada ajuste depois obrigaria a fabricar tudo de novo.
              Desenhadas na tela elas aparecem na hora, ele mexe à vontade, e a fabricação
              acontece uma vez só, no fim, já aprovada. -->
-        <div class="ed-sub-tela" data-sub="4" hidden>
+        <div class="ed-sub-tela" data-sub="5" hidden>
           <div class="ed-cab">
             <h2>Prévia Do Resultado</h2>
             <p class="nota">Todas de uma vez, como vão ficar. É aqui que você vê o
@@ -1334,7 +1408,7 @@
              a fonte (só nesta peça ou em todas) e o enquadramento do B-roll. O tamanho e
              a posição já existiam na lupa da olhada geral e vieram junto, para não haver
              dois lugares de fazer a mesma coisa. -->
-        <div class="ed-sub-tela" data-sub="5" hidden>
+        <div class="ed-sub-tela" data-sub="6" hidden>
           <!-- A BARRA DE COMANDO, e ela resolve três coisas de uma vez.
 
                SAIU O NOME DO ARQUIVO. "Não quero que isso fique aparecendo", ele disse, e

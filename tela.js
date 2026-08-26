@@ -3264,7 +3264,19 @@ async function nomeLivre(pasta, base) {
 /* -------------------------------------------------------------- os rascunhos */
 const listarRascunhos = () => noCofre(COFRE.rascunhos, false, s => s.getAll());
 
-async function salvarRascunho() {
+/* A GRAVACAO DO RASCUNHO E' UMA POR VEZ, em fila. A fabrica dos repetidos morava
+   aqui: na PRIMEIRA entrada de uma leva, a gravacao da entrada e a do relogio de
+   600 ms disparavam quase juntas; as duas procuravam o rascunho da leva, nenhuma
+   achava (a outra ainda nao tinha gravado), e cada uma criava o seu, com id proprio.
+   "Sempre fica gerando 2", 26/08/2026. Na fila, a segunda ja' encontra o da primeira. */
+let RASCUNHO_NA_VEZ = Promise.resolve();
+function salvarRascunho() {
+  const vez = RASCUNHO_NA_VEZ.then(() => salvarRascunhoDeVerdade());
+  RASCUNHO_NA_VEZ = vez.catch(() => {});
+  return vez;
+}
+
+async function salvarRascunhoDeVerdade() {
   if (!EDIT_LEVA) return;
   /* ENQUANTO A RESTAURACAO NAO ACONTECEU, ESTA TELA NAO TEM O QUE GRAVAR.
 
@@ -3294,12 +3306,16 @@ async function salvarRascunho() {
      A MARCA E' DA LEVA, E NAO DO REGISTRO. Enquanto o registro pode ser apagado e
      recriado, o numero da leva encerrada fica, e e' ele que fecha a porta. */
   if (ENCERRADAS.has(EDIT_LEVA.numero)) return;
-  // UM RASCUNHO POR LEVA, e não um por vez que ele abre a leva. Sem esta busca, entrar
-  // duas vezes na leva 28 criava dois rascunhos idênticos, e a portaria virava uma
-  // lista de repetições que ele tinha de apagar na mão.
+  // RASCUNHO DE OUTRA LEVA NO BOLSO NAO SERVE: entrar na leva 31 com o registro da 30
+  // ainda carregado reescreveria o registro da 30 como se fosse da 31, e a portaria
+  // ganharia um repetido convertido.
+  if (EDIT_RASCUNHO && EDIT_RASCUNHO.leva !== EDIT_LEVA.numero) EDIT_RASCUNHO = null;
+  // UM RASCUNHO POR LEVA, e não um por vez que ele abre a leva; havendo mais de um no
+  // cofre (herança dos repetidos), vale o MAIS RECENTE, nunca o primeiro que aparecer.
   if (!EDIT_RASCUNHO) {
     const todos = (await listarRascunhos()) || [];
-    EDIT_RASCUNHO = todos.find(x => x.leva === EDIT_LEVA.numero) || null;
+    EDIT_RASCUNHO = todos.filter(x => x.leva === EDIT_LEVA.numero)
+                         .sort((a, b) => (b.mexido || 0) - (a.mexido || 0))[0] || null;
   }
   /* O RASCUNHO GUARDA ONDE ELE PAROU, e não só o número do passo.
 
@@ -3383,6 +3399,10 @@ async function salvarRascunho() {
     pecas: pecas1().length,
     passo: EDIT_PASSO,
     sub: TPL_SUB,
+    /* O CARIMBO DA NUMERACAO. Em 26/08/2026 o passo 3 ganhou uma fase na frente e todas
+       as outras deslizaram um numero. Rascunho gravado antes disso nao tem este campo, e
+       e' por essa falta que a retomada sabe que precisa somar um. */
+    subv: 2,
     /* O DESENHO INTEIRO, e não só o nome dele. Ver o comentário lá em cima. */
     desenho, desenhoEm,
     template: desenho ? desenho.id : (TPL ? TPL.id : null),
@@ -3570,7 +3590,15 @@ $("ed_levas").addEventListener("click", async ev => {
   const n = Number(b.dataset.leva);
   EDIT_LEVA = (LOTES || []).find(l => l.numero === n) || { numero: n };
   b.classList.add("indo");
-  await entrarNaOficina(1);
+  /* ESCOLHER A LEVA E' VOLTAR AO TRABALHO DELA, quando ja' ha' trabalho: o caminho da
+     escolha entrava sempre zerado, criando registro novo ao lado do existente e
+     jogando fora o passo em que ele estava. Um rascunho por leva vale tambem aqui:
+     havendo um, ele abre no passo salvo, com os vigias; sem nenhum, comeca do um. */
+  const todos = (await listarRascunhos()) || [];
+  const r = todos.filter(x => x.leva === n)
+                 .sort((a, b) => (b.mexido || 0) - (a.mexido || 0))[0] || null;
+  EDIT_RASCUNHO = r;
+  await entrarNaOficina(r ? (r.passo || 1) : 1, r || undefined);
 });
 
 /* ------------------------------------------------- entrar na oficina
@@ -3644,6 +3672,7 @@ function esquecerOsPassos() {
   EDIT_PECAS = [];
   SEM_FRASE = null;
   BROLL_DE = null;
+  MODO_DE = null;
   REC_NOME = "";
   REC_ACHADO = null;
   TPL = null;
@@ -4130,19 +4159,48 @@ desenhaRascunhos();
    O caminho e' o MESMO do cartao de rascunho da portaria; a unica diferenca e' que
    ninguem precisa clicar. So' age na aba de edicao e so' quando ha' leva anotada. */
 async function retomarLevaAberta() {
-  if ((location.hash || "").slice(1) !== "editar") return;
   let n = null;
   try { n = Number(localStorage.getItem("estudio.leva.aberta")) || null; }
   catch (e) {}
   if (!n || EDIT_LEVA || ENCERRADAS.has(n)) return;
+  /* O RASCUNHO E' O MAIS RECENTE DA LEVA, e nao o primeiro que aparecer: leva antiga
+     pode ter rascunho velho parado no passo 1, e o F5 dele caiu exatamente nesse,
+     jogando o Gabriel na etapa 1 com o recorte correndo invisivel (26/08/2026). */
   const todos = (await listarRascunhos()) || [];
-  const r = todos.find(x => x.leva === n);
+  const r = todos.filter(x => x.leva === n)
+                 .sort((a, b) => (b.mexido || 0) - (a.mexido || 0))[0];
   if (!r) return;
+  /* E A ABA E' A DA EDICAO, mesmo que o endereco tenha perdido a ancora: leva aberta
+     quer dizer trabalho no meio, e o F5 tem de devolver a pagina em que ele estava,
+     nunca a tela inicial. Sair da edicao ou trocar de leva desanotam, e ai' o F5
+     volta a respeitar a aba do endereco. */
+  if ((location.hash || "").slice(1) !== "editar") irPara("editar", false);
   EDIT_RASCUNHO = r;
   EDIT_LEVA = (LOTES || []).find(l => l.numero === n) || { numero: n };
   await entrarNaOficina(r.passo || 1, r);
 }
-retomarLevaAberta().catch(() => {});
+/* A VARREDURA DOS REPETIDOS QUE JA' NASCERAM: fica o mais recente de cada leva, os
+   outros saem. Roda uma vez por carga, antes da retomada, para o F5 nunca mais ter
+   dois candidatos. Falhar aqui nao derruba nada: e' faxina, nao fundacao. */
+async function limparRascunhosRepetidos() {
+  try {
+    const todos = (await listarRascunhos()) || [];
+    const dono = new Map();
+    for (const r of todos) {
+      const atual = dono.get(r.leva);
+      if (!atual || (r.mexido || 0) > (atual.mexido || 0)) dono.set(r.leva, r);
+    }
+    let saiu = 0;
+    for (const rep of todos) {
+      if (dono.get(rep.leva).id !== rep.id) {
+        await noCofre(COFRE.rascunhos, true, s => s.delete(rep.id));
+        saiu++;
+      }
+    }
+    if (saiu && !$("ed_portaria").hidden) desenhaRascunhos();
+  } catch (e) {}
+}
+limparRascunhosRepetidos().then(() => retomarLevaAberta()).catch(() => {});
 
 /* ------------------------------------------------------------------- a partida
 
@@ -4200,6 +4258,7 @@ async function entrarNoRecorte() {
   await procurarRecortes();
   desenhaRecortado();
   resumoDoRecorte();
+  desenhaOFechoDoRecorte();
   if (!EDIT_PECAS.length) {
     $("rec_diz").textContent = "as peças da leva ainda não chegaram: volte ao passo 1 "
       + "para as abrir, e então eu meço.";
@@ -4476,13 +4535,16 @@ async function procurarRecortes() {
     try {
       const sem = new Set();
       const onde = new Map();
+      const modos = new Map();
       for (const x of (r.ficha.pecas || [])) {
         if (!x.frase) sem.add(x.arquivo);
         if (x.broll && typeof x.broll.y === "number") onde.set(x.arquivo, x.broll);
+        if (x.modo) modos.set(x.arquivo, x.modo);
       }
       SEM_FRASE = sem;
       BROLL_DE = onde;
-    } catch (e) { SEM_FRASE = null; BROLL_DE = null; }
+      MODO_DE = modos;
+    } catch (e) { SEM_FRASE = null; BROLL_DE = null; MODO_DE = null; }
     const doPosto = (r.nomes || []).map(n => ({ nome: n }));
     doPosto.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
     EDIT_RECORTES = doPosto;
@@ -4580,6 +4642,59 @@ function desenhaRecortado() {
   // A LINHA DE RESUMO SAIU com a descricao: a contagem ja' esta' escrita no proprio
   // botao e no passo 2 da trilha, e repetida aqui era a terceira copia do mesmo numero.
   $("rec_pasta").dataset.abrir = RECORTADO.onde;
+}
+
+/* A BARRA CONCLUIDA NASCE DO RE-SCAN DO DISCO, e nao da memoria de um vigia.
+
+   O VIGIA MORRE NO FECHO: quando o recorte termina, a gravacao seguinte do rascunho
+   escreve o vigia como nulo, e a retomada ficava sem o que retomar: F5 depois do fim
+   mostrava os botoes e NENHUMA barra ("cade a barra informando que esta' concluido?",
+   26/08/2026). O que nunca morre e' o disco: os recortes e a ficha deles estao na
+   casa, com o modo de cada peca. Entao o fecho se desenha DELES, toda vez que o passo
+   2 abre com recorte pronto e nenhuma obra em curso: cada peca com a sua cor, na
+   posicao dela na leva, e o caminho da pasta embaixo. */
+function desenhaOFechoDoRecorte() {
+  if (!RECORTADO || REC_OBRA) return;
+  const lista = pecas1();
+  if (!lista.length) return;
+  const temRec = new Set(EDIT_RECORTES.map(r => r.nome));
+  let marcas = "";
+  for (const p of lista) {
+    if (!temRec.has(p.nome)) { marcas += "."; continue; }
+    const modo = MODO_DE ? MODO_DE.get(p.nome) : null;
+    marcas += modo === "card" ? "c"
+      : modo === "nao consegui olhar" ? "?"
+      : modo ? "v" : "c";
+  }
+  const feitas = [...marcas].filter(x => x !== ".").length;
+  if (!feitas) return;
+  // TUDO PRONTO ABRE DIRETO NO SELO: quem chega pelo F5 nao precisa ver a barra
+  // sumir, precisa saber que pode avancar.
+  if (feitas === lista.length) return seloDoFecho(feitas, lista.length);
+  $("rec_obra").hidden = false;
+  desenhaTiras({ total: lista.length, marcas, fim: true, feitos: feitas });
+  $("rec_obra_tempo").textContent = "";
+  $("rec_obra_txt").textContent = num(feitas)
+    + (feitas === 1 ? " recorte pronto" : " recortes prontos")
+    + (feitas < lista.length
+       ? ", " + num(lista.length - feitas) + " sem recorte" : "");
+  $("rec_obra_nota").innerHTML = "estão em <a href=\"#\" data-abrir=\""
+    + escapa(RECORTADO.onde) + "\">" + escapa(RECORTADO.pasta)
+    + "</a>. Os brutos continuam onde estavam, intactos.";
+}
+
+/* O SELO DO FECHO: a barra recolhe e sobra o verificado com a conta e a ordem de
+   seguir. So' quando esta' TUDO pronto; faltando peca ou com falha, a barra fica,
+   porque numero vermelho escondido atras de um selo verde seria mentira. */
+function seloDoFecho(feitas, total) {
+  const caixa = $("rec_obra"), fecho = $("rec_fecho");
+  if (!caixa || !fecho) return;
+  caixa.hidden = false;
+  fecho.hidden = false;
+  $("rec_fecho_txt").textContent = num(total)
+    + (total === 1 ? " Recorte Pronto" : " Recortes Prontos")
+    + ", 100%: Pode Avançar";
+  caixa.classList.add("fechada");
 }
 
 function resumoDoRecorte() {
@@ -4793,6 +4908,9 @@ $("rec_aplicar").onclick = async () => {
 
     REC_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null };
     $("rec_obra").hidden = false;
+    // OBRA NOVA DESFAZ O SELO: a caixa volta a ser barra viva.
+    $("rec_obra").classList.remove("fechada");
+    $("rec_fecho").hidden = true;
     desenhaTiras({ total: alvos.length, marcas: "", fim: false });
     $("rec_obra_txt").textContent = "pedido deixado";
     $("rec_obra_nota").textContent = "o recorte começa em até um minuto, que é o passo do "
@@ -4920,6 +5038,11 @@ async function olharORecorte() {
   $("rec_obra_nota").innerHTML = "estão em <a href=\"#\" data-abrir=\""
     + escapa(onde) + "\">" + escapa(d.pasta || "")
     + "</a>. Os brutos continuam onde estavam, intactos.";
+  // O FECHO AO VIVO: a barra termina de acender, respira um instante, e ai' recolhe
+  // no selo. So' com a leva INTEIRA sem falha; sobrou vermelho, a barra fica.
+  if (!d.falhas && total && feitos >= total) {
+    setTimeout(() => { if (!REC_OBRA) seloDoFecho(feitos, total); }, 1200);
+  }
   salvarRascunho();
 }
 
@@ -5246,6 +5369,7 @@ let SEM_FRASE = null;
    Nada aqui e' estimado: e' o mesmo retangulo que o programa usa para abrir o buraco na
    camada do template na hora de montar. */
 let BROLL_DE = null;                // nome do arquivo -> {x, y, w, h}
+let MODO_DE = null;                 // nome do arquivo -> modo do recorte (a ficha)
 let TPL_SUB = 1;
 const ACERVO = { itens: [] };
 
@@ -5312,7 +5436,11 @@ const PESOS = [{ v: "400", r: "Normal" }, { v: "700", r: "Negrito" }];
 function tplVazio() {
   return { id: "c" + Date.now(), tipo: "composicao", nome: "", mercado: "", etiqueta: "",
            w: TELA.w, h: TELA.h, criado: Date.now(),
-           fundoCor: "#000000", fundoImagem: null, elementos: [] };
+           fundoCor: "#000000", fundoImagem: null,
+           /* A ARTE ESCOLHIDA NA FASE 1, e a janela dela. `arte` e' o id no acervo (para
+              a lista saber qual esta' em uso) e `janela` e' o retangulo do furo, que o
+              motor usa para encaixar a filmagem. */
+           arte: null, janela: null, elementos: [] };
 }
 
 /* ------------------------------------------------------ as peças de tela
@@ -5530,6 +5658,16 @@ async function desenhaEditor() {
   if (!TPL) return;
   const c = $("ed_canvas");
   c.style.background = TPL.fundoCor || "#000000";
+  /* A ARTE ESCOLHIDA E' O FUNDO DA BANCADA desde 26/08/2026. Sem isto ele escreveria as
+     caixas de texto sobre um retangulo preto e so' veria a moldura na peca pronta, que e'
+     escolher no escuro. O `background` acima e' atalho e zera a imagem: por isso a imagem
+     vem DEPOIS dele. */
+  let arteDeFundo = "";
+  if (TPL.fundoImagem) {
+    try { arteDeFundo = await enderecoDo(TPL.fundoImagem); } catch (e) { arteDeFundo = ""; }
+  }
+  c.style.backgroundImage = arteDeFundo ? `url(${arteDeFundo})` : "";
+  c.style.backgroundSize = "100% 100%";
   const camada = $("ed_camada");
   camada.innerHTML = "";
   for (const el of TPL.elementos) {
@@ -8966,7 +9104,9 @@ function acertarTexto(campo, texto, limite) {
 /* ------------------------------------------------- as fases */
 
 function podeIrAoSub(n) {
-  if (n >= 3 && !soTexto().length) return false;   // sem texto não há o que a IA escreva
+  // A FASE DA IA E' A 4 desde que o modelo do template virou a 1 (26/08/2026). Escrito
+  // como `>= 3` a trava passou a barrar a tela de IMAGENS, que nao tem nada com texto.
+  if (n >= 4 && !soTexto().length) return false;   // sem texto não há o que a IA escreva
   return true;
 }
 
@@ -8975,21 +9115,26 @@ function irParaSub(n) {
   TPL_SUB = n;
   document.querySelectorAll('.ed-etapa[data-passo="3"] .ed-sub-tela').forEach(t =>
     t.hidden = Number(t.dataset.sub) !== n);
-  // A TELA DA PEÇA É UMA SÓ e viaja entre as duas primeiras fases.
+  /* AS FASES DESLIZARAM UM NUMERO em 26/08/2026, quando o modelo do template virou a 1:
+     2 texto, 3 imagens, 4 a IA, 5 a previa, 6 a peca a peca. Os `n !==` sao os que
+     APAGAM video: errar neles nao da' erro na tela, deixa filmagem viva atras dela. */
+  // A TELA DA PEÇA É UMA SÓ e viaja entre a fase do texto e a das imagens.
   const meio = $("ed_canvas").parentElement;
-  const destino = n === 2 ? $("ed_meio2") : document.querySelector(
-    '.ed-sub-tela[data-sub="1"] .ed-meio');
+  const destino = n === 3 ? $("ed_meio2") : document.querySelector(
+    '.ed-sub-tela[data-sub="2"] .ed-meio');
   if (destino && meio !== destino) {
     destino.appendChild($("ed_canvas"));
-    if (n !== 2) destino.appendChild($("ed_medida"));
+    if (n !== 3) destino.appendChild($("ed_medida"));
   }
   // SAIR DA PECA A PECA FECHA O VIDEO. Sem isto ele fica vivo atras da tela.
-  if (n !== 5 && AJ_VIVO) { apagarPeca(AJ_VIVO); AJ_VIVO = null; }
-  if (n !== 4) $("gal_grade").querySelectorAll("video").forEach(apagarPeca);
-  if (n === 3) entrarNaIA();
-  if (n === 4) desenhaGaleria();
+  if (n !== 6 && AJ_VIVO) { apagarPeca(AJ_VIVO); AJ_VIVO = null; }
+  if (n !== 5) $("gal_grade").querySelectorAll("video").forEach(apagarPeca);
+  if (n !== 1) pararOModelo();
+  if (n === 1) entrarNoModelo();
+  if (n === 4) entrarNaIA();
+  if (n === 5) desenhaGaleria();
   moverAObraPara(n);
-  if (n === 5) entrarNoAjuste();
+  if (n === 6) entrarNoAjuste();
   desenhaSubTrilho();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -9005,20 +9150,22 @@ function desenhaSubTrilho() {
     ? `${t} ${t === 1 ? "texto" : "textos"}, ${i} ${i === 1 ? "imagem" : "imagens"}`
     : "a montar";
   const b = document.querySelector('#ed_trilho .ed-ponto[data-passo="3"] .ed-barra b');
-  if (b && EDIT_PASSO === 3) b.style.height = ((TPL_SUB - 1) / 4 * 100) + "%";
+  // SEIS FASES, ENTAO O DENOMINADOR E' CINCO. Ele nao e' constante generica: e' "quantas
+  // fases menos uma", e ficou em quatro quando a sexta entrou.
+  if (b && EDIT_PASSO === 3) b.style.height = ((TPL_SUB - 1) / 5 * 100) + "%";
 }
 
 document.querySelectorAll("#ed_sub3 li").forEach(li => {
   li.onclick = () => irParaSub(Number(li.dataset.sub));
 });
-$("ed_vai_imagens").onclick = () => irParaSub(2);
-$("ed_volta_texto").onclick = () => irParaSub(1);
-$("ed_vai_ia").onclick = () => irParaSub(3);
-$("ed_volta_imagens").onclick = () => irParaSub(2);
-$("ed_vai_ajuste").onclick = () => irParaSub(4);
-$("ed_volta_ia").onclick = () => irParaSub(3);
-$("ajs_um_a_um").onclick = () => irParaSub(5);
-$("aj_volta").onclick = () => irParaSub(4);
+$("ed_vai_imagens").onclick = () => irParaSub(3);
+$("ed_volta_texto").onclick = () => irParaSub(2);
+$("ed_vai_ia").onclick = () => irParaSub(4);
+$("ed_volta_imagens").onclick = () => irParaSub(3);
+$("ed_vai_ajuste").onclick = () => irParaSub(5);
+$("ed_volta_ia").onclick = () => irParaSub(4);
+$("ajs_um_a_um").onclick = () => irParaSub(6);
+$("aj_volta").onclick = () => irParaSub(5);
 /* FABRICAR SEM SAIR DAQUI. O botao e a barra de progresso moram na primeira olhada, e
    duplicar aquela maquinaria toda so' para ter um segundo botao seria duas verdades
    sobre a mesma obra. Entao ele volta e clica: uma linha, e o que ele ve' e' o mesmo. */
@@ -9035,12 +9182,12 @@ $("aj_volta").onclick = () => irParaSub(4);
    enquanto ele olharia o outro. Aqui é o mesmo elemento, com o mesmo nome, morando ora
    numa fase ora na outra. O que já estava escrito nele continua valendo. */
 function moverAObraPara(sub) {
-  const casa = sub === 5 ? $("aj_obra_casa") : $("apl_obra_casa");
+  const casa = sub === 6 ? $("aj_obra_casa") : $("apl_obra_casa");
   const obra = $("apl_obra"), feito = $("apl_feito");
   if (obra && obra.parentElement !== casa) casa.appendChild(obra);
   // O AVISO DE TERMINADO SEGUE A OBRA na fase 5; na primeira olhada ele volta para o
   // pé, ao lado do resumo, que é onde foi desenhado para ficar.
-  const casaDoFeito = sub === 5 ? casa : $("apl_feito_casa");
+  const casaDoFeito = sub === 6 ? casa : $("apl_feito_casa");
   if (feito && feito.parentElement !== casaDoFeito) casaDoFeito.appendChild(feito);
 }
 
@@ -9110,7 +9257,15 @@ async function tentarRetomar() {
   desenhaPecas();                 // a galeria volta com as tiradas apagadas
   if (TPL) {
     await entrarNoTemplate();
-    const alvo = Math.min(4, Math.max(1, r.sub || 1));
+    /* O TETO E' O NUMERO DE FASES, e ele ja' estava errado antes desta mexida: com cinco
+       fases o teto era quatro, e quem dava F5 na peca a peca voltava na previa.
+
+       E RASCUNHO VELHO E' TRADUZIDO: gravado antes de 26/08/2026 ele guarda a numeracao
+       de cinco fases, em que 1 era o texto. Sem o `subv`, soma-se um, senao quem parou
+       na previa (4) reabre na fase da IA. */
+    const velho = !r.subv;
+    const guardado = Math.max(1, r.sub || 1);
+    const alvo = Math.min(6, velho ? guardado + 1 : guardado);
     if (alvo > 1) irParaSub(alvo);
   }
   /* OS VIGIAS VOLTAM DEPOIS DO F5, desde 25/08/2026. O rascunho guarda o id dos
@@ -9119,55 +9274,347 @@ async function tentarRetomar() {
      mostra o resultado, e rearmar em cima dele pintaria um erro falso de contato
      perdido num trabalho que terminou dias atras. */
   const vigias = r.vigias || {};
-  const aindaVivo = async id => {
+  /* VIVO E FECHADO SAO DUAS RETOMADAS, e nao uma. O rearme so' tratava pedido em
+     curso: quem dava F5 DEPOIS do fim voltava para uma tela sem barra nenhuma, como
+     se nada tivesse sido pedido ("um loading que nem sequer mais aparece como
+     concluido", 26/08/2026). Pedido fechado agora rearma SEM relogio e olha uma vez:
+     o proprio olhar desenha a barra cheia, os selos e o caminho da pasta. */
+  const estadoDoPedido = async id => {
     try {
+      let d = null;
       if (await postoDePe()) {
         const p = await noPosto("/pedido?id=" + encodeURIComponent(id));
-        return !!(p.tem && p.d && !p.d.fim && !p.d.erro);
+        d = (p.tem && p.d) ? p.d : null;
+      } else {
+        const p = await pastaDo("pedidos", false);
+        if (!p) return null;
+        d = JSON.parse(await (await
+          (await p.getFileHandle(id + ".andamento.json")).getFile()).text());
       }
-      const p = await pastaDo("pedidos", false);
-      if (!p) return false;
-      const d = JSON.parse(await (await
-        (await p.getFileHandle(id + ".andamento.json")).getFile()).text());
-      return !d.fim && !d.erro;
-    } catch (e) { return false; }
+      if (!d || d.erro) return null;
+      return d.fim ? "fechado" : "vivo";
+    } catch (e) { return null; }
   };
-  if (vigias.rec && !REC_OBRA && await aindaVivo(vigias.rec.id)) {
-    REC_OBRA = { id: vigias.rec.id, desde: vigias.rec.desde || Date.now(),
-                 total: vigias.rec.total || 0, relogio: null };
-    $("rec_obra").hidden = false;
-    // O GIRADOR SAIU DAQUI com a barra nova: quem prova vida agora e' a marca que acende
-    // e o relogio que anda. Esta linha ficou apontando para um elemento que nao existe
-    // mais e derrubava a retomada do vigia inteira, calada, depois do F5.
-    desenhaTiras({ total: REC_OBRA.total, marcas: "", fim: false });
-    $("rec_obra_txt").textContent = "trabalho em curso, vigia retomada";
-    REC_OBRA.relogio = setInterval(olharORecorte, 3000);
-    olharORecorte();
+  if (vigias.rec && !REC_OBRA) {
+    const como = await estadoDoPedido(vigias.rec.id);
+    if (como === "vivo") {
+      REC_OBRA = { id: vigias.rec.id, desde: vigias.rec.desde || Date.now(),
+                   total: vigias.rec.total || 0, relogio: null };
+      $("rec_obra").hidden = false;
+      $("rec_obra").classList.remove("fechada");
+      $("rec_fecho").hidden = true;
+      desenhaTiras({ total: REC_OBRA.total, marcas: "", fim: false });
+      $("rec_obra_txt").textContent = "trabalho em curso, vigia retomada";
+      REC_OBRA.relogio = setInterval(olharORecorte, 3000);
+      olharORecorte();
+    } else if (como === "fechado") {
+      REC_OBRA = { id: vigias.rec.id, desde: vigias.rec.desde || Date.now(),
+                   total: vigias.rec.total || 0, relogio: null };
+      $("rec_obra").hidden = false;
+      olharORecorte();       // ve o fim e desenha a barra concluida, uma vez so'
+    }
   }
-  if (vigias.mont && !OBRA && await aindaVivo(vigias.mont.id)) {
-    OBRA = { id: vigias.mont.id, desde: vigias.mont.desde || Date.now(),
-             total: vigias.mont.total || 0, qual: vigias.mont.qual, relogio: null };
-    $("apl_obra").hidden = false;
-    document.querySelector("#apl_obra .cfg-girando").style.display = "";
-    $("apl_obra_txt").textContent = "trabalho em curso, vigia retomada";
-    OBRA.relogio = setInterval(olharAObra, 3000);
-    olharAObra();
+  if (vigias.mont && !OBRA) {
+    const como = await estadoDoPedido(vigias.mont.id);
+    if (como === "vivo" || como === "fechado") {
+      OBRA = { id: vigias.mont.id, desde: vigias.mont.desde || Date.now(),
+               total: vigias.mont.total || 0, qual: vigias.mont.qual, relogio: null };
+      $("apl_obra").hidden = false;
+      document.querySelector("#apl_obra .cfg-girando").style.display =
+        como === "vivo" ? "" : "none";
+      $("apl_obra_txt").textContent = como === "vivo"
+        ? "trabalho em curso, vigia retomada" : "";
+      if (como === "vivo") OBRA.relogio = setInterval(olharAObra, 3000);
+      olharAObra();
+    }
   }
-  if (vigias.ent && !ENT_OBRA && await aindaVivo(vigias.ent.id)) {
-    ENT_OBRA = { id: vigias.ent.id, desde: vigias.ent.desde || Date.now(),
-                 total: vigias.ent.total || 0, relogio: null, mudo: 0,
-                 subir: vigias.ent.subir !== false };
-    $("ent_subir").disabled = $("ent_so_pacote").disabled = true;
-    $("ent_feito").hidden = true;
-    $("ent_obra").hidden = false;
-    document.querySelector("#ent_obra .cfg-girando").style.display = "";
-    $("ent_obra_txt").textContent = "trabalho em curso, vigia retomada";
-    const olhar = olharOPedido(ENT_OBRA, andouAEntrega, terminouAEntrega);
-    ENT_OBRA.relogio = setInterval(olhar, 3000);
-    olhar();
+  if (vigias.ent && !ENT_OBRA) {
+    const como = await estadoDoPedido(vigias.ent.id);
+    if (como === "vivo" || como === "fechado") {
+      ENT_OBRA = { id: vigias.ent.id, desde: vigias.ent.desde || Date.now(),
+                   total: vigias.ent.total || 0, relogio: null, mudo: 0,
+                   subir: vigias.ent.subir !== false };
+      if (como === "vivo") {
+        $("ent_subir").disabled = $("ent_so_pacote").disabled = true;
+        $("ent_feito").hidden = true;
+      }
+      $("ent_obra").hidden = false;
+      document.querySelector("#ent_obra .cfg-girando").style.display =
+        como === "vivo" ? "" : "none";
+      $("ent_obra_txt").textContent = como === "vivo"
+        ? "trabalho em curso, vigia retomada" : "";
+      const olhar = olharOPedido(ENT_OBRA, andouAEntrega, terminouAEntrega);
+      if (como === "vivo") ENT_OBRA.relogio = setInterval(olhar, 3000);
+      olhar();
+    }
   }
   salvarRascunho();
 }
+
+/* ============================================ 3.1 · O MODELO DO TEMPLATE
+
+   O QUE ESTA FASE FAZ: ele escolhe UMA arte dele para vestir a leva inteira. A arte e' a
+   moldura; o recorte que saiu do passo 2 entra DENTRO da janela dela, inclusive quando a
+   peca e' de tela cheia.
+
+   A JANELA NAO SE MARCA A MAO, e o canto nao se regula: os dois vem do proprio arquivo.
+   Arte exportada em PNG com o furo VAZADO ja' diz onde o video aparece (o retangulo do
+   furo) e com que canto (o desenho do furo). "O raio de canto ja' vem junto do template",
+   26/08/2026. Arte sem furo nao tem como dizer isso, e por isso ela entra na lista mas
+   nao pode fechar a leva: inventar um retangulo seria inventar criterio.
+
+   O QUADRO DA DIREITA E' PROVA, e nao ilustracao: o video ali e' um recorte de verdade
+   desta leva, encaixado pela mesma conta que o motor vai refazer na hora de gravar. */
+
+let MP_I = -1;                 // qual arte esta' na tela
+let MP_PECA = -1;              // qual recorte veste o quadro da direita
+const MP_FURO_MINIMO = 0.02;   // furo menor que isto e' respiro do desenho, nao janela
+
+function artesDoAcervo() {
+  return (ACERVO.itens || []).filter(x => x && x.tipo === "arte" && x.arquivo);
+}
+
+/** Onde a filmagem entra: o retangulo do B-roll da peca posto DENTRO da janela da arte.
+    Devolve o canto e o tamanho do video em fracao do quadro, a mesma conta dos dois lados. */
+function encaixeNaJanela(broll, jan) {
+  const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
+  // COBRIR, e nao caber: sobrar tarja preta dentro da moldura seria pior que perder
+  // beirada de filmagem, porque a tarja aparece na peca pronta.
+  const k = Math.max(jan.w / b.w, jan.h / b.h);
+  return { k, x: jan.x + jan.w / 2 - k * (b.x + b.w / 2),
+              y: jan.y + jan.h / 2 - k * (b.y + b.h / 2) };
+}
+
+/** Mede a arte subida: tamanho, retangulo do furo transparente e se ha' furo. */
+async function medirAArte(blob) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((ok, nao) => {
+      const i = new Image();
+      i.onload = () => ok(i);
+      i.onerror = () => nao(new Error("não consegui abrir a arte"));
+      i.src = url;
+    });
+    const lar = 200;
+    const alt = Math.max(1, Math.round(lar * img.naturalHeight / img.naturalWidth));
+    const c = document.createElement("canvas");
+    c.width = lar; c.height = alt;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.drawImage(img, 0, 0, lar, alt);
+    const d = g.getImageData(0, 0, lar, alt).data;
+    let x0 = lar, y0 = alt, x1 = -1, y1 = -1, vazios = 0;
+    for (let y = 0; y < alt; y++) {
+      for (let x = 0; x < lar; x++) {
+        if (d[(y * lar + x) * 4 + 3] < 16) {
+          vazios++;
+          if (x < x0) x0 = x;
+          if (x > x1) x1 = x;
+          if (y < y0) y0 = y;
+          if (y > y1) y1 = y;
+        }
+      }
+    }
+    const furo = vazios > lar * alt * MP_FURO_MINIMO && x1 >= x0 && y1 >= y0;
+    const arr = v => Math.round(v * 1e5) / 1e5;
+    return {
+      w: img.naturalWidth, h: img.naturalHeight, furo,
+      janela: furo ? { x: arr(x0 / lar), y: arr(y0 / alt),
+                       w: arr((x1 - x0 + 1) / lar), h: arr((y1 - y0 + 1) / alt) } : null
+    };
+  } finally { URL.revokeObjectURL(url); }
+}
+
+function desenhaAsArtes() {
+  const artes = artesDoAcervo();
+  const l = $("mp_lista");
+  if (!artes.length) {
+    l.innerHTML = '<li class="ed-cam-vazio">nenhuma arte subida ainda</li>';
+    return;
+  }
+  l.innerHTML = artes.map((a, i) => `<li data-i="${i}"${i === MP_I ? ' class="sel"' : ""}>
+      <span class="mp-mini"><img alt="" data-arte="${escapa(a.arquivo)}"></span>
+      <span class="ed-cam-nome">${escapa(a.nome || a.arquivo)}</span>
+      ${a.furo ? "" : '<span class="mp-sem">sem furo</span>'}</li>`).join("");
+  l.querySelectorAll("img[data-arte]").forEach(async img => {
+    try { img.src = await enderecoDo(img.dataset.arte); } catch (e) {}
+  });
+}
+
+/** Pinta os dois quadros: a arte crua e a mesma arte com um recorte da leva encaixado. */
+async function pintarOModelo() {
+  const artes = artesDoAcervo();
+  const a = artes[MP_I] || null;
+  const qArte = $("mp_arte"), qPeca = $("mp_peca"), v = $("mp_video");
+  qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
+  qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
+  $("mp_usar").disabled = !a || !a.furo;
+  if (!a) {
+    $("mp_recado").textContent = "Suba uma arte para escolher o modelo desta leva.";
+    return;
+  }
+  const url = await enderecoDo(a.arquivo);
+  const jan = a.janela || { x: 0, y: 0, w: 1, h: 1 };
+
+  // O QUADRO DA ESQUERDA: a arte como ela e'. O furo aparece como encaixe vazio, e nao
+  // como buraco preto, senao arte de fundo escuro parece imagem quebrada.
+  if (a.furo) {
+    const vazio = document.createElement("div");
+    vazio.className = "mp-vazia";
+    vazio.style.left = (jan.x * 100) + "%";
+    vazio.style.top = (jan.y * 100) + "%";
+    vazio.style.width = (jan.w * 100) + "%";
+    vazio.style.height = (jan.h * 100) + "%";
+    qArte.appendChild(vazio);
+  }
+  const i1 = document.createElement("img");
+  i1.className = "mp-arte"; i1.alt = ""; i1.src = url;
+  qArte.appendChild(i1);
+
+  // O QUADRO DA DIREITA: a mesma arte com a filmagem encaixada na janela.
+  const caixa = document.createElement("div");
+  caixa.className = "mp-jan";
+  caixa.style.left = (jan.x * 100) + "%";
+  caixa.style.top = (jan.y * 100) + "%";
+  caixa.style.width = (jan.w * 100) + "%";
+  caixa.style.height = (jan.h * 100) + "%";
+  caixa.appendChild(v);
+  qPeca.appendChild(caixa);
+  const i2 = document.createElement("img");
+  i2.className = "mp-arte"; i2.alt = ""; i2.src = url;
+  qPeca.appendChild(i2);
+  await vestirORecorte();
+  $("mp_recado").textContent = a.furo
+    ? "A arte escolhida veste a leva inteira."
+    : "Esta arte não tem o furo transparente: exporte o PNG com a janela vazada.";
+}
+
+/** Poe no quadro da direita o recorte da vez, encaixado na janela da arte escolhida. */
+async function vestirORecorte() {
+  const a = artesDoAcervo()[MP_I];
+  const v = $("mp_video");
+  if (!a) return;
+  if (!EDIT_RECORTES.length || MP_PECA < 0 || !EDIT_RECORTES[MP_PECA]) {
+    v.removeAttribute("src");
+    return;
+  }
+  const peca = EDIT_RECORTES[MP_PECA];
+  const jan = a.janela || { x: 0, y: 0, w: 1, h: 1 };
+  const e = encaixeNaJanela(BROLL_DE && BROLL_DE.get(peca.nome), jan);
+  // O VIDEO E' POSICIONADO DENTRO DA CAIXA DA JANELA, entao a medida vira porcentagem
+  // dela, e nao do quadro: e' a mesma conta, so' que na regua da caixa.
+  v.style.width = (e.k / jan.w * 100) + "%";
+  v.style.height = (e.k / jan.h * 100) + "%";
+  v.style.left = ((e.x - jan.x) / jan.w * 100) + "%";
+  v.style.top = ((e.y - jan.y) / jan.h * 100) + "%";
+  try {
+    const u = await urlDaMidia(peca, pastaDosRecortes());
+    if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
+    v.dataset.url = u;
+    v.src = u;
+    v.play().catch(() => {});
+  } catch (e2) {}
+}
+
+async function entrarNoModelo() {
+  if (!EDIT_RECORTES.length) await procurarRecortes();
+  if (!ACERVO.itens.length) await lerAcervo();
+  const artes = artesDoAcervo();
+  if (MP_I < 0 || MP_I >= artes.length) {
+    const jaEscolhida = TPL && TPL.arte
+      ? artes.findIndex(x => x.id === TPL.arte) : -1;
+    MP_I = jaEscolhida >= 0 ? jaEscolhida : (artes.length ? 0 : -1);
+  }
+  if (MP_PECA < 0 && EDIT_RECORTES.length) MP_PECA = sortearBroll();
+  desenhaAsArtes();
+  await pintarOModelo();
+  marcaOModelo();
+}
+
+/** Sair da fase FECHA o video. Sem isto ele fica vivo atras da tela, gastando rede. */
+function pararOModelo() {
+  const v = $("mp_video");
+  if (!v) return;
+  v.pause();
+  if (v.dataset.url) { URL.revokeObjectURL(v.dataset.url); delete v.dataset.url; }
+  v.removeAttribute("src");
+  v.load();
+}
+
+/** O selo do fecho: escolher a arte e' um gesto, fechar a leva nela e' outro. */
+function marcaOModelo() {
+  const a = artesDoAcervo()[MP_I];
+  const fechado = !!(a && TPL && TPL.arte === a.id);
+  $("mp_arte").classList.toggle("mp-escolhida", fechado);
+  $("mp_peca").classList.toggle("mp-escolhida", fechado);
+  const t = $("mp_usar").querySelector(".txt");
+  if (t) t.textContent = fechado ? "Modelo Definido" : "Usar Nesta Leva";
+  $("mp_usar").classList.toggle("brasa", !fechado);
+}
+
+async function usarOModelo() {
+  const a = artesDoAcervo()[MP_I];
+  if (!a || !a.furo || !TPL) return;
+  TPL.arte = a.id;
+  TPL.fundoImagem = a.arquivo;
+  TPL.janela = a.janela;
+  marcaOModelo();
+  await salvarRascunho();
+  await desenhaEditor();
+  irParaSub(2);
+}
+
+async function subirArtes(arquivos) {
+  const l = $("mp_lista");
+  for (const f of arquivos) {
+    if (!/\.(png|jpe?g|webp)$/i.test(f.name)) continue;
+    try {
+      const medida = await medirAArte(f);
+      const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
+      // O NOME NO DISCO E' NOSSO, e o dele fica de rotulo: nome vindo de fora abriria a
+      // porta para uma arte sobrescrever a outra em silencio (o posto nao recusa
+      // repetido). Ver posto.py, gravar_bytes.
+      const arquivo = "arte" + Date.now() + "_" + novoId() + ext;
+      await guardarNoAcervo(arquivo, await f.arrayBuffer());
+      ACERVO.itens.push({
+        id: "a" + Date.now() + "_" + novoId(), tipo: "arte",
+        nome: f.name.replace(/\.[^.]+$/, ""), arquivo,
+        w: medida.w, h: medida.h, furo: medida.furo, janela: medida.janela,
+        criado: Date.now()
+      });
+      await gravarAcervo();
+      MP_I = artesDoAcervo().length - 1;
+    } catch (e) {
+      if (l) l.insertAdjacentHTML("afterend",
+        '<p class="nota mini">não consegui guardar a arte: ' + escapa(String(e.message || e))
+        + "</p>");
+      break;
+    }
+  }
+  desenhaAsArtes();
+  await pintarOModelo();
+  marcaOModelo();
+}
+
+$("mp_lista").addEventListener("click", async ev => {
+  const li = ev.target.closest("li[data-i]");
+  if (!li) return;
+  MP_I = Number(li.dataset.i);
+  desenhaAsArtes();
+  await pintarOModelo();
+  marcaOModelo();
+});
+$("mp_outra").onclick = async () => {
+  if (EDIT_RECORTES.length < 2) return;
+  MP_PECA = (MP_PECA + 1) % EDIT_RECORTES.length;
+  await vestirORecorte();
+};
+$("mp_usar").onclick = () => usarOModelo();
+$("mp_subir").onclick = () => $("mp_arquivo").click();
+$("mp_arquivo").addEventListener("change", async ev => {
+  const fs = [...(ev.target.files || [])];
+  ev.target.value = "";
+  if (fs.length) await subirArtes(fs);
+});
 
 async function entrarNoTemplate() {
   if (!EDIT_RECORTES.length) await procurarRecortes();
@@ -9261,10 +9708,16 @@ $("apl_montar").onclick = async () => {
            mover e redimensionar acontecem em cima do CENTRO da janela, e o centro so' se
            sabe conhecendo o retangulo que o passo 2 mediu. */
         const e = ENQUADRES.get(nome);
-        if (e) {
-          p.enquadre = Object.assign({}, e);
+        /* A JANELA DA ARTE VAI EM TODA PECA, e nao so' nas que ele reenquadrou: ela e' do
+           TEMPLATE, e e' ela que diz onde a filmagem entra. Antes o enquadre so' existia
+           quando havia mexida, e uma peca intocada chegaria ao motor sem saber que ha'
+           moldura, caindo no caminho velho. */
+        const janela = TPL && TPL.janela ? TPL.janela : null;
+        if (e || janela) {
+          p.enquadre = Object.assign({}, e || {});
           const r = BROLL_DE && BROLL_DE.get(nome);
           if (r) p.enquadre.base = { x: r.x, y: r.y, w: r.w, h: r.h };
+          if (janela) p.enquadre.janela = janela;
         }
         return p;
       })

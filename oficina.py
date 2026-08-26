@@ -1122,12 +1122,23 @@ def pintar_camadas(tpl: dict, textos: dict, tela: dict, pasta: Path,
         return str(padrao if v is None else v)
     tw, th = par(tela.get("w", 1080)), par(tela.get("h", 1920))
     fundo = Image.new("RGB", (tw, th), cor_de(tpl.get("fundoCor"), (0, 0, 0)))
+    janela = tpl.get("janela") if isinstance(tpl.get("janela"), dict) else None
     if tpl.get("fundoImagem"):
         arq = pasta / str(tpl["fundoImagem"])
         if arq.is_file():
             try:
                 im = Image.open(arq).convert("RGBA").resize((tw, th), Image.LANCZOS)
-                fundo.paste(im, (0, 0), im)
+                if janela and im.getchannel("A").getextrema()[0] < 250:
+                    # A ARTE E' A MOLDURA, e o furo dela e' o furo da peca.
+                    #
+                    # ATE' 26/08/2026 a arte era chapada sobre a cor de fundo e o buraco
+                    # vinha da mascara do passo 2, ou seja, do card do reel ORIGINAL. Com
+                    # o modelo escolhido na fase 1 quem manda e' o desenho dele: aqui o
+                    # fundo passa a ser a propria arte, com a transparencia dela intacta,
+                    # e o canto arredondado vem de graca, porque e' o canto que ela tem.
+                    fundo = im
+                else:
+                    fundo.paste(im, (0, 0), im)
             except OSError:
                 pass
 
@@ -1192,6 +1203,42 @@ def cor_de(texto, padrao):
         return padrao
 
 
+def encaixe_na_janela(base, jan, z: float = 1.0, dx: float = 0.0,
+                      dy: float = 0.0) -> tuple | None:
+    """Onde a filmagem entra quando a janela e' a da ARTE, e nao a do reel de origem.
+
+    Devolve `(k, x, y)`: quanto o quadro do recorte cresce e onde fica o canto de cima
+    dele, em fracao do quadro da peca. Sem janela devolve None, e o caminho velho segue.
+
+    A CONTA E' A MESMA QUE A TELA FAZ na fase 1 (`encaixeNaJanela`, em tela.js), e tem de
+    continuar sendo: a filmagem cresce ate' o retangulo do B-roll COBRIR a janela da
+    arte, e o meio de um cai no meio do outro. Cobrir, e nao caber: tarja preta dentro da
+    moldura apareceria na peca pronta; beirada de filmagem perdida, nao.
+
+    `es`, `mx` e `my` NAO ENTRAM AQUI. Eles movem a janela, e a janela agora e' o furo da
+    arte, que nao se move. O que se move e' a filmagem dentro dela, com `z` e `d`.
+    """
+    if not isinstance(jan, dict):
+        return None
+    b = base if isinstance(base, dict) else {}
+    try:
+        bw = max(1e-4, float(b.get("w", 1) or 1))
+        bh = max(1e-4, float(b.get("h", 1) or 1))
+        jw = max(1e-4, float(jan.get("w", 1)))
+        jh = max(1e-4, float(jan.get("h", 1)))
+        # PECA DE TELA CHEIA CHEGA COM O QUADRO INTEIRO de base, e e' assim que ela
+        # ENCOLHE para caber na moldura em vez de tapar o desenho todo.
+        cxb = float(b.get("x", 0) or 0) + bw / 2
+        cyb = float(b.get("y", 0) or 0) + bh / 2
+        cxj = float(jan.get("x", 0)) + jw / 2
+        cyj = float(jan.get("y", 0)) + jh / 2
+    except (TypeError, ValueError):
+        return None
+    kenc = max(jw / bw, jh / bh)
+    k = kenc * z
+    return (k, cxj - k * cxb + kenc * dx, cyj - k * cyb + kenc * dy)
+
+
 def movimento_da_janela(enquadre: dict | None) -> tuple:
     """O que a fase 5 fez com a janela do B-roll: quanto ela cresceu e para onde andou.
 
@@ -1238,7 +1285,18 @@ def camada_da_peca(fundo, frente, mascara: Path | None, tela: dict,
     from PIL import Image
     tw, th = par(tela.get("w", 1080)), par(tela.get("h", 1920))
     camada = fundo.convert("RGBA")
-    if mascara and Path(mascara).is_file():
+    # A MOLDURA PODE JA' TRAZER O FURO DELA. Quando o template e' uma arte do Gabriel com
+    # a janela vazada, o furo chegou aqui dentro do proprio fundo, com o canto que o
+    # desenho tem. Nesse caso nao ha' mascara a aplicar: aplicar a do passo 2 por cima
+    # devolveria o buraco para o formato do card do reel, que e' o que se quis trocar.
+    #
+    # E E' AQUI QUE A PECA DE TELA CHEIA PASSA A TER MOLDURA: sem furo proprio ela caia
+    # no `putalpha(0)` la' embaixo e o template inteiro sumia.
+    furo_proprio = (fundo.mode == "RGBA"
+                    and fundo.getchannel("A").getextrema()[0] < 250)
+    if furo_proprio:
+        pass
+    elif mascara and Path(mascara).is_file():
         try:
             m = Image.open(mascara).convert("L").resize((tw, th), Image.LANCZOS)
             # A JANELA PODE TER SIDO MOVIDA NA FASE 5, e entao o buraco se muda com ela.
@@ -1309,18 +1367,33 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
     folga = max(0.0, (z - 1) / 2)
     dx = max(-folga, min(folga, dx))
     dy = max(-folga, min(folga, dy))
-    # E O QUE FOI FEITO COM A JANELA. A filmagem acompanha: ver `camada_da_peca`.
-    esc, mx, my, cx, cy = movimento_da_janela(e)
-    # DUAS AMPLIACOES SE MULTIPLICAM: a da janela e a da filmagem dentro dela.
-    k = esc * z
-    ew, eh = par(int(round(tw * k))), par(int(round(th * k)))
-    # ONDE FICA O CANTO DE CIMA DA FILMAGEM, DEPOIS DE TUDO.
+    # A JANELA DA ARTE MANDA, QUANDO EXISTE.
     #
-    # E' A MESMA COMPOSICAO QUE O NAVEGADOR FAZ, escrita de uma vez so': a filmagem
-    # cresce `z` em cima do centro do quadro e desliza `d`; depois a janela cresce
-    # `esc` em cima do centro dela e anda `m`, levando a filmagem junto.
-    px = int(round(tw * (-0.5 * k + cx + esc * (0.5 - cx) + esc * dx + mx)))
-    py = int(round(th * (-0.5 * k + cy + esc * (0.5 - cy) + esc * dy + my)))
+    # A conta e' a mesma que a tela faz na fase 1 (`encaixeNaJanela`): a filmagem cresce
+    # ate' que o retangulo do B-roll COBRIR a janela da arte, e o meio de um cai no meio
+    # do outro. Cobrir, e nao caber: sobrar tarja preta dentro da moldura apareceria na
+    # peca pronta, e perder beirada de filmagem nao aparece.
+    #
+    # `es`, `mx` e `my` NAO ENTRAM AQUI. Eles movem a janela, e a janela agora e' o furo
+    # da arte, que nao se move: o que se move e' a filmagem dentro dela, com `z` e `d`.
+    encaixe = encaixe_na_janela(e.get("base"), e.get("janela"), z, dx, dy)
+    if encaixe:
+        k, fx, fy = encaixe
+        ew, eh = par(int(round(tw * k))), par(int(round(th * k)))
+        px, py = int(round(tw * fx)), int(round(th * fy))
+    else:
+        # E O QUE FOI FEITO COM A JANELA. A filmagem acompanha: ver `camada_da_peca`.
+        esc, mx, my, cx, cy = movimento_da_janela(e)
+        # DUAS AMPLIACOES SE MULTIPLICAM: a da janela e a da filmagem dentro dela.
+        k = esc * z
+        ew, eh = par(int(round(tw * k))), par(int(round(th * k)))
+        # ONDE FICA O CANTO DE CIMA DA FILMAGEM, DEPOIS DE TUDO.
+        #
+        # E' A MESMA COMPOSICAO QUE O NAVEGADOR FAZ, escrita de uma vez so': a filmagem
+        # cresce `z` em cima do centro do quadro e desliza `d`; depois a janela cresce
+        # `esc` em cima do centro dela e anda `m`, levando a filmagem junto.
+        px = int(round(tw * (-0.5 * k + cx + esc * (0.5 - cx) + esc * dx + mx)))
+        py = int(round(th * (-0.5 * k + cy + esc * (0.5 - cy) + esc * dy + my)))
     if z == 1 and not px and not py:
         # O CAMINHO CURTO, que e' o de quase toda peca: nada foi mexido.
         filtro = (f"[0:v]scale={tw}:{th},setsar=1[v];"

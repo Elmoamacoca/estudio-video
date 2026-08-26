@@ -1410,6 +1410,41 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    4. SAIRAM O RODAPE DE MEDIDAS e a descricao do card. "Nao entendi que porra de
       descricao e' essa? Remove isso. So' deixa um botao grande de ver outro reel."
       No lugar deles, os dois botoes grandes, lado a lado. */
+/* ================================ 3.1 · O MODELO DO TEMPLATE (26/08/2026)
+
+   Esta fase tem DUAS colunas, e nao tres: nao ha' painel de propriedades aqui, porque
+   nao ha' o que regular. A arte manda na janela e no canto; o que ele faz e' escolher. */
+/* A FORCA PRECISA SER MAIOR QUE A DA `.ed-tres`, e nao igual: com uma classe so' quem
+   ganha e' quem vem por ultimo na folha, e a `.ed-tres` mora mais abaixo. Empatado, o
+   palco voltava a ter tres colunas, a terceira ficava vazia e os dois quadros do par
+   quebravam um embaixo do outro, que e' o contrario do que esta fase e'. */
+.ed-tres.mp-tres{grid-template-columns:230px minmax(0,1fr)}
+@media(max-width:1100px){.ed-tres.mp-tres{grid-template-columns:200px minmax(0,1fr)}}
+@media(max-width:900px){.ed-tres.mp-tres{grid-template-columns:1fr}}
+/* COM TETO: sem ele a lista cresce a cada arte subida e empurra a coluna tela abaixo. */
+.mp-lista{max-height:min(58vh,620px)}
+.mp-mini{flex:0 0 26px;width:26px;aspect-ratio:9/16;border-radius:4px;overflow:hidden;
+  position:relative;background:#000}
+.mp-mini img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mp-sem{margin-left:auto;font-size:10px;font-weight:700;color:var(--muted);
+  white-space:nowrap}
+/* O QUADRO NASCE DA ALTURA, e nao so' da largura: a peca e' em pe', e e' a altura que
+   aperta. Dois quadros lado a lado com medida so' de largura estouram no portatil. */
+.mp-quadro{width:clamp(190px,min(36vh,25vw),340px)}
+.mp-quadro .mp-arte{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
+  z-index:2;pointer-events:none}
+/* A CAIXA DA JANELA recorta a filmagem no retangulo do furo; o canto redondo quem faz e'
+   a propria arte, que fica POR CIMA. Arte sem furo nao chega aqui: ela nao fecha leva. */
+.mp-jan{position:absolute;overflow:hidden;z-index:1}
+.mp-jan video{position:absolute;inset:auto;object-fit:fill;background:#000}
+.mp-vazia{position:absolute;z-index:1;
+  background:repeating-linear-gradient(45deg,
+    color-mix(in srgb,var(--ink) 8%,transparent),
+    color-mix(in srgb,var(--ink) 8%,transparent) 6px,
+    transparent 6px,transparent 12px)}
+.mp-escolhida{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.mp-quadro video{inset:auto}
+
 .rec-par{display:flex;align-items:flex-start;justify-content:center;
   gap:clamp(24px,4vw,56px);flex-wrap:wrap;padding:6px 0 4px}
 .rec-lado{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
@@ -1526,6 +1561,36 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    viva" aqui de proposito: com varias pecas rodando juntas elas nao acabam em ordem, e
    apontar uma posicao seria afirmar o que nao se sabe. O que se sabe e' que aquelas
    ainda nao chegaram e que ha' gente trabalhando, e e' isso que o respiro diz. */
+/* ========================================== O SELO DO FECHO, e a barra que some
+
+   O PEDIDO DELE, em 26/08/2026: "quando os recortes ficarem prontos... quero uma
+   animacao, e quero que toda essa barra suma e fique apenas um simbolo de verificado
+   informando que a quantidade esta' 100% pronta, pode avancar". O miolo vivo recolhe
+   e desbota; o circulo do selo se desenha e o risco entra em seguida. */
+.rec-vivo{display:flex;flex-direction:column;max-height:400px;
+  transition:max-height .55s cubic-bezier(.23,1,.32,1),opacity .4s ease,
+             margin .55s cubic-bezier(.23,1,.32,1)}
+.apl-obra.fechada .rec-vivo{max-height:0;opacity:0;margin:0;overflow:hidden;
+  pointer-events:none}
+.rec-fecho{display:flex;align-items:center;justify-content:center;gap:13px;
+  padding:6px 0}
+.rec-fecho[hidden]{display:none}
+.rec-fecho b{font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.rec-fecho .ok{width:36px;height:36px;flex:0 0 auto;fill:none;stroke:var(--accent);
+  stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.rec-fecho .ok circle{stroke-dasharray:151;stroke-dashoffset:151;
+  animation:fecho-circulo .55s ease-out forwards}
+.rec-fecho .ok path{stroke-dasharray:42;stroke-dashoffset:42;
+  animation:fecho-risco .3s .4s ease-out forwards}
+@keyframes fecho-circulo{to{stroke-dashoffset:0}}
+@keyframes fecho-risco{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion: reduce){
+  .rec-vivo{transition:none}
+  .rec-fecho .ok circle,.rec-fecho .ok path{animation:none;stroke-dashoffset:0}
+}
+/* OS BOTOES DO FIM, centrados abaixo da caixa do andamento. */
+.apl-feito.rec-adiante{justify-content:center;margin-top:16px}
+
 .rec-tiras.andando i:not([class]){animation:rec-espera 1.8s ease-in-out infinite}
 @keyframes rec-espera{0%,100%{opacity:1}50%{opacity:.55}}
 @media (prefers-reduced-motion: reduce){
