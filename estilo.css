@@ -1462,6 +1462,21 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* A SEGUNDA LINHA DO CARTAO DE CONTA: quantas variacoes servem. E' o dado que separa
    uma conta pronta de uma conta pela metade, entao ele mora no cartao e nao num tooltip. */
 .mp-qtas{display:block;padding:0 9px 8px;font-size:10.5px;color:var(--muted)}
+/* O CARDZINHO SEM PREVIEW, por ordem dele em 27/08/2026: "eu nao quero que apareca um
+   preview da conta... no mais tardar apenas um cardzinho". A conta em cima, a conta de
+   variacoes embaixo, e um Abrir por template para ver e mudar o que esta' gravado. */
+.mp-cartinha{grid-column:1/-1;padding:10px 11px 9px;overflow:visible}
+.mp-cartinha .mp-cab{display:flex;align-items:center;gap:8px}
+.mp-cartinha .mp-cab b{padding:0;font-size:13px;font-weight:700;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.mp-sem-solto{flex:0 0 auto;margin-left:auto;font-size:9.5px;font-weight:700;
+  padding:2px 7px;border-radius:999px;color:#fff;background:rgba(224,87,75,.9)}
+.mp-cartinha .mp-qtas{padding:2px 0 7px}
+.mp-tpl{display:flex;align-items:center;gap:8px;padding:6px 0 0;
+  border-top:1px solid var(--rule-solid)}
+.mp-tpl span{flex:1 1 auto;min-width:0;font-size:12px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.mp-tpl .acao{flex:0 0 auto}
 .mp-sem{position:absolute;top:7px;right:7px;font-size:9.5px;font-weight:700;
   padding:3px 7px;border-radius:999px;color:var(--ink);
   background:color-mix(in srgb,var(--paper) 86%,transparent);
@@ -1475,6 +1490,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    a propria arte, que fica POR CIMA. Arte sem furo nao chega aqui: ela nao fecha leva. */
 .mp-jan{position:absolute;overflow:hidden;z-index:1}
 .mp-jan video{position:absolute;inset:auto;object-fit:fill;background:#000}
+.mp-descendo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-size:11px;color:var(--muted);white-space:nowrap}
 .mp-vazia{position:absolute;z-index:1;
   background:repeating-linear-gradient(45deg,
     color-mix(in srgb,var(--ink) 8%,transparent),
@@ -2606,6 +2623,8 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   background:color-mix(in srgb,var(--accent) 20%,transparent);font-size:9px;
   font-weight:700;color:#fff;text-align:center;user-select:none;padding:0 4px;z-index:2}
 .cd-txt:active{cursor:grabbing}
+/* O MODO MIRA DA TESOURA: o palco avisa que o proximo clique corta. */
+.cd-palco.cd-mira{cursor:crosshair;outline:2px dashed var(--accent);outline-offset:2px}
 .cd-var-pe{display:flex;gap:8px;padding:10px 11px}
 .cd-var-pe .acao{flex:1 1 auto;justify-content:center}
 /* O ALVO DE ACRESCENTAR ATRAVESSA A GRADE: ele e' o proximo passo, nao um cartao par

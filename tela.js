@@ -9390,17 +9390,40 @@ let MP_CONTA = "";             // a conta na tela
 let MP_PECA = -1;              // qual recorte veste o quadro da direita
 let MP_VAR = null;             // a variacao que a medida escolheu para o recorte da vez
 let MP_GERACAO = 0;            // quem pinta por ultimo manda; pintura velha desiste
-const MP_FURO_MINIMO = 0.02;   // furo menor que isto e' respiro do desenho, nao janela
+let MP_VIDEO = null;           // o elemento do video, guardado uma vez
+let MP_RETENTA = 0;            // tentativas de baixar de novo a arte que nao desceu
+const MP_FURO_MINIMO = 0.02;
+
+/* O VIDEO DO PALCO NAO SE PROCURA PELO ID toda vez: limpar o quadro tira a caixa da
+   janela da pagina COM o video dentro, e ate' a proxima pintura o getElementById
+   devolve nada; a pintura seguinte estourava encaixando um nulo. O elemento nasce uma
+   vez no HTML, entao guardar a referencia resolve de vez. */
+function videoDoModelo() {
+  if (!MP_VIDEO) MP_VIDEO = $("mp_video");
+  return MP_VIDEO;
+}   // furo menor que isto e' respiro do desenho, nao janela
 
 function artesDoAcervo() {
   return (ACERVO.itens || []).filter(x => x && x.tipo === "arte" && x.arquivo);
 }
 
-/** As contas que tem pelo menos uma variacao pronta (arte com furo). */
+/** TODAS as contas com template, prontas ou nao. Esconder a conta sem furo foi o
+    engano de 27/08/2026: ele cadastrou o Teste com artes exportadas sem o fundo
+    transparente e a fase 1 disse "nenhuma conta com template ainda", com o template
+    dele intacto no acervo. E' o falso relato da trava 2: a conta capenga APARECE,
+    marcada, com a tela dizendo o que falta; sumir e' que nao pode. */
 function contasComModelo() {
   return [...new Set((ACERVO.itens || [])
     .filter(x => x && x.tipo === "template" && x.conta)
-    .map(x => x.conta))].filter(c => variacoesDaConta(c).length).sort();
+    .map(x => x.conta))].sort();
+}
+
+/** As artes da conta como ELE as ve, com ou sem furo: e' por elas que a conta se
+    reconhece no cartao, e e' nelas que o aviso de sem-furo aponta. */
+function artesDaConta(conta) {
+  const meus = new Set((ACERVO.itens || [])
+    .filter(x => x && x.tipo === "template" && x.conta === conta).map(x => x.id));
+  return artesDoAcervo().filter(a => meus.has(a.template));
 }
 
 /** As variacoes da conta: as artes COM FURO de todos os templates dela.
@@ -9421,10 +9444,21 @@ function encaixeNaJanela(broll, jan) {
   const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
   // COBRIR, e nao caber: sobrar tarja preta dentro da moldura seria pior que perder
   // beirada de filmagem, porque a tarja aparece na peca pronta.
-  const k = Math.max(jan.w / b.w, jan.h / b.h);
+  const k = Math.max(jan.w / b.w, jan.h / b.h) * FOLGA_DO_ENCAIXE;
   return { k, x: jan.x + jan.w / 2 - k * (b.x + b.w / 2),
               y: jan.y + jan.h / 2 - k * (b.y + b.h / 2) };
 }
+
+/* A FOLGA DO ENCAIXE, caso real de 27/08/2026 a' noite: o recorte da fase 2
+   preserva o reel INTEIRO de proposito ("e' para capturar 100% como e' o original"),
+   entao a moldura arredondada e o preto do proprio reel vem gravados nos pixels da
+   filmagem. Sem folga, o retangulo do B-roll cobria a janela mas os cantos redondos
+   ALHEIOS apareciam dentro dela: "olha a borda curvada que nao ta' aparecendo... a
+   diferenca entre esses dois ta' ficando preta". A filmagem entra 12% maior do que o
+   justo, e esses cantos caem fora da moldura. Calibrado ao vivo na casa da rua, peca
+   a peca: 1.10 esconde o canto do reel, 1.12 fica com margem; o preco e' perder ate'
+   6% de beirada por lado, e beirada perdida nao aparece, preto alheio aparece. */
+const FOLGA_DO_ENCAIXE = 1.12;
 
 /** O preco de vestir este B-roll com esta janela. Menor preco, melhor encaixe.
 
@@ -9437,7 +9471,9 @@ function encaixeNaJanela(broll, jan) {
 function custoDoEncaixe(broll, jan) {
   const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
   const proporcao = Math.abs(Math.log((b.w / b.h) / (jan.w / jan.h)));
-  const tamanho = Math.abs(Math.log(Math.max(jan.w / b.w, jan.h / b.h)));
+  // O TAMANHO PAGA COM A FOLGA JUNTO, porque e' com ela que a filmagem vai vestir.
+  const tamanho = Math.abs(Math.log(
+    FOLGA_DO_ENCAIXE * Math.max(jan.w / b.w, jan.h / b.h)));
   return proporcao + tamanho;
 }
 
@@ -9515,34 +9551,48 @@ function desenhaAsContas() {
     l.innerHTML = '<p class="nota mini ed-nada">nenhuma conta com template ainda</p>';
     return;
   }
-  /* O CARTAO MOSTRA A PRIMEIRA VARIACAO da conta, porque conta se reconhece pela cara
-     das artes dela, e diz quantas variacoes servem: e' o dado que separa uma conta
-     pronta de uma pela metade. */
+  /* SEM PREVIEW, POR ORDEM DELE: "eu nao quero que apareca um preview da conta... no
+     mais tardar apenas um cardzinho" (27/08/2026). O cardzinho diz a conta e lista os
+     templates dela, cada um com o Abrir que leva ao cadastro carregado, para ver e
+     mudar o que esta' gravado. Quem quer VER as variacoes abre: la' estao todas.
+     O ATRIBUTO E' data-editar, e NAO data-abrir: data-abrir pertence aos links de
+     abrir pasta, e um ouvinte no documento inteiro os atende; com o mesmo nome, o
+     clique no Abrir do cardzinho caia la' tambem, e na casa que nao abre pastas o
+     aviso "essa pasta mora na casa do Estudio" tomava o lugar do texto do botao e
+     estourava o cartao de lado (o bug do cartao, 27/08/2026 a' noite). */
   l.innerHTML = contas.map(c => {
     const vs = variacoesDaConta(c);
-    return `<div class="mp-cartao${c === MP_CONTA ? " sel" : ""}"
+    const meus = (ACERVO.itens || [])
+      .filter(x => x && x.tipo === "template" && x.conta === c);
+    return `<div class="mp-cartao mp-cartinha${c === MP_CONTA ? " sel" : ""}"
       data-conta="${escapa(c)}" title="${escapa(c)}">
-      <span class="mp-mini"><img alt="" data-arte="${escapa(vs[0].arquivo)}"></span>
-      <b>${escapa(c)}</b>
+      <div class="mp-cab"><b>${escapa(c)}</b>
+        ${vs.length ? "" : '<span class="mp-sem-solto">Sem Furo</span>'}</div>
       <span class="mp-qtas">${vs.length === 1 ? "1 Variação"
-        : vs.length + " Variações"}</span></div>`;
+        : vs.length ? vs.length + " Variações" : "nenhuma arte com furo"}</span>
+      ${meus.map(m => `<div class="mp-tpl">
+        <span>${escapa(m.nome || "sem nome")}</span>
+        <button class="acao mini" type="button"
+          data-editar="${escapa(m.id)}">Abrir</button></div>`).join("")}
+      </div>`;
   }).join("");
-  l.querySelectorAll("img[data-arte]").forEach(async img => {
-    try { img.src = await enderecoDo(img.dataset.arte); } catch (e) {}
-  });
 }
 
 /** Pinta o par: a variacao que a medida escolheu, crua e vestida com o recorte da vez. */
-async function pintarOModelo() {
+async function pintarOModelo(deNovo) {
+  if (!deNovo) MP_RETENTA = 0;         // gesto novo zera a conta das retentativas
   /* DUAS PINTURAS SE ATROPELAM: a limpeza e' sincrona e o desenho vem depois de um
      await (a arte desce da rede na primeira vez). Dois cliques rapidos em Ver Outra
      Peça deixavam os quadros com as duas artes empilhadas, e a de baixo com o recado
      da outra (revisao de 27/08/2026). A geracao resolve: quem envelheceu desiste. */
   const ger = ++MP_GERACAO;
   const vars = variacoesDaConta(MP_CONTA);
-  const qArte = $("mp_arte"), qPeca = $("mp_peca"), v = $("mp_video");
+  const qArte = $("mp_arte"), qPeca = $("mp_peca"), v = videoDoModelo();
   $("mp_usar").disabled = !vars.length;
-  if (!vars.length) {
+  // SEM CONTA NENHUMA e' um caso; CONTA CAPENGA e' outro, e confundi-los foi o engano
+  // de 27/08/2026: o Teste dele, com as quatro artes opacas, caia aqui como se nao
+  // existisse, e ele leu "nenhuma conta" com o template intacto no acervo.
+  if (!MP_CONTA) {
     MP_VAR = null;
     qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
     qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
@@ -9551,10 +9601,55 @@ async function pintarOModelo() {
       : "Cadastre um template com variações para vestir esta leva.";
     return;
   }
+  // A CONTA CAPENGA MOSTRA A PROPRIA ARTE E O MOTIVO. So' o recado, sem a arte na
+  // frente, deixaria ele sem saber DE QUAL arquivo a tela esta' falando.
+  if (!vars.length) {
+    MP_VAR = null;
+    const cara = artesDaConta(MP_CONTA)[0];
+    const urlCrua = cara ? await enderecoDo(cara.arquivo) : null;
+    if (ger !== MP_GERACAO) return;
+    qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
+    qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
+    if (urlCrua) {
+      const cru = document.createElement("img");
+      cru.className = "mp-arte"; cru.alt = ""; cru.src = urlCrua;
+      qArte.appendChild(cru);
+    }
+    $("mp_recado").textContent = "As artes de " + MP_CONTA + " estão sem o furo "
+      + "transparente, e sem ele a filmagem não tem onde entrar: exporte cada PNG "
+      + "com a janela vazada e troque as artes no cadastro.";
+    return;
+  }
   const peca = (MP_PECA >= 0 && EDIT_RECORTES[MP_PECA]) || null;
   MP_VAR = melhorVariacao(peca && BROLL_DE && BROLL_DE.get(peca.nome), vars) || vars[0];
   const url = await enderecoDo(MP_VAR.arquivo);
   if (ger !== MP_GERACAO) return;      // outra pintura assumiu enquanto a arte descia
+  /* A ARTE QUE NAO DESCEU NAO VIRA IMAGEM QUEBRADA, caso real de 27/08/2026 na casa
+     da rua: o posto engasgou por um instante, o endereco veio nulo, e a tela pintou os
+     dois quadros com o icone de imagem quebrada dizendo por cima qual variacao vestia
+     melhor (trava 2: a tela nao afirma o que nao mediu). A falta se diz, e a propria
+     tela tenta baixar de novo, ate' tres vezes, antes de parar com o motivo na tela. */
+  if (!url) {
+    qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
+    qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
+    if (CASA_INFO && CASA_INFO.sessao === "vencida") {
+      $("mp_recado").textContent = "A sessão venceu, e sem ela o posto não entrega "
+        + "as artes: recarregue a página e entre de novo.";
+      return;
+    }
+    if (MP_RETENTA < 3) {
+      MP_RETENTA += 1;
+      POSTO_DE_PE = null;              // o batimento se refaz na proxima tentativa
+      $("mp_recado").textContent = "A arte da variação não desceu do posto; "
+        + "vou tentar de novo em instantes.";
+      setTimeout(() => { if (ger === MP_GERACAO) pintarOModelo(true); }, 2500);
+    } else {
+      $("mp_recado").textContent = "A arte da variação não desceu do posto, mesmo "
+        + "tentando de novo: confira se ele está no ar e recarregue a página.";
+    }
+    return;
+  }
+  MP_RETENTA = 0;
   /* O PALCO SO' SE MEXE DEPOIS DA ESPERA, tudo de uma vez. Limpar antes do await
      deixava o video FORA da pagina no vao da descarga: a pintura seguinte procurava
      `mp_video` e achava nada, estourando no encaixe. Limpeza e desenho juntos, sem
@@ -9574,6 +9669,21 @@ async function pintarOModelo() {
   qArte.appendChild(vazio);
   const i1 = document.createElement("img");
   i1.className = "mp-arte"; i1.alt = ""; i1.src = url;
+  /* O ENDERECO PODE ESTAR MORTO SEM SER NULO (foto devolvida por engano, cache velho):
+     se a imagem nao abrir, o endereco sai do cache e a pintura se refaz pelo mesmo
+     caminho da falta, com recado e com o mesmo teto de tentativas. */
+  i1.onerror = () => {
+    if (ger !== MP_GERACAO) return;
+    ED_IMGS.delete(MP_VAR.arquivo);
+    try { URL.revokeObjectURL(url); } catch (e) { /* endereco ja' devolvido */ }
+    if (MP_RETENTA >= 3) {
+      $("mp_recado").textContent = "A arte da variação não abre como imagem: "
+        + "troque a arte no cadastro ou recarregue a página.";
+      return;
+    }
+    MP_RETENTA += 1;
+    pintarOModelo(true);
+  };
   qArte.appendChild(i1);
 
   // O QUADRO DA DIREITA: a mesma variacao com a filmagem encaixada na janela.
@@ -9584,6 +9694,13 @@ async function pintarOModelo() {
   caixa.style.width = (jan.w * 100) + "%";
   caixa.style.height = (jan.h * 100) + "%";
   caixa.appendChild(v);
+  // A FILMAGEM QUE AINDA NAO ABRIU SE DIZ: os recortes moram na casa da rua e podem
+  // levar segundos descendo; quadro preto mudo parecia tela travada ("ta' tudo
+  // cinza... que delay e' esse"). O aviso some no primeiro quadro do video.
+  const espera = document.createElement("span");
+  espera.className = "mp-descendo";
+  espera.textContent = "Descendo A Filmagem…";
+  caixa.appendChild(espera);
   qPeca.appendChild(caixa);
   const i2 = document.createElement("img");
   i2.className = "mp-arte"; i2.alt = ""; i2.src = url;
@@ -9597,7 +9714,7 @@ async function pintarOModelo() {
 
 /** Poe no quadro da direita o recorte da vez, encaixado na janela da variacao. */
 async function vestirORecorte() {
-  const v = $("mp_video");
+  const v = videoDoModelo();
   if (!MP_VAR || !EDIT_RECORTES.length || MP_PECA < 0 || !EDIT_RECORTES[MP_PECA]) {
     v.removeAttribute("src");
     return;
@@ -9615,6 +9732,12 @@ async function vestirORecorte() {
     const u = await urlDaMidia(peca, pastaDosRecortes());
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
     v.dataset.url = u;
+    const aviso = () => document.querySelector("#mp_peca .mp-descendo");
+    v.onplaying = () => { const a = aviso(); if (a) a.hidden = true; };
+    v.onerror = () => {
+      const a = aviso();
+      if (a) a.textContent = "A Filmagem Não Desceu";
+    };
     v.src = u;
     v.play().catch(() => {});
   } catch (e2) {}
@@ -9641,7 +9764,10 @@ async function entrarNoModelo() {
 
 /** Sair da fase FECHA o video. Sem isto ele fica vivo atras da tela, gastando rede. */
 function pararOModelo() {
-  const v = $("mp_video");
+  // QUEM SAIU NAO REPINTA: a retentativa agendada por pintarOModelo morre aqui, senao
+  // ela dispararia com a fase escondida e ressuscitaria o video atras da tela.
+  MP_GERACAO++;
+  const v = videoDoModelo();
   if (!v) return;
   v.pause();
   if (v.dataset.url) { URL.revokeObjectURL(v.dataset.url); delete v.dataset.url; }
@@ -9674,6 +9800,12 @@ async function usarOModelo() {
 }
 
 $("mp_lista").addEventListener("click", async ev => {
+  // O ABRIR LEVA AO CADASTRO CARREGADO, para ver tudo que foi gravado e mudar.
+  const editar = ev.target.closest("[data-editar]");
+  if (editar) {
+    await abrirCadastro(editar.dataset.editar);
+    return;
+  }
   const li = ev.target.closest("[data-conta]");
   if (!li) return;
   MP_CONTA = li.dataset.conta;
@@ -9779,21 +9911,48 @@ async function cdRegistrarFonte(f) {
 
 /* ------------------------------------------------------------- abrir e fechar */
 
-async function abrirCadastro() {
+/* ABRE VAZIO PARA CADASTRAR, ou CARREGADO PARA VER E MUDAR. "Cria uma opcao que eu
+   possa clicar, abrir e visualizar tudo que foi cadastrado, mudar talvez os dados"
+   (27/08/2026): com um id de template, cada aba abre mostrando o que esta' gravado, e
+   o fecho SALVA POR CIMA do mesmo template em vez de criar outro. */
+async function abrirCadastro(idTpl) {
   if (!ACERVO.itens.length) await lerAcervo();
+  const dele = idTpl
+    ? (ACERVO.itens || []).find(x => x && x.tipo === "template" && x.id === idTpl)
+    : null;
   CAD = {
-    passo: 1, nome: "", conta: cdNomes("conta")[0] || "",
-    fonte: cdBiblioteca()[0] ? cdBiblioteca()[0].chave : "anton",
-    linhas: 3, frase: 1, filtro: "todas", busca: "",
-    marca: (cdDoAcervo("marca")[0] || {}).id || null,
-    marcaPos: { dir: 6, baixo: 6, larg: 42, alt: 13 },
+    passo: 1, nome: dele ? (dele.nome || "") : "",
+    conta: dele ? (dele.conta || "") : (cdNomes("conta")[0] || ""),
+    fonte: dele && dele.fonte ? dele.fonte
+         : (cdBiblioteca()[0] ? cdBiblioteca()[0].chave : "anton"),
+    linhas: dele && dele.linhas ? dele.linhas : 3,
+    frase: 1, filtro: "todas", busca: "",
+    marca: dele ? (dele.marca || null) : ((cdDoAcervo("marca")[0] || {}).id || null),
+    marcaPos: dele && dele.marcaPos ? { ...dele.marcaPos }
+            : { dir: 6, baixo: 6, larg: 42, alt: 13 },
     /* AS VARIACOES NASCEM VAZIAS E CRESCEM SEM TETO: "se eu quiser adicionar mais
        modelos, eu devo conseguir adicionar mais" (27/08/2026). Cada arte subida vira
        uma variacao; `qual` negativo quer dizer que a proxima subida ACRESCENTA. */
     vars: [],
-    qual: -1, gravando: false
+    qual: -1, mira: -1, gravando: false,
+    editando: dele ? dele.id : null
   };
-  $("cd_nome").value = "";
+  if (dele) {
+    // AS VARIACOES GRAVADAS ENTRAM COMO ESTAO: a arte vem do acervo (sem re-subir no
+    // salvar), a medida vem da ficha, e `novo` marca o que ainda nao mora no disco.
+    for (const va of (dele.variacoes || [])) {
+      const a = artesDoAcervo().find(x => x.id === va.arte);
+      if (!a) continue;
+      CAD.vars.push({
+        blob: null, novo: false, id: a.id, arquivo: a.arquivo,
+        nome: a.nome || "", url: await enderecoDo(a.arquivo),
+        medida: { w: a.w, h: a.h, furo: !!a.furo, janela: a.janela || null },
+        escrita: { ...(va.escrita || a.escrita || { topo: 78, altura: 13 }) }
+      });
+    }
+  }
+  $("cd_titulo").textContent = dele ? "Editar Template" : "Cadastrar Template";
+  $("cd_nome").value = CAD.nome;
   $("cd_busca").value = "";
   $("cd_conta_nova").classList.remove("abre");
   $("cd_girando").hidden = true;
@@ -9822,10 +9981,15 @@ function fecharCadastro() {
   // de falha o proprio recado de erro morria (revisao de 27/08/2026). O rodape ja' diz
   // qual variacao esta' subindo; e' essa a resposta para o clique impaciente.
   if (CAD && CAD.gravando) return;
-  // AS FOTOS SOLTAS SAO DEVOLVIDAS: cada arte de variacao virou um endereco de memoria, e
-  // fechar sem devolver deixa o arquivo inteiro preso no navegador ate' o F5.
+  /* AS FOTOS SOLTAS SAO DEVOLVIDAS, MAS SO' AS NOSSAS: arte subida aqui dentro tem
+     endereco proprio; variacao carregada para EDICAO (a que tem v.arquivo) usa o
+     endereco que mora no cache ED_IMGS, o mesmo que a fase 1 usa. Devolve-lo matava a
+     foto para o cache inteiro: Abrir, fechar, e o modelo pintava os dois quadros com
+     o icone de imagem quebrada (o bug das imagens de 27/08/2026 a' noite). */
   if (CAD) {
-    for (const v of CAD.vars) if (v.url) URL.revokeObjectURL(v.url);
+    for (const v of CAD.vars) {
+      if (v.url && !v.arquivo) URL.revokeObjectURL(v.url);
+    }
   }
   const v = $("cd_marca_video");
   if (v) {
@@ -9856,7 +10020,8 @@ function cdMostraPasso(n) {
     x.classList.toggle("on", Number(x.dataset.p) === n);
   });
   $("cd_voltar").disabled = n === 1;
-  $("cd_avancar").textContent = n === 4 ? "Cadastrar Template" : "Avançar";
+  $("cd_avancar").textContent = n !== 4 ? "Avançar"
+    : (CAD.editando ? "Salvar Template" : "Cadastrar Template");
   if (n === 2) cdPintaFrase();
   cdDiz();
 }
@@ -9868,9 +10033,15 @@ function cdDiz(texto, classe) {
   if (texto !== undefined) { d.textContent = texto; d.className = "pop-diz " + (classe || ""); return; }
   d.className = "pop-diz";
   if (!CAD) { d.textContent = ""; return; }
+  const semFuro = CAD.vars.filter(x => x.medida && !x.medida.furo).length;
   d.textContent = CAD.passo === 4 && CAD.vars.length
     ? (CAD.vars.length === 1 ? "1 Variação No Template"
-       : CAD.vars.length + " Variações No Template") : "";
+       : CAD.vars.length + " Variações No Template")
+      + (semFuro ? ", " + semFuro + " Sem O Furo Transparente" : "") : "";
+  // O SEM-FURO PINTA O RODAPE DE VERMELHO: foi o aviso que faltou em 27/08/2026,
+  // quando ele cadastrou quatro artes opacas so' com o selo no canto de cada cartao e
+  // foi descobrir na fase 1, achando que o cadastro tinha sumido.
+  if (semFuro && CAD.passo === 4) d.className = "pop-diz ruim";
 }
 
 $("cd_trilha").addEventListener("click", ev => {
@@ -10037,6 +10208,84 @@ $("cd_fonte_arq").addEventListener("change", async ev => {
   await cdReceberLote(fs, cdSubirFonte);
 });
 
+/* A TESOURA DO FURO. Ele nao tem o plano pago do Canva, que e' quem exporta PNG com
+   fundo transparente ("nao consegui fazer isso por ai nao? eu nao tenho canva pro",
+   27/08/2026). Entao o furo se abre AQUI: ele clica no miolo que vira a janela, e o
+   bloco continuo de pixels que difere do fundo da arte e' apagado inteiro, com o
+   desenho que ele tem, canto arredondado incluso.
+
+   O CORTE SEGUE A COR DO PONTO CLICADO, desde a noite de 27/08/2026. A primeira
+   tesoura apagava "tudo que foge do fundo", e comeu um elemento desenhado POR CIMA do
+   miolo (o verde-limao das artes dele), que devia continuar na arte, na frente da
+   filmagem. Agora o bloco apagado e' o dos pixels PARECIDOS com o clicado (ate' 90
+   por canal, o bastante para o degrade do miolo), andando por vizinho; o que tem
+   outra cor fica. Arte de fundo estampado continua fora, e o recado diz isso. */
+async function vazarNoMiolo(blob, fx, fy) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((ok, nao) => {
+      const i = new Image();
+      i.onload = () => ok(i);
+      i.onerror = () => nao(new Error("não consegui abrir a arte"));
+      i.src = url;
+    });
+    const lar = img.naturalWidth, alt = img.naturalHeight;
+    const c = document.createElement("canvas");
+    c.width = lar; c.height = alt;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, lar, alt).data;
+    const cor = i => [d[i * 4], d[i * 4 + 1], d[i * 4 + 2]];
+    const fundo = cor(2 * lar + 2);
+    const difere = i => {
+      const p4 = i * 4;
+      return Math.max(Math.abs(d[p4] - fundo[0]), Math.abs(d[p4 + 1] - fundo[1]),
+                      Math.abs(d[p4 + 2] - fundo[2])) > 40;
+    };
+    const x0 = Math.min(lar - 1, Math.max(0, Math.round(fx * lar)));
+    const y0 = Math.min(alt - 1, Math.max(0, Math.round(fy * alt)));
+    const alvo = cor(y0 * lar + x0);
+    const doMiolo = i => {
+      const p4 = i * 4;
+      return Math.max(Math.abs(d[p4] - alvo[0]), Math.abs(d[p4 + 1] - alvo[1]),
+                      Math.abs(d[p4 + 2] - alvo[2])) <= 90;
+    };
+    if (!difere(y0 * lar + x0)) {
+      return { erro: "esse ponto é do fundo da arte, não do miolo: clique dentro "
+                     + "da área que vira a janela." };
+    }
+    // O BLOCO INTEIRO, andando por vizinho a partir do clique.
+    const bloco = new Uint8Array(lar * alt);
+    const fila = new Int32Array(lar * alt);
+    let lidos = 0, postos = 0;
+    fila[postos++] = y0 * lar + x0;
+    bloco[y0 * lar + x0] = 1;
+    while (lidos < postos) {
+      const i = fila[lidos++];
+      const x = i % lar;
+      if (x > 0 && !bloco[i - 1] && doMiolo(i - 1)) { bloco[i - 1] = 1; fila[postos++] = i - 1; }
+      if (x < lar - 1 && !bloco[i + 1] && doMiolo(i + 1)) { bloco[i + 1] = 1; fila[postos++] = i + 1; }
+      if (i >= lar && !bloco[i - lar] && doMiolo(i - lar)) { bloco[i - lar] = 1; fila[postos++] = i - lar; }
+      if (i < lar * (alt - 1) && !bloco[i + lar] && doMiolo(i + lar)) { bloco[i + lar] = 1; fila[postos++] = i + lar; }
+    }
+    if (postos < lar * alt * MP_FURO_MINIMO) {
+      return { erro: "o miolo clicado é pequeno demais para ser a janela do vídeo." };
+    }
+    // A MASCARA APAGA O BLOCO com meio pixel de suavidade, senao o canto arredondado
+    // sai serrilhado na peca pronta.
+    const md = new ImageData(lar, alt);
+    for (let i = 0; i < lar * alt; i++) md.data[i * 4 + 3] = bloco[i] ? 255 : 0;
+    const cm = document.createElement("canvas");
+    cm.width = lar; cm.height = alt;
+    cm.getContext("2d").putImageData(md, 0, 0);
+    g.globalCompositeOperation = "destination-out";
+    g.filter = "blur(1px)";
+    g.drawImage(cm, 0, 0);
+    const vazado = await new Promise(ok => c.toBlob(ok, "image/png"));
+    return { blob: vazado };
+  } finally { URL.revokeObjectURL(url); }
+}
+
 /* O LOTE PRESTA CONTA NO FIM. Arquivo recusado no meio da selecao era engolido: o
    proximo arquivo bom repintava e o recado da recusa durava um piscar. Cada subida
    devolve o MOTIVO da recusa (ou nada), e quem chama o lote junta os que ficaram de
@@ -10096,7 +10345,11 @@ function cdPintaMarcas() {
         title="${escapa(m.nome || m.arquivo)}"><img alt=""
         data-marca="${escapa(m.arquivo)}"></div>`).join("");
     alvo.querySelectorAll("img[data-marca]").forEach(async img => {
-      try { img.src = await enderecoDo(img.dataset.marca); } catch (e) {}
+      // endereco nulo (arte que nao desceu) nao vira icone de imagem quebrada
+      try {
+        const u = await enderecoDo(img.dataset.marca);
+        if (u) img.src = u;
+      } catch (e) { /* sem a miniatura; o title do cartao segue dizendo qual e' */ }
     });
   }
   cdPintaAMarcaNoPalco();
@@ -10112,7 +10365,10 @@ async function cdPintaAMarcaNoPalco() {
   caixa.style.bottom = p.baixo + "%";
   caixa.style.width = p.larg + "%";
   caixa.style.height = p.alt + "%";
-  try { $("cd_marca_img").src = await enderecoDo(m.arquivo); } catch (e) {}
+  try {
+    const u = await enderecoDo(m.arquivo);
+    if (u) $("cd_marca_img").src = u;
+  } catch (e) { /* sem a previa; a caixa segue mostrando o lugar dela */ }
 }
 
 /* O FUNDO E' UM RECORTE DESTA LEVA, e nao um desenho de exemplo: e' por cima da filmagem
@@ -10180,13 +10436,15 @@ function cdPintaVars() {
     const semFuro = v.medida && !v.medida.furo;
     return `<div class="cd-var${i === CAD.qual ? " on" : ""}" data-i="${i}">
       <div class="cd-var-cab">Variação ${i + 1}</div>
-      <div class="cd-palco">
+      <div class="cd-palco${CAD.mira === i ? " cd-mira" : ""}" data-palco="${i}">
         <img class="cd-var-arte" alt="" src="${escapa(v.url)}">
         ${semFuro ? '<span class="cd-sem-furo">Sem Furo</span>' : ""}
         <div class="cd-txt" data-v="${i}" style="top:${v.escrita.topo}%;height:${
           v.escrita.altura}%">A Escrita Fica Aqui<span class="cd-alca"></span></div>
       </div>
       <div class="cd-var-pe">
+        ${semFuro ? `<button class="acao mini" type="button" data-vazar="${i}">${
+          CAD.mira === i ? "Cancelar" : "Abrir A Janela"}</button>` : ""}
         <button class="acao mini" type="button" data-subir="${i}">Trocar Arte</button>
         <button class="acao mini" type="button" data-tirar="${i}">Tirar</button>
       </div></div>`;
@@ -10201,13 +10459,60 @@ function cdPintaVars() {
   cdDiz();
 }
 
-$("cd_vars").addEventListener("click", ev => {
+$("cd_vars").addEventListener("click", async ev => {
   if (!CAD) return;
+  const vazar = ev.target.closest("[data-vazar]");
+  if (vazar) {
+    const i = Number(vazar.dataset.vazar);
+    CAD.mira = CAD.mira === i ? -1 : i;
+    cdPintaVars();
+    cdDiz(CAD.mira >= 0
+      ? "Clique dentro da área da arte que deve virar a janela do vídeo." : "");
+    return;
+  }
+  // NA MIRA, o clique na arte E' a tesoura: o miolo clicado vira o furo.
+  if (CAD.mira >= 0) {
+    const palco = ev.target.closest('[data-palco="' + CAD.mira + '"]');
+    const arte = palco && palco.querySelector(".cd-var-arte");
+    if (arte) {
+      const r = arte.getBoundingClientRect();
+      const v = CAD.vars[CAD.mira];
+      // ARTE GRAVADA DESCE DO ACERVO NA HORA DO CORTE: na edicao ela abre so' com o
+      // endereco, e a tesoura precisa dos bytes.
+      if (!v.blob && v.arquivo) {
+        cdDiz("buscando a arte…");
+        v.blob = await arquivoDoAcervo(v.arquivo);
+        if (!v.blob) return cdDiz("não consegui ler a arte do acervo.", "ruim");
+      }
+      // A TESOURA CORTA SEMPRE DO ORIGINAL: reclicar refaz o furo do zero, em vez de
+      // abrir um segundo buraco por cima do primeiro.
+      if (!v.blobCru) v.blobCru = v.blob;
+      cdDiz("abrindo a janela…");
+      const feito = await vazarNoMiolo(v.blobCru,
+        (ev.clientX - r.left) / r.width, (ev.clientY - r.top) / r.height);
+      if (feito.erro) { cdDiz(feito.erro, "ruim"); return; }
+      const medida = await medirAArte(feito.blob);
+      if (!medida.furo) {
+        return cdDiz("não consegui abrir uma janela que a régua do furo enxergue: "
+                     + "exporte a arte já vazada.", "ruim");
+      }
+      if (v.url && v.url.startsWith("blob:") && !v.arquivo) URL.revokeObjectURL(v.url);
+      v.blob = feito.blob;
+      v.novo = true;                       // o corte vira arquivo novo no salvar
+      v.medida = medida;
+      v.url = URL.createObjectURL(feito.blob);
+      CAD.mira = -1;
+      cdPintaVars();
+      cdDiz("A janela foi aberta com o desenho do miolo.", "boa");
+      return;
+    }
+  }
   const tirar = ev.target.closest("[data-tirar]");
   if (tirar) {
     const i = Number(tirar.dataset.tirar);
     const v = CAD.vars[i];
-    if (v && v.url) URL.revokeObjectURL(v.url);
+    // arte de edicao EMPRESTA o endereco do cache ED_IMGS: nao e' nosso para devolver
+    if (v && v.url && !v.arquivo) URL.revokeObjectURL(v.url);
     CAD.vars.splice(i, 1);
     CAD.qual = -1;
     cdPintaVars();
@@ -10249,11 +10554,14 @@ async function cdPorArteNaVariacao(f) {
   try {
     const medida = await medirAArte(f);
     let v = CAD.qual >= 0 ? CAD.vars[CAD.qual] : null;
-    if (v && v.url) URL.revokeObjectURL(v.url);
+    if (v && v.url && v.url.startsWith("blob:") && !v.arquivo) URL.revokeObjectURL(v.url);
     if (!v) {
       v = { escrita: { topo: 78, altura: 13 } };
       CAD.vars.push(v);
     }
+    v.novo = true;                         // trocar poe arquivo novo no lugar
+    v.arquivo = null;
+    v.blobCru = null;
     v.blob = f;
     v.nome = f.name.replace(/\.[^.]+$/, "");
     v.medida = medida;
@@ -10355,10 +10663,28 @@ async function cdCadastrar() {
   // O TRABALHO SE VE. "Eu nao sei se ta salvando ou nao ta, se bugou ou nao bugou":
   // a roda gira, e o recado diz qual variacao esta' subindo, uma a uma.
   $("cd_girando").hidden = false;
-  const idTpl = "t" + Date.now() + "_" + novoId();
+  // EDITANDO, O ID E' O MESMO: salvar por cima nao pode virar um segundo template, e o
+  // rascunho que aponta a conta continua valendo. As fichas antigas ficam guardadas
+  // para a volta em caso de falha.
+  const idTpl = CAD.editando || ("t" + Date.now() + "_" + novoId());
+  const fichasAntes = CAD.editando
+    ? ACERVO.itens.filter(x => x.id === idTpl
+        || (x.tipo === "arte" && x.template === idTpl))
+    : [];
   const guardadas = [];
   try {
     for (const [n, v] of CAD.vars.entries()) {
+      if (v.novo === false && v.id) {
+        // ARTE QUE JA' MORA NO DISCO NAO SOBE DE NOVO: so' a ficha viaja, com a
+        // escrita do jeito que ficou.
+        guardadas.push({
+          id: v.id, tipo: "arte", nome: nome + " · Variação " + (n + 1),
+          arquivo: v.arquivo, w: v.medida.w, h: v.medida.h,
+          furo: v.medida.furo, janela: v.medida.janela,
+          template: idTpl, escrita: { ...v.escrita }, criado: Date.now()
+        });
+        continue;
+      }
       cdDiz("guardando a variação " + (n + 1) + " de " + CAD.vars.length + "…");
       const ext = "." + (v.blob.type === "image/webp" ? "webp"
                        : v.blob.type === "image/jpeg" ? "jpg" : "png");
@@ -10373,6 +10699,12 @@ async function cdCadastrar() {
       });
     }
     cdDiz("guardando o template…");
+    // NA EDICAO AS FICHAS VELHAS SAEM ANTES DAS NOVAS ENTRAREM: variacao tirada some
+    // do catalogo (o arquivo dela fica no disco, sem rota de apagar), e o template
+    // regravado ocupa o lugar do antigo, com o mesmo id.
+    if (CAD.editando) {
+      ACERVO.itens = ACERVO.itens.filter(x => !fichasAntes.includes(x));
+    }
     ACERVO.itens.push(...guardadas);
     ACERVO.itens.push({
       id: idTpl, tipo: "template", nome, conta: CAD.conta || "",
@@ -10387,19 +10719,20 @@ async function cdCadastrar() {
     // nenhum, porque ele escolheria uma arte que o disco nao tem.
     ACERVO.itens = ACERVO.itens.filter(
       x => x.id !== idTpl && !guardadas.some(g => g.id === x.id));
+    ACERVO.itens.push(...fichasAntes.filter(x => !ACERVO.itens.includes(x)));
     CAD.gravando = false;
     $("cd_girando").hidden = true;
     $("cd_avancar").disabled = false;
     $("cd_voltar").disabled = false;
     $("cd_corpo").style.opacity = "";
     $("cd_corpo").style.pointerEvents = "";
-    return cdDiz("não consegui cadastrar: " + e.message, "ruim");
+    return cdDiz("não consegui salvar: " + e.message, "ruim");
   }
   $("cd_girando").hidden = true;
   // A GRAVACAO ACABOU, e o fecho de fechar precisa saber: com `gravando` ligado, o
   // proprio guarda que segura o X durante a subida seguraria a saida automatica.
   CAD.gravando = false;
-  cdDiz("Template Cadastrado", "boa");
+  cdDiz(CAD.editando ? "Template Salvo" : "Template Cadastrado", "boa");
   MP_CONTA = CAD.conta;
   // O FECHO SE VE ANTES DE FECHAR: um instante com o recado bom, e a janela sai
   // sozinha, com a conta nova ja' escolhida na lista.

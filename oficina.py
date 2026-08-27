@@ -90,6 +90,15 @@ CRF = "20"
 # 1,96 de 255, o que ninguem enxerga, e o arquivo sai um pouco maior.
 QUALIDADE_DA_PLACA = "22"
 
+# A FOLGA DO ENCAIXE, de 27/08/2026 a' noite: o recorte preserva o reel INTEIRO, com a
+# moldura arredondada e o preto do proprio reel gravados nos pixels. Sem folga, o
+# retangulo do B-roll cobria a janela da arte mas os cantos redondos ALHEIOS apareciam
+# dentro dela, com o preto entre as duas curvas. A filmagem entra 12% maior do que o
+# justo e esses cantos caem fora da moldura. Calibrado ao vivo peca a peca: 1.10
+# esconde o canto do reel, 1.12 fica com margem. E' A MESMA CONTA DA TELA (tela.js,
+# FOLGA_DO_ENCAIXE): mudou aqui, muda la'.
+FOLGA_DO_ENCAIXE = 1.12
+
 
 def par(n) -> int:
     """Arredonda para par. O yuv420p, que e' o formato que todo tocador entende, guarda
@@ -1244,7 +1253,7 @@ def encaixe_na_janela(base, jan, z: float = 1.0, dx: float = 0.0,
         cyj = float(jan.get("y", 0)) + jh / 2
     except (TypeError, ValueError):
         return None
-    kenc = max(jw / bw, jh / bh)
+    kenc = max(jw / bw, jh / bh) * FOLGA_DO_ENCAIXE
     k = kenc * z
     return (k, cxj - k * cxb + kenc * dx, cyj - k * cyb + kenc * dy)
 
