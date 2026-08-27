@@ -146,9 +146,14 @@ def main() -> int:
                         for lado in ("fundo", "frente"):
                             rel = f"despachos/{ficha}/camada-{n}-{lado}.png"
                             baixar(base, ficha, rel, CASA_LOCAL / rel)
+                        # O FUNDO ABRE EM RGBA, NUNCA EM RGB (revisao de 27/08/2026):
+                        # o furo da arte VIAJA no canal transparente do PNG, e o
+                        # convert("RGB") o descartava; o camada_da_peca deixava de ver
+                        # furo proprio e reabria o buraco no formato do card antigo.
+                        # Fundo sem furo chega opaco e sai identico convertido a RGBA.
                         camadas[n] = (
                             Image.open(CASA_LOCAL / "despachos" / ficha
-                                       / f"camada-{n}-fundo.png").convert("RGB"),
+                                       / f"camada-{n}-fundo.png").convert("RGBA"),
                             Image.open(CASA_LOCAL / "despachos" / ficha
                                        / f"camada-{n}-frente.png").convert("RGBA"))
                     mascara = None

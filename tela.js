@@ -3679,6 +3679,12 @@ function esquecerOsPassos() {
   TPL_SUB = 1;
   EL_SEL = null;
   ED_BROLL_I = -1;
+  // O ESTADO DA FASE 1 TAMBEM MORRE AQUI (revisao de 27/08/2026): MP_PECA da leva
+  // anterior apontava peca que a nova nao tem, a conta caia no padrao de tela cheia e
+  // o recado afirmava a escolha de uma peca fantasma.
+  MP_CONTA = "";
+  MP_PECA = -1;
+  MP_VAR = null;
   ESCRITO.clear();
   AJUSTES.clear();
   // A FASE 5 TAMBEM ZERA. Sem isto, o enquadramento de uma leva atravessaria para a
@@ -5974,6 +5980,10 @@ async function trocarBroll(i) {
     v.play().catch(() => {});
   } catch (e) { return; }
   diz(`peça ${i + 1} de ${EDIT_RECORTES.length}`);
+  // A MOLDURA E' POR PECA desde 27/08/2026, e a bancada veste a variacao da peca de
+  // conferencia: trocar o B-roll sem repintar deixava o fundo preso na variacao da
+  // peca anterior, com o video novo dentro dela (revisao do mesmo dia).
+  if (TPL && TPL.contaModelo) await desenhaEditor();
 }
 
 $("ed_outro_broll").onclick = () => trocarBroll(sortearBroll());
@@ -9379,6 +9389,7 @@ async function tentarRetomar() {
 let MP_CONTA = "";             // a conta na tela
 let MP_PECA = -1;              // qual recorte veste o quadro da direita
 let MP_VAR = null;             // a variacao que a medida escolheu para o recorte da vez
+let MP_GERACAO = 0;            // quem pinta por ultimo manda; pintura velha desiste
 const MP_FURO_MINIMO = 0.02;   // furo menor que isto e' respiro do desenho, nao janela
 
 function artesDoAcervo() {
@@ -9493,6 +9504,13 @@ async function medirAArte(blob) {
 function desenhaAsContas() {
   const contas = contasComModelo();
   const l = $("mp_lista");
+  // LEITURA QUE FALHOU NAO E' ACERVO VAZIO, trava 2: dizer "nenhuma conta" com os
+  // templates dele intactos no disco e' o falso relato classico. O motivo aparece.
+  if (ACERVO.falhou) {
+    l.innerHTML = '<p class="nota mini ed-nada">não consegui ler o acervo: '
+      + escapa(ACERVO.falhou) + "</p>";
+    return;
+  }
   if (!contas.length) {
     l.innerHTML = '<p class="nota mini ed-nada">nenhuma conta com template ainda</p>';
     return;
@@ -9516,20 +9534,33 @@ function desenhaAsContas() {
 
 /** Pinta o par: a variacao que a medida escolheu, crua e vestida com o recorte da vez. */
 async function pintarOModelo() {
+  /* DUAS PINTURAS SE ATROPELAM: a limpeza e' sincrona e o desenho vem depois de um
+     await (a arte desce da rede na primeira vez). Dois cliques rapidos em Ver Outra
+     Peça deixavam os quadros com as duas artes empilhadas, e a de baixo com o recado
+     da outra (revisao de 27/08/2026). A geracao resolve: quem envelheceu desiste. */
+  const ger = ++MP_GERACAO;
   const vars = variacoesDaConta(MP_CONTA);
   const qArte = $("mp_arte"), qPeca = $("mp_peca"), v = $("mp_video");
-  qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
-  qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
   $("mp_usar").disabled = !vars.length;
   if (!vars.length) {
     MP_VAR = null;
-    $("mp_recado").textContent =
-      "Cadastre um template com variações para vestir esta leva.";
+    qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
+    qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
+    $("mp_recado").textContent = ACERVO.falhou
+      ? "não consegui ler o acervo; os templates continuam no disco."
+      : "Cadastre um template com variações para vestir esta leva.";
     return;
   }
   const peca = (MP_PECA >= 0 && EDIT_RECORTES[MP_PECA]) || null;
   MP_VAR = melhorVariacao(peca && BROLL_DE && BROLL_DE.get(peca.nome), vars) || vars[0];
   const url = await enderecoDo(MP_VAR.arquivo);
+  if (ger !== MP_GERACAO) return;      // outra pintura assumiu enquanto a arte descia
+  /* O PALCO SO' SE MEXE DEPOIS DA ESPERA, tudo de uma vez. Limpar antes do await
+     deixava o video FORA da pagina no vao da descarga: a pintura seguinte procurava
+     `mp_video` e achava nada, estourando no encaixe. Limpeza e desenho juntos, sem
+     espera no meio, nao abrem esse vao. */
+  qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
+  qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
   const jan = MP_VAR.janela;
 
   // O QUADRO DA ESQUERDA: a variacao como ela e'. O furo aparece como encaixe vazio, e
@@ -9597,7 +9628,12 @@ async function entrarNoModelo() {
     MP_CONTA = (TPL && TPL.contaModelo && contas.includes(TPL.contaModelo))
       ? TPL.contaModelo : (contas[0] || "");
   }
-  if (MP_PECA < 0 && EDIT_RECORTES.length) MP_PECA = sortearBroll();
+  // O INDICE ENVELHECIDO TAMBEM SE CONSERTA AQUI: cinto alem do zerar da troca de
+  // leva, porque um F5 no meio pode trazer MP_PECA maior que a leva reaberta.
+  if ((MP_PECA < 0 || MP_PECA >= EDIT_RECORTES.length) && EDIT_RECORTES.length) {
+    MP_PECA = sortearBroll();
+  }
+  if (!EDIT_RECORTES.length) MP_PECA = -1;
   desenhaAsContas();
   await pintarOModelo();
   marcaOModelo();
@@ -9780,6 +9816,12 @@ async function abrirCadastro() {
 }
 
 function fecharCadastro() {
+  // FECHAR NAO INTERROMPE GRAVACAO. O X, o fundo e o Esc ficam fora do cd_corpo que a
+  // gravacao trava, e fechar no meio deixava CAD nulo com o cdCadastrar por terminar:
+  // a retomada estourava lendo o nulo, o redesenho da fase 1 nunca vinha, e no caminho
+  // de falha o proprio recado de erro morria (revisao de 27/08/2026). O rodape ja' diz
+  // qual variacao esta' subindo; e' essa a resposta para o clique impaciente.
+  if (CAD && CAD.gravando) return;
   // AS FOTOS SOLTAS SAO DEVOLVIDAS: cada arte de variacao virou um endereco de memoria, e
   // fechar sem devolver deixa o arquivo inteiro preso no navegador ate' o F5.
   if (CAD) {
@@ -9992,14 +10034,31 @@ $("cd_fonte_arq").addEventListener("change", async ev => {
   // (27/08/2026): o campo aceita a leva, e cada arquivo entra na biblioteca.
   const fs = [...(ev.target.files || [])];
   ev.target.value = "";
-  for (const f of fs) await cdSubirFonte(f);
+  await cdReceberLote(fs, cdSubirFonte);
 });
+
+/* O LOTE PRESTA CONTA NO FIM. Arquivo recusado no meio da selecao era engolido: o
+   proximo arquivo bom repintava e o recado da recusa durava um piscar. Cada subida
+   devolve o MOTIVO da recusa (ou nada), e quem chama o lote junta os que ficaram de
+   fora num aviso que fica na tela (revisao de 27/08/2026). */
+async function cdReceberLote(fs, subir) {
+  const deFora = [];
+  for (const f of fs) {
+    const motivo = await subir(f);
+    if (motivo) deFora.push(f.name + " (" + motivo + ")");
+  }
+  if (deFora.length) cdDiz("Ficou de fora: " + deFora.join("; "), "ruim");
+}
 
 async function cdSubirFonte(f) {
   if (!/\.(ttf|otf)$/i.test(f.name)) {
-    return cdDiz("essa fonte não é TTF nem OTF, e o motor só desenha esses dois.", "ruim");
+    cdDiz("essa fonte não é TTF nem OTF, e o motor só desenha esses dois.", "ruim");
+    return "não é TTF nem OTF";
   }
-  if (f.size > CD_TETO) return cdDiz("essa fonte passa dos 5 MB.", "ruim");
+  if (f.size > CD_TETO) {
+    cdDiz("essa fonte passa dos 5 MB.", "ruim");
+    return "passa dos 5 MB";
+  }
   try {
     const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
     // O NOME NO DISCO E' NOSSO, e o dele fica de rotulo: nome vindo de fora abriria a
@@ -10061,8 +10120,7 @@ async function cdPintaAMarcaNoPalco() {
    legivel em qualquer lugar. Sem recorte a tela DIZ que nao tem, em vez de fingir um. */
 async function cdPintaOBrollDaMarca() {
   const v = $("cd_marca_video");
-  const peca = (EDIT_RECORTES.length && MP_PECA >= 0) ? EDIT_RECORTES[MP_PECA]
-             : (EDIT_RECORTES[0] || null);
+  const peca = (MP_PECA >= 0 && EDIT_RECORTES[MP_PECA]) || EDIT_RECORTES[0] || null;
   $("cd_sem_broll").hidden = !!peca;
   if (!peca) { v.removeAttribute("src"); return; }
   try {
@@ -10176,14 +10234,18 @@ $("cd_var_arq").addEventListener("change", async ev => {
   if (!fs.length) return;
   // TROCAR troca UMA; ACRESCENTAR aceita a selecao inteira, uma variacao por arquivo.
   if (CAD.qual >= 0) { await cdPorArteNaVariacao(fs[0]); return; }
-  for (const f of fs) await cdPorArteNaVariacao(f);
+  await cdReceberLote(fs, cdPorArteNaVariacao);
 });
 
 async function cdPorArteNaVariacao(f) {
   if (!/\.(png|jpe?g|webp)$/i.test(f.name)) {
-    return cdDiz("essa arte não é PNG, JPG nem WEBP.", "ruim");
+    cdDiz("essa arte não é PNG, JPG nem WEBP.", "ruim");
+    return "não é PNG, JPG nem WEBP";
   }
-  if (f.size > CD_TETO) return cdDiz("essa arte passa dos 5 MB.", "ruim");
+  if (f.size > CD_TETO) {
+    cdDiz("essa arte passa dos 5 MB.", "ruim");
+    return "passa dos 5 MB";
+  }
   try {
     const medida = await medirAArte(f);
     let v = CAD.qual >= 0 ? CAD.vars[CAD.qual] : null;
@@ -10205,6 +10267,7 @@ async function cdPorArteNaVariacao(f) {
                + "onde entrar: exporte o PNG com a janela vazada.", "ruim");
   } catch (e) {
     cdDiz("não consegui ler a arte: " + e.message, "ruim");
+    return "não deu para ler";
   }
 }
 
@@ -10333,6 +10396,9 @@ async function cdCadastrar() {
     return cdDiz("não consegui cadastrar: " + e.message, "ruim");
   }
   $("cd_girando").hidden = true;
+  // A GRAVACAO ACABOU, e o fecho de fechar precisa saber: com `gravando` ligado, o
+  // proprio guarda que segura o X durante a subida seguraria a saida automatica.
+  CAD.gravando = false;
   cdDiz("Template Cadastrado", "boa");
   MP_CONTA = CAD.conta;
   // O FECHO SE VE ANTES DE FECHAR: um instante com o recado bom, e a janela sai

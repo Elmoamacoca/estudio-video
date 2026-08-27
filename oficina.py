@@ -3793,11 +3793,19 @@ def despachar(caminho: Path, p: dict, tipo: str, tpl: dict | None = None,
                     nome = str(peca.get("arquivo", ""))
                     textos = peca.get("textos") or {}
                     acertos = peca.get("ajustes") or {}
-                    chave_par = json.dumps([textos, acertos], sort_keys=True,
-                                           ensure_ascii=False)
+                    # A MOLDURA E' POR PECA TAMBEM AQUI (revisao de 27/08/2026): so' o
+                    # laco local tinha aprendido, e a esteira, que e' quem monta as
+                    # levas grandes, pintava todo mundo com o template global, que no
+                    # desenho novo vem sem arte nenhuma. A arte entra na chave do par
+                    # pela mesma razao do laco local: pecas de variacoes diferentes
+                    # nao podem sair vestindo o mesmo PNG.
+                    tpl_da_peca = template_da_peca(tpl, peca.get("enquadre"))
+                    chave_par = json.dumps([textos, acertos,
+                                            tpl_da_peca.get("fundoImagem")],
+                                           sort_keys=True, ensure_ascii=False)
                     if chave_par not in pares:
                         n = len(pares)
-                        fundo, frente = pintar_camadas(tpl, textos, tela,
+                        fundo, frente = pintar_camadas(tpl_da_peca, textos, tela,
                                                        TEMPLATES, acertos)
                         fundo.save(aux / f"camada-{n}-fundo.png")
                         frente.save(aux / f"camada-{n}-frente.png")
