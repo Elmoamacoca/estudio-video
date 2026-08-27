@@ -1278,6 +1278,28 @@ def movimento_da_janela(enquadre: dict | None) -> tuple:
     s_ = min(4.0, max(0.1, s_))
     return (s_, mx, my, cx, cy)
 
+def template_da_peca(tpl: dict, enquadre: dict | None) -> dict:
+    """O template como ESTA peca o ve: com a moldura que a tela escolheu para ela.
+
+    A MOLDURA E' POR PECA desde 27/08/2026. A tela escolhe, para cada recorte, a
+    variacao do template da conta cujo furo melhor encaixa aquele B-roll (a conta e'
+    dela, em `variacaoDaPeca`), e manda no pedido o arquivo e a janela da escolhida.
+    Aqui so' se obedece: quando a peca traz `arte`, ela vira o fundo DESTA peca.
+
+    NOME COM SEPARADOR NAO PASSA, pela mesma razao do guardar-no-acervo do posto: o
+    arquivo e' juntado a' pasta dos templates, e um nome com barra sairia dela.
+    """
+    e = enquadre or {}
+    arte = str(e.get("arte") or "")
+    if not arte or "/" in arte or chr(92) in arte or ".." in arte:
+        return tpl
+    proprio = dict(tpl)
+    proprio["fundoImagem"] = arte
+    if isinstance(e.get("janela"), dict):
+        proprio["janela"] = e["janela"]
+    return proprio
+
+
 def camada_da_peca(fundo, frente, mascara: Path | None, tela: dict,
                    enquadre: dict | None = None):
     """Junta fundo, buraco do B-roll e elementos numa IMAGEM SO', com transparencia.
@@ -3560,11 +3582,15 @@ def cumprir(caminho: Path) -> None:
             # e o desenho custa uma vez em vez de cento e sete.
             textos = peca.get("textos") or {}
             acertos = peca.get("ajustes") or {}
-            chave = json.dumps([textos, acertos], sort_keys=True, ensure_ascii=False)
+            # A MOLDURA DA PECA ENTRA NA CHAVE DA GUARDA: duas pecas de variacoes
+            # diferentes nao podem sair vestindo o mesmo par de PNGs.
+            tpl_da_peca = template_da_peca(tpl, peca.get("enquadre"))
+            chave = json.dumps([textos, acertos, tpl_da_peca.get("fundoImagem")],
+                               sort_keys=True, ensure_ascii=False)
             if guardado["chave"] != chave:
                 try:
                     guardado = {"chave": chave,
-                                "par": pintar_camadas(tpl, textos, tela,
+                                "par": pintar_camadas(tpl_da_peca, textos, tela,
                                                       TEMPLATES, acertos)}
                 except Exception as e:
                     # PINTAR O TEMPLATE E' O QUE VALE PARA A LEVA INTEIRA, entao uma falha

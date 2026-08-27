@@ -998,21 +998,26 @@
              quadros grandes lado a lado, o mesmo desenho do passo 2, com a arte crua a'
              esquerda e a peca ja' vestida a' direita. "gostei desse, aprovado".
 
-             A ARTE E' A MOLDURA, e o recorte do passo 2 entra DENTRO da janela dela. O
-             canto arredondado vem do proprio desenho da arte, porque a moldura cobre a
-             filmagem: por isso nao ha' controle de raio em lugar nenhum desta tela. -->
+             DESDE 27/08/2026 O QUE SE ESCOLHE E' A CONTA, e nao uma arte: "essa conta
+             vai ter os templates dela, vai ter as variacoes dela". O par da direita e'
+             a PROVA do mecanismo: para o recorte da vez, a tela mostra a variacao que
+             a medida escolheu, e trocar de peca troca de variacao quando a medida
+             pede. O canto arredondado segue vindo do desenho de cada arte. -->
         <div class="ed-sub-tela" data-sub="1">
           <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2.5" width="18" height="19" rx="2.5"/><rect x="6.5" y="7" width="11" height="10" rx="1.6"/></svg></span>Modelo Do Template</h2>
-            <p class="nota" id="mp_recado">A arte escolhida veste a leva inteira.</p>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6H2"/><path d="M22 18H2"/><path d="M6 2v20"/><path d="M18 2v20"/></svg></span>Modelo Do Template</h2>
+            <p class="nota" id="mp_recado">As variações da conta vestem a leva, peça a peça.</p>
           </div>
 
           <div class="ed-tres mp-tres">
             <aside class="ed-lado">
               <section class="ed-bloco">
-                <h4>Minhas Artes</h4>
-                <!-- COM TETO: sem ele a pilha cresce a cada arte subida e empurra a
-                     coluna para fora da tela. -->
+                <!-- A LISTA E' DE CONTAS DESDE 27/08/2026. "Nao e' pra eu selecionar
+                     mais o template... vai ser uma separacao a nivel de conta. Essa
+                     conta vai ter os templates dela, vai ter as variacoes dela." O
+                     cartao mostra a primeira variacao da conta, para ela ser
+                     reconhecivel de olho, e diz quantas variacoes servem. -->
+                <h4>As Contas</h4>
                 <div class="mp-grade" id="mp_lista"></div>
               </section>
 
@@ -1051,7 +1056,7 @@
 
         <div class="ed-sub-tela" data-sub="2" hidden>
           <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M9 6v13"/><path d="M15 6v13"/><path d="M6 19h6"/></svg></span>Caixas De Texto</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M12 4v16"/><path d="M9 20h6"/></svg></span>Caixas De Texto</h2>
             <p class="nota">Onde a escrita fica na peça, com que letra, e o que a IA pode
               mexer.</p>
           </div>
@@ -2091,7 +2096,7 @@
      A ORDEM DAS QUATRO ABAS E' A QUE ELE APROVOU na versao G da proposta, e cada uma
      nasceu de uma frase dele:
 
-       01 A Marca        "a conta eu posso ta criando aqui e a etiqueta tambem"
+       01 A Marca        o nome e a conta ("remove essa questao de etiqueta", 27/08)
        02 A Escrita      "existe uma alta chance da escrita ser algo que eu vou tar upando"
        03 A Marca D'Agua "um PNG com fundo transparente... em cima de cada B-roll"
        04 As Variacoes   "essas sao as variacoes que esse template compoe em questao de B-roll"
@@ -2139,18 +2144,6 @@
           <button class="acao forte" type="button" id="cd_conta_ok">Criar</button>
         </div>
       </div>
-
-      <div class="cfg-campo">
-        <span>Etiqueta</span>
-        <div class="cd-linha">
-          <div class="psel" id="cd_etq"></div>
-          <button class="acao" type="button" id="cd_nova_etq">Criar Etiqueta</button>
-        </div>
-        <div class="cd-novo" id="cd_etq_nova">
-          <input id="cd_etq_txt" type="text" placeholder="Bastidor" spellcheck="false">
-          <button class="acao forte" type="button" id="cd_etq_ok">Criar</button>
-        </div>
-      </div>
     </div>
 
     <!-- ........................................................ 02 &#183; A ESCRITA -->
@@ -2186,7 +2179,7 @@
         <b>Subir Fonte</b>
         <em>TTF Ou OTF, At&#233; 5 MB</em>
       </div>
-      <input type="file" id="cd_fonte_arq" accept=".ttf,.otf" hidden>
+      <input type="file" id="cd_fonte_arq" accept=".ttf,.otf" multiple hidden>
 
       <div class="cd-linha">
         <div class="psel cd-frase-sel" id="cd_frase_sel"></div>
@@ -2241,11 +2234,15 @@
     <!-- ....................................................... 04 &#183; AS VARIA&#199;&#213;ES -->
     <div class="cd-tela" data-p="4" hidden>
       <div class="cd-vars" id="cd_vars"></div>
-      <input type="file" id="cd_var_arq" accept="image/png,image/jpeg,image/webp" hidden>
+      <input type="file" id="cd_var_arq" accept="image/png,image/jpeg,image/webp" multiple hidden>
     </div>
   </div>
 
   <div class="pop-pe">
+    <!-- O CADASTRAR TEM CARA DE TRABALHANDO. "Eu nao sei se ta salvando ou nao ta,
+         se bugou ou nao bugou" (27/08/2026): a roda gira enquanto as artes sobem, o
+         recado diz qual esta' subindo, e o fecho diz que cadastrou. -->
+    <span class="cfg-girando" id="cd_girando" hidden></span>
     <span class="pop-diz" id="cd_diz"></span>
     <button class="acao" type="button" id="cd_voltar">Voltar</button>
     <button class="acao forte" type="button" id="cd_avancar">Avan&#231;ar</button>

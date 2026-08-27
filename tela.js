@@ -5437,10 +5437,10 @@ function tplVazio() {
   return { id: "c" + Date.now(), tipo: "composicao", nome: "", mercado: "", etiqueta: "",
            w: TELA.w, h: TELA.h, criado: Date.now(),
            fundoCor: "#000000", fundoImagem: null,
-           /* A ARTE ESCOLHIDA NA FASE 1, e a janela dela. `arte` e' o id no acervo (para
-              a lista saber qual esta' em uso) e `janela` e' o retangulo do furo, que o
-              motor usa para encaixar a filmagem. */
-           arte: null, janela: null, elementos: [] };
+           /* A CONTA ESCOLHIDA NA FASE 1, desde 27/08/2026: as variacoes DELA vestem
+              a leva, peca a peca, pela medida. `arte` e `janela` sao da era da escolha
+              unica e ficam para o rascunho antigo nao quebrar. */
+           contaModelo: null, arte: null, janela: null, elementos: [] };
 }
 
 /* ------------------------------------------------------ as peças de tela
@@ -5663,8 +5663,14 @@ async function desenhaEditor() {
      escolher no escuro. O `background` acima e' atalho e zera a imagem: por isso a imagem
      vem DEPOIS dele. */
   let arteDeFundo = "";
-  if (TPL.fundoImagem) {
-    try { arteDeFundo = await enderecoDo(TPL.fundoImagem); } catch (e) { arteDeFundo = ""; }
+  /* A MOLDURA E' POR PECA desde 27/08/2026: a bancada mostra a variacao que a medida
+     escolheu para o recorte de conferencia, a mesma que a montagem vai usar nele.
+     Rascunho antigo, de arte unica, cai no fundoImagem gravado. */
+  const pecaDaBancada = EDIT_RECORTES[ED_BROLL_I] || null;
+  const varDaBancada = pecaDaBancada ? variacaoDaPeca(pecaDaBancada.nome) : null;
+  const moldura = varDaBancada ? varDaBancada.arquivo : TPL.fundoImagem;
+  if (moldura) {
+    try { arteDeFundo = await enderecoDo(moldura); } catch (e) { arteDeFundo = ""; }
   }
   c.style.backgroundImage = arteDeFundo ? `url(${arteDeFundo})` : "";
   c.style.backgroundSize = "100% 100%";
@@ -9353,25 +9359,49 @@ async function tentarRetomar() {
 
 /* ============================================ 3.1 · O MODELO DO TEMPLATE
 
-   O QUE ESTA FASE FAZ: ele escolhe UMA arte dele para vestir a leva inteira. A arte e' a
-   moldura; o recorte que saiu do passo 2 entra DENTRO da janela dela, inclusive quando a
-   peca e' de tela cheia.
+   O QUE ESTA FASE FAZ, desde 27/08/2026: ele escolhe a CONTA, e nao uma arte. "Nao e'
+   pra eu selecionar mais o template... vai ser uma separacao a nivel de conta. Essa
+   conta vai ter os templates dela, vai ter as variacoes dela." As variacoes da conta
+   vestem a leva PECA A PECA: para cada recorte, a montagem escolhe a variacao cujo
+   furo melhor encaixa aquele B-roll.
 
-   A JANELA NAO SE MARCA A MAO, e o canto nao se regula: os dois vem do proprio arquivo.
-   Arte exportada em PNG com o furo VAZADO ja' diz onde o video aparece (o retangulo do
-   furo) e com que canto (o desenho do furo). "O raio de canto ja' vem junto do template",
-   26/08/2026. Arte sem furo nao tem como dizer isso, e por isso ela entra na lista mas
-   nao pode fechar a leva: inventar um retangulo seria inventar criterio.
+   POR QUE POR MEDIDA E NAO POR NOME. As variacoes tinham nome de formato (Quadrado,
+   Horizontal, Vertical, Tela Cheia) e ele cortou: "nao e' pra ter esses nomes". O que
+   separa uma variacao da outra e' o furo dela, e o furo e' medido do arquivo; o
+   recorte tambem e' medido (o retangulo do B-roll, do passo 2). Casar as duas medidas
+   e' a mesma lei da trava 60: quem responde e' o arquivo, e nao um rotulo.
 
-   O QUADRO DA DIREITA E' PROVA, e nao ilustracao: o video ali e' um recorte de verdade
-   desta leva, encaixado pela mesma conta que o motor vai refazer na hora de gravar. */
+   O QUADRO DA DIREITA E' PROVA, e nao ilustracao: o video ali e' um recorte de
+   verdade desta leva, na variacao que a medida escolheu, encaixado pela mesma conta
+   que o motor vai refazer na hora de gravar. Trocar de peca troca de variacao quando
+   a medida pede, e e' assim que ele VE o mecanismo escolhendo. */
 
-let MP_I = -1;                 // qual arte esta' na tela
+let MP_CONTA = "";             // a conta na tela
 let MP_PECA = -1;              // qual recorte veste o quadro da direita
+let MP_VAR = null;             // a variacao que a medida escolheu para o recorte da vez
 const MP_FURO_MINIMO = 0.02;   // furo menor que isto e' respiro do desenho, nao janela
 
 function artesDoAcervo() {
   return (ACERVO.itens || []).filter(x => x && x.tipo === "arte" && x.arquivo);
+}
+
+/** As contas que tem pelo menos uma variacao pronta (arte com furo). */
+function contasComModelo() {
+  return [...new Set((ACERVO.itens || [])
+    .filter(x => x && x.tipo === "template" && x.conta)
+    .map(x => x.conta))].filter(c => variacoesDaConta(c).length).sort();
+}
+
+/** As variacoes da conta: as artes COM FURO de todos os templates dela.
+
+    DOIS TEMPLATES DA MESMA CONTA SOMAM num conjunto so', porque foi assim que ele
+    descreveu ("essa conta vai ter os templates dela, vai ter as variacoes dela"): a
+    peca procura o melhor furo entre tudo que a conta oferece. Arte sem furo nao entra,
+    pela lei da trava 60: sem furo nao ha' onde a filmagem aparecer. */
+function variacoesDaConta(conta) {
+  const meus = new Set((ACERVO.itens || [])
+    .filter(x => x && x.tipo === "template" && x.conta === conta).map(x => x.id));
+  return artesDoAcervo().filter(a => meus.has(a.template) && a.furo && a.janela);
 }
 
 /** Onde a filmagem entra: o retangulo do B-roll da peca posto DENTRO da janela da arte.
@@ -9383,6 +9413,42 @@ function encaixeNaJanela(broll, jan) {
   const k = Math.max(jan.w / b.w, jan.h / b.h);
   return { k, x: jan.x + jan.w / 2 - k * (b.x + b.w / 2),
               y: jan.y + jan.h / 2 - k * (b.y + b.h / 2) };
+}
+
+/** O preco de vestir este B-roll com esta janela. Menor preco, melhor encaixe.
+
+    SAO DUAS PENAS, e sao as duas queixas dele nas referencias de 27/08/2026. A de
+    PROPORCAO: encaixar um B-roll quase de tela cheia numa janela media "perde muito do
+    B-roll", porque cobrir corta o que a proporcao nao deixa entrar. A de TAMANHO:
+    encaixar um B-roll pequeno numa janela grande fica "muito esticado, feio", porque a
+    filmagem amplia alem do que o material tem. O logaritmo poe as duas na mesma regua:
+    dobrar custa o mesmo que cair pela metade, para qualquer lado. */
+function custoDoEncaixe(broll, jan) {
+  const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
+  const proporcao = Math.abs(Math.log((b.w / b.h) / (jan.w / jan.h)));
+  const tamanho = Math.abs(Math.log(Math.max(jan.w / b.w, jan.h / b.h)));
+  return proporcao + tamanho;
+}
+
+/** A variacao que melhor veste este B-roll. Nulo quando nao ha' variacao nenhuma. */
+function melhorVariacao(broll, variacoes) {
+  let melhor = null, menor = Infinity;
+  for (const v of (variacoes || [])) {
+    const custo = custoDoEncaixe(broll, v.janela);
+    if (custo < menor) { menor = custo; melhor = v; }
+  }
+  return melhor;
+}
+
+/** A variacao que veste ESTA peca da leva, pela conta gravada no rascunho.
+
+    A ESCOLHA MORA AQUI, NUM LUGAR SO'. Ela e' feita na tela e viaja no pedido, peca a
+    peca (arquivo e janela da variacao); o motor so' obedece. Duas implementacoes da
+    escolha divergiriam caladas, que e' a mesma razao do encaixeNaJanela ser um so'. */
+function variacaoDaPeca(nome) {
+  if (!TPL || !TPL.contaModelo) return null;
+  return melhorVariacao(BROLL_DE && BROLL_DE.get(nome),
+                        variacoesDaConta(TPL.contaModelo));
 }
 
 /** Mede a arte subida: tamanho, retangulo do furo transparente e se ha' furo. */
@@ -9424,58 +9490,62 @@ async function medirAArte(blob) {
   } finally { URL.revokeObjectURL(url); }
 }
 
-function desenhaAsArtes() {
-  const artes = artesDoAcervo();
+function desenhaAsContas() {
+  const contas = contasComModelo();
   const l = $("mp_lista");
-  if (!artes.length) {
-    l.innerHTML = '<p class="nota mini ed-nada">nenhum template cadastrado ainda</p>';
+  if (!contas.length) {
+    l.innerHTML = '<p class="nota mini ed-nada">nenhuma conta com template ainda</p>';
     return;
   }
-  /* CARTAO, E NAO LINHA DE LISTA. A linha mostrava a arte num selo de 26 pixels, que e'
-     pequeno demais para reconhecer desenho nenhum: "em minhas artes o negocio ta feio,
-     ta todo quadrado, todo esquisito" (26/08/2026). No cartao a arte aparece no formato
-     em que ela vai sair, e o nome vira legenda. */
-  l.innerHTML = artes.map((a, i) => `<div class="mp-cartao${i === MP_I ? " sel" : ""}"
-      data-i="${i}" title="${escapa(a.nome || a.arquivo)}">
-      <span class="mp-mini"><img alt="" data-arte="${escapa(a.arquivo)}"></span>
-      <b>${escapa(a.nome || a.arquivo)}</b>
-      ${a.furo ? "" : '<span class="mp-sem">Sem Furo</span>'}</div>`).join("");
+  /* O CARTAO MOSTRA A PRIMEIRA VARIACAO da conta, porque conta se reconhece pela cara
+     das artes dela, e diz quantas variacoes servem: e' o dado que separa uma conta
+     pronta de uma pela metade. */
+  l.innerHTML = contas.map(c => {
+    const vs = variacoesDaConta(c);
+    return `<div class="mp-cartao${c === MP_CONTA ? " sel" : ""}"
+      data-conta="${escapa(c)}" title="${escapa(c)}">
+      <span class="mp-mini"><img alt="" data-arte="${escapa(vs[0].arquivo)}"></span>
+      <b>${escapa(c)}</b>
+      <span class="mp-qtas">${vs.length === 1 ? "1 Variação"
+        : vs.length + " Variações"}</span></div>`;
+  }).join("");
   l.querySelectorAll("img[data-arte]").forEach(async img => {
     try { img.src = await enderecoDo(img.dataset.arte); } catch (e) {}
   });
 }
 
-/** Pinta os dois quadros: a arte crua e a mesma arte com um recorte da leva encaixado. */
+/** Pinta o par: a variacao que a medida escolheu, crua e vestida com o recorte da vez. */
 async function pintarOModelo() {
-  const artes = artesDoAcervo();
-  const a = artes[MP_I] || null;
+  const vars = variacoesDaConta(MP_CONTA);
   const qArte = $("mp_arte"), qPeca = $("mp_peca"), v = $("mp_video");
   qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
   qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
-  $("mp_usar").disabled = !a || !a.furo;
-  if (!a) {
-    $("mp_recado").textContent = "Cadastre um template para escolher o modelo desta leva.";
+  $("mp_usar").disabled = !vars.length;
+  if (!vars.length) {
+    MP_VAR = null;
+    $("mp_recado").textContent =
+      "Cadastre um template com variações para vestir esta leva.";
     return;
   }
-  const url = await enderecoDo(a.arquivo);
-  const jan = a.janela || { x: 0, y: 0, w: 1, h: 1 };
+  const peca = (MP_PECA >= 0 && EDIT_RECORTES[MP_PECA]) || null;
+  MP_VAR = melhorVariacao(peca && BROLL_DE && BROLL_DE.get(peca.nome), vars) || vars[0];
+  const url = await enderecoDo(MP_VAR.arquivo);
+  const jan = MP_VAR.janela;
 
-  // O QUADRO DA ESQUERDA: a arte como ela e'. O furo aparece como encaixe vazio, e nao
-  // como buraco preto, senao arte de fundo escuro parece imagem quebrada.
-  if (a.furo) {
-    const vazio = document.createElement("div");
-    vazio.className = "mp-vazia";
-    vazio.style.left = (jan.x * 100) + "%";
-    vazio.style.top = (jan.y * 100) + "%";
-    vazio.style.width = (jan.w * 100) + "%";
-    vazio.style.height = (jan.h * 100) + "%";
-    qArte.appendChild(vazio);
-  }
+  // O QUADRO DA ESQUERDA: a variacao como ela e'. O furo aparece como encaixe vazio, e
+  // nao como buraco preto, senao arte de fundo escuro parece imagem quebrada.
+  const vazio = document.createElement("div");
+  vazio.className = "mp-vazia";
+  vazio.style.left = (jan.x * 100) + "%";
+  vazio.style.top = (jan.y * 100) + "%";
+  vazio.style.width = (jan.w * 100) + "%";
+  vazio.style.height = (jan.h * 100) + "%";
+  qArte.appendChild(vazio);
   const i1 = document.createElement("img");
   i1.className = "mp-arte"; i1.alt = ""; i1.src = url;
   qArte.appendChild(i1);
 
-  // O QUADRO DA DIREITA: a mesma arte com a filmagem encaixada na janela.
+  // O QUADRO DA DIREITA: a mesma variacao com a filmagem encaixada na janela.
   const caixa = document.createElement("div");
   caixa.className = "mp-jan";
   caixa.style.left = (jan.x * 100) + "%";
@@ -9488,22 +9558,21 @@ async function pintarOModelo() {
   i2.className = "mp-arte"; i2.alt = ""; i2.src = url;
   qPeca.appendChild(i2);
   await vestirORecorte();
-  $("mp_recado").textContent = a.furo
-    ? "A arte escolhida veste a leva inteira."
-    : "Esta arte não tem o furo transparente: exporte o PNG com a janela vazada.";
+  const qual = vars.indexOf(MP_VAR) + 1;
+  $("mp_recado").textContent = vars.length === 1
+    ? "A única variação de " + MP_CONTA + " veste esta peça."
+    : "A variação " + qual + " de " + vars.length + " é a que melhor veste esta peça.";
 }
 
-/** Poe no quadro da direita o recorte da vez, encaixado na janela da arte escolhida. */
+/** Poe no quadro da direita o recorte da vez, encaixado na janela da variacao. */
 async function vestirORecorte() {
-  const a = artesDoAcervo()[MP_I];
   const v = $("mp_video");
-  if (!a) return;
-  if (!EDIT_RECORTES.length || MP_PECA < 0 || !EDIT_RECORTES[MP_PECA]) {
+  if (!MP_VAR || !EDIT_RECORTES.length || MP_PECA < 0 || !EDIT_RECORTES[MP_PECA]) {
     v.removeAttribute("src");
     return;
   }
   const peca = EDIT_RECORTES[MP_PECA];
-  const jan = a.janela || { x: 0, y: 0, w: 1, h: 1 };
+  const jan = MP_VAR.janela;
   const e = encaixeNaJanela(BROLL_DE && BROLL_DE.get(peca.nome), jan);
   // O VIDEO E' POSICIONADO DENTRO DA CAIXA DA JANELA, entao a medida vira porcentagem
   // dela, e nao do quadro: e' a mesma conta, so' que na regua da caixa.
@@ -9523,14 +9592,13 @@ async function vestirORecorte() {
 async function entrarNoModelo() {
   if (!EDIT_RECORTES.length) await procurarRecortes();
   if (!ACERVO.itens.length) await lerAcervo();
-  const artes = artesDoAcervo();
-  if (MP_I < 0 || MP_I >= artes.length) {
-    const jaEscolhida = TPL && TPL.arte
-      ? artes.findIndex(x => x.id === TPL.arte) : -1;
-    MP_I = jaEscolhida >= 0 ? jaEscolhida : (artes.length ? 0 : -1);
+  const contas = contasComModelo();
+  if (!contas.includes(MP_CONTA)) {
+    MP_CONTA = (TPL && TPL.contaModelo && contas.includes(TPL.contaModelo))
+      ? TPL.contaModelo : (contas[0] || "");
   }
   if (MP_PECA < 0 && EDIT_RECORTES.length) MP_PECA = sortearBroll();
-  desenhaAsArtes();
+  desenhaAsContas();
   await pintarOModelo();
   marcaOModelo();
 }
@@ -9545,10 +9613,9 @@ function pararOModelo() {
   v.load();
 }
 
-/** O selo do fecho: escolher a arte e' um gesto, fechar a leva nela e' outro. */
+/** O selo do fecho: olhar uma conta e' um gesto, fechar a leva nela e' outro. */
 function marcaOModelo() {
-  const a = artesDoAcervo()[MP_I];
-  const fechado = !!(a && TPL && TPL.arte === a.id);
+  const fechado = !!(MP_CONTA && TPL && TPL.contaModelo === MP_CONTA);
   $("mp_arte").classList.toggle("mp-escolhida", fechado);
   $("mp_peca").classList.toggle("mp-escolhida", fechado);
   const t = $("mp_usar").querySelector(".txt");
@@ -9557,61 +9624,32 @@ function marcaOModelo() {
 }
 
 async function usarOModelo() {
-  const a = artesDoAcervo()[MP_I];
-  if (!a || !a.furo || !TPL) return;
-  TPL.arte = a.id;
-  TPL.fundoImagem = a.arquivo;
-  TPL.janela = a.janela;
+  if (!MP_CONTA || !variacoesDaConta(MP_CONTA).length || !TPL) return;
+  TPL.contaModelo = MP_CONTA;
+  // OS CAMPOS DA ESCOLHA UNICA MORREM AQUI: a moldura passou a ser por peca, e um
+  // rascunho com arte global faria a bancada e o pedido brigarem sobre quem manda.
+  TPL.arte = null;
+  TPL.fundoImagem = null;
+  TPL.janela = null;
   marcaOModelo();
   await salvarRascunho();
   await desenhaEditor();
   irParaSub(2);
 }
 
-async function subirArtes(arquivos) {
-  const l = $("mp_lista");
-  for (const f of arquivos) {
-    if (!/\.(png|jpe?g|webp)$/i.test(f.name)) continue;
-    try {
-      const medida = await medirAArte(f);
-      const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
-      // O NOME NO DISCO E' NOSSO, e o dele fica de rotulo: nome vindo de fora abriria a
-      // porta para uma arte sobrescrever a outra em silencio (o posto nao recusa
-      // repetido). Ver posto.py, gravar_bytes.
-      const arquivo = "arte" + Date.now() + "_" + novoId() + ext;
-      await guardarNoAcervo(arquivo, await f.arrayBuffer());
-      ACERVO.itens.push({
-        id: "a" + Date.now() + "_" + novoId(), tipo: "arte",
-        nome: f.name.replace(/\.[^.]+$/, ""), arquivo,
-        w: medida.w, h: medida.h, furo: medida.furo, janela: medida.janela,
-        criado: Date.now()
-      });
-      await gravarAcervo();
-      MP_I = artesDoAcervo().length - 1;
-    } catch (e) {
-      if (l) l.insertAdjacentHTML("afterend",
-        '<p class="nota mini">não consegui guardar a arte: ' + escapa(String(e.message || e))
-        + "</p>");
-      break;
-    }
-  }
-  desenhaAsArtes();
-  await pintarOModelo();
-  marcaOModelo();
-}
-
 $("mp_lista").addEventListener("click", async ev => {
-  const li = ev.target.closest("[data-i]");
+  const li = ev.target.closest("[data-conta]");
   if (!li) return;
-  MP_I = Number(li.dataset.i);
-  desenhaAsArtes();
+  MP_CONTA = li.dataset.conta;
+  desenhaAsContas();
   await pintarOModelo();
   marcaOModelo();
 });
 $("mp_outra").onclick = async () => {
   if (EDIT_RECORTES.length < 2) return;
   MP_PECA = (MP_PECA + 1) % EDIT_RECORTES.length;
-  await vestirORecorte();
+  // A PECA NOVA PODE PEDIR OUTRA VARIACAO, entao o par inteiro se repinta.
+  await pintarOModelo();
 };
 $("mp_usar").onclick = () => usarOModelo();
 $("mp_novo").onclick = () => abrirCadastro();
@@ -9623,10 +9661,11 @@ $("mp_novo").onclick = () => abrirCadastro();
    que eu for subir o template, a gente precisa fazer um cadastramento completo".
 
    O QUE UM TEMPLATE TEM, e cada item saiu de uma frase dele:
-     a marca       nome, conta e etiqueta, as duas ULTIMAS criaveis aqui dentro
+     a marca       o nome e a CONTA, criavel aqui dentro (a etiqueta saiu em 27/08)
      a escrita     o desenho da letra e quantas linhas a frase pode ocupar
      a marca d'agua um PNG transparente posto por cima do B-roll
-     as variacoes  uma arte por formato de recorte
+     as variacoes  quantas artes ele quiser, SEM nome de formato: o que separa uma da
+                   outra e' o furo medido do arquivo ("nao e' pra ter esses nomes")
 
    O QUE NAO ENTRA, POR ORDEM DELE: cor, cor de destaque, sublinhado, caixa, alinhamento e
    tamanho de letra. "Isso vai ser a etapa da IA, no momento que ela vai escrever." O que
@@ -9635,13 +9674,6 @@ $("mp_novo").onclick = () => abrirCadastro();
    ONDE ISSO MORA: no acervo, junto dos templates, e nao numa memoria desta aba. Conta,
    etiqueta, fonte e marca d'agua sao itens proprios, porque ele reusa os quatro no
    template seguinte; a variacao e' uma arte com o template dela anotado. */
-
-const CD_FORMATOS = [
-  { v: "quadrado", r: "Quadrado", razao: "1 para 1", topo: 78, altura: 13 },
-  { v: "horizontal", r: "Horizontal", razao: "16 para 9", topo: 68, altura: 15 },
-  { v: "vertical", r: "Vertical", razao: "9 para 16", topo: 83, altura: 12 },
-  { v: "cheia", r: "Tela Cheia", razao: "a peça inteira", topo: 72, altura: 16 },
-];
 
 /* AS FRASES DE TESTE. Fonte se julga escrevendo, e uma frase so' esconde o que importa: a
    curta cabe em qualquer desenho, a longa e' a que estoura o maximo de linhas. */
@@ -9714,19 +9746,21 @@ async function cdRegistrarFonte(f) {
 async function abrirCadastro() {
   if (!ACERVO.itens.length) await lerAcervo();
   CAD = {
-    passo: 1, nome: "", conta: cdNomes("conta")[0] || "", etiqueta: cdNomes("etiqueta")[0] || "",
+    passo: 1, nome: "", conta: cdNomes("conta")[0] || "",
     fonte: cdBiblioteca()[0] ? cdBiblioteca()[0].chave : "anton",
     linhas: 3, frase: 1, filtro: "todas", busca: "",
     marca: (cdDoAcervo("marca")[0] || {}).id || null,
     marcaPos: { dir: 6, baixo: 6, larg: 42, alt: 13 },
-    vars: CD_FORMATOS.map(f => ({ formato: f.v, blob: null, url: null, medida: null,
-                                  nome: "", escrita: { topo: f.topo, altura: f.altura } })),
-    qual: 0, gravando: false
+    /* AS VARIACOES NASCEM VAZIAS E CRESCEM SEM TETO: "se eu quiser adicionar mais
+       modelos, eu devo conseguir adicionar mais" (27/08/2026). Cada arte subida vira
+       uma variacao; `qual` negativo quer dizer que a proxima subida ACRESCENTA. */
+    vars: [],
+    qual: -1, gravando: false
   };
   $("cd_nome").value = "";
   $("cd_busca").value = "";
   $("cd_conta_nova").classList.remove("abre");
-  $("cd_etq_nova").classList.remove("abre");
+  $("cd_girando").hidden = true;
   $("cd_avancar").disabled = false;
   $("cd_corpo").style.opacity = "";
   $("cd_corpo").style.pointerEvents = "";
@@ -9792,9 +9826,9 @@ function cdDiz(texto, classe) {
   if (texto !== undefined) { d.textContent = texto; d.className = "pop-diz " + (classe || ""); return; }
   d.className = "pop-diz";
   if (!CAD) { d.textContent = ""; return; }
-  const comArte = CAD.vars.filter(v => v.blob).length;
-  d.textContent = CAD.passo === 4
-    ? comArte + " De " + CD_FORMATOS.length + " Variações Com Arte" : "";
+  d.textContent = CAD.passo === 4 && CAD.vars.length
+    ? (CAD.vars.length === 1 ? "1 Variação No Template"
+       : CAD.vars.length + " Variações No Template") : "";
 }
 
 $("cd_trilha").addEventListener("click", ev => {
@@ -9812,10 +9846,8 @@ $("cd_nome").addEventListener("input", ev => { if (CAD) CAD.nome = ev.target.val
 /* ------------------------------------------------- 01 · a conta e a etiqueta */
 
 function cdSeletoresDaMarca() {
-  const contas = cdNomes("conta");
-  const etqs = cdNomes("etiqueta");
-  cdSeletor("cd_conta", contas, CAD.conta, "nenhuma conta criada", v => { CAD.conta = v; });
-  cdSeletor("cd_etq", etqs, CAD.etiqueta, "nenhuma etiqueta criada", v => { CAD.etiqueta = v; });
+  cdSeletor("cd_conta", cdNomes("conta"), CAD.conta, "nenhuma conta criada",
+            v => { CAD.conta = v; });
 }
 
 /* LISTA VAZIA NAO VIRA CAMPO EM BRANCO. Ela diz que nao ha' nada criado, que e' a verdade
@@ -9842,25 +9874,21 @@ async function cdCriar(tipo, texto, caixa, campo, redesenha) {
     cdDiz("não consegui guardar: " + e.message, "ruim");
     return;
   }
-  if (tipo === "conta") CAD.conta = nome; else CAD.etiqueta = nome;
+  CAD.conta = nome;
   $(campo).value = "";
   $(caixa).classList.remove("abre");
   redesenha();
-  cdDiz("");
+  // A CONFIRMACAO SE VE. Ele criou e ficou sem saber ("uai, nao criou?"): a lista
+  // mudava de longe e nada dizia que o clique valeu. Agora o rodape diz, na hora.
+  cdDiz("A conta " + nome + " foi criada e já está escolhida.", "boa");
 }
 
 $("cd_nova_conta").onclick = () => {
   $("cd_conta_nova").classList.toggle("abre");
   if ($("cd_conta_nova").classList.contains("abre")) $("cd_conta_txt").focus();
 };
-$("cd_nova_etq").onclick = () => {
-  $("cd_etq_nova").classList.toggle("abre");
-  if ($("cd_etq_nova").classList.contains("abre")) $("cd_etq_txt").focus();
-};
 $("cd_conta_ok").onclick = () =>
   cdCriar("conta", "uma conta", "cd_conta_nova", "cd_conta_txt", cdSeletoresDaMarca);
-$("cd_etq_ok").onclick = () =>
-  cdCriar("etiqueta", "uma etiqueta", "cd_etq_nova", "cd_etq_txt", cdSeletoresDaMarca);
 
 /* ------------------------------------------------------------ 02 · a escrita */
 
@@ -9960,9 +9988,11 @@ function cdPintaFrase() {
 
 $("cd_subir_fonte").onclick = () => $("cd_fonte_arq").click();
 $("cd_fonte_arq").addEventListener("change", async ev => {
-  const f = (ev.target.files || [])[0];
+  // A SELECAO INTEIRA SOBE DE UMA VEZ. "So' consigo selecionar uma por vez, porra?"
+  // (27/08/2026): o campo aceita a leva, e cada arquivo entra na biblioteca.
+  const fs = [...(ev.target.files || [])];
   ev.target.value = "";
-  if (f) await cdSubirFonte(f);
+  for (const f of fs) await cdSubirFonte(f);
 });
 
 async function cdSubirFonte(f) {
@@ -10084,29 +10114,55 @@ async function cdSubirMarca(f) {
 /* ---------------------------------------------------------- 04 · as variações */
 
 function cdPintaVars() {
-  $("cd_vars").innerHTML = CD_FORMATOS.map((f, i) => {
-    const v = CAD.vars[i];
+  /* SEM NOME DE FORMATO. "Aqui so' tem quadrado, horizontal, vertical e tela cheia.
+     Nao, irmao... e' so' pra ter as variacoes de como se comporta de formas
+     diferentes" (27/08/2026). O numero e' referencia de ordem, nao categoria: o que
+     separa uma variacao da outra e' a arte e onde a escrita fica nela. */
+  const cartoes = CAD.vars.map((v, i) => {
     const semFuro = v.medida && !v.medida.furo;
-    const dentro = v.url
-      ? `<img class="cd-var-arte" alt="" src="${escapa(v.url)}">`
-        + (semFuro ? '<span class="cd-sem-furo">Sem Furo</span>' : "")
-        + `<div class="cd-txt" data-v="${i}" style="top:${v.escrita.topo}%;height:${
-            v.escrita.altura}%">A Escrita Fica Aqui<span class="cd-alca"></span></div>`
-      : '<div class="cd-oco">Sem Arte</div>';
     return `<div class="cd-var${i === CAD.qual ? " on" : ""}" data-i="${i}">
-      <div class="cd-var-cab">${escapa(f.r)}<em>${escapa(f.razao)}</em></div>
-      <div class="cd-palco">${dentro}</div>
-      <div class="cd-var-pe"><button class="acao mini" type="button" data-subir="${i}">${
-        v.url ? "Trocar Arte" : "Subir Arte"}</button></div></div>`;
-  }).join("");
+      <div class="cd-var-cab">Variação ${i + 1}</div>
+      <div class="cd-palco">
+        <img class="cd-var-arte" alt="" src="${escapa(v.url)}">
+        ${semFuro ? '<span class="cd-sem-furo">Sem Furo</span>' : ""}
+        <div class="cd-txt" data-v="${i}" style="top:${v.escrita.topo}%;height:${
+          v.escrita.altura}%">A Escrita Fica Aqui<span class="cd-alca"></span></div>
+      </div>
+      <div class="cd-var-pe">
+        <button class="acao mini" type="button" data-subir="${i}">Trocar Arte</button>
+        <button class="acao mini" type="button" data-tirar="${i}">Tirar</button>
+      </div></div>`;
+  });
+  // O FORMATO ACEITO FICA NUMA LINHA SO' DE ASPAS: o vigia de nomes le' texto de crase
+  // linha a linha, e sigla em caixa alta no meio de crase multilinha vira alarme falso.
+  const aceita = "PNG, JPG Ou WEBP, Até 5 MB";
+  cartoes.push(`<div class="cd-solta cd-var-mais" id="cd_var_mais">
+    <span class="cd-mais">+</span><b>Acrescentar Variação</b>
+    <em>${aceita}</em></div>`);
+  $("cd_vars").innerHTML = cartoes.join("");
   cdDiz();
 }
 
 $("cd_vars").addEventListener("click", ev => {
   if (!CAD) return;
+  const tirar = ev.target.closest("[data-tirar]");
+  if (tirar) {
+    const i = Number(tirar.dataset.tirar);
+    const v = CAD.vars[i];
+    if (v && v.url) URL.revokeObjectURL(v.url);
+    CAD.vars.splice(i, 1);
+    CAD.qual = -1;
+    cdPintaVars();
+    return;
+  }
   const s = ev.target.closest("[data-subir]");
   if (s) {
     CAD.qual = Number(s.dataset.subir);
+    $("cd_var_arq").click();
+    return;
+  }
+  if (ev.target.closest("#cd_var_mais")) {
+    CAD.qual = -1;
     $("cd_var_arq").click();
     return;
   }
@@ -10115,9 +10171,12 @@ $("cd_vars").addEventListener("click", ev => {
 });
 
 $("cd_var_arq").addEventListener("change", async ev => {
-  const f = (ev.target.files || [])[0];
+  const fs = [...(ev.target.files || [])];
   ev.target.value = "";
-  if (f) await cdPorArteNaVariacao(f);
+  if (!fs.length) return;
+  // TROCAR troca UMA; ACRESCENTAR aceita a selecao inteira, uma variacao por arquivo.
+  if (CAD.qual >= 0) { await cdPorArteNaVariacao(fs[0]); return; }
+  for (const f of fs) await cdPorArteNaVariacao(f);
 });
 
 async function cdPorArteNaVariacao(f) {
@@ -10127,18 +10186,23 @@ async function cdPorArteNaVariacao(f) {
   if (f.size > CD_TETO) return cdDiz("essa arte passa dos 5 MB.", "ruim");
   try {
     const medida = await medirAArte(f);
-    const v = CAD.vars[CAD.qual];
-    if (v.url) URL.revokeObjectURL(v.url);
+    let v = CAD.qual >= 0 ? CAD.vars[CAD.qual] : null;
+    if (v && v.url) URL.revokeObjectURL(v.url);
+    if (!v) {
+      v = { escrita: { topo: 78, altura: 13 } };
+      CAD.vars.push(v);
+    }
     v.blob = f;
     v.nome = f.name.replace(/\.[^.]+$/, "");
     v.medida = medida;
     v.url = URL.createObjectURL(f);
     cdPintaVars();
     // O AVISO DO FURO SAI NA HORA, e nao no fim: descobrir no botao de cadastrar que a
-    // arte nao serve seria descobrir tarde demais, com as outras tres ja' escolhidas.
-    cdDiz(medida.furo ? "" : "essa arte não tem o furo transparente, e sem ele a "
-          + "filmagem não sabe onde entrar: exporte o PNG com a janela vazada.",
-          medida.furo ? "" : "ruim");
+    // arte nao serve seria descobrir tarde demais, com as outras ja' escolhidas. Arte
+    // boa devolve o rodape para a CONTA de variacoes, em vez de apagar o recado.
+    if (medida.furo) cdDiz();
+    else cdDiz("essa arte não tem o furo transparente, e sem ele a filmagem não sabe "
+               + "onde entrar: exporte o PNG com a janela vazada.", "ruim");
   } catch (e) {
     cdDiz("não consegui ler a arte: " + e.message, "ruim");
   }
@@ -10212,40 +10276,46 @@ async function cdCadastrar() {
   if (!CAD || CAD.gravando) return;
   const nome = (CAD.nome || "").trim();
   if (!nome) { cdMostraPasso(1); return cdDiz("o template precisa de um nome.", "ruim"); }
-  const comArte = CAD.vars.filter(v => v.blob);
-  if (!comArte.length) {
+  if (!(CAD.conta || "").trim()) {
+    cdMostraPasso(1);
+    return cdDiz("escolha ou crie a conta: é ela que agrupa os templates.", "ruim");
+  }
+  if (!CAD.vars.length) {
     cdMostraPasso(4);
-    return cdDiz("suba pelo menos uma arte: sem ela não há template.", "ruim");
+    return cdDiz("acrescente pelo menos uma variação: sem arte não há template.", "ruim");
   }
   CAD.gravando = true;
   $("cd_avancar").disabled = true;
+  $("cd_voltar").disabled = true;
   $("cd_corpo").style.opacity = ".55";
   $("cd_corpo").style.pointerEvents = "none";
+  // O TRABALHO SE VE. "Eu nao sei se ta salvando ou nao ta, se bugou ou nao bugou":
+  // a roda gira, e o recado diz qual variacao esta' subindo, uma a uma.
+  $("cd_girando").hidden = false;
   const idTpl = "t" + Date.now() + "_" + novoId();
   const guardadas = [];
   try {
-    for (const v of comArte) {
-      cdDiz("guardando a arte " + rotuloDoFormato(v.formato) + "…");
+    for (const [n, v] of CAD.vars.entries()) {
+      cdDiz("guardando a variação " + (n + 1) + " de " + CAD.vars.length + "…");
       const ext = "." + (v.blob.type === "image/webp" ? "webp"
                        : v.blob.type === "image/jpeg" ? "jpg" : "png");
       const arquivo = "arte" + Date.now() + "_" + novoId() + ext;
       await guardarNoAcervo(arquivo, await v.blob.arrayBuffer());
       guardadas.push({
         id: "a" + Date.now() + "_" + novoId(), tipo: "arte",
-        nome: nome + " · " + rotuloDoFormato(v.formato), arquivo,
+        nome: nome + " · Variação " + (n + 1), arquivo,
         w: v.medida.w, h: v.medida.h, furo: v.medida.furo, janela: v.medida.janela,
-        template: idTpl, formato: v.formato, escrita: { ...v.escrita },
+        template: idTpl, escrita: { ...v.escrita },
         criado: Date.now()
       });
     }
+    cdDiz("guardando o template…");
     ACERVO.itens.push(...guardadas);
     ACERVO.itens.push({
-      id: idTpl, tipo: "template", nome,
-      conta: CAD.conta || "", etiqueta: CAD.etiqueta || "",
+      id: idTpl, tipo: "template", nome, conta: CAD.conta || "",
       fonte: CAD.fonte, linhas: CAD.linhas,
       marca: CAD.marca || null, marcaPos: { ...CAD.marcaPos },
-      variacoes: guardadas.map(a => ({ formato: a.formato, arte: a.id,
-                                       escrita: a.escrita })),
+      variacoes: guardadas.map(a => ({ arte: a.id, escrita: a.escrita })),
       criado: Date.now()
     });
     await gravarAcervo();
@@ -10255,23 +10325,24 @@ async function cdCadastrar() {
     ACERVO.itens = ACERVO.itens.filter(
       x => x.id !== idTpl && !guardadas.some(g => g.id === x.id));
     CAD.gravando = false;
+    $("cd_girando").hidden = true;
     $("cd_avancar").disabled = false;
+    $("cd_voltar").disabled = false;
     $("cd_corpo").style.opacity = "";
     $("cd_corpo").style.pointerEvents = "";
     return cdDiz("não consegui cadastrar: " + e.message, "ruim");
   }
+  $("cd_girando").hidden = true;
   cdDiz("Template Cadastrado", "boa");
-  const primeira = artesDoAcervo().findIndex(a => a.template === idTpl);
-  if (primeira >= 0) MP_I = primeira;
-  fecharCadastro();
-  desenhaAsArtes();
-  await pintarOModelo();
-  marcaOModelo();
-}
-
-function rotuloDoFormato(v) {
-  const f = CD_FORMATOS.find(x => x.v === v);
-  return f ? f.r : v;
+  MP_CONTA = CAD.conta;
+  // O FECHO SE VE ANTES DE FECHAR: um instante com o recado bom, e a janela sai
+  // sozinha, com a conta nova ja' escolhida na lista.
+  setTimeout(async () => {
+    fecharCadastro();
+    desenhaAsContas();
+    await pintarOModelo();
+    marcaOModelo();
+  }, 900);
 }
 
 async function entrarNoTemplate() {
@@ -10366,16 +10437,20 @@ $("apl_montar").onclick = async () => {
            mover e redimensionar acontecem em cima do CENTRO da janela, e o centro so' se
            sabe conhecendo o retangulo que o passo 2 mediu. */
         const e = ENQUADRES.get(nome);
-        /* A JANELA DA ARTE VAI EM TODA PECA, e nao so' nas que ele reenquadrou: ela e' do
-           TEMPLATE, e e' ela que diz onde a filmagem entra. Antes o enquadre so' existia
-           quando havia mexida, e uma peca intocada chegaria ao motor sem saber que ha'
-           moldura, caindo no caminho velho. */
-        const janela = TPL && TPL.janela ? TPL.janela : null;
+        /* A MOLDURA E' POR PECA desde 27/08/2026: a variacao que a medida escolheu para
+           ESTE recorte viaja no pedido, arquivo e janela, e o motor so' obedece. A
+           escolha mora na tela, num lugar so' (variacaoDaPeca), pela mesma razao do
+           encaixeNaJanela ser um so': duas implementacoes divergiriam caladas. Rascunho
+           antigo, de arte unica, segue mandando o TPL.janela gravado. */
+        const varDaPeca = variacaoDaPeca(nome);
+        const janela = varDaPeca ? varDaPeca.janela
+                     : (TPL && TPL.janela ? TPL.janela : null);
         if (e || janela) {
           p.enquadre = Object.assign({}, e || {});
           const r = BROLL_DE && BROLL_DE.get(nome);
           if (r) p.enquadre.base = { x: r.x, y: r.y, w: r.w, h: r.h };
           if (janela) p.enquadre.janela = janela;
+          if (varDaPeca) p.enquadre.arte = varDaPeca.arquivo;
         }
         return p;
       })
