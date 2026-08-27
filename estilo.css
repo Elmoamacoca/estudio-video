@@ -1081,6 +1081,17 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* O CABECALHO ABRE ESPACO PARA O BOTAO DE SAIR, que flutua no canto de cima. Sem esta
    folga, a segunda linha do texto corre POR BAIXO dele: visto na conferencia de
    25/08/2026, com "solte na leva inteira" sumindo atras da pilula. */
+/* O ICONE DO TITULO DA TELA. "O titulo ta faltando o icone, coloca um iconezinho"
+   (26/08/2026). Ele nao e' enfeite: cada tela tem o desenho do que ela faz, e e' por ele
+   que o olho acha a tela antes de ler a palavra. O quadrado com o verde apagado atras e'
+   o mesmo padrao das outras ferramentas da casa. */
+.ed-cab h2{display:flex;align-items:center;gap:11px}
+.ed-icone{flex:0 0 34px;width:34px;height:34px;border-radius:10px;display:flex;
+  align-items:center;justify-content:center;color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 26%,transparent)}
+.ed-icone svg{width:19px;height:19px}
+
 .ed-cab{margin-bottom:20px;padding-right:190px}
 @media(max-width:820px){ .ed-cab{padding-right:0} }
 .ed-cab h2{margin:0 0 5px;font-size:22px;font-weight:700;letter-spacing:-.02em}
@@ -1422,12 +1433,32 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @media(max-width:1100px){.ed-tres.mp-tres{grid-template-columns:200px minmax(0,1fr)}}
 @media(max-width:900px){.ed-tres.mp-tres{grid-template-columns:1fr}}
 /* COM TETO: sem ele a lista cresce a cada arte subida e empurra a coluna tela abaixo. */
-.mp-lista{max-height:min(58vh,620px)}
-.mp-mini{flex:0 0 26px;width:26px;aspect-ratio:9/16;border-radius:4px;overflow:hidden;
-  position:relative;background:#000}
+/* A GRADE DAS ARTES. Duas por linha e a arte inteira a' mostra: e' desenho que se
+   escolhe, e desenho nao se reconhece num selo de 26 pixels. */
+.mp-grade{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;
+  max-height:min(58vh,620px);overflow:auto;padding:2px}
+.mp-cartao{position:relative;border-radius:11px;overflow:hidden;cursor:pointer;
+  border:1px solid var(--rule-solid);background:var(--branco);
+  transition:border-color .16s,transform .16s}
+.mp-cartao:hover{border-color:color-mix(in srgb,var(--accent) 55%,transparent);
+  transform:translateY(-1px)}
+.mp-cartao.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.mp-cartao b{display:block;padding:7px 9px 8px;font-size:11px;font-weight:600;
+  line-height:1.25;color:var(--ink);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+/* O FURO APARECE COMO ENCAIXE VAZIO, e nao como buraco preto: preto atras da arte fazia
+   o cartao parecer imagem quebrada, que foi metade do "ta todo esquisito". */
+.mp-mini{display:block;width:100%;aspect-ratio:9/16;overflow:hidden;
+  position:relative;background:var(--paper-2);
+  background-image:repeating-linear-gradient(45deg,
+    color-mix(in srgb,var(--ink) 9%,transparent),
+    color-mix(in srgb,var(--ink) 9%,transparent) 4px,
+    transparent 4px,transparent 8px)}
 .mp-mini img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.mp-sem{margin-left:auto;font-size:10px;font-weight:700;color:var(--muted);
-  white-space:nowrap}
+.mp-sem{position:absolute;top:7px;right:7px;font-size:9.5px;font-weight:700;
+  padding:3px 7px;border-radius:999px;color:var(--ink);
+  background:color-mix(in srgb,var(--paper) 86%,transparent);
+  border:1px solid var(--rule-solid)}
 /* O QUADRO NASCE DA ALTURA, e nao so' da largura: a peca e' em pe', e e' a altura que
    aperta. Dois quadros lado a lado com medida so' de largura estouram no portatil. */
 .mp-quadro{width:clamp(190px,min(36vh,25vw),340px)}
@@ -2381,4 +2412,200 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 @media (prefers-reduced-motion: reduce){
   :root.com-revelar .secao > *,
   :root.com-revelar .entra{opacity:1;transform:none;filter:none;transition:none}
+}
+
+/* ==================================================== O CADASTRO DO TEMPLATE
+
+   A JANELA E' LARGA porque ela tem quatro telas dentro, e uma delas mostra quatro
+   variacoes lado a lado. Com os 520 da janela da chave, o cartao de variacao ficaria com
+   235 pixels e a arte dentro dele nao seria reconhecivel, que foi a queixa dele sobre a
+   lista de artes ("ta todo quadrado, todo esquisito"). */
+.cd-pop{width:min(780px,94vw);inset:3vh auto auto 50%;transform:translateX(-50%);
+  max-height:94vh}
+/* A BARRA DE ROLAGEM SO' APARECE ONDE PRECISA, E NA COR DA CASA.
+
+   ELA APARECIA NO PASSO 1 SEM TER O QUE ROLAR, e a culpa era do menu FECHADO dos
+   seletores: `.psel-menu` e' absoluto e fica ancorado ABAIXO do seletor, entao mesmo
+   apagado ele esticava a altura rolavel do corpo em 61 pixels. Menu fechado agora sai do
+   desenho, e nao so' do olho.
+
+   A COR: fina e na regua da casa. Barra clara de fabrica sobre pop escuro le' como risco
+   branco no meio da tela. */
+.cd-pop .pop-corpo{overflow:auto;scrollbar-width:thin;
+  scrollbar-color:var(--rule-solid) transparent}
+.cd-pop .psel-menu:not(.aberto){display:none}
+.cd-fontes{scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
+.cd-pop .pop-corpo::-webkit-scrollbar,
+.cd-fontes::-webkit-scrollbar{width:9px}
+.cd-pop .pop-corpo::-webkit-scrollbar-track,
+.cd-fontes::-webkit-scrollbar-track{background:transparent}
+.cd-pop .pop-corpo::-webkit-scrollbar-thumb,
+.cd-fontes::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:999px;
+  border:2px solid transparent;background-clip:content-box}
+.cd-pop .pop-corpo::-webkit-scrollbar-thumb:hover,
+.cd-fontes::-webkit-scrollbar-thumb:hover{background:var(--muted);
+  background-clip:content-box}
+/* O RECADO EMPURRA OS BOTOES para o canto, em vez de colar neles. */
+.cd-pop .pop-diz{margin-right:auto}
+.cd-pop .pop-pe .acao.forte{margin-left:0}
+
+/* A TRILHA DAS QUATRO ABAS. */
+.cd-trilha{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cd-passo{display:flex;align-items:center;gap:9px;padding:11px 13px;cursor:pointer;
+  white-space:nowrap;min-width:0;overflow:hidden;font:inherit;text-align:left;
+  border:1px solid var(--rule-solid);border-radius:11px;background:var(--paper-2);
+  font-size:12.5px;font-weight:600;color:var(--muted);transition:.16s}
+.cd-passo:hover{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.cd-passo.on{border-color:var(--accent);color:var(--ink);background:var(--accent-tint)}
+.cd-passo i{font-style:normal;font-size:11px;font-weight:700;width:22px;height:22px;
+  flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:7px;
+  border:1px solid currentColor;opacity:.75}
+.cd-passo.on i{background:var(--accent);border-color:var(--accent);color:#fff;opacity:1}
+
+.cd-tela[hidden]{display:none}
+.cd-tela{display:flex;flex-direction:column;gap:15px}
+.cd-linha{display:flex;gap:10px;align-items:center}
+.cd-linha .psel{flex:1 1 auto}
+/* O SELETOR DA FRASE NAO ESTICA: ele divide a linha com os botoes de linha, e esticado
+   empurrava os dois para as pontas. */
+.cd-frase-sel{flex:0 1 260px;min-width:0}
+.cd-linha .acao{flex:0 0 auto;height:40px}
+.cd-novo{display:none;gap:8px;margin-top:8px}
+.cd-novo.abre{display:flex}
+.cd-novo input{flex:1 1 auto;width:100%;padding:9px 11px;font:inherit;font-size:13px;
+  color:var(--ink);background:var(--paper-2);border:1px solid var(--rule-solid);
+  border-radius:9px;outline:0}
+.cd-novo input:focus{border-color:var(--accent)}
+/* O SELETOR GANHA A MESMA CAIXA DO CAMPO DE TEXTO. Do jeito da casa ele nasce sem borda e
+   sem fundo, o que serve para um seletor solto no meio de uma barra; aqui ele esta' num
+   formulario, ao lado de um campo com caixa, e dois campos com aparencia diferente na
+   mesma coluna leem como campo quebrado. */
+.cd-pop .psel-b{width:100%;height:40px;justify-content:space-between;padding:0 11px;
+  border:1px solid var(--rule-solid);border-radius:9px;background:var(--paper-2)}
+.cd-pop .psel-b:hover{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.cd-pop .psel-menu{left:0;right:auto;max-height:230px;overflow:auto}
+
+/* ------------------------------------------------------- a biblioteca de fontes */
+.cd-barra{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.cd-busca{flex:1 1 auto;min-width:0;height:34px;padding:0 11px;font:inherit;
+  font-size:12.5px;color:var(--ink);background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:9px;outline:0}
+.cd-busca:focus{border-color:var(--accent)}
+/* O GRUPO DE FILTROS NAO ENCOLHE. Espremido pelo campo de busca, o terceiro botao
+   (Favoritas) era cortado pela borda do grupo e sumia sem aviso. */
+#cd_filtro{flex:0 0 auto}
+#cd_filtro button{white-space:nowrap;padding:0 11px}
+/* A FONTE, ESCRITA NELA MESMA: e' o desenho da letra que se escolhe, nao o nome. */
+.cd-fontes{display:flex;flex-direction:column;gap:2px;max-height:244px;overflow:auto}
+.cd-fonte{display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;
+  border:1px solid transparent;border-radius:10px;min-width:0}
+.cd-fonte:hover{background:var(--paper-2)}
+.cd-fonte.on{border-color:var(--accent);background:var(--accent-tint)}
+.cd-fonte b{font-size:20px;font-weight:700;line-height:1.1;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.cd-fonte i{font-style:normal;margin-left:auto;flex:0 0 auto;font-size:10.5px;
+  color:var(--muted);letter-spacing:.02em}
+.cd-vazio{margin:8px 2px 0;font-size:12px;color:var(--muted)}
+.cd-vazio[hidden]{display:none}
+.cd-estrela{flex:0 0 auto;width:26px;height:26px;display:flex;align-items:center;
+  justify-content:center;border:0;border-radius:8px;background:none;cursor:pointer;
+  color:var(--muted);padding:0}
+.cd-estrela:hover{background:var(--paper-2);color:var(--ink)}
+.cd-estrela svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
+.cd-estrela.on{color:var(--accent)}
+.cd-estrela.on svg{fill:currentColor}
+.cd-tipo{flex:0 0 auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;
+  border:1px solid var(--rule-solid);color:var(--muted)}
+.cd-tipo.minha{color:var(--accent);
+  border-color:color-mix(in srgb,var(--accent) 40%,transparent);
+  background:color-mix(in srgb,var(--accent) 10%,transparent)}
+
+/* O ALVO DA SUBIDA, que diz o que aceita ANTES de ele escolher o arquivo. */
+.cd-solta{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;
+  border:1.5px dashed var(--rule-solid);border-radius:12px;transition:.16s}
+.cd-solta:hover{border-color:var(--accent);background:var(--accent-tint)}
+.cd-solta b{font-size:13px;font-weight:700}
+.cd-solta em{font-style:normal;margin-left:auto;font-size:11px;color:var(--muted);
+  white-space:nowrap}
+.cd-mais{flex:0 0 30px;width:30px;height:30px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:17px;color:var(--accent);
+  border:1.5px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+
+/* --------------------------------------------------------------- a previa da frase */
+.cd-previa{border:1px solid var(--rule-solid);border-radius:13px;overflow:hidden}
+.cd-previa-cab{display:flex;align-items:center;padding:10px 13px;
+  border-bottom:1px solid var(--rule-solid);font-size:11.5px;font-weight:700;
+  letter-spacing:.02em;background:var(--paper-2)}
+.cd-previa-cab u{margin-left:auto;text-decoration:none;color:var(--accent);font-weight:700}
+.cd-previa-cab u.demais{color:#e0574b}
+.cd-frase{padding:26px 22px;text-align:center;font-size:33px;line-height:1.16;
+  font-weight:700;color:#fff;background:#0f1116}
+#cd_linhas button{white-space:nowrap;padding:0 12px}
+
+/* --------------------------------------------------------------- a marca d'agua */
+.cd-marcas{display:flex;gap:9px;flex-wrap:wrap}
+.cd-marca-item{position:relative;width:86px;height:52px;border-radius:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border:1px solid var(--rule-solid);
+  background:#101319;transition:.16s;overflow:hidden;padding:6px}
+.cd-marca-item:hover{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.cd-marca-item.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.cd-marca-item img{max-width:100%;max-height:100%;object-fit:contain}
+.cd-marca-nada{font-size:12px;color:var(--muted)}
+.cd-dagua{display:flex;justify-content:center}
+/* O PALCO TEM BORDA. Sem ela, o quadro vazio some no fundo do pop (o preto dele e' quase
+   o preto da janela) e a marca d'agua fica boiando no meio do nada, sem se ver em relacao
+   a que. Quadro de conferencia precisa ter beirada mesmo quando esta' vazio. */
+.cd-palco{position:relative;margin:0 auto;height:290px;aspect-ratio:9/16;
+  border:1px solid var(--rule-solid);border-radius:9px;overflow:hidden;background:#0d0f14}
+.cd-palco video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cd-sem-broll{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;padding:0 22px;text-align:center;font-size:11.5px;
+  color:var(--muted)}
+.cd-sem-broll[hidden]{display:none}
+/* A MARCA FICA POR CIMA DO B-ROLL e se mexe onde ele quiser: e' assim que ela entra na
+   peca, e por isso ela se posiciona aqui em vez de se descrever em campo. */
+.cd-agua{position:absolute;right:6%;bottom:6%;width:42%;height:13%;display:flex;
+  align-items:center;justify-content:center;cursor:grab;border-radius:6px;
+  border:1.5px dashed rgba(255,255,255,.5);background:rgba(0,0,0,.28);user-select:none}
+.cd-agua[hidden]{display:none}
+.cd-agua:active{cursor:grabbing}
+.cd-agua img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
+.cd-alca{position:absolute;left:50%;bottom:-5px;width:32px;height:9px;
+  transform:translateX(-50%);border-radius:5px;background:var(--accent);cursor:ns-resize}
+.cd-agua .cd-alca{background:#fff}
+
+/* --------------------------------------------------------------- as variacoes */
+.cd-vars{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.cd-var{border:1px solid var(--rule-solid);border-radius:12px;overflow:hidden;
+  background:var(--paper-2);transition:border-color .16s}
+.cd-var.on{border-color:var(--accent)}
+.cd-var-cab{display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:12.5px;
+  font-weight:700}
+.cd-var-cab em{font-style:normal;margin-left:auto;font-size:10.5px;font-weight:600;
+  color:var(--muted)}
+/* O PALCO CENTRALIZA NO CARTAO. Encostado a' esquerda ele deixava dois tercos do cartao
+   vazios, e vazio grande le' como coisa faltando. */
+.cd-var .cd-palco{height:232px}
+.cd-var-arte{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.cd-oco{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--muted);border:1px dashed var(--rule-solid);border-radius:9px;
+  background:repeating-linear-gradient(45deg,
+    color-mix(in srgb,var(--ink) 7%,transparent),
+    color-mix(in srgb,var(--ink) 7%,transparent) 5px,transparent 5px,transparent 10px)}
+/* O INDICATIVO DA ESCRITA: a faixa que diz onde o conteudo vai entrar, e ela ARRASTA.
+   "Eu fazer um indicativo de que, olha, a escrita do conteudo vai ficar aqui." */
+.cd-txt{position:absolute;left:6%;width:88%;display:flex;align-items:center;
+  justify-content:center;cursor:grab;border:1.5px dashed var(--accent);border-radius:6px;
+  background:color-mix(in srgb,var(--accent) 20%,transparent);font-size:9px;
+  font-weight:700;color:#fff;text-align:center;user-select:none;padding:0 4px;z-index:2}
+.cd-txt:active{cursor:grabbing}
+.cd-var-pe{display:flex;gap:8px;padding:10px 11px}
+.cd-var-pe .acao{flex:1 1 auto;justify-content:center}
+.cd-sem-furo{position:absolute;top:7px;right:7px;z-index:3;font-size:9.5px;
+  font-weight:700;padding:2px 7px;border-radius:999px;color:#fff;
+  background:rgba(224,87,75,.9)}
+
+@media (max-width:820px){
+  .cd-trilha{grid-template-columns:1fr 1fr}
+  .cd-vars{grid-template-columns:1fr}
 }

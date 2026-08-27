@@ -3622,7 +3622,7 @@ async function entrarNaOficina(passo, rasc) {
   try { localStorage.setItem("estudio.leva.aberta", String(EDIT_LEVA.numero)); }
   catch (e) {}
   $("ed_r1").textContent = `leva ${EDIT_LEVA.numero}`;
-  $("ed_p1_titulo").textContent = `Leva ${EDIT_LEVA.numero}`;
+  $("ed_p1_titulo").lastChild.textContent = `Leva ${EDIT_LEVA.numero}`;
   $("ed_p1_n").textContent = num(EDIT_LEVA.limpos || 0);
   $("ed_p1_qual").textContent = (EDIT_LEVA.limpos === 1) ? "peça" : "peças";
 
@@ -9428,13 +9428,18 @@ function desenhaAsArtes() {
   const artes = artesDoAcervo();
   const l = $("mp_lista");
   if (!artes.length) {
-    l.innerHTML = '<li class="ed-cam-vazio">nenhuma arte subida ainda</li>';
+    l.innerHTML = '<p class="nota mini ed-nada">nenhum template cadastrado ainda</p>';
     return;
   }
-  l.innerHTML = artes.map((a, i) => `<li data-i="${i}"${i === MP_I ? ' class="sel"' : ""}>
+  /* CARTAO, E NAO LINHA DE LISTA. A linha mostrava a arte num selo de 26 pixels, que e'
+     pequeno demais para reconhecer desenho nenhum: "em minhas artes o negocio ta feio,
+     ta todo quadrado, todo esquisito" (26/08/2026). No cartao a arte aparece no formato
+     em que ela vai sair, e o nome vira legenda. */
+  l.innerHTML = artes.map((a, i) => `<div class="mp-cartao${i === MP_I ? " sel" : ""}"
+      data-i="${i}" title="${escapa(a.nome || a.arquivo)}">
       <span class="mp-mini"><img alt="" data-arte="${escapa(a.arquivo)}"></span>
-      <span class="ed-cam-nome">${escapa(a.nome || a.arquivo)}</span>
-      ${a.furo ? "" : '<span class="mp-sem">sem furo</span>'}</li>`).join("");
+      <b>${escapa(a.nome || a.arquivo)}</b>
+      ${a.furo ? "" : '<span class="mp-sem">Sem Furo</span>'}</div>`).join("");
   l.querySelectorAll("img[data-arte]").forEach(async img => {
     try { img.src = await enderecoDo(img.dataset.arte); } catch (e) {}
   });
@@ -9449,7 +9454,7 @@ async function pintarOModelo() {
   qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
   $("mp_usar").disabled = !a || !a.furo;
   if (!a) {
-    $("mp_recado").textContent = "Suba uma arte para escolher o modelo desta leva.";
+    $("mp_recado").textContent = "Cadastre um template para escolher o modelo desta leva.";
     return;
   }
   const url = await enderecoDo(a.arquivo);
@@ -9596,7 +9601,7 @@ async function subirArtes(arquivos) {
 }
 
 $("mp_lista").addEventListener("click", async ev => {
-  const li = ev.target.closest("li[data-i]");
+  const li = ev.target.closest("[data-i]");
   if (!li) return;
   MP_I = Number(li.dataset.i);
   desenhaAsArtes();
@@ -9609,12 +9614,665 @@ $("mp_outra").onclick = async () => {
   await vestirORecorte();
 };
 $("mp_usar").onclick = () => usarOModelo();
-$("mp_subir").onclick = () => $("mp_arquivo").click();
-$("mp_arquivo").addEventListener("change", async ev => {
-  const fs = [...(ev.target.files || [])];
-  ev.target.value = "";
-  if (fs.length) await subirArtes(fs);
+$("mp_novo").onclick = () => abrirCadastro();
+
+/* ============================================ O CADASTRO DO TEMPLATE
+
+   O QUE MUDOU: ate' 26/08/2026 a arte entrava por "Subir Arte" e entrava crua. Ele
+   cortou o nome e a coisa junto: "eu nao quero que tenha esse nome, Subir arte... na hora
+   que eu for subir o template, a gente precisa fazer um cadastramento completo".
+
+   O QUE UM TEMPLATE TEM, e cada item saiu de uma frase dele:
+     a marca       nome, conta e etiqueta, as duas ULTIMAS criaveis aqui dentro
+     a escrita     o desenho da letra e quantas linhas a frase pode ocupar
+     a marca d'agua um PNG transparente posto por cima do B-roll
+     as variacoes  uma arte por formato de recorte
+
+   O QUE NAO ENTRA, POR ORDEM DELE: cor, cor de destaque, sublinhado, caixa, alinhamento e
+   tamanho de letra. "Isso vai ser a etapa da IA, no momento que ela vai escrever." O que
+   fica do lado do template e' o que e' decisao da ARTE, e nao do texto.
+
+   ONDE ISSO MORA: no acervo, junto dos templates, e nao numa memoria desta aba. Conta,
+   etiqueta, fonte e marca d'agua sao itens proprios, porque ele reusa os quatro no
+   template seguinte; a variacao e' uma arte com o template dela anotado. */
+
+const CD_FORMATOS = [
+  { v: "quadrado", r: "Quadrado", razao: "1 para 1", topo: 78, altura: 13 },
+  { v: "horizontal", r: "Horizontal", razao: "16 para 9", topo: 68, altura: 15 },
+  { v: "vertical", r: "Vertical", razao: "9 para 16", topo: 83, altura: 12 },
+  { v: "cheia", r: "Tela Cheia", razao: "a peça inteira", topo: 72, altura: 16 },
+];
+
+/* AS FRASES DE TESTE. Fonte se julga escrevendo, e uma frase so' esconde o que importa: a
+   curta cabe em qualquer desenho, a longa e' a que estoura o maximo de linhas. */
+const CD_FRASES = [
+  "o corte que ninguém mostra",
+  "o corte que ninguém mostra antes da hora",
+  "três minutos por peça, e não trinta",
+  "a conta que o dono nunca fez, e que aparece no fim do mês",
+];
+
+// O TETO E' O QUE O ALVO DA SUBIDA PROMETE NA TELA. Prometer 5 MB e aceitar 40 faria a
+// gravacao estourar no posto, longe do clique, com o erro chegando sem nome.
+const CD_TETO = 5 * 1024 * 1024;
+
+const CD_ESTRELA = '<svg viewBox="0 0 24 24" stroke-linejoin="round">'
+  + '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/>'
+  + "</svg>";
+
+let CAD = null;                 // o cadastro em curso; nulo com a janela fechada
+let CD_ARRASTO = null;          // o que esta' sendo arrastado agora, faixa ou marca
+
+const cdDoAcervo = tipo => (ACERVO.itens || []).filter(x => x && x.tipo === tipo);
+const cdNomes = tipo => cdDoAcervo(tipo).map(x => x.nome).filter(Boolean);
+
+/** A ficha das favoritas. Uma so' no acervo, com as chaves das fontes estreladas. */
+function cdFichaDasFavoritas() {
+  let f = (ACERVO.itens || []).find(x => x && x.tipo === "favoritas");
+  if (!f) { f = { id: "favfontes", tipo: "favoritas", chaves: [] }; ACERVO.itens.push(f); }
+  if (!Array.isArray(f.chaves)) f.chaves = [];
+  return f;
+}
+
+/* A BIBLIOTECA INTEIRA: as da casa (as mesmas que o motor sabe desenhar) e as que ele
+   subiu. `minha` e' o que separa as duas, e e' por ela que o filtro de personalizadas
+   trabalha. */
+function cdBiblioteca() {
+  const fav = cdFichaDasFavoritas().chaves;
+  const daCasa = FONTES.map(f => ({
+    chave: f.v, nome: f.r, arquivo: f.g, css: fonteCss(f.v), minha: false,
+    favorita: fav.includes(f.v)
+  }));
+  const minhas = cdDoAcervo("fonte").map(f => ({
+    chave: f.id, nome: f.nome || f.arquivo, arquivo: f.arquivo, css: cdCssDaFonte(f),
+    minha: true, favorita: fav.includes(f.id)
+  }));
+  return minhas.concat(daCasa);
+}
+
+/* A FONTE SUBIDA PRECISA SER REGISTRADA NO NAVEGADOR para aparecer escrita nela mesma.
+   Sem isto a lista mostraria todas as personalizadas com a letra do sistema, que e'
+   exatamente o que a biblioteca existe para nao fazer. O registro e' uma vez so' por
+   arquivo: `document.fonts` guarda, e registrar de novo a cada pintura penduraria uma
+   descarga por clique de filtro. */
+const CD_FONTES_POSTAS = new Set();
+function cdCssDaFonte(f) { return '"cdf' + f.id + '",sans-serif'; }
+async function cdRegistrarFonte(f) {
+  if (!f || !f.arquivo || CD_FONTES_POSTAS.has(f.id)) return;
+  CD_FONTES_POSTAS.add(f.id);
+  try {
+    const u = await enderecoDo(f.arquivo);
+    if (!u) { CD_FONTES_POSTAS.delete(f.id); return; }
+    const cara = new FontFace("cdf" + f.id, "url(" + u + ")");
+    await cara.load();
+    document.fonts.add(cara);
+  } catch (e) { CD_FONTES_POSTAS.delete(f.id); }
+}
+
+/* ------------------------------------------------------------- abrir e fechar */
+
+async function abrirCadastro() {
+  if (!ACERVO.itens.length) await lerAcervo();
+  CAD = {
+    passo: 1, nome: "", conta: cdNomes("conta")[0] || "", etiqueta: cdNomes("etiqueta")[0] || "",
+    fonte: cdBiblioteca()[0] ? cdBiblioteca()[0].chave : "anton",
+    linhas: 3, frase: 1, filtro: "todas", busca: "",
+    marca: (cdDoAcervo("marca")[0] || {}).id || null,
+    marcaPos: { dir: 6, baixo: 6, larg: 42, alt: 13 },
+    vars: CD_FORMATOS.map(f => ({ formato: f.v, blob: null, url: null, medida: null,
+                                  nome: "", escrita: { topo: f.topo, altura: f.altura } })),
+    qual: 0, gravando: false
+  };
+  $("cd_nome").value = "";
+  $("cd_busca").value = "";
+  $("cd_conta_nova").classList.remove("abre");
+  $("cd_etq_nova").classList.remove("abre");
+  $("cd_avancar").disabled = false;
+  $("cd_corpo").style.opacity = "";
+  $("cd_corpo").style.pointerEvents = "";
+  cdSeletoresDaMarca();
+  pselNovo($("cd_frase_sel"), CD_FRASES.map((f, i) => ({ v: String(i), r: f })),
+           String(CAD.frase), v => { CAD.frase = Number(v); cdPintaFrase(); });
+  cdPintaFiltro();
+  await cdPintaFontes();
+  cdPintaLinhas();
+  cdPintaMarcas();
+  await cdPintaOBrollDaMarca();
+  cdPintaVars();
+  cdMostraPasso(1);
+  $("cd_fundo").hidden = false;
+  $("cd_pop").hidden = false;
+  setTimeout(() => { $("cd_nome").focus(); cdPintaFrase(); }, 40);
+}
+
+function fecharCadastro() {
+  // AS FOTOS SOLTAS SAO DEVOLVIDAS: cada arte de variacao virou um endereco de memoria, e
+  // fechar sem devolver deixa o arquivo inteiro preso no navegador ate' o F5.
+  if (CAD) {
+    for (const v of CAD.vars) if (v.url) URL.revokeObjectURL(v.url);
+  }
+  const v = $("cd_marca_video");
+  if (v) {
+    v.pause();
+    if (v.dataset.url) { URL.revokeObjectURL(v.dataset.url); delete v.dataset.url; }
+    v.removeAttribute("src");
+    v.load();
+  }
+  CAD = null;
+  CD_ARRASTO = null;
+  $("cd_fundo").hidden = true;
+  $("cd_pop").hidden = true;
+}
+
+$("cd_fechar").onclick = () => fecharCadastro();
+$("cd_fundo").onclick = () => fecharCadastro();
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && !$("cd_pop").hidden) fecharCadastro();
 });
+
+function cdMostraPasso(n) {
+  if (!CAD) return;
+  CAD.passo = n;
+  document.querySelectorAll("#cd_pop .cd-tela").forEach(x => {
+    x.hidden = Number(x.dataset.p) !== n;
+  });
+  document.querySelectorAll("#cd_trilha .cd-passo").forEach(x => {
+    x.classList.toggle("on", Number(x.dataset.p) === n);
+  });
+  $("cd_voltar").disabled = n === 1;
+  $("cd_avancar").textContent = n === 4 ? "Cadastrar Template" : "Avançar";
+  if (n === 2) cdPintaFrase();
+  cdDiz();
+}
+
+/* O RECADO DO RODAPE CONTA O QUE FALTA, e nao o que ja' foi feito: o que falta e' a unica
+   coisa que muda a decisao dele de clicar em cadastrar. */
+function cdDiz(texto, classe) {
+  const d = $("cd_diz");
+  if (texto !== undefined) { d.textContent = texto; d.className = "pop-diz " + (classe || ""); return; }
+  d.className = "pop-diz";
+  if (!CAD) { d.textContent = ""; return; }
+  const comArte = CAD.vars.filter(v => v.blob).length;
+  d.textContent = CAD.passo === 4
+    ? comArte + " De " + CD_FORMATOS.length + " Variações Com Arte" : "";
+}
+
+$("cd_trilha").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-p]");
+  if (b) cdMostraPasso(Number(b.dataset.p));
+});
+$("cd_voltar").onclick = () => { if (CAD && CAD.passo > 1) cdMostraPasso(CAD.passo - 1); };
+$("cd_avancar").onclick = () => {
+  if (!CAD) return;
+  if (CAD.passo < 4) { cdMostraPasso(CAD.passo + 1); return; }
+  cdCadastrar();
+};
+$("cd_nome").addEventListener("input", ev => { if (CAD) CAD.nome = ev.target.value; });
+
+/* ------------------------------------------------- 01 · a conta e a etiqueta */
+
+function cdSeletoresDaMarca() {
+  const contas = cdNomes("conta");
+  const etqs = cdNomes("etiqueta");
+  cdSeletor("cd_conta", contas, CAD.conta, "nenhuma conta criada", v => { CAD.conta = v; });
+  cdSeletor("cd_etq", etqs, CAD.etiqueta, "nenhuma etiqueta criada", v => { CAD.etiqueta = v; });
+}
+
+/* LISTA VAZIA NAO VIRA CAMPO EM BRANCO. Ela diz que nao ha' nada criado, que e' a verdade
+   daquele instante, e o botao ao lado e' o caminho. Mesma lei da folha de marcacao. */
+function cdSeletor(alvo, nomes, atual, vazio, aoTrocar) {
+  const ops = nomes.length ? nomes.map(n => ({ v: n, r: n }))
+                           : [{ v: "", r: vazio }];
+  pselNovo($(alvo), ops, nomes.includes(atual) ? atual : ops[0].v, aoTrocar);
+}
+
+async function cdCriar(tipo, texto, caixa, campo, redesenha) {
+  const nome = (($(campo).value) || "").trim();
+  if (!nome) return;
+  if (cdNomes(tipo).some(x => x.toLowerCase() === nome.toLowerCase())) {
+    cdDiz("Já existe " + texto + " com esse nome.", "ruim");
+    return;
+  }
+  try {
+    ACERVO.itens.push({ id: tipo[0] + Date.now() + "_" + novoId(), tipo, nome,
+                        criado: Date.now() });
+    await gravarAcervo();
+  } catch (e) {
+    ACERVO.itens.pop();
+    cdDiz("não consegui guardar: " + e.message, "ruim");
+    return;
+  }
+  if (tipo === "conta") CAD.conta = nome; else CAD.etiqueta = nome;
+  $(campo).value = "";
+  $(caixa).classList.remove("abre");
+  redesenha();
+  cdDiz("");
+}
+
+$("cd_nova_conta").onclick = () => {
+  $("cd_conta_nova").classList.toggle("abre");
+  if ($("cd_conta_nova").classList.contains("abre")) $("cd_conta_txt").focus();
+};
+$("cd_nova_etq").onclick = () => {
+  $("cd_etq_nova").classList.toggle("abre");
+  if ($("cd_etq_nova").classList.contains("abre")) $("cd_etq_txt").focus();
+};
+$("cd_conta_ok").onclick = () =>
+  cdCriar("conta", "uma conta", "cd_conta_nova", "cd_conta_txt", cdSeletoresDaMarca);
+$("cd_etq_ok").onclick = () =>
+  cdCriar("etiqueta", "uma etiqueta", "cd_etq_nova", "cd_etq_txt", cdSeletoresDaMarca);
+
+/* ------------------------------------------------------------ 02 · a escrita */
+
+function cdCabeNoFiltro(f) {
+  if (CAD.filtro === "minhas" && !f.minha) return false;
+  if (CAD.filtro === "favoritas" && !f.favorita) return false;
+  if (CAD.busca && (f.nome + " " + f.arquivo).toLowerCase().indexOf(CAD.busca) < 0) {
+    return false;
+  }
+  return true;
+}
+
+function cdPintaFiltro() {
+  document.querySelectorAll("#cd_filtro button").forEach(b => {
+    b.classList.toggle("on", b.dataset.q === CAD.filtro);
+  });
+}
+
+async function cdPintaFontes() {
+  const todas = cdBiblioteca();
+  const vistas = todas.filter(cdCabeNoFiltro);
+  $("cd_fontes").innerHTML = vistas.map(f => `<div class="cd-fonte${
+      f.chave === CAD.fonte ? " on" : ""}" data-f="${escapa(f.chave)}">
+      <button class="cd-estrela${f.favorita ? " on" : ""}" type="button"
+        data-fav="${escapa(f.chave)}" aria-label="Favoritar">${CD_ESTRELA}</button>
+      <b style="font-family:${escapa(f.css)}">${escapa(f.nome)}</b>
+      <span class="cd-tipo${f.minha ? " minha" : ""}">${
+        f.minha ? "Personalizada" : "Da Casa"}</span>
+      <i>${escapa(f.arquivo)}</i></div>`).join("");
+  $("cd_sem_fonte").hidden = vistas.length > 0;
+  for (const f of cdDoAcervo("fonte")) await cdRegistrarFonte(f);
+}
+
+$("cd_filtro").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-q]");
+  if (!b || !CAD) return;
+  CAD.filtro = b.dataset.q;
+  cdPintaFiltro();
+  await cdPintaFontes();
+});
+$("cd_busca").addEventListener("input", async ev => {
+  if (!CAD) return;
+  CAD.busca = (ev.target.value || "").trim().toLowerCase();
+  await cdPintaFontes();
+});
+
+$("cd_fontes").addEventListener("click", async ev => {
+  if (!CAD) return;
+  const estrela = ev.target.closest("[data-fav]");
+  if (estrela) {
+    const ficha = cdFichaDasFavoritas();
+    const k = estrela.dataset.fav;
+    const i = ficha.chaves.indexOf(k);
+    if (i >= 0) ficha.chaves.splice(i, 1); else ficha.chaves.push(k);
+    await cdPintaFontes();
+    try { await gravarAcervo(); }
+    catch (e) { cdDiz("a estrela não foi guardada: " + e.message, "ruim"); }
+    return;
+  }
+  const d = ev.target.closest("[data-f]");
+  if (!d) return;
+  CAD.fonte = d.dataset.f;
+  await cdPintaFontes();
+  cdPintaFrase();
+});
+
+function cdPintaLinhas() {
+  document.querySelectorAll("#cd_linhas button").forEach(b => {
+    b.classList.toggle("on", Number(b.dataset.l) === CAD.linhas);
+  });
+}
+$("cd_linhas").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-l]");
+  if (!b || !CAD) return;
+  CAD.linhas = Number(b.dataset.l);
+  cdPintaLinhas();
+  cdPintaFrase();
+});
+
+/* QUANTAS LINHAS A FRASE OCUPOU E' MEDIDO NA TELA, e nao chutado pelo numero de letras: a
+   mesma frase ocupa duas linhas numa condensada e tres numa larga, e e' justamente essa
+   diferenca que ele esta' olhando aqui. */
+function cdPintaFrase() {
+  if (!CAD) return;
+  const f = $("cd_frase");
+  const escolhida = cdBiblioteca().find(x => x.chave === CAD.fonte);
+  f.style.fontFamily = escolhida ? escolhida.css : fonteCss("anton");
+  f.textContent = CD_FRASES[CAD.frase] || CD_FRASES[0];
+  const est = getComputedStyle(f);
+  const alt = parseFloat(est.lineHeight) || 1;
+  const folga = parseFloat(est.paddingTop) + parseFloat(est.paddingBottom);
+  const n = Math.max(1, Math.round((f.scrollHeight - folga) / alt));
+  const u = $("cd_linhas_diz");
+  u.textContent = n + " De " + CAD.linhas + (CAD.linhas === 1 ? " Linha" : " Linhas");
+  u.classList.toggle("demais", n > CAD.linhas);
+}
+
+$("cd_subir_fonte").onclick = () => $("cd_fonte_arq").click();
+$("cd_fonte_arq").addEventListener("change", async ev => {
+  const f = (ev.target.files || [])[0];
+  ev.target.value = "";
+  if (f) await cdSubirFonte(f);
+});
+
+async function cdSubirFonte(f) {
+  if (!/\.(ttf|otf)$/i.test(f.name)) {
+    return cdDiz("essa fonte não é TTF nem OTF, e o motor só desenha esses dois.", "ruim");
+  }
+  if (f.size > CD_TETO) return cdDiz("essa fonte passa dos 5 MB.", "ruim");
+  try {
+    const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
+    // O NOME NO DISCO E' NOSSO, e o dele fica de rotulo: nome vindo de fora abriria a
+    // porta para um arquivo sobrescrever o outro em silencio. Mesma lei das artes.
+    const arquivo = "fonte" + Date.now() + "_" + novoId() + ext;
+    await guardarNoAcervo(arquivo, await f.arrayBuffer());
+    const item = { id: "f" + Date.now() + "_" + novoId(), tipo: "fonte",
+                   nome: f.name.replace(/\.[^.]+$/, ""), arquivo, criado: Date.now() };
+    ACERVO.itens.push(item);
+    await gravarAcervo();
+    await cdRegistrarFonte(item);
+    CAD.fonte = item.id;
+    CAD.filtro = "todas";
+    CAD.busca = "";
+    $("cd_busca").value = "";
+    cdPintaFiltro();
+    await cdPintaFontes();
+    cdPintaFrase();
+    cdDiz("");
+  } catch (e) {
+    cdDiz("não consegui guardar a fonte: " + e.message, "ruim");
+  }
+}
+
+/* --------------------------------------------------------- 03 · a marca d'água */
+
+function cdPintaMarcas() {
+  const marcas = cdDoAcervo("marca");
+  const alvo = $("cd_marcas");
+  if (!marcas.length) {
+    alvo.innerHTML = '<span class="cd-marca-nada">nenhuma marca subida ainda</span>';
+  } else {
+    alvo.innerHTML = marcas.map(m => `<div class="cd-marca-item${
+        m.id === CAD.marca ? " on" : ""}" data-m="${escapa(m.id)}"
+        title="${escapa(m.nome || m.arquivo)}"><img alt=""
+        data-marca="${escapa(m.arquivo)}"></div>`).join("");
+    alvo.querySelectorAll("img[data-marca]").forEach(async img => {
+      try { img.src = await enderecoDo(img.dataset.marca); } catch (e) {}
+    });
+  }
+  cdPintaAMarcaNoPalco();
+}
+
+async function cdPintaAMarcaNoPalco() {
+  const m = cdDoAcervo("marca").find(x => x.id === CAD.marca);
+  const caixa = $("cd_marca");
+  caixa.hidden = !m;
+  if (!m) return;
+  const p = CAD.marcaPos;
+  caixa.style.right = p.dir + "%";
+  caixa.style.bottom = p.baixo + "%";
+  caixa.style.width = p.larg + "%";
+  caixa.style.height = p.alt + "%";
+  try { $("cd_marca_img").src = await enderecoDo(m.arquivo); } catch (e) {}
+}
+
+/* O FUNDO E' UM RECORTE DESTA LEVA, e nao um desenho de exemplo: e' por cima da filmagem
+   que a marca vai ficar, e uma marca clara sobre um retangulo preto de mentira parece
+   legivel em qualquer lugar. Sem recorte a tela DIZ que nao tem, em vez de fingir um. */
+async function cdPintaOBrollDaMarca() {
+  const v = $("cd_marca_video");
+  const peca = (EDIT_RECORTES.length && MP_PECA >= 0) ? EDIT_RECORTES[MP_PECA]
+             : (EDIT_RECORTES[0] || null);
+  $("cd_sem_broll").hidden = !!peca;
+  if (!peca) { v.removeAttribute("src"); return; }
+  try {
+    const u = await urlDaMidia(peca, pastaDosRecortes());
+    if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
+    v.dataset.url = u;
+    v.src = u;
+    v.play().catch(() => {});
+  } catch (e) { $("cd_sem_broll").hidden = false; }
+}
+
+$("cd_marcas").addEventListener("click", ev => {
+  const d = ev.target.closest("[data-m]");
+  if (!d || !CAD) return;
+  CAD.marca = d.dataset.m;
+  cdPintaMarcas();
+});
+
+$("cd_subir_marca").onclick = () => $("cd_marca_arq").click();
+$("cd_marca_arq").addEventListener("change", async ev => {
+  const f = (ev.target.files || [])[0];
+  ev.target.value = "";
+  if (f) await cdSubirMarca(f);
+});
+
+async function cdSubirMarca(f) {
+  if (!/\.png$/i.test(f.name)) {
+    return cdDiz("a marca d'água tem de ser PNG, que é o que guarda o fundo transparente.",
+                 "ruim");
+  }
+  if (f.size > CD_TETO) return cdDiz("essa marca passa dos 5 MB.", "ruim");
+  try {
+    const medida = await medirAArte(f);
+    const arquivo = "marca" + Date.now() + "_" + novoId() + ".png";
+    await guardarNoAcervo(arquivo, await f.arrayBuffer());
+    const item = { id: "m" + Date.now() + "_" + novoId(), tipo: "marca",
+                   nome: f.name.replace(/\.[^.]+$/, ""), arquivo,
+                   w: medida.w, h: medida.h, criado: Date.now() };
+    ACERVO.itens.push(item);
+    await gravarAcervo();
+    CAD.marca = item.id;
+    cdPintaMarcas();
+    cdDiz("");
+  } catch (e) {
+    cdDiz("não consegui guardar a marca: " + e.message, "ruim");
+  }
+}
+
+/* ---------------------------------------------------------- 04 · as variações */
+
+function cdPintaVars() {
+  $("cd_vars").innerHTML = CD_FORMATOS.map((f, i) => {
+    const v = CAD.vars[i];
+    const semFuro = v.medida && !v.medida.furo;
+    const dentro = v.url
+      ? `<img class="cd-var-arte" alt="" src="${escapa(v.url)}">`
+        + (semFuro ? '<span class="cd-sem-furo">Sem Furo</span>' : "")
+        + `<div class="cd-txt" data-v="${i}" style="top:${v.escrita.topo}%;height:${
+            v.escrita.altura}%">A Escrita Fica Aqui<span class="cd-alca"></span></div>`
+      : '<div class="cd-oco">Sem Arte</div>';
+    return `<div class="cd-var${i === CAD.qual ? " on" : ""}" data-i="${i}">
+      <div class="cd-var-cab">${escapa(f.r)}<em>${escapa(f.razao)}</em></div>
+      <div class="cd-palco">${dentro}</div>
+      <div class="cd-var-pe"><button class="acao mini" type="button" data-subir="${i}">${
+        v.url ? "Trocar Arte" : "Subir Arte"}</button></div></div>`;
+  }).join("");
+  cdDiz();
+}
+
+$("cd_vars").addEventListener("click", ev => {
+  if (!CAD) return;
+  const s = ev.target.closest("[data-subir]");
+  if (s) {
+    CAD.qual = Number(s.dataset.subir);
+    $("cd_var_arq").click();
+    return;
+  }
+  const c = ev.target.closest(".cd-var");
+  if (c) { CAD.qual = Number(c.dataset.i); cdPintaVars(); }
+});
+
+$("cd_var_arq").addEventListener("change", async ev => {
+  const f = (ev.target.files || [])[0];
+  ev.target.value = "";
+  if (f) await cdPorArteNaVariacao(f);
+});
+
+async function cdPorArteNaVariacao(f) {
+  if (!/\.(png|jpe?g|webp)$/i.test(f.name)) {
+    return cdDiz("essa arte não é PNG, JPG nem WEBP.", "ruim");
+  }
+  if (f.size > CD_TETO) return cdDiz("essa arte passa dos 5 MB.", "ruim");
+  try {
+    const medida = await medirAArte(f);
+    const v = CAD.vars[CAD.qual];
+    if (v.url) URL.revokeObjectURL(v.url);
+    v.blob = f;
+    v.nome = f.name.replace(/\.[^.]+$/, "");
+    v.medida = medida;
+    v.url = URL.createObjectURL(f);
+    cdPintaVars();
+    // O AVISO DO FURO SAI NA HORA, e nao no fim: descobrir no botao de cadastrar que a
+    // arte nao serve seria descobrir tarde demais, com as outras tres ja' escolhidas.
+    cdDiz(medida.furo ? "" : "essa arte não tem o furo transparente, e sem ele a "
+          + "filmagem não sabe onde entrar: exporte o PNG com a janela vazada.",
+          medida.furo ? "" : "ruim");
+  } catch (e) {
+    cdDiz("não consegui ler a arte: " + e.message, "ruim");
+  }
+}
+
+/* A FAIXA DA ESCRITA ARRASTA DE VERDADE, e a alca de baixo muda a altura dela: e' o
+   indicativo que ele pediu, e indicativo que nao se mexe nao marca nada. A marca d'agua
+   usa o mesmo gesto, e por isso os dois passam pelo mesmo par de laços. */
+function cdPegar(ev, alvo, palco, campos) {
+  ev.preventDefault();
+  const r = palco.getBoundingClientRect();
+  CD_ARRASTO = Object.assign({ alvo, palco: r, x: ev.clientX, y: ev.clientY,
+                               alto: !!ev.target.closest(".cd-alca") }, campos);
+}
+
+$("cd_vars").addEventListener("mousedown", ev => {
+  const faixa = ev.target.closest(".cd-txt");
+  if (!faixa || !CAD) return;
+  ev.stopPropagation();
+  const i = Number(faixa.dataset.v);
+  cdPegar(ev, faixa, faixa.parentElement,
+          { quem: "faixa", i, topo: CAD.vars[i].escrita.topo,
+            altura: CAD.vars[i].escrita.altura });
+});
+
+$("cd_marca").addEventListener("mousedown", ev => {
+  if (!CAD) return;
+  const p = CAD.marcaPos;
+  cdPegar(ev, $("cd_marca"), $("cd_marca_palco"),
+          { quem: "marca", dir: p.dir, baixo: p.baixo, larg: p.larg, alt: p.alt });
+});
+
+window.addEventListener("mousemove", ev => {
+  const g = CD_ARRASTO;
+  if (!g || !CAD) return;
+  const dx = (ev.clientX - g.x) / g.palco.width * 100;
+  const dy = (ev.clientY - g.y) / g.palco.height * 100;
+  if (g.quem === "faixa") {
+    const e = CAD.vars[g.i].escrita;
+    if (g.alto) {
+      e.altura = Math.max(6, Math.min(100 - g.topo, g.altura + dy));
+      g.alvo.style.height = e.altura + "%";
+    } else {
+      e.topo = Math.max(0, Math.min(100 - g.altura, g.topo + dy));
+      g.alvo.style.top = e.topo + "%";
+    }
+    return;
+  }
+  const p = CAD.marcaPos;
+  if (g.alto) {
+    p.larg = Math.max(14, Math.min(90, g.larg + dx));
+    p.alt = Math.max(6, Math.min(40, g.alt + dy));
+    g.alvo.style.width = p.larg + "%";
+    g.alvo.style.height = p.alt + "%";
+  } else {
+    p.dir = Math.max(0, Math.min(80, g.dir - dx));
+    p.baixo = Math.max(0, Math.min(80, g.baixo - dy));
+    g.alvo.style.right = p.dir + "%";
+    g.alvo.style.bottom = p.baixo + "%";
+  }
+});
+window.addEventListener("mouseup", () => { CD_ARRASTO = null; });
+
+/* ------------------------------------------------------------- gravar o cadastro
+
+   A ORDEM IMPORTA: primeiro os arquivos das artes, depois a ficha de cada uma, e so' no
+   fim o template que as amarra. Gravar o template antes deixaria uma ficha apontando para
+   arquivo que talvez nao chegasse ao disco, que e' o tipo de mentira que so' aparece na
+   hora de montar a leva. */
+async function cdCadastrar() {
+  if (!CAD || CAD.gravando) return;
+  const nome = (CAD.nome || "").trim();
+  if (!nome) { cdMostraPasso(1); return cdDiz("o template precisa de um nome.", "ruim"); }
+  const comArte = CAD.vars.filter(v => v.blob);
+  if (!comArte.length) {
+    cdMostraPasso(4);
+    return cdDiz("suba pelo menos uma arte: sem ela não há template.", "ruim");
+  }
+  CAD.gravando = true;
+  $("cd_avancar").disabled = true;
+  $("cd_corpo").style.opacity = ".55";
+  $("cd_corpo").style.pointerEvents = "none";
+  const idTpl = "t" + Date.now() + "_" + novoId();
+  const guardadas = [];
+  try {
+    for (const v of comArte) {
+      cdDiz("guardando a arte " + rotuloDoFormato(v.formato) + "…");
+      const ext = "." + (v.blob.type === "image/webp" ? "webp"
+                       : v.blob.type === "image/jpeg" ? "jpg" : "png");
+      const arquivo = "arte" + Date.now() + "_" + novoId() + ext;
+      await guardarNoAcervo(arquivo, await v.blob.arrayBuffer());
+      guardadas.push({
+        id: "a" + Date.now() + "_" + novoId(), tipo: "arte",
+        nome: nome + " · " + rotuloDoFormato(v.formato), arquivo,
+        w: v.medida.w, h: v.medida.h, furo: v.medida.furo, janela: v.medida.janela,
+        template: idTpl, formato: v.formato, escrita: { ...v.escrita },
+        criado: Date.now()
+      });
+    }
+    ACERVO.itens.push(...guardadas);
+    ACERVO.itens.push({
+      id: idTpl, tipo: "template", nome,
+      conta: CAD.conta || "", etiqueta: CAD.etiqueta || "",
+      fonte: CAD.fonte, linhas: CAD.linhas,
+      marca: CAD.marca || null, marcaPos: { ...CAD.marcaPos },
+      variacoes: guardadas.map(a => ({ formato: a.formato, arte: a.id,
+                                       escrita: a.escrita })),
+      criado: Date.now()
+    });
+    await gravarAcervo();
+  } catch (e) {
+    // O ACERVO DA TELA VOLTA AO QUE ERA: metade de um template na lista seria pior que
+    // nenhum, porque ele escolheria uma arte que o disco nao tem.
+    ACERVO.itens = ACERVO.itens.filter(
+      x => x.id !== idTpl && !guardadas.some(g => g.id === x.id));
+    CAD.gravando = false;
+    $("cd_avancar").disabled = false;
+    $("cd_corpo").style.opacity = "";
+    $("cd_corpo").style.pointerEvents = "";
+    return cdDiz("não consegui cadastrar: " + e.message, "ruim");
+  }
+  cdDiz("Template Cadastrado", "boa");
+  const primeira = artesDoAcervo().findIndex(a => a.template === idTpl);
+  if (primeira >= 0) MP_I = primeira;
+  fecharCadastro();
+  desenhaAsArtes();
+  await pintarOModelo();
+  marcaOModelo();
+}
+
+function rotuloDoFormato(v) {
+  const f = CD_FORMATOS.find(x => x.v === v);
+  return f ? f.r : v;
+}
 
 async function entrarNoTemplate() {
   if (!EDIT_RECORTES.length) await procurarRecortes();

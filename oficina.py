@@ -1026,6 +1026,10 @@ PASTAS_DE_FONTE = [
     Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts",
     Path.home() / "AppData" / "Local" / "Microsoft" / "Windows" / "Fonts",
     CASA / "fontes",
+    # A LETRA QUE ELE SOBE NO CADASTRO DO TEMPLATE mora junto do resto do material do
+    # template (26/08/2026), e nao numa pasta de fontes a' parte: quem apaga um template
+    # apaga tudo dele de uma vez, e uma fonte orfa em `fontes/` sobreviveria calada.
+    CASA / "templates",
 ]
 
 
@@ -1039,6 +1043,12 @@ def achar_fonte(nome: str, negrito: bool, tamanho: int):
     """
     from PIL import ImageFont
     tentativas = list(FONTES.get(nome, ())) or []
+    # NOME QUE E' ARQUIVO E' PROCURADO COMO ARQUIVO. A fonte que ele sobe no cadastro do
+    # template nao tem apelido no catalogo acima (ela nasceu depois dele), e o que a peca
+    # carrega e' o nome do arquivo no acervo. Sem esta linha ela cairia calada no
+    # `segoeui.ttf` do fim da fila, e a peca sairia com outra letra que nao a escolhida.
+    if not tentativas and str(nome).lower().endswith((".ttf", ".otf", ".ttc")):
+        tentativas = [str(nome)]
     arquivo = (tentativas[1] if negrito and len(tentativas) > 1
                else tentativas[0] if tentativas else None)
     ordem = [arquivo] if arquivo else []

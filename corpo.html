@@ -808,7 +808,7 @@
              com o número, que saiu do rodapé das peças. A contagem ganha corpo: é o
              dado que importa nesta tela. -->
         <div class="ed-cab">
-          <h2 id="ed_p1_titulo">A Leva</h2>
+          <h2 id="ed_p1_titulo"><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/></svg></span>A Leva</h2>
           <div class="ed-conta"><b id="ed_p1_n">0</b><span id="ed_p1_qual">peças</span></div>
         </div>
 
@@ -895,7 +895,7 @@
            só para conferir que o método está certo antes de soltar nas cento e sete. -->
       <div class="ed-etapa" data-passo="2" hidden>
         <div class="ed-cab">
-          <h2>Recorte Do B-roll</h2>
+          <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v14a2 2 0 0 0 2 2h12"/><path d="M3 7h14a2 2 0 0 1 2 2v12"/></svg></span>Recorte Do B-roll</h2>
           <p class="nota">O sistema mede o retângulo da filmagem em cada vídeo e grava só
             ele. Confira num exemplo e depois solte na leva inteira.</p>
         </div>
@@ -1003,7 +1003,7 @@
              filmagem: por isso nao ha' controle de raio em lugar nenhum desta tela. -->
         <div class="ed-sub-tela" data-sub="1">
           <div class="ed-cab">
-            <h2>Modelo Do Template</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2.5" width="18" height="19" rx="2.5"/><rect x="6.5" y="7" width="11" height="10" rx="1.6"/></svg></span>Modelo Do Template</h2>
             <p class="nota" id="mp_recado">A arte escolhida veste a leva inteira.</p>
           </div>
 
@@ -1013,13 +1013,17 @@
                 <h4>Minhas Artes</h4>
                 <!-- COM TETO: sem ele a pilha cresce a cada arte subida e empurra a
                      coluna para fora da tela. -->
-                <ul class="ed-camadas mp-lista" id="mp_lista"></ul>
+                <div class="mp-grade" id="mp_lista"></div>
               </section>
 
+              <!-- "SUBIR ARTE" SAIU, E O NOME NAO FOI A UNICA COISA QUE MUDOU.
+                   "Eu nao quero que tenha esse nome, Subir arte. Bota outro nome. Mas na
+                   hora que eu for subir o template, a gente precisa fazer um cadastramento
+                   completo do template" (26/08/2026). Arte solta entrava sem conta, sem
+                   etiqueta, sem fonte e sem saber para que formato de B-roll ela servia:
+                   era um arquivo, e nao um template. -->
               <section class="ed-bloco">
-                <button class="acao mini larga" type="button" id="mp_subir">Subir Arte</button>
-                <input type="file" id="mp_arquivo" accept="image/png,image/jpeg,image/webp"
-                       multiple hidden>
+                <button class="acao mini larga" type="button" id="mp_novo">Cadastrar Template</button>
               </section>
             </aside>
 
@@ -1047,7 +1051,7 @@
 
         <div class="ed-sub-tela" data-sub="2" hidden>
           <div class="ed-cab">
-            <h2>Caixas De Texto</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M9 6v13"/><path d="M15 6v13"/><path d="M6 19h6"/></svg></span>Caixas De Texto</h2>
             <p class="nota">Onde a escrita fica na peça, com que letra, e o que a IA pode
               mexer.</p>
           </div>
@@ -1156,7 +1160,7 @@
         <!-- ................................................ 3.2 · AS IMAGENS -->
         <div class="ed-sub-tela" data-sub="3" hidden>
           <div class="ed-cab">
-            <h2>Imagens Do Template</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.4"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m4 17 5-4 4 3 3-2 4 3"/></svg></span>Imagens Do Template</h2>
             <p class="nota">Logo, selo, qualquer PNG. Travar aqui é travar a posição, e
               não o conteúdo.</p>
           </div>
@@ -1230,7 +1234,7 @@
         <!-- ................................................ 3.3 · A IA ESCREVE -->
         <div class="ed-sub-tela" data-sub="4" hidden>
           <div class="ed-cab">
-            <h2>Escrita Das Frases</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span>Escrita Das Frases</h2>
             <!-- ESTA FASE NAO PERGUNTA NADA, e isso e' conserto. Ela pedia o texto de
                  cada peca, uma por uma, e o Gabriel viu o absurdo: "eu cheguei na etapa
                  da IA escrever, e' pra literalmente eu ter apenas a tela de carregamento
@@ -1302,7 +1306,7 @@
              acontece uma vez só, no fim, já aprovada. -->
         <div class="ed-sub-tela" data-sub="5" hidden>
           <div class="ed-cab">
-            <h2>Prévia Do Resultado</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="13" rx="2.2"/><path d="M8 20.5h8"/><path d="m10.5 9.5 4.5 2.5-4.5 2.5z"/></svg></span>Prévia Do Resultado</h2>
             <p class="nota">Todas de uma vez, como vão ficar. É aqui que você vê o
               conjunto e decide o que precisa de mão. Para mexer numa peça, vá para
               <b>peça a peça</b>: lá abre uma de cada vez, com a tela inteira para ela.</p>
@@ -1551,7 +1555,7 @@
         <!-- .............................................. 4.1 · AS DESCRIÇÕES -->
         <div class="ed-sub-tela" data-sub="1">
           <div class="ed-cab">
-            <h2>Descrição Dos Posts</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 10h16"/><path d="M4 15h10"/><path d="M4 20h7"/></svg></span>Descrição Dos Posts</h2>
             <!-- A MESMA DINÂMICA DA FASE 3, e foi ele quem pediu assim: "pode fazer a
                  mesma dinâmica que já foi feita anteriormente". Um botão, uma barra, e
                  no fim os textos prontos para ele olhar. Nada de perguntar peça a peça. -->
@@ -1643,7 +1647,7 @@
         <!-- .............................................. 4.2 · A ENTREGA -->
         <div class="ed-sub-tela" data-sub="2" hidden>
           <div class="ed-cab">
-            <h2>Envio Para O Drive</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></span>Envio Para O Drive</h2>
             <p class="nota">Cada vídeo vai para uma pasta só dele, com a descrição ao
               lado, e o conjunto sobe para o Drive com o nome da leva.</p>
           </div>
@@ -2072,6 +2076,179 @@
   <div class="pop-pe">
     <button class="acao" id="ch_provar" type="button">Provar</button>
     <button class="acao forte" id="ch_ok" type="button">Acrescentar</button>
+  </div>
+</div>
+
+
+<!-- ================================================ O CADASTRO DO TEMPLATE
+
+     POR QUE ELE EXISTE: ate' 26/08/2026 a arte entrava por um botao de subir arquivo, e
+     entrava crua. O Gabriel: "na hora que eu for subir o template, a gente precisa fazer
+     um cadastramento completo do template". Um template nao e' um PNG: e' a marca (nome,
+     conta, etiqueta), a letra com que a frase e' escrita, a marca d'agua que vai por cima
+     do B-roll, e as VARIACOES, uma por formato de recorte.
+
+     A ORDEM DAS QUATRO ABAS E' A QUE ELE APROVOU na versao G da proposta, e cada uma
+     nasceu de uma frase dele:
+
+       01 A Marca        "a conta eu posso ta criando aqui e a etiqueta tambem"
+       02 A Escrita      "existe uma alta chance da escrita ser algo que eu vou tar upando"
+       03 A Marca D'Agua "um PNG com fundo transparente... em cima de cada B-roll"
+       04 As Variacoes   "essas sao as variacoes que esse template compoe em questao de B-roll"
+
+     O QUE NAO ESTA AQUI, e saiu por ordem dele: cor da letra, cor de destaque, sublinhado,
+     caixa alta, alinhamento e tamanho. "Isso vai ser a etapa da IA, no momento que ela vai
+     escrever." Do lado do template fica o DESENHO DA LETRA e quantas linhas a frase pode
+     ocupar, que sao decisoes da arte e nao do texto.
+
+     ELE MORA FORA DA SECAO DA ABA pela mesma razao da janela da chave: `.aba` tem animacao
+     com transform, e elemento assim vira ancora de quem e' `position:fixed`. -->
+<div class="pop-fundo" id="cd_fundo" hidden></div>
+<div class="pop cd-pop" id="cd_pop" hidden role="dialog" aria-modal="true"
+     aria-labelledby="cd_titulo">
+  <div class="pop-cab">
+    <b id="cd_titulo">Cadastrar Template</b>
+    <button class="gal-x" id="cd_fechar" type="button" aria-label="Fechar">&times;</button>
+  </div>
+
+  <div class="pop-corpo" id="cd_corpo">
+    <div class="cd-trilha" id="cd_trilha">
+      <button class="cd-passo on" type="button" data-p="1"><i>01</i>A Marca</button>
+      <button class="cd-passo" type="button" data-p="2"><i>02</i>A Escrita</button>
+      <button class="cd-passo" type="button" data-p="3"><i>03</i>A Marca D&#39;&#193;gua</button>
+      <button class="cd-passo" type="button" data-p="4"><i>04</i>As Varia&#231;&#245;es</button>
+    </div>
+
+    <!-- .......................................................... 01 &#183; A MARCA -->
+    <div class="cd-tela" data-p="1">
+      <label class="cfg-campo">
+        <span>Nome Do Template</span>
+        <input id="cd_nome" type="text" placeholder="Vision Escuro" spellcheck="false">
+      </label>
+
+      <!-- A CONTA E A ETIQUETA SE CRIAM AQUI DENTRO. Lista fechada obrigaria a sair do
+           cadastro para cadastrar, que e' o caminho que ele recusou. -->
+      <div class="cfg-campo">
+        <span>A Conta</span>
+        <div class="cd-linha">
+          <div class="psel" id="cd_conta"></div>
+          <button class="acao" type="button" id="cd_nova_conta">Criar Conta</button>
+        </div>
+        <div class="cd-novo" id="cd_conta_nova">
+          <input id="cd_conta_txt" type="text" placeholder="perfis.dark" spellcheck="false">
+          <button class="acao forte" type="button" id="cd_conta_ok">Criar</button>
+        </div>
+      </div>
+
+      <div class="cfg-campo">
+        <span>Etiqueta</span>
+        <div class="cd-linha">
+          <div class="psel" id="cd_etq"></div>
+          <button class="acao" type="button" id="cd_nova_etq">Criar Etiqueta</button>
+        </div>
+        <div class="cd-novo" id="cd_etq_nova">
+          <input id="cd_etq_txt" type="text" placeholder="Bastidor" spellcheck="false">
+          <button class="acao forte" type="button" id="cd_etq_ok">Criar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ........................................................ 02 &#183; A ESCRITA -->
+    <div class="cd-tela" data-p="2" hidden>
+      <!-- A BIBLIOTECA DE FONTES, e nao um campo. "E se eu quiser pegar uma fonte que ja'
+           foi upada? E se eu quiser trazer apenas as fontes que sao personalizadas? E se
+           eu quiser favoritar algum tipo de fonte?" Fonte se escolhe olhando o desenho da
+           letra, e por isso cada nome aparece escrito NA PROPRIA FONTE. -->
+      <div class="cfg-campo">
+        <span>A Fonte Do Template</span>
+        <div class="cd-barra">
+          <div class="ed-botoes" id="cd_filtro">
+            <button type="button" data-q="todas" class="on">Todas</button>
+            <button type="button" data-q="minhas">Personalizadas</button>
+            <button type="button" data-q="favoritas">Favoritas</button>
+          </div>
+          <input class="cd-busca" id="cd_busca" type="search" placeholder="Procurar Fonte"
+                 spellcheck="false">
+        </div>
+        <div class="cd-fontes" id="cd_fontes"></div>
+        <p class="cd-vazio" id="cd_sem_fonte" hidden>Nenhuma Fonte Neste Filtro</p>
+      </div>
+
+      <!-- O ALVO DIZ O QUE ACEITA ANTES DE ELE ESCOLHER O ARQUIVO. "Tem que indicar qual
+           e' o modelo de arquivo que deve ser upado."
+
+           SAO TTF E OTF, e nao os tres da proposta. Quem desenha a peca e' o Pillow, do
+           lado do motor, e ele le' esses dois; o WOFF2 depende de a biblioteca de letras
+           ter sido compilada com o descompressor, o que nao esta' garantido na VPS.
+           Anunciar formato que a peca nao consegue usar seria mentira de tela. -->
+      <div class="cd-solta" id="cd_subir_fonte">
+        <span class="cd-mais">+</span>
+        <b>Subir Fonte</b>
+        <em>TTF Ou OTF, At&#233; 5 MB</em>
+      </div>
+      <input type="file" id="cd_fonte_arq" accept=".ttf,.otf" hidden>
+
+      <div class="cd-linha">
+        <div class="psel cd-frase-sel" id="cd_frase_sel"></div>
+        <div class="ed-botoes" id="cd_linhas">
+          <button type="button" data-l="1">1 Linha</button>
+          <button type="button" data-l="2">2 Linhas</button>
+          <button type="button" data-l="3" class="on">3 Linhas</button>
+        </div>
+      </div>
+
+      <!-- A PREVIA GRANDE, que foi a peca da proposta que ele aprovou de cara. Fonte se
+           julga escrevendo: nome de arquivo nao mostra o desenho da letra. -->
+      <div class="cd-previa">
+        <div class="cd-previa-cab">Pr&#233;via Da Frase<u id="cd_linhas_diz"></u></div>
+        <div class="cd-frase" id="cd_frase"></div>
+      </div>
+    </div>
+
+    <!-- ................................................. 03 &#183; A MARCA D&#39;&#193;GUA -->
+    <div class="cd-tela" data-p="3" hidden>
+      <div class="cd-solta" id="cd_subir_marca">
+        <span class="cd-mais">+</span>
+        <b>Subir Marca D&#39;&#193;gua</b>
+        <em>PNG Com Fundo Transparente, At&#233; 5 MB</em>
+      </div>
+      <input type="file" id="cd_marca_arq" accept="image/png" hidden>
+
+      <div class="cfg-campo">
+        <span>Marcas J&#225; Subidas</span>
+        <div class="cd-marcas" id="cd_marcas"></div>
+      </div>
+
+      <!-- ELA NAO SE DESCREVE EM CAMPO: ela se poe onde vai ficar. Arrasta para mover, e a
+           alca de baixo muda o tamanho. O fundo e' um recorte DESTA leva, e nao um desenho
+           de exemplo: marca d'agua se decide olhando a filmagem por baixo. -->
+      <div class="cd-dagua">
+        <div class="rec-lado">
+          <div class="rec-rotulo">Sobre O B-roll</div>
+          <div class="cd-palco" id="cd_marca_palco">
+            <video id="cd_marca_video" preload="metadata" muted playsinline loop></video>
+            <div class="cd-sem-broll" id="cd_sem_broll" hidden>sem recorte nesta leva para
+              mostrar por baixo</div>
+            <div class="cd-agua" id="cd_marca" hidden>
+              <img id="cd_marca_img" alt="">
+              <span class="cd-alca"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ....................................................... 04 &#183; AS VARIA&#199;&#213;ES -->
+    <div class="cd-tela" data-p="4" hidden>
+      <div class="cd-vars" id="cd_vars"></div>
+      <input type="file" id="cd_var_arq" accept="image/png,image/jpeg,image/webp" hidden>
+    </div>
+  </div>
+
+  <div class="pop-pe">
+    <span class="pop-diz" id="cd_diz"></span>
+    <button class="acao" type="button" id="cd_voltar">Voltar</button>
+    <button class="acao forte" type="button" id="cd_avancar">Avan&#231;ar</button>
   </div>
 </div>
 
