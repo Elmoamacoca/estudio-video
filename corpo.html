@@ -769,8 +769,6 @@
             <p id="ed_r3">nenhum escolhido</p>
             <ol class="ed-sub" id="ed_sub3">
               <li data-sub="1"><i></i>Modelo Do Template</li>
-              <li data-sub="2"><i></i>Caixas De Texto</li>
-              <li data-sub="3"><i></i>Imagens Do Template</li>
               <li data-sub="4"><i></i>Escrita Das Frases</li>
               <li data-sub="5"><i></i>Prévia Do Resultado</li>
               <li data-sub="6"><i></i>Revisão Peça A Peça</li>
@@ -1050,189 +1048,17 @@
                 <button class="btn grande" id="mp_outra" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ver Outra Peça</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
                 <button class="btn grande brasa" id="mp_usar" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Usar Nesta Leva</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
               </div>
+
+              <!-- A APLICACAO SE VE (27/08/2026): o painel toma o lugar do par
+                   enquanto cada peca veste a sua variacao, e fecha no selo. -->
+              <div class="mp-aplicando" id="mp_aplicando" hidden>
+                <div class="mp-apl-selo" aria-hidden="true"></div>
+                <h3 id="mp_apl_titulo">Aplicando O Template</h3>
+                <p class="nota" id="mp_apl_diz"></p>
+                <div class="mp-apl-trilho"><b id="mp_apl_barra"></b></div>
+                <p class="nota mini" id="mp_apl_conta"></p>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div class="ed-sub-tela" data-sub="2" hidden>
-          <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M12 4v16"/><path d="M9 20h6"/></svg></span>Caixas De Texto</h2>
-            <p class="nota">Onde a escrita fica na peça, com que letra, e o que a IA pode
-              mexer.</p>
-          </div>
-
-          <div class="ed-tres">
-            <aside class="ed-lado">
-              <section class="ed-bloco">
-                <h4>Fundo Da Peça</h4>
-                <div class="ed-cores" id="ed_cores"></div>
-              </section>
-
-              <section class="ed-bloco">
-                <h4>Texto</h4>
-                <button class="acao mini larga" id="ed_add_texto" type="button">
-                  Acrescentar Uma Caixa</button>
-                <ul class="ed-camadas" id="ed_camadas_txt"></ul>
-              </section>
-
-              <section class="ed-bloco">
-                <h4>Reel De Referência</h4>
-                <p class="nota mini" id="ed_broll_diz">nenhum recorte carregado</p>
-                <button class="acao mini larga" id="ed_outro_broll" type="button">
-                  Outro B-roll</button>
-              </section>
-            </aside>
-
-            <div class="ed-meio">
-              <div class="ed-canvas" id="ed_canvas">
-                <video id="ed_broll" preload="metadata" muted playsinline loop></video>
-                <div class="ed-camada" id="ed_camada"></div>
-              </div>
-              <p class="ed-medida" id="ed_medida">1080 por 1920</p>
-            </div>
-
-            <aside class="ed-lado" id="ed_props_txt">
-              <p class="nota mini ed-nada" id="ed_sem_txt">Clique numa caixa de texto da
-                peça para mexer nela.</p>
-
-              <div id="ed_prop_texto" hidden>
-                <section class="ed-bloco">
-                  <h4>O Que Está Escrito</h4>
-                  <textarea id="p_texto" rows="3"></textarea>
-                </section>
-
-                <section class="ed-bloco">
-                  <h4>Letra</h4>
-                  <div class="ed-linha-prop">
-                    <span>fonte</span>
-                    <div class="psel" id="p_fonte"></div>
-                  </div>
-                  <div class="ed-linha-prop">
-                    <span>peso</span>
-                    <div class="psel" id="p_peso"></div>
-                  </div>
-                  <div class="ed-linha-prop">
-                    <span>tamanho</span>
-                    <div class="ed-passo" id="p_tamanho"></div>
-                  </div>
-                  <div class="ed-linha-prop">
-                    <span>alinhar</span>
-                    <div class="ed-botoes" id="p_alinha">
-                      <button type="button" data-a="esquerda" title="à esquerda">
-                        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
-                      </button>
-                      <button type="button" data-a="centro" title="no centro">
-                        <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M6 18h12"/></svg>
-                      </button>
-                      <button type="button" data-a="direita" title="à direita">
-                        <svg viewBox="0 0 24 24"><path d="M4 6h16M10 12h10M7 18h13"/></svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="ed-cores mini" id="p_cores"></div>
-                </section>
-
-                <!-- O CADEADO. "Alguns textos eu posso colocar um cadeado, que é um texto
-                     que a IA não vai escrever. E alguns textos eu deixo em aberto: IA,
-                     quando você for escrever, escreve aqui, com essa fonte." -->
-                <section class="ed-bloco">
-                  <h4>A IA Pode Escrever Aqui?</h4>
-                  <div class="ed-botoes largo" id="p_trava">
-                    <button type="button" data-trava="1">
-                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
-                        rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-                      <span>Não, Travado</span></button>
-                    <button type="button" data-trava="0">
-                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
-                        rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>
-                      <span>Sim, Aberto</span></button>
-                  </div>
-                </section>
-
-                <button class="acao mini larga perigo" id="ed_apagar_txt" type="button">
-                  Apagar Esta Caixa</button>
-              </div>
-            </aside>
-          </div>
-
-          <div class="ed-pe">
-            <div class="ed-pe-conta" id="ed_conta_txt"></div>
-            <button class="acao forte" id="ed_vai_imagens" type="button">
-              Seguir Para As Imagens</button>
-          </div>
-        </div>
-
-        <!-- ................................................ 3.2 · AS IMAGENS -->
-        <div class="ed-sub-tela" data-sub="3" hidden>
-          <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.4"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m4 17 5-4 4 3 3-2 4 3"/></svg></span>Imagens Do Template</h2>
-            <p class="nota">Logo, selo, qualquer PNG. Travar aqui é travar a posição, e
-              não o conteúdo.</p>
-          </div>
-
-          <div class="ed-tres">
-            <aside class="ed-lado">
-              <section class="ed-bloco">
-                <h4>Acrescentar</h4>
-                <label class="ed-solta" id="ed_solta">
-                  <input type="file" id="ed_add_img" accept="image/png,image/jpeg,image/webp" hidden>
-                  <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/>
-                    <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-                  <span>escolher uma imagem</span>
-                </label>
-                <ul class="ed-camadas" id="ed_camadas_img"></ul>
-              </section>
-
-              <section class="ed-bloco">
-                <h4>Reel De Referência</h4>
-                <p class="nota mini" id="ed_broll_diz2">nenhum recorte carregado</p>
-                <button class="acao mini larga" id="ed_outro_broll2" type="button">
-                  Outro B-roll</button>
-              </section>
-            </aside>
-
-            <!-- A TELA DA PEÇA É A MESMA NAS DUAS FASES, e ela é movida para cá em vez
-                 de duplicada. Duas telas seriam dois vídeos tocando, dois desenhos para
-                 manter em dia e uma chance a mais de discordarem entre si. -->
-            <div class="ed-meio" id="ed_meio2"></div>
-
-            <aside class="ed-lado">
-              <p class="nota mini ed-nada" id="ed_sem_img">Clique numa imagem da peça para
-                mexer nela.</p>
-              <div id="ed_prop_img" hidden>
-                <section class="ed-bloco">
-                  <h4>Imagem</h4>
-                  <p class="ed-medida" id="p_img_nome"></p>
-                  <div class="ed-linha-prop">
-                    <span>largura</span>
-                    <div class="ed-passo" id="p_larg"></div>
-                  </div>
-                </section>
-                <section class="ed-bloco">
-                  <h4>A IA Pode Mover?</h4>
-                  <div class="ed-botoes largo" id="p_trava_img">
-                    <button type="button" data-travai="1">
-                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
-                        rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-                      <span>Não, Cravada</span></button>
-                    <button type="button" data-travai="0">
-                      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"
-                        rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>
-                      <span>Sim, Pode</span></button>
-                  </div>
-                </section>
-                <button class="acao mini larga perigo" id="ed_apagar_img" type="button">
-                  Apagar Esta Imagem</button>
-              </div>
-            </aside>
-          </div>
-
-          <div class="ed-pe">
-            <button class="acao" id="ed_volta_texto" type="button">Voltar Ao Texto</button>
-            <div class="ed-pe-conta" id="ed_conta_img"></div>
-            <button class="acao" id="ed_salvar_tpl" type="button">Salvar No Acervo</button>
-            <button class="acao forte" id="ed_vai_ia" type="button">
-              Seguir Para A IA Escrever</button>
           </div>
         </div>
 
@@ -1246,14 +1072,15 @@
                  da IA escrevendo, algo parecido com o recorte". Entao e' isso: um botao,
                  uma barra, e no fim as pecas prontas para ele olhar. -->
             <p class="nota">Ela abre a frase do card original de cada reel, entende o que
-              está escrito e escreve uma equivalente nas caixas que você deixou abertas.
-              Uma passada só, em todas as peças.</p>
+              está escrito e escreve uma equivalente na faixa de escrita da arte que cada
+              peça veste. Uma passada só, em todas as peças.</p>
           </div>
 
           <div class="leg-vazio" id="ia_sem_campo" hidden>
-            <b>Nenhuma caixa aberta no template.</b>
-            <p class="nota">Volte à fase do texto, escolha uma caixa e marque
-              <i>sim, aberto</i>. A IA só escreve nessas.</p>
+            <b>As artes desta conta não têm faixa de escrita.</b>
+            <p class="nota">A faixa é onde a frase vai ficar na peça. Volte ao
+              <b>modelo do template</b>, abra o cadastro e arraste a faixa
+              <i>a escrita fica aqui</i> em cada variação.</p>
           </div>
 
           <div class="leg-vazio" id="ia_sem_chave" hidden>
@@ -1291,7 +1118,7 @@
 
           <div class="ed-pe">
             <button class="acao" id="ed_volta_imagens" type="button">
-              Voltar Às Imagens</button>
+              Voltar Ao Modelo</button>
             <div class="ed-pe-conta" id="ed_conta_ia"></div>
             <button class="acao forte" id="ed_vai_ajuste" type="button">
               Ver As Peças Prontas</button>
@@ -2183,11 +2010,6 @@
 
       <div class="cd-linha">
         <div class="psel cd-frase-sel" id="cd_frase_sel"></div>
-        <div class="ed-botoes" id="cd_linhas">
-          <button type="button" data-l="1">1 Linha</button>
-          <button type="button" data-l="2">2 Linhas</button>
-          <button type="button" data-l="3" class="on">3 Linhas</button>
-        </div>
       </div>
 
       <!-- A PREVIA GRANDE, que foi a peca da proposta que ele aprovou de cara. Fonte se

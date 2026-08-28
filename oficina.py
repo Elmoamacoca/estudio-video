@@ -1306,6 +1306,16 @@ def template_da_peca(tpl: dict, enquadre: dict | None) -> dict:
     proprio["fundoImagem"] = arte
     if isinstance(e.get("janela"), dict):
         proprio["janela"] = e["janela"]
+    # A FRASE DESTA PECA, na faixa da variacao que ela veste.
+    #
+    # ELA CHEGA PRONTA DA TELA, como elemento de texto de id `frase`: posicao, largura,
+    # tamanho de letra, fonte, cor e alinhamento ja' resolvidos la'. Refazer a conta aqui
+    # seria a segunda implementacao da mesma regra, e o arquivo sairia diferente do que
+    # ele aprovou na previa. Daqui para baixo ela e' um elemento como qualquer outro: o
+    # que a IA escreveu entra por `textos["frase"]` e o acerto daquela peca por `ajustes`.
+    escrita = e.get("escrita")
+    if isinstance(escrita, dict) and escrita.get("id"):
+        proprio["elementos"] = list(tpl.get("elementos") or []) + [escrita]
     return proprio
 
 

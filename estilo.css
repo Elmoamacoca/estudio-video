@@ -1674,49 +1674,7 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .acao.larga{width:100%;justify-content:center}
 .acao.perigo{color:#d9534f;border-color:rgba(217,83,79,.35)}
 .acao.perigo:hover{background:rgba(217,83,79,.08)}
-/* A TELA DA PEÇA. `container-type:size` liga a unidade `cqh`, e é ela que faz o tamanho
-   da letra ser fração da ALTURA DA PEÇA aqui na tela, exatamente como o `oficina.py`
-   calcula na hora de gravar. Sem isso o texto sairia de um tamanho na tela e de outro no
-   arquivo, e o editor deixaria de valer como conferência. */
-.ed-canvas{position:relative;height:min(60vh,600px);aspect-ratio:9/16;overflow:hidden;
-  border-radius:var(--r-md);border:1px solid var(--rule-solid);background:#000;
-  container-type:size;touch-action:none;user-select:none}
-.ed-canvas video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
-  display:block}
-.ed-camada{position:absolute;inset:0}
-.ed-el{position:absolute;cursor:grab;outline:1px dashed transparent;white-space:pre-wrap;
-  word-break:break-word;background-repeat:no-repeat}
-.ed-el:hover{outline-color:rgba(255,255,255,.32)}
-.ed-el.sel{outline:1.5px solid var(--accent);cursor:move}
-/* A CAIXA ABERTA GANHA UMA MARCA DISCRETA: é a que a IA vai escrever, e ele precisa
-   distinguir de relance qual texto é dele e qual é dela. */
-.ed-el.aberto{outline-color:rgba(186,90,24,.5);outline-style:dashed}
-.ed-el i{position:absolute;width:13px;height:13px;border-radius:3px;background:var(--accent);
-  border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5)}
-.ed-el i[data-canto="nw"]{left:-7px;top:-7px;cursor:nwse-resize}
-.ed-el i[data-canto="ne"]{right:-7px;top:-7px;cursor:nesw-resize}
-.ed-el i[data-canto="sw"]{left:-7px;bottom:-7px;cursor:nesw-resize}
-.ed-el i[data-canto="se"]{right:-7px;bottom:-7px;cursor:nwse-resize}
-.ed-medida{margin:0;font:12px/1.6 ui-monospace,Consolas,monospace;color:var(--muted);
-  text-align:center}
-/* ......... a pilha de camadas */
-.ed-camadas{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;
-  gap:5px;max-height:216px;overflow:auto}
-.ed-camadas li{display:flex;align-items:center;gap:8px;padding:7px 10px;
-  border-radius:var(--r-sm);background:var(--paper-2);border:1px solid var(--rule-solid);
-  font-size:12.5px;cursor:pointer;min-width:0}
-.ed-camadas li.sel{border-color:var(--accent);color:var(--ink)}
-.ed-camadas li.ed-cam-vazio{justify-content:center;color:var(--muted);cursor:default;
-  border-style:dashed;font-size:12px}
-.ed-cam-nome{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ed-cam-cad{flex:none;display:flex;color:var(--muted)}
-.ed-cam-cad svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
-.ed-camadas li:not(.sel) .ed-cam-cad{opacity:.65}
-/* ......... as propriedades */
-.ed-linha-prop{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:7px 0;border-bottom:1px solid var(--rule)}
-.ed-linha-prop:last-of-type{border-bottom:0}
-.ed-linha-prop>span{font-size:12px;color:var(--muted)}
+/* ......... os controles miúdos, hoje espalhados por outras telas */
 /* O MENOS E O MAIS, no lugar da barra de arrastar do navegador. */
 .ed-passo{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--rule-solid);
   border-radius:var(--r-sm);background:var(--paper-2);overflow:hidden}
@@ -1735,23 +1693,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ed-botoes button:hover{background:var(--paper);color:var(--ink)}
 .ed-botoes button.on{background:var(--accent-tint);color:var(--accent)}
 .ed-botoes svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;
-  stroke-linecap:round;stroke-linejoin:round}
-/* A PALETA, com a última casa abrindo o seletor do navegador só quando ele quer uma cor
-   que não está aqui. */
-.ed-cores{display:flex;flex-wrap:wrap;gap:6px}
-.ed-cor{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--rule-solid);
-  cursor:pointer;padding:0;position:relative}
-.ed-cor.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-tint)}
-.ed-cor.outra{display:flex;align-items:center;justify-content:center;
-  background:var(--paper-2);color:var(--muted);font-size:15px;overflow:hidden}
-.ed-cor.outra input{position:absolute;inset:0;opacity:0;cursor:pointer;border:0;padding:0}
-.ed-cores.mini{margin-top:10px}
-/* ......... a área de soltar imagem */
-.ed-solta{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 14px;
-  border:1px dashed var(--rule-solid);border-radius:var(--r-md);cursor:pointer;
-  color:var(--muted);font-size:12.5px;text-align:center}
-.ed-solta:hover{border-color:var(--accent);color:var(--ink)}
-.ed-solta svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round}
 /* O RODAPÉ DA FASE. Ele estava colado no elemento de cima, e o Gabriel apontou: "rodapé
    grudado com outro elemento, tá literalmente grudado um com o outro". A borda e a folga
@@ -2183,6 +2124,9 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .aj-moldura i[data-canto="ne"]{right:-7px;top:-7px;cursor:nesw-resize}
 .aj-moldura i[data-canto="sw"]{left:-7px;bottom:-7px;cursor:nesw-resize}
 .aj-moldura i[data-canto="se"]{right:-7px;bottom:-7px;cursor:nwse-resize}
+/* A MOLDURA DA PECA na previa: o quadro inteiro, com o furo da propria arte. */
+.gal-arte{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
+  pointer-events:none;display:block}
 .gal-broll-marca{position:absolute;pointer-events:none;border-radius:10px;
   border:2px solid transparent;transition:border-color .16s ease}
 .aj-tela .gal-broll-marca{border-color:color-mix(in srgb,var(--accent) 22%,transparent)}
@@ -2624,7 +2568,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   font-weight:700;color:#fff;text-align:center;user-select:none;padding:0 4px;z-index:2}
 .cd-txt:active{cursor:grabbing}
 /* O MODO MIRA DA TESOURA: o palco avisa que o proximo clique corta. */
-.cd-palco.cd-mira{cursor:crosshair;outline:2px dashed var(--accent);outline-offset:2px}
 .cd-var-pe{display:flex;gap:8px;padding:10px 11px}
 .cd-var-pe .acao{flex:1 1 auto;justify-content:center}
 /* O ALVO DE ACRESCENTAR ATRAVESSA A GRADE: ele e' o proximo passo, nao um cartao par
@@ -2638,3 +2581,19 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   .cd-trilha{grid-template-columns:1fr 1fr}
   .cd-vars{grid-template-columns:1fr}
 }
+
+/* A APLICACAO SE VE: a barra acende peca a peca e o fecho nasce como selo. */
+.mp-aplicando{display:flex;flex-direction:column;align-items:center;gap:10px;
+  justify-content:center;min-height:340px;text-align:center}
+.mp-aplicando[hidden]{display:none}
+.mp-aplicando h3{font-size:16px;font-weight:700}
+.mp-apl-trilho{width:min(420px,80%);height:6px;border-radius:999px;
+  background:color-mix(in srgb,var(--ink) 12%,transparent);overflow:hidden}
+.mp-apl-trilho b{display:block;height:100%;width:0;border-radius:999px;
+  background:var(--accent);transition:width .1s linear}
+.mp-apl-selo{width:46px;height:46px;border-radius:50%;border:2px solid var(--accent);
+  display:none;align-items:center;justify-content:center}
+.mp-apl-selo::after{content:"";width:12px;height:22px;border:solid var(--accent);
+  border-width:0 3px 3px 0;transform:rotate(45deg);margin-top:-6px}
+.mp-aplicando.feita .mp-apl-selo{display:flex;animation:mp-apl-nasce .5s ease}
+@keyframes mp-apl-nasce{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}

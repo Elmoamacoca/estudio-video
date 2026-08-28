@@ -3677,7 +3677,6 @@ function esquecerOsPassos() {
   REC_ACHADO = null;
   TPL = null;
   TPL_SUB = 1;
-  EL_SEL = null;
   ED_BROLL_I = -1;
   // O ESTADO DA FASE 1 TAMBEM MORRE AQUI (revisao de 27/08/2026): MP_PECA da leva
   // anterior apontava peca que a nova nao tem, a conta caia no padrao de tela cheia e
@@ -5380,19 +5379,11 @@ let TPL_SUB = 1;
 const ACERVO = { itens: [] };
 
 let TPL = null;                    // a composição que está na bancada
-let EL_SEL = null;                 // id do elemento selecionado
 let ED_IMGS = new Map();           // arquivo -> blob URL, para desenhar sem reler o disco
 let ED_BROLL_I = -1;               // qual recorte está servindo de conferência
 
 const TELA = { w: 1080, h: 1920 };
 const novoId = () => "e" + Math.random().toString(36).slice(2, 8);
-
-/* AS CORES SÃO UMA PALETA, e não um seletor do sistema. O Gabriel reclamou com todas as
-   letras dos widgets crus: "tem vários aqui padrão Windows... você tem literalmente
-   dentro do próprio estúdio referência de como montar". A última casa abre o seletor do
-   navegador só quando ele quer uma cor que não está aqui. */
-const PALETA = ["#000000", "#101418", "#1C1C1E", "#F5F3EF", "#FFFFFF",
-                "#BA5A18", "#E8A33D", "#2F5D50", "#1E3A5F", "#8A1C1C"];
 
 /* AS FONTES DA PEÇA. Eram sete, e o Gabriel abriu o seletor e disse o óbvio: "aqui
    deveria ter vários outros tipos de fonte, e não tem". As sete eram as do Windows mais
@@ -5507,26 +5498,6 @@ function passoNovo(alvo, min, max, salto, valor, rotulo, aoMudar) {
   };
 }
 
-/** A fileira de cores, com a última abrindo o seletor do navegador. */
-function coresNovo(alvo, valor, aoEscolher) {
-  alvo.innerHTML = PALETA.map(c =>
-    `<button type="button" class="ed-cor${c.toLowerCase() === String(valor).toLowerCase()
-      ? " on" : ""}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join("")
-    + '<label class="ed-cor outra" title="outra cor">'
-    + `<input type="color" value="${escapa(valor || "#000000")}"><span>+</span></label>`;
-  alvo.onclick = e => {
-    const b = e.target.closest("button[data-c]");
-    if (!b) return;
-    alvo.querySelectorAll(".ed-cor").forEach(x => x.classList.toggle("on", x === b));
-    aoEscolher(b.dataset.c);
-  };
-  const inp = alvo.querySelector('input[type="color"]');
-  inp.oninput = e => {
-    alvo.querySelectorAll(".ed-cor").forEach(x => x.classList.remove("on"));
-    aoEscolher(e.target.value);
-  };
-}
-
 /* ---------------------------------------------------------- o acervo */
 
 async function lerAcervo() {
@@ -5636,7 +5607,6 @@ async function enderecoDo(nome) {
 
 const soTexto = () => (TPL ? TPL.elementos.filter(e => e.tipo === "texto") : []);
 const soImagem = () => (TPL ? TPL.elementos.filter(e => e.tipo === "imagem") : []);
-const elSel = () => (TPL ? TPL.elementos.find(x => x.id === EL_SEL) : null);
 
 const FONTE_CSS = {
   anton: "'Anton',sans-serif", bebas: "'Bebas Neue',sans-serif",
@@ -5660,360 +5630,15 @@ const FONTE_CSS = {
 
 function fonteCss(n) { return FONTE_CSS[n] || "'Segoe UI',sans-serif"; }
 
-async function desenhaEditor() {
-  if (!TPL) return;
-  const c = $("ed_canvas");
-  c.style.background = TPL.fundoCor || "#000000";
-  /* A ARTE ESCOLHIDA E' O FUNDO DA BANCADA desde 26/08/2026. Sem isto ele escreveria as
-     caixas de texto sobre um retangulo preto e so' veria a moldura na peca pronta, que e'
-     escolher no escuro. O `background` acima e' atalho e zera a imagem: por isso a imagem
-     vem DEPOIS dele. */
-  let arteDeFundo = "";
-  /* A MOLDURA E' POR PECA desde 27/08/2026: a bancada mostra a variacao que a medida
-     escolheu para o recorte de conferencia, a mesma que a montagem vai usar nele.
-     Rascunho antigo, de arte unica, cai no fundoImagem gravado. */
-  const pecaDaBancada = EDIT_RECORTES[ED_BROLL_I] || null;
-  const varDaBancada = pecaDaBancada ? variacaoDaPeca(pecaDaBancada.nome) : null;
-  const moldura = varDaBancada ? varDaBancada.arquivo : TPL.fundoImagem;
-  if (moldura) {
-    try { arteDeFundo = await enderecoDo(moldura); } catch (e) { arteDeFundo = ""; }
-  }
-  c.style.backgroundImage = arteDeFundo ? `url(${arteDeFundo})` : "";
-  c.style.backgroundSize = "100% 100%";
-  const camada = $("ed_camada");
-  camada.innerHTML = "";
-  for (const el of TPL.elementos) {
-    const d = document.createElement("div");
-    d.className = "ed-el" + (el.id === EL_SEL ? " sel" : "")
-      + (el.trava ? "" : " aberto");
-    d.dataset.id = el.id;
-    d.style.left = (el.x * 100) + "%";
-    d.style.top = (el.y * 100) + "%";
-    d.style.width = (el.w * 100) + "%";
-    if (el.tipo === "texto") {
-      d.style.color = el.cor;
-      d.style.fontFamily = fonteCss(el.fonte);
-      d.style.fontWeight = el.peso;
-      d.style.textAlign = el.alinha === "centro" ? "center"
-        : el.alinha === "direita" ? "right" : "left";
-      // O TAMANHO DA LETRA É FRAÇÃO DA ALTURA DA PEÇA, exatamente como o `oficina.py`
-      // calcula na hora de gravar. Por isso o que se vê aqui é o que sai no arquivo.
-      d.style.fontSize = (el.tamanho * 100) + "cqh";
-      d.style.lineHeight = "1.22";
-      d.textContent = el.texto || " ";
-    } else {
-      d.style.height = (el.h * 100) + "%";
-      const u = await enderecoDo(el.arquivo);
-      if (u) d.style.backgroundImage = `url(${u})`;
-      d.style.backgroundSize = "100% 100%";
-    }
-    if (el.id === EL_SEL) {
-      for (const canto of ["nw", "ne", "sw", "se"]) {
-        const i = document.createElement("i");
-        i.dataset.canto = canto;
-        d.appendChild(i);
-      }
-    }
-    camada.appendChild(d);
-  }
-  desenhaCamadas();
-  desenhaProps();
-  /* TODA MEXIDA NO TEMPLATE VAI PARA O RASCUNHO, e até 22/08/2026 nenhuma ia.
-
-     Este é o único ponto por onde passam todas elas: trocar a cor de fundo,
-     acrescentar caixa, escrever dentro dela, arrastar, redimensionar e apagar todas
-     terminam aqui. Pendurar a gravação em cada botão daria a mesma coisa com trinta
-     chances de esquecer um. A gravação é adiada em 600 ms, então desenhar dez vezes
-     seguidas durante um arrasto custa uma gravação só. */
-  anotarMexida();
-}
-
-function desenhaCamadas() {
-  const pinta = (alvo, lista, vazio) => {
-    if (!alvo) return;
-    alvo.innerHTML = lista.length ? lista.map(el => `
-      <li data-id="${el.id}" class="${el.id === EL_SEL ? "sel" : ""}">
-        <span class="ed-cam-cad">${el.trava ? CADEADO_FECHADO : CADEADO_ABERTO}</span>
-        <span class="ed-cam-nome">${escapa(el.tipo === "texto"
-          ? (el.texto || "caixa vazia").slice(0, 26) : (el.arquivo || "").slice(-22))}</span>
-      </li>`).reverse().join("") : `<li class="ed-cam-vazio">${vazio}</li>`;
-  };
-  pinta($("ed_camadas_txt"), soTexto(), "nenhuma caixa ainda");
-  pinta($("ed_camadas_img"), soImagem(), "nenhuma imagem ainda");
-  const t = soTexto().length, i = soImagem().length;
-  const abertas = soTexto().filter(x => !x.trava).length;
-  $("ed_conta_txt").innerHTML = `<b>${t}</b> ${t === 1 ? "caixa" : "caixas"}`
-    + (abertas ? `, <b>${abertas}</b> para a IA escrever` : ", nenhuma aberta para a IA");
-  $("ed_conta_img").innerHTML = `<b>${i}</b> ${i === 1 ? "imagem" : "imagens"}`;
-}
-
-const CADEADO_FECHADO = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"'
-  + ' rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-const CADEADO_ABERTO = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"'
-  + ' rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>';
-
-document.querySelectorAll(".ed-camadas").forEach(u => {
-  u.addEventListener("click", ev => {
-    const li = ev.target.closest("li[data-id]");
-    if (!li) return;
-    EL_SEL = li.dataset.id;
-    desenhaEditor();
-  });
-});
-
-
-/* ---------------------------------------------------------- as propriedades */
-
-function desenhaProps() {
-  const el = elSel();
-  const eTexto = !!(el && el.tipo === "texto");
-  const eImagem = !!(el && el.tipo === "imagem");
-  $("ed_sem_txt").hidden = eTexto;
-  $("ed_prop_texto").hidden = !eTexto;
-  $("ed_sem_img").hidden = eImagem;
-  $("ed_prop_img").hidden = !eImagem;
-
-  if (eTexto) {
-    $("p_texto").value = el.texto || "";
-    pselNovo($("p_fonte"), FONTES, el.fonte, v => mexeNoSel(x => x.fonte = v));
-    pselNovo($("p_peso"), PESOS, String(el.peso), v => mexeNoSel(x => x.peso = Number(v)));
-    passoNovo($("p_tamanho"), 10, 140, 2, Math.round(el.tamanho * 1000),
-              v => (v / 10).toFixed(1) + "%", v => mexeNoSel(x => x.tamanho = v / 1000));
-    coresNovo($("p_cores"), el.cor, c => mexeNoSel(x => x.cor = c));
-    $("p_alinha").querySelectorAll("button").forEach(b =>
-      b.classList.toggle("on", b.dataset.a === el.alinha));
-    $("p_trava").querySelectorAll("button").forEach(b =>
-      b.classList.toggle("on", (b.dataset.trava === "1") === !!el.trava));
-  }
-  if (eImagem) {
-    $("p_img_nome").textContent = (el.arquivo || "").slice(-26);
-    passoNovo($("p_larg"), 3, 100, 2, Math.round(el.w * 100), v => v + "%",
-              v => mexeNoSel(x => {
-                const antes = x.w;
-                x.w = v / 100;
-                x.h = x.h * (x.w / Math.max(0.0001, antes));
-              }));
-    $("p_trava_img").querySelectorAll("button").forEach(b =>
-      b.classList.toggle("on", (b.dataset.travai === "1") === !!el.trava));
-  }
-}
-
-/* MEXE E REDESENHA. Quando a mudança é de texto puro, redesenhar a peça inteira
-   recarregaria as imagens do disco a cada tecla, então o texto tem caminho curto. */
-function mexeNoSel(f, leve) {
-  const el = elSel();
-  if (!el) return;
-  f(el);
-  if (leve) {
-    const d = $("ed_camada").querySelector(`.ed-el[data-id="${el.id}"]`);
-    if (d) d.textContent = el.texto || " ";
-    desenhaCamadas();
-    return;
-  }
-  desenhaEditor();
-}
-
-$("p_texto").oninput = e => mexeNoSel(el => el.texto = e.target.value, true);
-$("p_alinha").onclick = e => {
-  const b = e.target.closest("button[data-a]");
-  if (b) mexeNoSel(el => el.alinha = b.dataset.a);
-};
-
-/* O CADEADO. "Alguns textos eu posso colocar um cadeado, que é um texto que a IA não vai
-   escrever. E alguns textos eu deixo em aberto." Na imagem o sentido é outro e está
-   escrito na tela: travar imagem é travar a POSIÇÃO dela. */
-$("p_trava").onclick = e => {
-  const b = e.target.closest("button[data-trava]");
-  if (b) mexeNoSel(el => el.trava = b.dataset.trava === "1");
-};
-$("p_trava_img").onclick = e => {
-  const b = e.target.closest("button[data-travai]");
-  if (b) mexeNoSel(el => el.trava = b.dataset.travai === "1");
-};
-
-/* ---------------------------------------------------------- acrescentar e apagar */
-
-$("ed_add_texto").onclick = () => {
-  if (!TPL) TPL = tplVazio();
-  TPL.elementos.push({ id: novoId(), tipo: "texto", texto: "escreva aqui",
-    x: 0.08, y: 0.08, w: 0.84, tamanho: 0.038, cor: "#FFFFFF", fonte: "arialn",
-    peso: 700, alinha: "centro", trava: true });
-  EL_SEL = TPL.elementos[TPL.elementos.length - 1].id;
-  desenhaEditor();
-};
-
-$("ed_add_img").addEventListener("change", async ev => {
-  const f = ev.target.files[0];
-  ev.target.value = "";
-  if (!f) return;
-  if (!TPL) TPL = tplVazio();
-  // O RECADO MORA NO PRÓPRIO BOTÃO de escolher, e a falha não passa mais calada: a
-  // gravação vai pelo posto e pode recusar, e o elemento só entra no molde se o
-  // arquivo de fato ficou no acervo. Auditoria de 25/08/2026.
-  const rotulo = document.querySelector("#ed_solta span");
-  const antes = rotulo ? rotulo.textContent : "";
-  const diz = (t) => { if (rotulo) rotulo.textContent = t; };
-  const casou = f.name.match(/\.(png|jpe?g|webp)$/i);
-  if (!casou) {
-    diz("só png, jpg ou webp");
-    setTimeout(() => diz(antes), 2500);
-    return;
-  }
-  try {
-    const ext = casou[0].toLowerCase();
-    const nome = TPL.id + "_" + novoId() + ext;
-    await guardarNoAcervo(nome, await f.arrayBuffer());
-    const m = await medirImagem(f);
-    const larg = 0.3;
-    TPL.elementos.push({ id: novoId(), tipo: "imagem", arquivo: nome,
-      x: 0.35, y: 0.82, w: larg, h: larg * (m.h / m.w) * (TELA.w / TELA.h), trava: true });
-    EL_SEL = TPL.elementos[TPL.elementos.length - 1].id;
-    desenhaEditor();
-  } catch (e) {
-    diz("não deu: " + (e.message || e));
-    setTimeout(() => diz(antes), 4000);
-  }
-});
-
-function apagarSel() {
-  if (!TPL) return;
-  TPL.elementos = TPL.elementos.filter(x => x.id !== EL_SEL);
-  EL_SEL = null;
-  desenhaEditor();
-}
-$("ed_apagar_txt").onclick = apagarSel;
-$("ed_apagar_img").onclick = apagarSel;
-
-function medirImagem(file) {
-  return new Promise(ok => {
-    const u = URL.createObjectURL(file), i = new Image();
-    i.onload = () => { ok({ w: i.naturalWidth, h: i.naturalHeight }); URL.revokeObjectURL(u); };
-    i.onerror = () => { ok({ w: 1, h: 1 }); URL.revokeObjectURL(u); };
-    i.src = u;
-  });
-}
-
-/* ---------------------------------------------------------- arrastar na peça */
-
-$("ed_camada").addEventListener("pointerdown", ev => {
-  const alvo = ev.target.closest(".ed-el");
-  if (!alvo) { EL_SEL = null; desenhaEditor(); return; }
-  const id = alvo.dataset.id;
-  if (id !== EL_SEL) { EL_SEL = id; desenhaEditor(); }
-  const el = TPL.elementos.find(x => x.id === id);
-  if (!el) return;
-  const canto = ev.target.dataset ? ev.target.dataset.canto : null;
-  const caixa = $("ed_canvas").getBoundingClientRect();
-  const de = { px: ev.clientX, py: ev.clientY,
-               x0: el.x, y0: el.y, w0: el.w, h0: el.h || 0 };
-  ev.preventDefault();
-  const camada = $("ed_camada");
-  camada.setPointerCapture(ev.pointerId);
-  const mover = e => arrastarLeve(el, canto, de,
-    (e.clientX - de.px) / caixa.width, (e.clientY - de.py) / caixa.height);
-  const soltar = () => {
-    camada.removeEventListener("pointermove", mover);
-    camada.removeEventListener("pointerup", soltar);
-    desenhaProps();
-  };
-  camada.addEventListener("pointermove", mover);
-  camada.addEventListener("pointerup", soltar);
-});
-
-/* MEXE NO ELEMENTO E REDESENHA SÓ ELE. Redesenhar a peça inteira a cada movimento do
-   ponteiro recarregaria as imagens do disco dezenas de vezes por segundo. */
-function arrastarLeve(el, canto, de, dx, dy) {
-  if (!canto) {
-    el.x = de.x0 + dx;
-    el.y = de.y0 + dy;
-  } else {
-    const px = canto.includes("w") ? -1 : 1;
-    const larg = Math.max(0.03, de.w0 + dx * px);
-    if (el.tipo === "imagem") {
-      const prop = de.h0 / Math.max(0.0001, de.w0);
-      el.h = larg * prop;
-      if (canto.includes("n")) el.y = de.y0 + (de.h0 - el.h);
-    }
-    if (canto.includes("w")) el.x = de.x0 + (de.w0 - larg);
-    el.w = larg;
-  }
-  const d = $("ed_camada").querySelector(`.ed-el[data-id="${el.id}"]`);
-  if (!d) return;
-  d.style.left = (el.x * 100) + "%";
-  d.style.top = (el.y * 100) + "%";
-  d.style.width = (el.w * 100) + "%";
-  if (el.tipo === "imagem") d.style.height = (el.h * 100) + "%";
-}
-
 /* ---------------------------------------------------------- o B-roll de conferência
 
-   O B-ROLL DE VERDADE ENQUANTO ELE MONTA, e não um retângulo cinza fazendo as vezes.
-   Cada vídeo põe a filmagem numa altura diferente, então só vendo o de verdade dá para
-   saber se o rodapé vai encostar nela. */
+   O B-ROLL DE VERDADE ENQUANTO ELE ESCOLHE, e não um retângulo cinza fazendo as vezes:
+   a fase 1 sorteia uma peça da leva para servir de conferência dentro da variação. */
 
 function sortearBroll() {
   const n = EDIT_RECORTES.length;
-  if (!n) return -1;
-  let i = Math.floor(Math.random() * n);
-  if (n > 1) while (i === ED_BROLL_I) i = Math.floor(Math.random() * n);
-  return i;
+  return n ? Math.floor(Math.random() * n) : -1;
 }
-
-async function trocarBroll(i) {
-  const v = $("ed_broll");
-  const diz = t => { $("ed_broll_diz").textContent = t; $("ed_broll_diz2").textContent = t; };
-  if (i < 0 || !EDIT_RECORTES[i]) {
-    diz("recorte o B-roll no passo 2 para conferir aqui.");
-    v.removeAttribute("src");
-    return;
-  }
-  ED_BROLL_I = i;
-  try {
-    const u = await urlDaMidia(EDIT_RECORTES[i], pastaDosRecortes());
-    if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
-    v.dataset.url = u;
-    v.src = u;
-    // A MASCARA ENTRA AQUI, e e' o conserto da cor de fundo que nao mudava. O recorte e'
-    // preto opaco fora da janela do B-roll, e video nao tem transparencia: sem recortar
-    // esse preto, ele tapa o fundo inteiro e a cor escolhida nunca aparece.
-    vestirMascara(v, await mascaraDe(EDIT_RECORTES[i].nome));
-    v.play().catch(() => {});
-  } catch (e) { return; }
-  diz(`peça ${i + 1} de ${EDIT_RECORTES.length}`);
-  // A MOLDURA E' POR PECA desde 27/08/2026, e a bancada veste a variacao da peca de
-  // conferencia: trocar o B-roll sem repintar deixava o fundo preso na variacao da
-  // peca anterior, com o video novo dentro dela (revisao do mesmo dia).
-  if (TPL && TPL.contaModelo) await desenhaEditor();
-}
-
-$("ed_outro_broll").onclick = () => trocarBroll(sortearBroll());
-$("ed_outro_broll2").onclick = () => trocarBroll(sortearBroll());
-
-/* ---------------------------------------------------------- guardar no acervo */
-
-$("ed_salvar_tpl").onclick = async () => {
-  if (!TPL) return;
-  const b = $("ed_salvar_tpl");
-  b.disabled = true;
-  const antes = b.textContent;
-  try {
-    TPL.nome = TPL.nome || ("template de " + new Date().toLocaleDateString("pt-BR"));
-    TPL.w = TELA.w; TPL.h = TELA.h;
-    await guardarNoAcervo(TPL.id + ".json", JSON.stringify(TPL, null, 1));
-    const ficha = { id: TPL.id, tipo: "composicao", nome: TPL.nome,
-                    mercado: TPL.mercado || "", etiqueta: TPL.etiqueta || "",
-                    w: TPL.w, h: TPL.h, criado: TPL.criado || Date.now(),
-                    fundoCor: TPL.fundoCor };
-    const i = ACERVO.itens.findIndex(x => x.id === TPL.id);
-    if (i >= 0) ACERVO.itens[i] = ficha; else ACERVO.itens.push(ficha);
-    await gravarAcervo();
-    b.textContent = "salvo";
-  } catch (e) {
-    b.textContent = "não deu: " + e.message;
-  }
-  setTimeout(() => { b.textContent = antes; b.disabled = false; }, 1600);
-};
-
 
 /* ------------------------------------------------- 3.3 · a IA escreve
 
@@ -6027,7 +5652,20 @@ $("ed_salvar_tpl").onclick = async () => {
    aqui na mão e o resto do caminho funciona igual. */
 
 let ESCRITO = new Map();           // arquivo -> { idDaCaixa: texto }
-const abertas = () => soTexto().filter(e => !e.trava);
+/* O CAMPO DA LEVA, que e' o que a IA vai preencher.
+
+   O LIMITE SAI DA FAIXA MAIS APERTADA das variacoes da conta, e nao da primeira: o que
+   cabe na menor cabe em todas. Com a maior, frase comprida demais so' apareceria peca a
+   peca, depois de gasta a cota do dia. */
+function abertas() {
+  const base = soTexto().filter(e => !e.trava);
+  const vars = (TPL && TPL.contaModelo) ? variacoesDaConta(TPL.contaModelo) : [];
+  const comFaixa = vars.filter(v => v.escrita);
+  if (!comFaixa.length) return base;
+  const menor = comFaixa.reduce(
+    (a, b) => ((a.escrita.altura || 0) <= (b.escrita.altura || 0) ? a : b));
+  return base.concat([campoDaFaixa(menor.escrita, fonteDaArte(menor))]);
+}
 
 /* ============================================== FASE 3 · A IA ESCREVE, E SÓ ISSO
 
@@ -6657,6 +6295,14 @@ function urlDoArquivo(rel) {
 async function urlDaMidia(item, pastaRel) {
   if (item && item.h) return URL.createObjectURL(await item.h.getFile());
   return urlDoArquivo(pastaRel + "/" + item.nome);
+}
+
+/* DEVOLVER O ENDERECO DE QUEM DESISTIU. Quando a pintura envelhece no meio do caminho,
+   o endereco que ela ja' pegou nao pode ficar largado: o do cracha local e' um blob, e
+   blob largado segura o arquivo inteiro na memoria ate' a pagina fechar. O do posto e'
+   so' um endereco de rede, nao ha' o que devolver, e por isso a checagem. */
+function devolverEndereco(u) {
+  if (u && String(u).startsWith("blob:")) URL.revokeObjectURL(u);
 }
 
 /** A pasta (relativa à casa) de onde saem as peças do passo em curso. */
@@ -8215,6 +7861,30 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
     marca.style.height = (j.h * 100) + "%";
     alvo.appendChild(marca);
   }
+  /* A MOLDURA DA PECA, e ela faltava.
+
+     A PREVIA MOSTRAVA A FILMAGEM SOBRE PRETO, e o Gabriel leu o que estava la': "so' me
+     move para a proxima etapa, que e' previa de resultado, mas nao tem previa nenhuma".
+     Eram 180 retangulos pretos, porque a arte nunca foi desenhada aqui: no desenho
+     antigo o quadro era a cor de fundo mais as caixas de texto, e a moldura so' aparecia
+     no arquivo montado.
+
+     A ORDEM E' A DA PECA MONTADA: filmagem embaixo, arte por cima dela (com o furo dela,
+     que e' por onde a filmagem aparece) e a frase por cima de tudo. `pointer-events` fica
+     desligado para o clique continuar chegando na filmagem, que e' quem se arrasta. */
+  const varDaPeca = variacaoDaPeca(peca.nome);
+  const arteDaPeca = varDaPeca ? varDaPeca.arquivo : (TPL.fundoImagem || null);
+  if (arteDaPeca) {
+    const u = await enderecoDo(arteDaPeca);
+    if (u) {
+      const im = document.createElement("img");
+      im.className = "gal-arte";
+      im.alt = "";
+      im.src = u;
+      alvo.appendChild(im);
+    }
+  }
+
   /* A MOLDURA DAS ALCAS, uma so' para tudo o que se pode redimensionar.
 
      ELA E' ELEMENTO SEPARADO DE PROPOSITO. Pendurar as alcas dentro da caixa de texto
@@ -8233,7 +7903,7 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
     alvo.appendChild(moldura);
   }
 
-  for (const el of TPL.elementos) {
+  for (const el of elementosDaPeca(peca.nome)) {
     const m = medidaDaPeca(el, peca.nome);
     const d = document.createElement("div");
     d.className = "gal-el" + (interativa && el.id === sel ? " sel" : "");
@@ -8304,6 +7974,10 @@ async function desenhaGaleria() {
      a fila inteira. */
   for (const el of (TPL.elementos || []))
     if (el.tipo === "imagem") await enderecoDo(el.arquivo);
+  // AS ARTES DA CONTA TAMBEM DESCEM ANTES DO LACO, pela mesma razao: sao quatro para
+  // cento e oitenta pecas, e sem isto as 179 seguintes esperariam a fila da primeira.
+  for (const v of ((TPL && TPL.contaModelo) ? variacoesDaConta(TPL.contaModelo) : []))
+    await enderecoDo(v.arquivo);
   // AS PECAS NASCEM FORA DA PAGINA e entram de uma vez so'. Anexar uma a uma faz o
   // navegador recalcular a grade noventa e duas vezes.
   const bandeja = document.createDocumentFragment();
@@ -8395,7 +8069,8 @@ $("gal_lupa_tela").addEventListener("click", ev => {
 });
 
 function desenhaLupaProps() {
-  const el = TPL && TPL.elementos.find(x => x.id === GAL_SEL);
+  const aberta = pecas3()[GAL_ABERTA];
+  const el = aberta ? elementoDaPeca(aberta.nome, GAL_SEL) : null;
   $("gal_lupa_vazio").hidden = !!el;
   $("gal_lupa_props").hidden = !el;
   $("gl_para_todas").disabled = !AJUSTES.has((pecas3()[GAL_ABERTA] || {}).nome);
@@ -8569,7 +8244,8 @@ function desenhaAjustePainel() {
   $("aj_sem_texto").hidden = !!campos.length;
   $("aj_textos").innerHTML = campos.map(c =>
     `<div class="aj-campo"><label for="ajt_${c.id}">`
-    + `${escapa(c.texto || "a caixa aberta")}</label>`
+    + `${escapa(c.id === ID_DA_FRASE ? "A Frase Desta Peça"
+                : (c.texto || "a caixa aberta"))}</label>`
     + `<textarea id="ajt_${c.id}" rows="3"></textarea></div>`).join("");
   for (const c of campos) {
     const t = $("ajt_" + c.id);
@@ -8620,7 +8296,7 @@ function desenhaAjustePainel() {
   }
 
   /* ---------------------------------------------------------------- tamanho e posição */
-  const item = TPL.elementos.find(e => e.id === AJ_SEL);
+  const item = elementoDaPeca(p.nome, AJ_SEL);
   $("aj_item").hidden = !item;
   if (item) {
     const m = medidaDaPeca(item, p.nome);
@@ -8800,8 +8476,7 @@ $("aj_tela").addEventListener("pointerdown", ev => {
   const canto = ev.target.dataset ? ev.target.dataset.canto : null;
   if (canto && AJ_SEL) {
     const e = enquadreDe(p.nome);
-    const el = AJ_SEL === "_broll"
-      ? null : TPL.elementos.find(x => x.id === AJ_SEL);
+    const el = AJ_SEL === "_broll" ? null : elementoDaPeca(p.nome, AJ_SEL);
     if (AJ_SEL !== "_broll" && !el) return;
     AJ_ARRASTO = { tipo: "tamanho", canto, nome: p.nome, quem: AJ_SEL, el, caixa,
                    x0: ev.clientX, y0: ev.clientY, es0: e.es,
@@ -8818,7 +8493,7 @@ $("aj_tela").addEventListener("pointerdown", ev => {
   if (!item && !broll) { AJ_SEL = null; marcarEscolhido(); desenhaAjustePainel(); return; }
 
   if (item) {
-    const el = TPL.elementos.find(x => x.id === item.dataset.id);
+    const el = elementoDaPeca(p.nome, item.dataset.id);
     if (!el) return;
     const m = medidaDaPeca(el, p.nome);
     AJ_ARRASTO = { tipo: "item", el, nome: p.nome, x0: ev.clientX, y0: ev.clientY,
@@ -8912,7 +8587,7 @@ $("aj_fonte_alvo").addEventListener("click", ev => {
 
 $("aj_fonte_todas").onclick = () => {
   const p = pecas3()[AJ_I];
-  const el = TPL && TPL.elementos.find(e => e.id === AJ_SEL);
+  const el = p ? elementoDaPeca(p.nome, AJ_SEL) : null;
   if (!p || !el) return;
   const fonte = medidaDaPeca(el, p.nome).fonte;
   let n = 0;
@@ -8983,7 +8658,8 @@ $("aj_zerar").onclick = () => {
 
 $("ajs_acertar").onclick = () => {
   const campos = abertas();
-  if (!campos.length) return parado("apl_resumo", "Nenhuma caixa aberta para acertar.");
+  if (!campos.length) return parado("apl_resumo", "As variações desta conta não têm "
+    + "faixa de escrita: abra o cadastro do template e arraste a faixa na arte.");
   let mexidas = 0, subidas = 0, encolhidas = 0;
   for (const p of pecas3()) {
     const g = ESCRITO.get(p.nome) || {};
@@ -9122,26 +8798,28 @@ function acertarTexto(campo, texto, limite) {
 function podeIrAoSub(n) {
   // A FASE DA IA E' A 4 desde que o modelo do template virou a 1 (26/08/2026). Escrito
   // como `>= 3` a trava passou a barrar a tela de IMAGENS, que nao tem nada com texto.
-  if (n >= 4 && !soTexto().length) return false;   // sem texto não há o que a IA escreva
+  // NO CAMINHO DA CONTA (trava 62) nao ha' caixa avulsa: a escrita de cada peca vem da
+  // VARIACAO dela (topo e altura), entao conta definida vale como texto para a IA.
+  if (n >= 4 && !soTexto().length && !(TPL && TPL.contaModelo)) return false;
   return true;
 }
 
+// AS FASES DO PASSO 3 SAO QUATRO desde 27/08/2026 a' noite ("remover essas duas
+// coisas da subetapa"): Caixas De Texto (2) e Imagens Do Template (3) sairam do
+// caminho, e a faxina do mesmo dia levou as telas e o editor de elementos junto.
+// Os numeros 2 e 3 NAO se reaproveitam: rascunho antigo ainda os guarda, e quem
+// apontar para eles cai na escrita. A barrinha conta pela POSICAO no trilho.
+const POSICAO_DA_SUB = { 1: 0, 4: 1, 5: 2, 6: 3 };
+
 function irParaSub(n) {
+  if (n === 2 || n === 3) n = 4;
   if (!podeIrAoSub(n)) return;
   TPL_SUB = n;
   document.querySelectorAll('.ed-etapa[data-passo="3"] .ed-sub-tela').forEach(t =>
     t.hidden = Number(t.dataset.sub) !== n);
   /* AS FASES DESLIZARAM UM NUMERO em 26/08/2026, quando o modelo do template virou a 1:
-     2 texto, 3 imagens, 4 a IA, 5 a previa, 6 a peca a peca. Os `n !==` sao os que
-     APAGAM video: errar neles nao da' erro na tela, deixa filmagem viva atras dela. */
-  // A TELA DA PEÇA É UMA SÓ e viaja entre a fase do texto e a das imagens.
-  const meio = $("ed_canvas").parentElement;
-  const destino = n === 3 ? $("ed_meio2") : document.querySelector(
-    '.ed-sub-tela[data-sub="2"] .ed-meio');
-  if (destino && meio !== destino) {
-    destino.appendChild($("ed_canvas"));
-    if (n !== 3) destino.appendChild($("ed_medida"));
-  }
+     4 a IA, 5 a previa, 6 a peca a peca. Os `n !==` sao os que APAGAM video: errar
+     neles nao da' erro na tela, deixa filmagem viva atras dela. */
   // SAIR DA PECA A PECA FECHA O VIDEO. Sem isto ele fica vivo atras da tela.
   if (n !== 6 && AJ_VIVO) { apagarPeca(AJ_VIVO); AJ_VIVO = null; }
   if (n !== 5) $("gal_grade").querySelectorAll("video").forEach(apagarPeca);
@@ -9161,24 +8839,37 @@ function desenhaSubTrilho() {
     li.classList.toggle("agora", q === TPL_SUB);
     li.classList.toggle("feito", q < TPL_SUB);
   });
-  const t = soTexto().length, i = soImagem().length;
-  $("ed_r3").textContent = t || i
-    ? `${t} ${t === 1 ? "texto" : "textos"}, ${i} ${i === 1 ? "imagem" : "imagens"}`
-    : "a montar";
+  /* O RESUMO CONTA O QUE EXISTE HOJE: pecas escritas, e nao caixas de texto. Ele
+     ficou preso em "a montar" para sempre quando as caixas sairam, porque contava
+     justamente o que tinha sido excisado. */
+  const campos = abertas();
+  const total = pecas3().length;
+  let escritas = 0;
+  if (campos.length) {
+    for (const p of pecas3()) {
+      const g = ESCRITO.get(p.nome) || {};
+      if (campos.every(c => (g[c.id] || "").trim())) escritas++;
+    }
+  }
+  $("ed_r3").textContent = !total ? "a montar"
+    : !TPL.contaModelo ? "sem modelo"
+    : escritas ? `${escritas} de ${total} escritas`
+    : `${total} ${total === 1 ? "peça" : "peças"}, sem frase ainda`;
   const b = document.querySelector('#ed_trilho .ed-ponto[data-passo="3"] .ed-barra b');
   // SEIS FASES, ENTAO O DENOMINADOR E' CINCO. Ele nao e' constante generica: e' "quantas
   // fases menos uma", e ficou em quatro quando a sexta entrou.
-  if (b && EDIT_PASSO === 3) b.style.height = ((TPL_SUB - 1) / 5 * 100) + "%";
+  if (b && EDIT_PASSO === 3) {
+    b.style.height = ((POSICAO_DA_SUB[TPL_SUB] || 0) / 3 * 100) + "%";
+  }
 }
 
 document.querySelectorAll("#ed_sub3 li").forEach(li => {
   li.onclick = () => irParaSub(Number(li.dataset.sub));
 });
-$("ed_vai_imagens").onclick = () => irParaSub(3);
-$("ed_volta_texto").onclick = () => irParaSub(2);
-$("ed_vai_ia").onclick = () => irParaSub(4);
-$("ed_volta_imagens").onclick = () => irParaSub(3);
 $("ed_vai_ajuste").onclick = () => irParaSub(5);
+// O VOLTAR DA ESCRITA LEVA AO MODELO. Ele levava a's Imagens Do Template, que nao
+// existem mais, e desde a excisao era um botao que nao fazia nada.
+$("ed_volta_imagens").onclick = () => irParaSub(1);
 $("ed_volta_ia").onclick = () => irParaSub(4);
 $("ajs_um_a_um").onclick = () => irParaSub(6);
 $("aj_volta").onclick = () => irParaSub(5);
@@ -9498,6 +9189,70 @@ function variacaoDaPeca(nome) {
                         variacoesDaConta(TPL.contaModelo));
 }
 
+/* A FRASE DA PECA MORA NA FAIXA DA VARIACAO, e nao mais numa caixa de template.
+
+   O QUE MUDOU E POR QUE. Ate' 27/08/2026 quem dizia onde o texto ia era uma caixa
+   desenhada na fase "Caixas De Texto". Essa fase saiu por ordem dele ("pode excluir de
+   tudo"), e com ela foi embora o unico lugar que dizia onde escrever: a fase da IA
+   passou a nao mostrar nada e a previa a mostrar 180 retangulos pretos.
+
+   QUEM DIZ AGORA E' A PROPRIA ARTE. No cadastro, cada variacao tem uma faixa arrastavel
+   ("A Escrita Fica Aqui"), e como cada peca veste a variacao que melhor lhe cabe, cada
+   peca tem a sua faixa, sem ele escolher nada peca a peca.
+
+   ELA VIRA UM ELEMENTO DE TEXTO NA HORA DE USAR, com id fixo `frase`. Assim tudo o que
+   ja' existia continua valendo sem uma linha de mudanca: o pedido para a IA, o acerto
+   do que nao coube, o tamanho e a fonte so' desta peca, o desenho da previa e o do
+   motor. Um elemento sintetizado no lugar de um sistema paralelo. */
+const ID_DA_FRASE = "frase";
+const MARGEM_DA_FRASE = 0.06;      // um dedo de cada lado, para o texto nao encostar
+
+/** A faixa de escrita da variacao que ESTA peca veste. Nula quando nao ha' variacao. */
+function faixaDaPeca(nome) {
+  const v = variacaoDaPeca(nome);
+  return v && v.escrita ? v.escrita : null;
+}
+
+/** A fonte do template de onde saiu esta arte. */
+function fonteDaArte(arte) {
+  const t = arte && ACERVO.itens.find(x => x.id === arte.template);
+  return (t && t.fonte) || "anton";
+}
+
+/* O CAMPO SAI DA FAIXA, e as contas sao estas:
+
+     o topo e a altura     vem da faixa, em por cento da peca, do jeito que ele arrastou
+     a largura             a peca inteira menos um dedo de cada lado
+     o tamanho da letra    DUAS LINHAS dentro da altura da faixa, com a entrelinha de
+                           1,22 que a tela e o motor usam. Frase comprida encolhe
+                           depois, no "Ajustar O Texto Que Nao Coube", que ja' existe.
+
+   A COR E' BRANCA E O ALINHAMENTO E' CENTRAL. Nao ha' de onde tirar isso: a cor e o
+   alinhamento eram da caixa, e a caixa morreu. Branco centralizado e' o que essas artes
+   pedem, e ele muda peca a peca na fase de revisao. */
+function campoDaFaixa(faixa, fonte) {
+  if (!faixa) return null;
+  return {
+    id: ID_DA_FRASE, tipo: "texto", texto: "", trava: false,
+    x: MARGEM_DA_FRASE, y: (faixa.topo || 0) / 100, w: 1 - MARGEM_DA_FRASE * 2,
+    tamanho: Math.max(0.02, ((faixa.altura || 12) / 100) / (2 * 1.22)),
+    fonte: fonte || "anton", peso: 700, cor: "#FFFFFF", alinha: "centro"
+  };
+}
+
+/** Os elementos que ESTA peca desenha: os do template mais a frase da faixa dela. */
+function elementosDaPeca(nome) {
+  const base = (TPL && TPL.elementos) || [];
+  const v = variacaoDaPeca(nome);
+  const campo = v && campoDaFaixa(v.escrita, fonteDaArte(v));
+  return campo ? base.concat([campo]) : base;
+}
+
+/** Um elemento desta peca pelo id, que pode ser a frase sintetizada. */
+function elementoDaPeca(nome, id) {
+  return elementosDaPeca(nome).find(x => x.id === id) || null;
+}
+
 /** Mede a arte subida: tamanho, retangulo do furo transparente e se ha' furo. */
 async function medirAArte(blob) {
   const url = URL.createObjectURL(blob);
@@ -9705,15 +9460,23 @@ async function pintarOModelo(deNovo) {
   const i2 = document.createElement("img");
   i2.className = "mp-arte"; i2.alt = ""; i2.src = url;
   qPeca.appendChild(i2);
-  await vestirORecorte();
+  await vestirORecorte(ger);
   const qual = vars.indexOf(MP_VAR) + 1;
   $("mp_recado").textContent = vars.length === 1
     ? "A única variação de " + MP_CONTA + " veste esta peça."
     : "A variação " + qual + " de " + vars.length + " é a que melhor veste esta peça.";
 }
 
-/** Poe no quadro da direita o recorte da vez, encaixado na janela da variacao. */
-async function vestirORecorte() {
+/** Poe no quadro da direita o recorte da vez, encaixado na janela da variacao.
+
+   O `ger` E' O DA PINTURA QUE CHAMOU, e ele existe por causa de um estrago de
+   27/08/2026 na casa da rua: aqui morava um `if (!CAD) return`, guarda do CADASTRO,
+   que nesta tela e' sempre nulo com o pop fechado. Resultado: a filmagem descia
+   inteira e era jogada fora, e o "Descendo A Filmagem" ficava eterno ("aqui nao esta'
+   carregando nada, fica em descendo filmagem faz mais de 1 minuto"). O guarda certo e'
+   o da GERACAO, o mesmo do resto da pintura: quem envelheceu desiste, quem esta' na
+   vez veste. */
+async function vestirORecorte(ger) {
   const v = videoDoModelo();
   if (!MP_VAR || !EDIT_RECORTES.length || MP_PECA < 0 || !EDIT_RECORTES[MP_PECA]) {
     v.removeAttribute("src");
@@ -9730,6 +9493,8 @@ async function vestirORecorte() {
   v.style.top = ((e.y - jan.y) / jan.h * 100) + "%";
   try {
     const u = await urlDaMidia(peca, pastaDosRecortes());
+    // QUEM ENVELHECEU NAO VESTE, e devolve o endereco que acabou de pegar
+    if (ger !== undefined && ger !== MP_GERACAO) { devolverEndereco(u); return; }
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
     v.dataset.url = u;
     const aviso = () => document.querySelector("#mp_peca .mp-descendo");
@@ -9785,8 +9550,47 @@ function marcaOModelo() {
   $("mp_usar").classList.toggle("brasa", !fechado);
 }
 
+/* A APLICACAO SE VE, pedido de 27/08/2026: "que eu consiga acompanhar como e' que
+   ta' sendo feito tudo isso... e que no final ali me informa que o template foi
+   aplicado em todos os recortes". A conta que acende aqui e' a MESMA variacaoDaPeca
+   que o pedido de montagem manda, peca a peca: e' o encaixe de verdade, nao teatro. */
+async function aplicarOModelo() {
+  const painel = $("mp_aplicando");
+  const par = $("mp_par");
+  const acoes = par ? par.parentElement.querySelector(".rec-acoes") : null;
+  const vars = variacoesDaConta(MP_CONTA);
+  pararOModelo();
+  // O `hidden` PERDE para regra de display com classe (a mesma armadilha que o
+  // conferidor pegou no proprio painel): o par e as acoes se apagam por estilo em
+  // linha, senao o painel abria escondido EMBAIXO do par, fora da dobra.
+  if (par) par.style.display = "none";
+  if (acoes) acoes.style.display = "none";
+  painel.classList.remove("feita");
+  painel.hidden = false;
+  $("mp_apl_titulo").textContent = "Aplicando O Template";
+  const total = EDIT_RECORTES.length;
+  for (let i = 0; i < total; i++) {
+    const nome = EDIT_RECORTES[i].nome;
+    const v = variacaoDaPeca(nome);
+    const qual = v ? vars.findIndex(x => x.arquivo === v.arquivo) + 1 : 0;
+    $("mp_apl_diz").textContent = nome + (qual ? " veste a Variação " + qual : "");
+    $("mp_apl_barra").style.width = ((i + 1) / Math.max(1, total) * 100) + "%";
+    $("mp_apl_conta").textContent = (i + 1) + " De " + total;
+    await new Promise(r => setTimeout(r, 12));
+  }
+  painel.classList.add("feita");
+  $("mp_apl_titulo").textContent = "O Template Foi Aplicado Em Todos Os Recortes";
+  $("mp_apl_diz").textContent = "Cada peça vestiu a variação que melhor lhe cabe. "
+    + "Agora vem a escrita das frases.";
+  await new Promise(r => setTimeout(r, 1400));
+  painel.hidden = true;
+  if (par) par.style.display = "";
+  if (acoes) acoes.style.display = "";
+}
+
 async function usarOModelo() {
   if (!MP_CONTA || !variacoesDaConta(MP_CONTA).length || !TPL) return;
+  $("mp_usar").disabled = true;
   TPL.contaModelo = MP_CONTA;
   // OS CAMPOS DA ESCOLHA UNICA MORREM AQUI: a moldura passou a ser por peca, e um
   // rascunho com arte global faria a bancada e o pedido brigarem sobre quem manda.
@@ -9795,8 +9599,9 @@ async function usarOModelo() {
   TPL.janela = null;
   marcaOModelo();
   await salvarRascunho();
-  await desenhaEditor();
-  irParaSub(2);
+  await aplicarOModelo();
+  $("mp_usar").disabled = false;
+  irParaSub(4);
 }
 
 $("mp_lista").addEventListener("click", async ev => {
@@ -9925,7 +9730,6 @@ async function abrirCadastro(idTpl) {
     conta: dele ? (dele.conta || "") : (cdNomes("conta")[0] || ""),
     fonte: dele && dele.fonte ? dele.fonte
          : (cdBiblioteca()[0] ? cdBiblioteca()[0].chave : "anton"),
-    linhas: dele && dele.linhas ? dele.linhas : 3,
     frase: 1, filtro: "todas", busca: "",
     marca: dele ? (dele.marca || null) : ((cdDoAcervo("marca")[0] || {}).id || null),
     marcaPos: dele && dele.marcaPos ? { ...dele.marcaPos }
@@ -9934,7 +9738,7 @@ async function abrirCadastro(idTpl) {
        modelos, eu devo conseguir adicionar mais" (27/08/2026). Cada arte subida vira
        uma variacao; `qual` negativo quer dizer que a proxima subida ACRESCENTA. */
     vars: [],
-    qual: -1, mira: -1, gravando: false,
+    qual: -1, gravando: false,
     editando: dele ? dele.id : null
   };
   if (dele) {
@@ -9945,7 +9749,7 @@ async function abrirCadastro(idTpl) {
       if (!a) continue;
       CAD.vars.push({
         blob: null, novo: false, id: a.id, arquivo: a.arquivo,
-        nome: a.nome || "", url: await enderecoDo(a.arquivo),
+        nome: a.nome || "", url: null,
         medida: { w: a.w, h: a.h, furo: !!a.furo, janela: a.janela || null },
         escrita: { ...(va.escrita || a.escrita || { topo: 78, altura: 13 }) }
       });
@@ -9963,14 +9767,46 @@ async function abrirCadastro(idTpl) {
   pselNovo($("cd_frase_sel"), CD_FRASES.map((f, i) => ({ v: String(i), r: f })),
            String(CAD.frase), v => { CAD.frase = Number(v); cdPintaFrase(); });
   cdPintaFiltro();
-  await cdPintaFontes();
-  cdPintaLinhas();
-  cdPintaMarcas();
-  await cdPintaOBrollDaMarca();
   cdPintaVars();
   cdMostraPasso(1);
+  /* O ABRIR ABRE NA HORA ("voce clicar em abrir tem que abrir, porra", 27/08/2026):
+     a janela aparece primeiro, e as cargas lentas descem por tras, cada uma pintando
+     quando chega. Se ele fechar antes, a guarda do CAD faz a carga velha desistir. */
   $("cd_fundo").hidden = false;
   $("cd_pop").hidden = false;
+  const esse = CAD;
+  (async () => {
+    /* A CARGA NAO ATROPELA O GESTO (painel adversario de 27/08/2026): a lista e'
+       uma COPIA (o Tirar encurta o array no meio do laco); variacao ja' trocada ou
+       ja' pintada nao recebe resposta atrasada; cada arte pinta quando chega; e
+       recado vivo (erro de salvar, roda da gravacao) nao morre no repinte. */
+    for (const v of [...esse.vars]) {
+      const arq = v.arquivo;
+      if (!arq || v.url) continue;
+      const u = await enderecoDo(arq);
+      if (CAD !== esse) return;
+      if (v.arquivo !== arq || v.url || !u) continue;
+      v.url = u;
+      if (CAD.gravando) continue;
+      const aviso = $("cd_diz");
+      const texto = aviso.textContent;
+      const classe = aviso.className;
+      cdPintaVars();
+      if (texto && (classe.includes("ruim") || classe.includes("boa"))) {
+        aviso.textContent = texto;
+        aviso.className = classe;
+      }
+    }
+  })();
+  (async () => {
+    await cdPintaFontes();
+    if (CAD !== esse) return;
+    cdPintaFrase();
+  })();
+  (async () => {
+    cdPintaMarcas();
+    await cdPintaOBrollDaMarca();
+  })();
   setTimeout(() => { $("cd_nome").focus(); cdPintaFrase(); }, 40);
 }
 
@@ -10168,19 +10004,6 @@ $("cd_fontes").addEventListener("click", async ev => {
   cdPintaFrase();
 });
 
-function cdPintaLinhas() {
-  document.querySelectorAll("#cd_linhas button").forEach(b => {
-    b.classList.toggle("on", Number(b.dataset.l) === CAD.linhas);
-  });
-}
-$("cd_linhas").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-l]");
-  if (!b || !CAD) return;
-  CAD.linhas = Number(b.dataset.l);
-  cdPintaLinhas();
-  cdPintaFrase();
-});
-
 /* QUANTAS LINHAS A FRASE OCUPOU E' MEDIDO NA TELA, e nao chutado pelo numero de letras: a
    mesma frase ocupa duas linhas numa condensada e tres numa larga, e e' justamente essa
    diferenca que ele esta' olhando aqui. */
@@ -10194,9 +10017,11 @@ function cdPintaFrase() {
   const alt = parseFloat(est.lineHeight) || 1;
   const folga = parseFloat(est.paddingTop) + parseFloat(est.paddingBottom);
   const n = Math.max(1, Math.round((f.scrollHeight - folga) / alt));
+  // QUANTAS LINHAS NAO E' MAIS ESCOLHA DO CADASTRO ("quem vai decidir isso vai
+  // ser a IA na hora de escrever", 27/08/2026): aqui so' se MEDE a frase de prova.
   const u = $("cd_linhas_diz");
-  u.textContent = n + " De " + CAD.linhas + (CAD.linhas === 1 ? " Linha" : " Linhas");
-  u.classList.toggle("demais", n > CAD.linhas);
+  u.textContent = n + (n === 1 ? " Linha" : " Linhas");
+  u.classList.remove("demais");
 }
 
 $("cd_subir_fonte").onclick = () => $("cd_fonte_arq").click();
@@ -10207,84 +10032,6 @@ $("cd_fonte_arq").addEventListener("change", async ev => {
   ev.target.value = "";
   await cdReceberLote(fs, cdSubirFonte);
 });
-
-/* A TESOURA DO FURO. Ele nao tem o plano pago do Canva, que e' quem exporta PNG com
-   fundo transparente ("nao consegui fazer isso por ai nao? eu nao tenho canva pro",
-   27/08/2026). Entao o furo se abre AQUI: ele clica no miolo que vira a janela, e o
-   bloco continuo de pixels que difere do fundo da arte e' apagado inteiro, com o
-   desenho que ele tem, canto arredondado incluso.
-
-   O CORTE SEGUE A COR DO PONTO CLICADO, desde a noite de 27/08/2026. A primeira
-   tesoura apagava "tudo que foge do fundo", e comeu um elemento desenhado POR CIMA do
-   miolo (o verde-limao das artes dele), que devia continuar na arte, na frente da
-   filmagem. Agora o bloco apagado e' o dos pixels PARECIDOS com o clicado (ate' 90
-   por canal, o bastante para o degrade do miolo), andando por vizinho; o que tem
-   outra cor fica. Arte de fundo estampado continua fora, e o recado diz isso. */
-async function vazarNoMiolo(blob, fx, fy) {
-  const url = URL.createObjectURL(blob);
-  try {
-    const img = await new Promise((ok, nao) => {
-      const i = new Image();
-      i.onload = () => ok(i);
-      i.onerror = () => nao(new Error("não consegui abrir a arte"));
-      i.src = url;
-    });
-    const lar = img.naturalWidth, alt = img.naturalHeight;
-    const c = document.createElement("canvas");
-    c.width = lar; c.height = alt;
-    const g = c.getContext("2d", { willReadFrequently: true });
-    g.drawImage(img, 0, 0);
-    const d = g.getImageData(0, 0, lar, alt).data;
-    const cor = i => [d[i * 4], d[i * 4 + 1], d[i * 4 + 2]];
-    const fundo = cor(2 * lar + 2);
-    const difere = i => {
-      const p4 = i * 4;
-      return Math.max(Math.abs(d[p4] - fundo[0]), Math.abs(d[p4 + 1] - fundo[1]),
-                      Math.abs(d[p4 + 2] - fundo[2])) > 40;
-    };
-    const x0 = Math.min(lar - 1, Math.max(0, Math.round(fx * lar)));
-    const y0 = Math.min(alt - 1, Math.max(0, Math.round(fy * alt)));
-    const alvo = cor(y0 * lar + x0);
-    const doMiolo = i => {
-      const p4 = i * 4;
-      return Math.max(Math.abs(d[p4] - alvo[0]), Math.abs(d[p4 + 1] - alvo[1]),
-                      Math.abs(d[p4 + 2] - alvo[2])) <= 90;
-    };
-    if (!difere(y0 * lar + x0)) {
-      return { erro: "esse ponto é do fundo da arte, não do miolo: clique dentro "
-                     + "da área que vira a janela." };
-    }
-    // O BLOCO INTEIRO, andando por vizinho a partir do clique.
-    const bloco = new Uint8Array(lar * alt);
-    const fila = new Int32Array(lar * alt);
-    let lidos = 0, postos = 0;
-    fila[postos++] = y0 * lar + x0;
-    bloco[y0 * lar + x0] = 1;
-    while (lidos < postos) {
-      const i = fila[lidos++];
-      const x = i % lar;
-      if (x > 0 && !bloco[i - 1] && doMiolo(i - 1)) { bloco[i - 1] = 1; fila[postos++] = i - 1; }
-      if (x < lar - 1 && !bloco[i + 1] && doMiolo(i + 1)) { bloco[i + 1] = 1; fila[postos++] = i + 1; }
-      if (i >= lar && !bloco[i - lar] && doMiolo(i - lar)) { bloco[i - lar] = 1; fila[postos++] = i - lar; }
-      if (i < lar * (alt - 1) && !bloco[i + lar] && doMiolo(i + lar)) { bloco[i + lar] = 1; fila[postos++] = i + lar; }
-    }
-    if (postos < lar * alt * MP_FURO_MINIMO) {
-      return { erro: "o miolo clicado é pequeno demais para ser a janela do vídeo." };
-    }
-    // A MASCARA APAGA O BLOCO com meio pixel de suavidade, senao o canto arredondado
-    // sai serrilhado na peca pronta.
-    const md = new ImageData(lar, alt);
-    for (let i = 0; i < lar * alt; i++) md.data[i * 4 + 3] = bloco[i] ? 255 : 0;
-    const cm = document.createElement("canvas");
-    cm.width = lar; cm.height = alt;
-    cm.getContext("2d").putImageData(md, 0, 0);
-    g.globalCompositeOperation = "destination-out";
-    g.filter = "blur(1px)";
-    g.drawImage(cm, 0, 0);
-    const vazado = await new Promise(ok => c.toBlob(ok, "image/png"));
-    return { blob: vazado };
-  } finally { URL.revokeObjectURL(url); }
-}
 
 /* O LOTE PRESTA CONTA NO FIM. Arquivo recusado no meio da selecao era engolido: o
    proximo arquivo bom repintava e o recado da recusa durava um piscar. Cada subida
@@ -10367,7 +10114,8 @@ async function cdPintaAMarcaNoPalco() {
   caixa.style.height = p.alt + "%";
   try {
     const u = await enderecoDo(m.arquivo);
-    if (u) $("cd_marca_img").src = u;
+    // a resposta atrasada de um pop fechado (ou de outra marca) nao pinta o palco
+    if (u && CAD && CAD.marca === m.id) $("cd_marca_img").src = u;
   } catch (e) { /* sem a previa; a caixa segue mostrando o lugar dela */ }
 }
 
@@ -10381,6 +10129,8 @@ async function cdPintaOBrollDaMarca() {
   if (!peca) { v.removeAttribute("src"); return; }
   try {
     const u = await urlDaMidia(peca, pastaDosRecortes());
+    // O POP FECHOU ENQUANTO O RECORTE DESCIA: aqui, sim, o guarda e' o do cadastro.
+    if (!CAD) { devolverEndereco(u); return; }
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
     v.dataset.url = u;
     v.src = u;
@@ -10436,15 +10186,13 @@ function cdPintaVars() {
     const semFuro = v.medida && !v.medida.furo;
     return `<div class="cd-var${i === CAD.qual ? " on" : ""}" data-i="${i}">
       <div class="cd-var-cab">Variação ${i + 1}</div>
-      <div class="cd-palco${CAD.mira === i ? " cd-mira" : ""}" data-palco="${i}">
+      <div class="cd-palco" data-palco="${i}">
         <img class="cd-var-arte" alt="" src="${escapa(v.url)}">
         ${semFuro ? '<span class="cd-sem-furo">Sem Furo</span>' : ""}
         <div class="cd-txt" data-v="${i}" style="top:${v.escrita.topo}%;height:${
           v.escrita.altura}%">A Escrita Fica Aqui<span class="cd-alca"></span></div>
       </div>
       <div class="cd-var-pe">
-        ${semFuro ? `<button class="acao mini" type="button" data-vazar="${i}">${
-          CAD.mira === i ? "Cancelar" : "Abrir A Janela"}</button>` : ""}
         <button class="acao mini" type="button" data-subir="${i}">Trocar Arte</button>
         <button class="acao mini" type="button" data-tirar="${i}">Tirar</button>
       </div></div>`;
@@ -10461,52 +10209,6 @@ function cdPintaVars() {
 
 $("cd_vars").addEventListener("click", async ev => {
   if (!CAD) return;
-  const vazar = ev.target.closest("[data-vazar]");
-  if (vazar) {
-    const i = Number(vazar.dataset.vazar);
-    CAD.mira = CAD.mira === i ? -1 : i;
-    cdPintaVars();
-    cdDiz(CAD.mira >= 0
-      ? "Clique dentro da área da arte que deve virar a janela do vídeo." : "");
-    return;
-  }
-  // NA MIRA, o clique na arte E' a tesoura: o miolo clicado vira o furo.
-  if (CAD.mira >= 0) {
-    const palco = ev.target.closest('[data-palco="' + CAD.mira + '"]');
-    const arte = palco && palco.querySelector(".cd-var-arte");
-    if (arte) {
-      const r = arte.getBoundingClientRect();
-      const v = CAD.vars[CAD.mira];
-      // ARTE GRAVADA DESCE DO ACERVO NA HORA DO CORTE: na edicao ela abre so' com o
-      // endereco, e a tesoura precisa dos bytes.
-      if (!v.blob && v.arquivo) {
-        cdDiz("buscando a arte…");
-        v.blob = await arquivoDoAcervo(v.arquivo);
-        if (!v.blob) return cdDiz("não consegui ler a arte do acervo.", "ruim");
-      }
-      // A TESOURA CORTA SEMPRE DO ORIGINAL: reclicar refaz o furo do zero, em vez de
-      // abrir um segundo buraco por cima do primeiro.
-      if (!v.blobCru) v.blobCru = v.blob;
-      cdDiz("abrindo a janela…");
-      const feito = await vazarNoMiolo(v.blobCru,
-        (ev.clientX - r.left) / r.width, (ev.clientY - r.top) / r.height);
-      if (feito.erro) { cdDiz(feito.erro, "ruim"); return; }
-      const medida = await medirAArte(feito.blob);
-      if (!medida.furo) {
-        return cdDiz("não consegui abrir uma janela que a régua do furo enxergue: "
-                     + "exporte a arte já vazada.", "ruim");
-      }
-      if (v.url && v.url.startsWith("blob:") && !v.arquivo) URL.revokeObjectURL(v.url);
-      v.blob = feito.blob;
-      v.novo = true;                       // o corte vira arquivo novo no salvar
-      v.medida = medida;
-      v.url = URL.createObjectURL(feito.blob);
-      CAD.mira = -1;
-      cdPintaVars();
-      cdDiz("A janela foi aberta com o desenho do miolo.", "boa");
-      return;
-    }
-  }
   const tirar = ev.target.closest("[data-tirar]");
   if (tirar) {
     const i = Number(tirar.dataset.tirar);
@@ -10561,7 +10263,6 @@ async function cdPorArteNaVariacao(f) {
     }
     v.novo = true;                         // trocar poe arquivo novo no lugar
     v.arquivo = null;
-    v.blobCru = null;
     v.blob = f;
     v.nome = f.name.replace(/\.[^.]+$/, "");
     v.medida = medida;
@@ -10708,7 +10409,7 @@ async function cdCadastrar() {
     ACERVO.itens.push(...guardadas);
     ACERVO.itens.push({
       id: idTpl, tipo: "template", nome, conta: CAD.conta || "",
-      fonte: CAD.fonte, linhas: CAD.linhas,
+      fonte: CAD.fonte,
       marca: CAD.marca || null, marcaPos: { ...CAD.marcaPos },
       variacoes: guardadas.map(a => ({ arte: a.id, escrita: a.escrita })),
       criado: Date.now()
@@ -10748,13 +10449,10 @@ async function entrarNoTemplate() {
   if (!EDIT_RECORTES.length) await procurarRecortes();
   if (!ACERVO.itens.length) await lerAcervo();
   if (!TPL) TPL = tplVazio();
-  coresNovo($("ed_cores"), TPL.fundoCor, c => {
-    TPL.fundoCor = c;
-    desenhaEditor();
-  });
-  $("ed_medida").textContent = `${TELA.w} por ${TELA.h}`;
-  if (ED_BROLL_I < 0) await trocarBroll(sortearBroll());
-  await desenhaEditor();
+  // O PASSO ANOTADO SOBREVIVE AO F5: quem entra por "Ir Para O Passo 3" nao passa pelo
+  // salvarRascunho do trilho, e ate 27/08/2026 quem anotava a mexida aqui era o desenho
+  // do editor de elementos, que morreu com as fases de texto e imagens.
+  anotarMexida();
   irParaSub(TPL_SUB || 1);
 }
 
@@ -10844,12 +10542,19 @@ $("apl_montar").onclick = async () => {
         const varDaPeca = variacaoDaPeca(nome);
         const janela = varDaPeca ? varDaPeca.janela
                      : (TPL && TPL.janela ? TPL.janela : null);
-        if (e || janela) {
+        /* A FRASE VIAJA PRONTA, e nao como faixa para o motor remontar. A conta de
+           onde a letra fica, de que tamanho e com que fonte mora num lugar so' (aqui),
+           pela mesma razao do `encaixeNaJanela`: duas implementacoes divergiriam
+           caladas, e o arquivo sairia diferente do que ele aprovou na previa. */
+        const frase = varDaPeca
+          ? campoDaFaixa(varDaPeca.escrita, fonteDaArte(varDaPeca)) : null;
+        if (e || janela || frase) {
           p.enquadre = Object.assign({}, e || {});
           const r = BROLL_DE && BROLL_DE.get(nome);
           if (r) p.enquadre.base = { x: r.x, y: r.y, w: r.w, h: r.h };
           if (janela) p.enquadre.janela = janela;
           if (varDaPeca) p.enquadre.arte = varDaPeca.arquivo;
+          if (frase) p.enquadre.escrita = frase;
         }
         return p;
       })
