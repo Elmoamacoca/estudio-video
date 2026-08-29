@@ -181,6 +181,16 @@ def montar() -> Path:
     js_cab = re.sub(r"/\*.*?\*/", "", js_cab, flags=re.S)
     js_sel = (PECAS / "sel.js").read_text(encoding="utf-8", errors="replace")
     js_sel = re.sub(r"/\*.*?\*/", "", js_sel, flags=re.S)
+    # A BIBLIOTECA DO EDITOR DA REVISAO, e ela e' a unica peca que NAO veio do Social
+    # Tracker. E' a Fabric 6.7.1, que desenha a peca em tela de pintura e traz as alcas
+    # de canto, a selecao direta e a escrita no proprio lugar: o nivel de edicao que ele
+    # pediu em 29/08/2026 depois de cinco rodadas de ajuste no desenho antigo.
+    #
+    # ELA VEM EMBUTIDA, e nao de fora, pela mesma razao da marca: a tela e' servida de um
+    # lugar so'. Sao 308 kB que fazem a pagina passar de 990 kB para 1,3 MB, e por isso o
+    # Caddy da casa passou a comprimir na saida (vps/Caddyfile), o que devolve o tamanho
+    # com folga. Sem o comentario tirado ela nao encolhe: e' arquivo ja' minificado.
+    js_fabric = (PECAS / "fabric.js").read_text(encoding="utf-8", errors="replace")
     corpo = (BASE / "corpo.html").read_text(encoding="utf-8")
     js = (BASE / "tela.js").read_text(encoding="utf-8")
 
@@ -254,6 +264,9 @@ def montar() -> Path:
 </script>
 <script>
 {js_sel}
+</script>
+<script>
+{js_fabric}
 </script>
 <script>
 {js}

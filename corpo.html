@@ -1276,14 +1276,35 @@
               <span class="aj-kpi"><b id="aj_kpi_falta">0</b> para ver</span>
             </div>
 
+            <!-- DESFAZER E REFAZER MORAM NA BARRA, junto do resto do comando.
+                 O editor da revisao guarda cada gesto numa pilha, e sem o caminho de
+                 volta um arrasto errado obriga a zerar a peca inteira, que e' o botao
+                 do pe' e leva junto tudo o que ele ja' tinha acertado ali. -->
             <div class="aj-acoes">
+              <button class="acao mini" id="aj_voltar_gesto" type="button"
+                      title="Desfazer o último gesto">Desfazer</button>
+              <button class="acao mini" id="aj_refazer_gesto" type="button"
+                      title="Refazer o gesto desfeito">Refazer</button>
               <button class="acao mini" id="aj_montar" type="button">Fabricar</button>
               <button class="acao forte" id="aj_pronta" type="button">Pronta</button>
             </div>
           </div>
           <p class="nota mini aj-recado" id="aj_recado"></p>
           <div class="aj-corpo">
-            <div class="aj-tela" id="aj_tela"></div>
+            <div class="aj-palco">
+              <div class="aj-tela" id="aj_tela"></div>
+              <!-- QUANTO DO B-ROLL SOBREVIVE AO ENCAIXE, medido na hora.
+                   Ele nao tinha como saber o preco de uma moldura antes de escolher
+                   ela: medido nas 180 pecas da leva 31, a escolha automatica deixa de
+                   fora 26% da filmagem em media, e vinte desses pontos sao so' da folga
+                   de seguranca. O numero do lado diz o que a outra opcao daria. -->
+              <div class="aj-medidas">
+                <span class="aj-medida" id="aj_med"><b id="aj_med_n">100%</b>
+                  Do B-roll Aparece</span>
+                <span class="aj-medida" id="aj_med2"><b id="aj_med2_n">100%</b>
+                  <span id="aj_med2_r">Sem A Folga</span></span>
+              </div>
+            </div>
 
             <aside class="aj-lado">
               <!-- O TEXTO NA MÃO. A IA escreve, ele corrige. -->
@@ -1321,10 +1342,43 @@
                 <div class="ed-passo" id="aj_zoom"></div>
                 <div class="ed-passo" id="aj_bx"></div>
                 <div class="ed-passo" id="aj_by"></div>
+                <!-- A FOLGA DEIXOU DE SER LEI E VIROU PARTIDA (29/08/2026).
+                     Ela nasceu em 27/08 para esconder o canto arredondado que vem
+                     gravado nos pixels do reel baixado, e passou a valer para TODA
+                     peca, inclusive as que nao tem canto nenhum. Medido nas 180 da
+                     leva 31: sozinha, ela corta 20,3% da filmagem sempre, e a perda
+                     mediana cai de 26,1% para 7,3% sem ela. Agora ela vem ligada,
+                     como antes, e ele desliga onde nao precisa. -->
+                <button class="aj-chave on" id="aj_folga" type="button"
+                        aria-pressed="true">
+                  <span>Folga De Segurança De 12%</span><u></u></button>
                 <button class="acao mini larga" id="aj_broll_todas" type="button">
                   Usar Este Enquadramento Em Todas</button>
                 <p class="nota mini" id="aj_broll_sem" hidden>Esta peça não tem recorte de
                   B-roll para reenquadrar.</p>
+              </section>
+
+              <!-- A MOLDURA DESTA PECA, e a escolha da maquina virou sugestao.
+                   Ate' 29/08/2026 `variacaoDaPeca` decidia sozinha e nao havia como
+                   discordar: ele viu um B-roll quadrado entrar na variacao errada e
+                   sair cortado, sem botao nenhum para trocar. A medida continua
+                   escolhendo primeiro, com o selo dizendo qual foi; o clique dele
+                   vence e viaja no pedido daquela peca. -->
+              <section class="ed-bloco" id="aj_bloco_moldura" hidden>
+                <h4>A Moldura</h4>
+                <div class="aj-molduras" id="aj_molduras"></div>
+                <p class="nota mini" id="aj_moldura_sem" hidden>Esta conta tem uma
+                  variação só, então não há o que trocar.</p>
+              </section>
+
+              <!-- AS CAMADAS, para alcancar o que esta' por baixo.
+                   Com a moldura por cima da filmagem, clicar no meio da peca pega
+                   sempre a de cima; a lista diz o que existe e leva o gesto para a
+                   camada certa. A moldura aparece marcada como travada porque ela e'
+                   o quadro da peca: quem se move e' o que entra nela. -->
+              <section class="ed-bloco" id="aj_bloco_camadas">
+                <h4>As Camadas</h4>
+                <div class="aj-camadas" id="aj_camadas"></div>
               </section>
 
               <!-- TAMANHO E POSIÇÃO do item escolhido. -->

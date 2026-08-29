@@ -5859,7 +5859,12 @@ function faltamEscrever() {
 const FOLGA_DO_BROLL = 0.012;
 
 function ateOndeDesce(campo, nome) {
-  const b = BROLL_DE && BROLL_DE.get(nome);
+  /* O TETO E' A FILMAGEM DA PECA MONTADA, e ela mora no FURO DA ARTE desde 29/08/2026.
+     Ler aqui o retangulo do reel BAIXADO era o mesmo engano que punha a filmagem no
+     lugar errado, so' que do outro lado: na peca 0001 da leva 31 o furo comeca em 25,8%
+     e o reel comecava em 32%, entao o texto podia descer seis por cento para dentro da
+     filmagem sem ninguem reclamar. */
+  const b = janelaDaArte(nome) || (BROLL_DE && BROLL_DE.get(nome));
   if (!b) return 1;                       // sem ficha, nao invento limite nenhum
   if (campo.y >= b.y) return 1;           // a caixa ja' nasce dentro ou abaixo dela
   return Math.max(campo.y + 0.02, b.y - FOLGA_DO_BROLL);
@@ -7773,7 +7778,27 @@ function enquadreDe(nome) {
            mx: e.mx || 0, my: e.my || 0,
            // `es` E' O TAMANHO DA JANELA, e cresce a partir do centro dela. Nao
            // confundir com `z`, que aproxima a filmagem DENTRO da janela.
-           es: e.es || 1 };
+           es: e.es || 1,
+           /* A FOLGA E A MOLDURA PASSARAM A SER DESTA PECA em 29/08/2026, e as duas
+              pelo mesmo motivo: eram decisao global e ele nao tinha como discordar
+              numa peca so'.
+
+              `folga`    quanto a filmagem entra maior que o furo. Nasce em 1,12, que
+                         e' a constante calibrada para esconder o canto arredondado que
+                         vem gravado no reel baixado; peca sem canto nenhum pagava esses
+                         12% a toa. Medido nas 180 da leva 31: a folga sozinha corta
+                         20,3% da filmagem, e sem ela a perda mediana cai de 26,1% para
+                         7,3%.
+              `moldura`  o ID da variacao que ELE escolheu. Nulo quer dizer "o que a
+                         medida escolher", que continua sendo o caminho de quase toda
+                         peca. Ver `variacaoDaPeca`.
+
+     E O NOME NAO E' `arte` DE PROPOSITO, que era o obvio: `enquadre.arte` ja' existe no
+     PEDIDO e la' ele e' o NOME DO ARQUIVO da variacao, nao o id. Dois campos com o mesmo
+     apelido guardando coisas diferentes e' a armadilha que custou o dia 29/08/2026 com
+     a palavra "janela", e ela nao se repete aqui. */
+           folga: e.folga != null ? e.folga : FOLGA_DO_ENCAIXE,
+           moldura: e.moldura || null };
 }
 
 /** Onde a janela do B-roll desta peça está de fato, já com o que ele moveu. */
@@ -8098,12 +8123,518 @@ function descerAsMolduras() {
   for (const v of variacoesDaConta(TPL.contaModelo)) enderecoDo(v.arquivo);
 }
 
+/* ===================== O EDITOR DA REVISAO (29/08/2026) =========================
+
+   POR QUE ELE EXISTE. Cinco pedidos seguidos de ajuste na revisao nao saiam do lugar,
+   e ele foi direto: "eu quero que seja um layout exatamente como o Canva, onde o nivel
+   de edicao e' o nivel de edicao do Canva". O desenho antigo era feito de retangulos
+   posicionados na pagina com quatro alcas de canto penduradas por fora; ele mesmo
+   comparou com o Paint. Medido no arquivo: 12.029 linhas de tela e 24 pontos que
+   respondem a mouse ou toque na tela inteira.
+
+   O QUE MUDA. A peca passa a ser desenhada numa TELA DE PINTURA, com a Fabric por
+   baixo: cada parte da peca vira um objeto de verdade, com alca em todo canto e em
+   todo lado, selecao pelo clique, escrita no proprio lugar e camadas. O gesto ganha o
+   acabamento que a biblioteca ja' traz, em vez de ser remendado a mao.
+
+   O QUE NAO MUDA, E ISSO E' O IMPORTANTE. Quem GRAVA continua sendo `mexerEnquadre` e
+   `mexerItem`, exatamente como antes: o editor traduz o gesto para os mesmos `z`, `dx`,
+   `dy`, `x`, `y` e `tamanho` que o motor ja' entende, e nao inventa um segundo cofre.
+   As contas do encaixe continuam vindo de `encaixeNaJanela`, que e' a mesma do
+   `encaixe_na_janela` do oficina.py. A licao da trava 60 continua de pe': mexeu numa,
+   mexe na outra.
+
+   E RASCUNHO SEM FURO DE ARTE NAO ENTRA AQUI. Sem furo, a peca veste a mascara do
+   passo 2, que e' um recorte de imagem do navegador e nao existe em tela de pintura.
+   Esse caminho segue no desenho antigo (`pintaPeca`), que e' o mesmo `else` que o
+   motor tem. */
+
+let EDT = null;                   // { tela, filmagem, moldura, frase, marca, nome }
+let EDT_ALVO = null;              // qual objeto esta' escolhido, por nome de camada
+const EDT_ENTRELINHA = 1.22;      // a mesma que o motor usa em `pintar_camadas`
+
+/** Fecha a tela de pintura e devolve o vídeo, se houver um aberto. */
+function fecharOEditor() {
+  if (!EDT) return;
+  try { EDT.tela.dispose(); } catch (e) { /* a aba esta' fechando */ }
+  EDT = null;
+  EDT_ALVO = null;
+}
+
+/** O tamanho da letra em fração da ALTURA da peça, que é a régua do motor. */
+function corpoDaFrase(el, nome) { return medidaDaPeca(el, nome).tamanho; }
+
+/* DESENHA A PECA NA TELA DE PINTURA. A ordem e' a da peca montada: filmagem embaixo,
+   moldura por cima com o furo dela, e a frase por cima de tudo. */
+async function abrirOEditor(alvo, peca, indice) {
+  fecharOEditor();
+  alvo.querySelectorAll("video").forEach(apagarPeca);
+  alvo.innerHTML = "";
+  /* PALCO SEM MEDIDA E' FASE QUE AINDA NAO APARECEU, e nao peca sem desenho.
+
+     A tela de pintura precisa do tamanho em pixels, e o navegador so' sabe dize-lo
+     depois de a fase estar visivel. Desistir aqui deixaria a peca sem existir: foi o
+     que a prova do texto na mao pegou, porque ela mexe na revisao sem abrir a fase, e
+     a peca simplesmente nao era desenhada.
+
+     ENTAO O PALCO NASCE NA MEDIDA DE REFERENCIA, que e' a mesma do CSS (altura de 700
+     e a largura saindo da proporcao do quadro). Quando ele entra na fase de verdade,
+     `entrarNoAjuste` redesenha com a medida real, e como tudo aqui e' fracao do quadro
+     o desenho e' o mesmo em qualquer tamanho. */
+  const A = alvo.clientHeight || 700;
+  const L = alvo.clientWidth || Math.round(A * 9 / 16);
+
+  const lona = document.createElement("canvas");
+  alvo.appendChild(lona);
+  const tela = new fabric.Canvas(lona, {
+    width: L, height: A, backgroundColor: "#000000",
+    preserveObjectStacking: true, selection: false, uniformScaling: true
+  });
+
+  /* O VIDEO CONTINUA SENDO UM ELEMENTO DA PAGINA, e nao um desenho solto: e' ele que
+     `acenderPeca` abre, que `apagarPeca` fecha e devolve a memoria, e que o resto da
+     tela ja' sabe cuidar. A tela de pintura so' o COPIA quadro a quadro. */
+  const v = document.createElement("video");
+  v.muted = true; v.playsInline = true; v.loop = true; v.preload = "metadata";
+  v.dataset.arq = indice;
+  v.style.display = "none";
+  alvo.appendChild(v);
+  await acenderPeca(v);
+
+  /* A PECA NAO ESPERA A FILMAGEM DESCER, e essa e' a mesma licao da moldura em
+     `pintaPeca`: esperar aqui parava o desenho no meio, e a peca so' aparecia quando o
+     arquivo chegasse da rede. Medido na bancada com o video dando 404: o editor ficava
+     tres segundos sem existir, e quem olhasse veria o quadro preto sem moldura nem
+     frase, que e' o que ele chama de bugado.
+
+     O QUADRO ENTRA VAZIO NA ORDEM CERTA e se preenche quando o video abre. As medidas
+     de origem comecam no tamanho do quadro da peca (1080 por 1920), que e' o de todo
+     recorte desta casa, e sao corrigidas na hora em que o arquivo diz as dele. */
+  const filmagem = new fabric.FabricImage(v, {
+    objectCaching: false, originX: "left", originY: "top",
+    width: v.videoWidth || 1080, height: v.videoHeight || 1920,
+    lockRotation: true, hasRotatingPoint: false
+  });
+  filmagem.nome = "Filmagem";
+  filmagem.larNat = v.videoWidth || 1080;
+  filmagem.altNat = v.videoHeight || 1920;
+  tela.add(filmagem);
+  if (v.readyState < 2) {
+    v.addEventListener("loadeddata", () => {
+      // OUTRA PECA JA' ABRIU ENQUANTO ESTA DESCIA: mexer aqui pintaria por cima dela.
+      if (!EDT || EDT.video !== v) return;
+      filmagem.larNat = v.videoWidth || 1080;
+      filmagem.altNat = v.videoHeight || 1920;
+      filmagem.set({ width: filmagem.larNat, height: filmagem.altNat });
+      editorPorNoLugar();
+      v.play().catch(() => {});
+    }, { once: true });
+  } else v.play().catch(() => {});
+
+  /* A MOLDURA TAMBEM NAO SEGURA A PECA. Ela desce por tras e se poe no lugar dela
+     quando chega: entre a filmagem e a frase, que e' a ordem da peca montada. Esperar
+     por ela aqui deixaria a revisao sem texto ate' a rede responder, que e' o defeito
+     que `pintaPeca` ja' tinha consertado em 29/08/2026. */
+  const varDaPeca = variacaoDaPeca(peca.nome);
+  const arteDaPeca = varDaPeca ? varDaPeca.arquivo : (TPL.fundoImagem || null);
+  let moldura = null;
+  if (arteDaPeca) {
+    enderecoDo(arteDaPeca).then(u => {
+      if (!u) return;
+      const i = new Image();
+      i.onload = () => {
+        if (!EDT || EDT.tela !== tela) return;   // outra peca abriu no meio do caminho
+        moldura = new fabric.FabricImage(i, {
+          left: 0, top: 0, selectable: false, evented: false,
+          scaleX: L / (i.naturalWidth || 1080), scaleY: A / (i.naturalHeight || 1920)
+        });
+        moldura.nome = "Moldura";
+        EDT.moldura = moldura;
+        // O LUGAR E' LOGO ACIMA DA FILMAGEM, e nao o fim da pilha: por cima de tudo ela
+        // taparia a frase, que na peca montada fica em cima da arte.
+        tela.insertAt(tela.getObjects().indexOf(filmagem) + 1, moldura);
+        tela.requestRenderAll();
+        desenhaAsCamadas();
+      };
+      i.src = u;
+    }).catch(() => {});
+  }
+
+  /* A MARCA DO B-ROLL, e ela e' a mesma ideia da marca do desenho antigo: mostrar ONDE
+     a filmagem esta' de verdade, inclusive o pedaco que fica fora do furo. Sem ela o
+     que se perde no encaixe e' invisivel, e foi o que ele nao conseguia ver. */
+  const marca = new fabric.Rect({
+    fill: "transparent", stroke: "#3F7D53", strokeWidth: 2, strokeDashArray: [7, 5],
+    strokeUniform: true, selectable: false, evented: false, visible: false
+  });
+  tela.add(marca);
+
+  const campos = elementosDaPeca(peca.nome).filter(e => e.tipo === "texto");
+  const campo = campos[0] || null;
+  let frase = null;
+  if (campo) {
+    const m = medidaDaPeca(campo, peca.nome);
+    frase = new fabric.Textbox(textoDaPeca(campo, peca.nome) || " ", {
+      left: m.x * L, top: m.y * A, width: campo.w * L,
+      fontFamily: fonteCss(m.fonte).split(",")[0].replace(/["']/g, ""),
+      fontSize: m.tamanho * A, fill: campo.cor || "#FFFFFF",
+      fontWeight: campo.peso || 700, lineHeight: EDT_ENTRELINHA,
+      textAlign: campo.alinha === "centro" ? "center"
+        : campo.alinha === "direita" ? "right" : "left",
+      lockRotation: true, hasRotatingPoint: false, editable: true
+    });
+    frase.nome = "Frase";
+    frase.campo = campo;
+    tela.add(frase);
+  }
+
+  EDT = { tela, filmagem, moldura, frase, marca, video: v, nome: peca.nome, L, A };
+  editorAlcas(filmagem);
+  if (frase) editorAlcas(frase);
+
+  /* A FICHA E' GUARDADA ANTES DO GESTO, e nao depois: o caminho de volta precisa do
+     estado anterior, e depois de arrastar ele ja' se foi. `before:transform` dispara
+     uma vez por gesto, no primeiro toque, e nao a cada movimento do dedo. */
+  tela.on("before:transform", guardarOGesto);
+  tela.on("object:modified", () => { editorGuardaGesto(); editorMede(); });
+  tela.on("object:moving", editorMede);
+  tela.on("object:scaling", editorMede);
+  tela.on("selection:created", () => editorEscolhido(tela.getActiveObject()));
+  tela.on("selection:updated", () => editorEscolhido(tela.getActiveObject()));
+  tela.on("selection:cleared", () => editorEscolhido(null));
+  if (frase) frase.on("changed", () => {
+    if (!EDT || !EDT.frase) return;
+    escreverAMao(peca, campo, EDT.frase.text);
+    const t = $("ajt_" + campo.id);
+    if (t && document.activeElement !== t) t.value = EDT.frase.text;
+  });
+
+  editorPorNoLugar();
+  editorGirar(++EDT_GERACAO);
+  return v;
+}
+
+/** As alças no padrão da casa: brasa da paleta, redondas, com contorno claro. */
+function editorAlcas(o) {
+  o.set({ borderColor: "#3F7D53", cornerColor: "#3F7D53", cornerStrokeColor: "#FFFFFF",
+          cornerSize: 11, transparentCorners: false, cornerStyle: "circle",
+          borderScaleFactor: 1.6, padding: 0 });
+}
+
+/* O LACO QUE FAZ A FILMAGEM ANDAR. Tela de pintura nao tem video: ela tem o quadro que
+   estava la' na hora em que se pediu para desenhar. Sem este laco a peca fica no
+   primeiro quadro e parece travada, que e' o que ele chama de bugado.
+
+   A GERACAO MATA O LACO ANTIGO, e ela e' a mesma ideia do `MP_GERACAO` da fase 1:
+   trocar de peca fecha um editor e abre outro, e sem a marca os dois lacos ficariam
+   girando ao mesmo tempo, cada um pedindo um quadro por vez na maquina que ele ja'
+   disse ser curta de memoria. */
+let EDT_GERACAO = 0;
+
+function editorGirar(geracao) {
+  if (!EDT || geracao !== EDT_GERACAO) return;
+  if (EDT.video && !EDT.video.paused) EDT.tela.requestRenderAll();
+  fabric.util.requestAnimFrame(() => editorGirar(geracao));
+}
+
+/* PÕE A FILMAGEM E A FRASE ONDE A FICHA DIZ, sem remontar nada.
+
+   E' O CAMINHO DE VOLTA da ficha para o desenho, e ele existe para os dois lados nunca
+   discordarem: quem mexe nos botoes do painel, quem troca a moldura e quem desfaz caem
+   todos aqui, em vez de cada um mexer no desenho do seu jeito. */
+function editorPorNoLugar() {
+  if (!EDT) return;
+  const { filmagem, frase, marca, L, A, nome } = EDT;
+  const lugar = lugarDaFilmagem(nome);
+  if (lugar && filmagem) {
+    filmagem.set({ left: lugar.x * L, top: lugar.y * A });
+    filmagem.scaleX = lugar.k * L / filmagem.larNat;
+    filmagem.scaleY = lugar.k * A / filmagem.altNat;
+    filmagem.setCoords();
+  }
+  if (frase && frase.campo) {
+    const m = medidaDaPeca(frase.campo, nome);
+    frase.set({ left: m.x * L, top: m.y * A, fontSize: m.tamanho * A,
+                scaleX: 1, scaleY: 1, width: frase.campo.w * L,
+                fontFamily: fonteCss(m.fonte).split(",")[0].replace(/["']/g, "") });
+    frase.setCoords();
+  }
+  editorMede();
+  EDT.tela.requestRenderAll();
+}
+
+/* QUANTO DO B-ROLL SOBREVIVE, medido no desenho que esta' na tela.
+
+   E' MEDIDO E NAO ESTIMADO (trava 2): a conta sai da posicao real do objeto, entao ela
+   anda junto com o dedo dele enquanto arrasta. O numero do lado e' o que a outra folga
+   daria, no encaixe limpo, para ele nao precisar ligar e desligar para comparar. */
+function editorMede() {
+  if (!EDT) return;
+  const { filmagem, marca, L, A, nome } = EDT;
+  const b = BROLL_DE && BROLL_DE.get(nome);
+  const jan = janelaDaArte(nome);
+  if (!b || !jan || !filmagem) return;
+  const lar = filmagem.getScaledWidth(), alt = filmagem.getScaledHeight();
+  const bx = filmagem.left + lar * b.x, by = filmagem.top + alt * b.y;
+  const bl = lar * b.w, ba = alt * b.h;
+  const jx = jan.x * L, jy = jan.y * A, jl = jan.w * L, ja = jan.h * A;
+  const ix = Math.max(0, Math.min(bx + bl, jx + jl) - Math.max(bx, jx));
+  const iy = Math.max(0, Math.min(by + ba, jy + ja) - Math.max(by, jy));
+  const pct = (bl > 0 && ba > 0) ? Math.round(100 * (ix * iy) / (bl * ba)) : 0;
+  const caixa = $("aj_med");
+  if (caixa) {
+    $("aj_med_n").textContent = pct + "%";
+    caixa.className = "aj-medida " + (pct >= 88 ? "bom" : pct >= 70 ? "" : "ruim");
+  }
+  const e = enquadreDe(nome);
+  const outra = aproveitamentoLimpo(nome, e.folga > 1 ? 1 : FOLGA_DO_ENCAIXE);
+  const c2 = $("aj_med2");
+  if (c2 && outra != null) {
+    $("aj_med2_n").textContent = outra + "%";
+    $("aj_med2_r").textContent = e.folga > 1 ? "Sem A Folga" : "Com A Folga";
+    c2.className = "aj-medida " + (outra > pct ? "bom" : "");
+  }
+  /* A MARCA APARECE COM A FILMAGEM ESCOLHIDA, e some quando ele solta.
+
+     ELA E' O UNICO JEITO DE VER O QUE SE PERDE. O que cai fora do furo simplesmente
+     nao e' desenhado, entao o corte e' invisivel: ele via a peca bonita e o B-roll
+     cortado pela metade, sem nada na tela explicando de onde vinha o corte. Deixa-la
+     acesa o tempo todo poria um tracejado por cima de toda peca, inclusive na hora de
+     julgar a arte, que e' quando ele quer ver a peca limpa. */
+  if (marca) {
+    marca.set({ left: bx, top: by, width: bl, height: ba, scaleX: 1, scaleY: 1,
+                visible: EDT.tela.getActiveObject() === filmagem });
+    marca.setCoords();
+  }
+}
+
+/* Quanto do B-roll sobra no encaixe LIMPO, com a folga que se pedir.
+
+   O ENCAIXE CENTRALIZA OS DOIS RETANGULOS, entao a sobra de cada lado e' o menor dos
+   dois. Esta conta nao olha o desenho: ela responde "e se", que e' a pergunta que o
+   numero do lado faz. */
+function aproveitamentoLimpo(nome, folga) {
+  const b = BROLL_DE && BROLL_DE.get(nome);
+  const jan = janelaDaArte(nome);
+  if (!b || !jan || !b.w || !b.h) return null;
+  const e = enquadreDe(nome);
+  const k = Math.max(jan.w / b.w, jan.h / b.h) * folga * e.z;
+  const bl = k * b.w, ba = k * b.h;
+  return Math.round(100 * (Math.min(bl, jan.w) / bl) * (Math.min(ba, jan.h) / ba));
+}
+
+/* O GESTO VIRA FICHA. Traduz o que ele fez na tela de pintura para os mesmos numeros
+   que o motor le', e grava pelo caminho de sempre.
+
+   A CONTA E' A INVERSA DO `encaixeNaJanela`, e tem de ser: se ela divergir, a peca sai
+   diferente da que ele aprovou. Da ida: k = kenc vezes z, e o canto e' o centro do furo
+   menos o centro do B-roll crescido, mais o deslize na regua do encaixe. */
+function editorGuardaGesto() {
+  if (!EDT) return;
+  const { filmagem, frase, L, A, nome } = EDT;
+  const alvo = EDT.tela.getActiveObject();
+  if (alvo === filmagem) {
+    const b = BROLL_DE && BROLL_DE.get(nome);
+    const jan = janelaDaArte(nome);
+    if (!b || !jan) return;
+    const e = enquadreDe(nome);
+    const kenc = Math.max(jan.w / b.w, jan.h / b.h) * e.folga;
+    /* AS TRES MEDIDAS SE LEEM DE UMA VEZ, ANTES DE GRAVAR QUALQUER UMA.
+
+       O DEFEITO QUE ISTO CONSERTA, e ele custou uma sonda inteira: `mexerEnquadre`
+       redesenha a peca a partir da ficha, entao a PRIMEIRA gravacao ja' devolvia a
+       filmagem para o encaixe limpo. As duas leituras seguintes viam a posicao
+       reposta, e nao a que o dedo dele tinha deixado: o arrasto media zero e a ficha
+       era apagada por "nada mudou". Na tela o gesto simplesmente voltava sozinho. */
+    const k = filmagem.getScaledWidth() / L;
+    const esq = filmagem.left / L, alto = filmagem.top / A;
+    const z = Math.max(1, Math.min(4, k / kenc));
+    const kz = kenc * z;
+    const dx = (esq - jan.x - jan.w / 2 + kz * (b.x + b.w / 2)) / kenc;
+    const dy = (alto - jan.y - jan.h / 2 + kz * (b.y + b.h / 2)) / kenc;
+    // A APROXIMACAO ENTRA PRIMEIRO: o deslize se prende na regua dela, e gravar o
+    // deslize com o `z` velho poria a filmagem num lugar que o arquivo nao teria.
+    mexerEnquadre(nome, "z", z, true);
+    mexerEnquadre(nome, "dx", dx, true);
+    mexerEnquadre(nome, "dy", dy);
+    editorPorNoLugar();       // a ficha prende o gesto na sobra; o desenho obedece a ela
+    desenhaAjustePainel();
+    return;
+  }
+  if (alvo === frase && frase && frase.campo) {
+    /* A ALCA DE CANTO MUDA A ESCALA, e a de lado muda a largura. O tamanho da peca e'
+       fracao da ALTURA, entao a escala vertical e' quem manda na letra; devolver a
+       escala para um depois de somar ela na letra deixa a caixa com a medida real. */
+    const corpo = (frase.fontSize * (frase.scaleY || 1)) / A;
+    const esq = frase.left / L, alto = frase.top / A;   // ver a nota da filmagem
+    mexerItem(nome, frase.campo, "tamanho", corpo, true);
+    mexerItem(nome, frase.campo, "x", esq, true);
+    mexerItem(nome, frase.campo, "y", alto);
+    editorPorNoLugar();
+    desenhaAjustePainel();
+  }
+}
+
+/** Guarda quem está escolhido e acende a camada dele na lista. */
+function editorEscolhido(o) {
+  EDT_ALVO = o ? o.nome : null;
+  AJ_SEL = (o && o.nome === "Frase" && o.campo) ? o.campo.id
+    : (o && o.nome === "Filmagem") ? "_broll" : null;
+  editorMede();                 // a marca do B-roll acende com a filmagem escolhida
+  if (EDT) EDT.tela.requestRenderAll();
+  desenhaAsCamadas();
+  desenhaAjustePainel();
+}
+
+/** Escolhe uma camada pelo nome, do lado do painel. */
+function editorEscolher(nome) {
+  if (!EDT) return;
+  const o = nome === "Filmagem" ? EDT.filmagem : nome === "Frase" ? EDT.frase : null;
+  if (!o || !o.selectable) return;
+  EDT.tela.setActiveObject(o);
+  EDT.tela.requestRenderAll();
+}
+
+/* A LISTA DE CAMADAS, de cima para baixo, como no desenho da peca.
+
+   A MOLDURA APARECE TRAVADA em vez de sumir: ela e' o quadro da peca e esta' por cima
+   da filmagem, entao quem clica no meio pega sempre ela. Dizer que existe e que nao se
+   move explica o que o clique fez, e some com a impressao de tela quebrada. */
+function desenhaAsCamadas() {
+  const casa = $("aj_camadas");
+  if (!casa) return;
+  if (!EDT) { casa.innerHTML = ""; return; }
+  const camadas = [];
+  if (EDT.frase) camadas.push({ nome: "Frase", travada: false });
+  if (EDT.moldura) camadas.push({ nome: "Moldura", travada: true });
+  camadas.push({ nome: "Filmagem", travada: false });
+  casa.innerHTML = camadas.map(c =>
+    `<button type="button" class="aj-cam${c.travada ? " travada" : ""}`
+    + `${!c.travada && EDT_ALVO === c.nome ? " on" : ""}" data-camada="${c.nome}">`
+    + `<i></i>${c.nome}${c.travada ? " (Travada)" : ""}</button>`).join("");
+  for (const b of casa.querySelectorAll("[data-camada]"))
+    b.onclick = () => editorEscolher(b.dataset.camada);
+}
+
+/* AS MOLDURAS DA CONTA, com a que a medida sugeriu marcada.
+
+   O SELO DIZ QUAL A MAQUINA ESCOLHERIA, e o clique dele vence. Sem o selo a troca
+   viraria escolha no escuro: ele nao saberia de onde a peca veio nem para onde volta. */
+function desenhaAsMolduras() {
+  const casa = $("aj_molduras");
+  const bloco = $("aj_bloco_moldura");
+  if (!casa || !bloco) return;
+  const p = pecas3()[AJ_I];
+  const todas = (TPL && TPL.contaModelo) ? variacoesDaConta(TPL.contaModelo) : [];
+  bloco.hidden = !p || todas.length < 2;
+  if (bloco.hidden) { casa.innerHTML = ""; return; }
+  const daPeca = variacaoDaPeca(p.nome);
+  const sugerida = melhorVariacao(BROLL_DE && BROLL_DE.get(p.nome), todas);
+  casa.innerHTML = todas.map((v, i) =>
+    `<button type="button" class="aj-mold${daPeca && v.id === daPeca.id ? " on" : ""}" `
+    + `data-arte="${escapa(v.id)}" title="${escapa(v.nome || ("Variação " + (i + 1)))}">`
+    + `<img alt="" data-arte-img="${escapa(v.arquivo)}">`
+    + `<span>${escapa(v.nome || ("Variação " + (i + 1)))}</span>`
+    + (sugerida && v.id === sugerida.id ? `<em class="aj-selo">Sugerida</em>` : "")
+    + "</button>").join("");
+  for (const im of casa.querySelectorAll("[data-arte-img]"))
+    enderecoDo(im.dataset.arteImg).then(u => { if (u) im.src = u; }).catch(() => {});
+  for (const b of casa.querySelectorAll("[data-arte]"))
+    b.onclick = () => trocarAMoldura(b.dataset.arte);
+}
+
+/* Troca a moldura desta peça e refaz o desenho a partir da ficha nova. */
+function trocarAMoldura(id) {
+  const p = pecas3()[AJ_I];
+  if (!p) return;
+  const atual = variacaoDaPeca(p.nome);
+  if (atual && atual.id === id) return;
+  guardarOGesto();
+  const e = enquadreDe(p.nome);
+  e.moldura = id;
+  /* A MOLDURA NOVA TEM OUTRO FURO, entao o enquadramento velho nao vale: `dx` e `dy`
+     eram medidos na regua do furo anterior e cairiam em outro lugar. A peca volta ao
+     encaixe limpo da moldura escolhida, que e' de onde ele ajusta de novo. */
+  e.dx = 0; e.dy = 0; e.z = 1;
+  ENQUADRES.set(p.nome, e);
+  A_MAO.add(p.nome);
+  anotarMexida();
+  desenhaAjuste();
+}
+
+/* A CHAVE DA FOLGA, e ela vale só desta peça.
+
+   POR QUE NAO E' UM BOTAO DE LIGAR PARA A LEVA INTEIRA: as duas respostas convivem na
+   mesma leva. Peca cujo reel veio com card arredondado precisa dos 12%; peca de card
+   reto paga por um problema que nao tem. Medido nas 180 da leva 31, a folga sozinha
+   custa 20,3% da filmagem em toda peca. */
+function virarAFolga() {
+  const p = pecas3()[AJ_I];
+  if (!p) return;
+  const e = enquadreDe(p.nome);
+  e.folga = e.folga > 1 ? 1 : FOLGA_DO_ENCAIXE;
+  // A SOBRA DO DESLIZE MUDA COM ELA: sem folga a filmagem entra justa e `dx` que
+  // sobrava abriria tarja preta dentro do furo. `mexerEnquadre` prende no limite novo.
+  ENQUADRES.set(p.nome, e);
+  mexerEnquadre(p.nome, "z", e.z);
+  editorPorNoLugar();
+  desenhaAjustePainel();
+}
+
+/* ------------------------------------------------- desfazer e refazer o gesto
+
+   A PILHA GUARDA A FICHA, e nao o desenho. Guardar o desenho obrigaria a saber
+   remontar objeto de tela de pintura a partir de texto, e o que decide a peca e' a
+   ficha: com ela de volta, o desenho se refaz sozinho por `editorPorNoLugar`. */
+let AJ_PILHA = [], AJ_REFEITOS = [];
+
+function fichaDaPeca(nome) {
+  return JSON.stringify({ e: ENQUADRES.get(nome) || null,
+                          a: AJUSTES.get(nome) || null,
+                          t: ESCRITO.get(nome) || null });
+}
+
+function porFichaDaPeca(nome, texto) {
+  const d = JSON.parse(texto);
+  if (d.e) ENQUADRES.set(nome, d.e); else ENQUADRES.delete(nome);
+  if (d.a) AJUSTES.set(nome, d.a); else AJUSTES.delete(nome);
+  if (d.t) ESCRITO.set(nome, d.t); else ESCRITO.delete(nome);
+}
+
+function guardarOGesto() {
+  const p = pecas3()[AJ_I];
+  if (!p) return;
+  AJ_PILHA.push({ nome: p.nome, ficha: fichaDaPeca(p.nome) });
+  AJ_REFEITOS.length = 0;
+  // TETO DE SESSENTA: a pilha e' conforto, nao arquivo. Sem teto ela cresce com o dia
+  // inteiro de trabalho dentro, na memoria da aba que ele ja' disse ser curta.
+  if (AJ_PILHA.length > 60) AJ_PILHA.shift();
+  desenhaAjustePainel();
+}
+
+async function voltarUmGesto(de, para) {
+  const m = de.pop();
+  if (!m) return;
+  para.push({ nome: m.nome, ficha: fichaDaPeca(m.nome) });
+  porFichaDaPeca(m.nome, m.ficha);
+  A_MAO.add(m.nome);
+  anotarMexida();
+  const onde = pecas3().findIndex(p => p.nome === m.nome);
+  if (onde >= 0 && onde !== AJ_I) { AJ_I = onde; AJ_SEL = null; }
+  await desenhaAjuste();
+}
+
+/* DEVOLVE A PROMESSA DO DESENHO, e antes engolia: quem chamava com `await` seguia em
+   frente com a peca ainda abrindo. Nao aparecia enquanto a peca era um punhado de
+   retangulos (o navegador os poe na mesma rodada), e passou a aparecer com a tela de
+   pintura, que espera o video e a moldura descerem. A prova do texto na mao leu a peca
+   antes de ela existir e disse que a tela nao tinha redesenhado. */
 function entrarNoAjuste() {
   const n = pecas3().length;
   if (!n) return parado("aj_recado", "Não há peça nenhuma nesta leva.");
   if (AJ_I >= n) AJ_I = 0;
   descerAsMolduras();
-  desenhaAjuste();
+  return desenhaAjuste();
 }
 
 async function desenhaAjuste() {
@@ -8111,8 +8642,15 @@ async function desenhaAjuste() {
   if (!p || !TPL) return;
   const vez = ++AJ_VEZ;
   if (AJ_VIVO) { apagarPeca(AJ_VIVO); AJ_VIVO = null; }
+  fecharOEditor();
   desenhaAjustePainel();
-  const v = await pintaPeca($("aj_tela"), p, AJ_I, true, AJ_SEL);
+  /* COM FURO DE ARTE A PECA VAI PARA A TELA DE PINTURA, que e' o editor de 29/08/2026.
+     Sem furo ela segue no desenho antigo, pelo mesmo motivo que o motor tem dois
+     caminhos: sem furo a peca veste a mascara do passo 2, que e' recorte de imagem do
+     navegador e nao existe em tela de pintura. */
+  const v = janelaDaArte(p.nome)
+    ? await abrirOEditor($("aj_tela"), p, AJ_I)
+    : await pintaPeca($("aj_tela"), p, AJ_I, true, AJ_SEL);
   // ELE JÁ PULOU PARA OUTRA ENQUANTO ESTA ABRIA. Sem esta guarda, o vídeo da peça velha
   // ficaria vivo por cima da nova, que é exatamente o vazamento que se está consertando.
   if (vez !== AJ_VEZ) return apagarPeca(v);
@@ -8255,7 +8793,7 @@ function desenhaAjustePainel() {
     /* SEM SOBRA, DESLIZAR NÃO TEM PARA ONDE IR, e desligar os botões diz isso melhor
        do que deixá-los sem efeito. Com furo de arte a sobra existe desde o começo, que
        é a folga do encaixe; sem furo, ela só nasce ao aproximar. */
-    const sobra = jan ? folgaDoDeslize(BROLL_DE.get(p.nome), jan, e.z).fx > 0.001
+    const sobra = jan ? folgaDoDeslize(BROLL_DE.get(p.nome), jan, e.z, e.folga).fx > 0.001
                       : folgaDoEnquadre(e.z) > 0.001;
     $("aj_bx").classList.toggle("apagado", !sobra);
     $("aj_by").classList.toggle("apagado", !sobra);
@@ -8283,6 +8821,29 @@ function desenhaAjustePainel() {
     passoNovo($("aj_y"), -20, 100, 1, Math.round(m.y * 100),
               v => "Topo " + v + "%", v => mexerItem(p.nome, item, "y", v / 100));
   }
+
+  /* ------------------------------------------- a folga, a moldura e as camadas
+
+     TUDO O QUE E' DO EDITOR SE DESENHA DE UMA VEZ, e a partir da ficha: assim o painel
+     nunca discorda do que esta' na peca, seja quem for que mudou (o gesto, o botao, a
+     troca de moldura ou o desfazer). */
+  const eq = enquadreDe(p.nome);
+  const temFuro = !!janelaDaArte(p.nome);
+  const chave = $("aj_folga");
+  if (chave) {
+    chave.classList.toggle("on", eq.folga > 1);
+    chave.setAttribute("aria-pressed", eq.folga > 1 ? "true" : "false");
+    chave.hidden = !temFuro;
+  }
+  /* AS MEDIDAS SO' EXISTEM ONDE HA' O QUE MEDIR (trava 2). Sem furo de arte nao ha'
+     janela nenhuma para comparar, e deixar o numero da peca anterior na tela seria a
+     tela afirmando o que nao mediu, que e' o pior erro possivel aqui. */
+  const medidas = document.querySelector(".aj-medidas");
+  if (medidas) medidas.hidden = !temFuro;
+  desenhaAsMolduras();
+  desenhaAsCamadas();
+  $("aj_voltar_gesto").disabled = !AJ_PILHA.length;
+  $("aj_refazer_gesto").disabled = !AJ_REFEITOS.length;
 }
 
 /* ESCREVER NA MÃO POR CIMA DO QUE A IA ESCREVEU.
@@ -8298,10 +8859,27 @@ function escreverAMao(p, campo, texto) {
   A_MAO.add(p.nome);
   const d = $("aj_tela").querySelector(`.gal-el[data-id="${campo.id}"]`);
   if (d) d.textContent = texto || " ";
+  /* E NO EDITOR A FRASE E' UM OBJETO, e nao um elemento da pagina.
+
+     SEM ESTA LINHA, digitar na caixa do painel gravava e nao aparecia na peca: o que a
+     prova pegou como "nao redesenhou". O caminho de volta tem de existir nos dois
+     sentidos, senao o painel e a peca contam historias diferentes da mesma frase.
+
+     `isEditing` GUARDA O CASO DE ELE ESTAR DIGITANDO NA PROPRIA PECA: ali o texto ja'
+     e' o dele, e escrever por cima moveria o cursor para o comeco a cada tecla. */
+  if (EDT && EDT.nome === p.nome && EDT.frase && EDT.frase.campo
+      && EDT.frase.campo.id === campo.id && !EDT.frase.isEditing) {
+    EDT.frase.set("text", texto || " ");
+    EDT.tela.requestRenderAll();
+  }
   if (AJ_RELOGIO) clearTimeout(AJ_RELOGIO);
   AJ_RELOGIO = setTimeout(() => {
     AJ_RELOGIO = null;
     caberDeNovo(p, campo);
+    // O `caberDeNovo` MUDA A FICHA (o topo e o tamanho da letra), e no editor quem
+    // desenha a partir dela e' o `editorPorNoLugar`. Sem esta linha a frase caberia
+    // no arquivo e continuaria transbordando na tela, que e' mentira de previa.
+    if (EDT && EDT.nome === p.nome) editorPorNoLugar();
     contaEscrito();
     anotarMexida();
   }, 700);
@@ -8357,6 +8935,8 @@ function mexerItem(nome, el, chave, valor, calado) {
     }
   }
   porMoldura();          // as alcas acompanham o que acabou de mudar de tamanho
+  // E NO EDITOR QUEM DESENHA E' ELE, pela ficha que acabou de mudar. Ver `mexerEnquadre`.
+  if (EDT && EDT.nome === nome && !calado) editorPorNoLugar();
   if (!calado) anotarMexida();
 }
 
@@ -8372,6 +8952,22 @@ function mexerItem(nome, el, chave, valor, calado) {
 function folgaDoEnquadre(z) { return Math.max(0, (z - 1) / 2); }
 
 
+/* A FICHA SO' SE APAGA QUANDO NAO HA' NADA DELE GUARDADO NELA.
+
+   O DEFEITO QUE ISTO CONSERTA, pego pela prova em 29/08/2026: a regra antiga era "z em
+   um, sem deslize, sem janela movida, entao apaga", e ela nasceu quando a ficha so'
+   guardava enquadramento. Com a folga e a moldura morando aqui, virar a chave da folga
+   gravava o campo e a chamada seguinte apagava a ficha inteira, levando a folga junto.
+   Na tela o gesto simplesmente nao acontecia, e a razao era invisivel.
+
+   APAGAR CONTINUA IMPORTANDO: ficha vazia e' o que diz "esta peca nao foi mexida", e e'
+   dela que sai a conta de ajustadas na galeria. */
+function fichaSoDoPadrao(e) {
+  return (e.z || 1) === 1 && !e.dx && !e.dy && !e.mx && !e.my && (e.es || 1) === 1
+    && !e.moldura && Math.abs((e.folga != null ? e.folga : FOLGA_DO_ENCAIXE)
+                              - FOLGA_DO_ENCAIXE) < 1e-9;
+}
+
 /** Reenquadra a filmagem desta peça. A janela não sai do lugar: quem anda é o vídeo. */
 function mexerEnquadre(nome, chave, valor, calado) {
   const e = enquadreDe(nome);
@@ -8383,13 +8979,16 @@ function mexerEnquadre(nome, chave, valor, calado) {
        my nao entram aqui; a janela agora e' o furo da arte, que nao se move". Escrever
        esses tres seria guardar um ajuste que o arquivo nunca vai ter. */
     e.es = 1; e.mx = 0; e.my = 0;
-    const f = folgaDoDeslize(r, jan, e.z);
+    const f = folgaDoDeslize(r, jan, e.z, e.folga);
     e.dx = Math.max(-f.fx, Math.min(f.fx, e.dx));
     e.dy = Math.max(-f.fy, Math.min(f.fy, e.dy));
-    if (e.z === 1 && !e.dx && !e.dy) ENQUADRES.delete(nome);
+    if (fichaSoDoPadrao(e)) ENQUADRES.delete(nome);
     else ENQUADRES.set(nome, e);
     A_MAO.add(nome);
     porFilmagemNoLugar(AJ_VIVO, lugarDaFilmagem(nome));
+    // COM O EDITOR ABERTO QUEM DESENHA E' ELE, e a partir da mesma ficha: os botoes do
+    // painel e o gesto na peca chegam aqui pelo mesmo caminho e saem no mesmo lugar.
+    if (EDT && EDT.nome === nome) editorPorNoLugar();
     if (!calado) anotarMexida();
     return;
   }
@@ -8406,8 +9005,7 @@ function mexerEnquadre(nome, chave, valor, calado) {
     e.mx = Math.max(-x0, Math.min(1 - w - x0, e.mx));
     e.my = Math.max(-y0, Math.min(1 - h - y0, e.my));
   } else { e.mx = 0; e.my = 0; e.es = 1; }
-  if (e.z === 1 && !e.dx && !e.dy && !e.mx && !e.my && e.es === 1)
-    ENQUADRES.delete(nome);
+  if (fichaSoDoPadrao(e)) ENQUADRES.delete(nome);
   else ENQUADRES.set(nome, e);
   A_MAO.add(nome);
   if (AJ_VIVO) AJ_VIVO.style.transform = transformDo(e);
@@ -8416,6 +9014,15 @@ function mexerEnquadre(nome, chave, valor, calado) {
 }
 
 /* ---------------------------------------------------------------- os botões da fase */
+
+/* A CHAVE DA FOLGA, O DESFAZER E O REFAZER.
+
+   OS TRES GUARDAM A FICHA ANTES DE MEXER, pelo mesmo motivo do gesto: sem o estado
+   anterior nao ha' caminho de volta, e o unico jeito de voltar seria zerar a peca
+   inteira, levando junto tudo o que ele ja' tinha acertado nela. */
+$("aj_folga").onclick = () => { guardarOGesto(); virarAFolga(); };
+$("aj_voltar_gesto").onclick = () => voltarUmGesto(AJ_PILHA, AJ_REFEITOS);
+$("aj_refazer_gesto").onclick = () => voltarUmGesto(AJ_REFEITOS, AJ_PILHA);
 
 $("aj_ant").onclick = () => {
   if (AJ_I <= 0) return;
@@ -9149,11 +9756,12 @@ function variacoesDaConta(conta) {
 
 /** Onde a filmagem entra: o retangulo do B-roll da peca posto DENTRO da janela da arte.
     Devolve o canto e o tamanho do video em fracao do quadro, a mesma conta dos dois lados. */
-function encaixeNaJanela(broll, jan, z, dx, dy) {
+function encaixeNaJanela(broll, jan, z, dx, dy, folga) {
   const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
   // COBRIR, e nao caber: sobrar tarja preta dentro da moldura seria pior que perder
   // beirada de filmagem, porque a tarja aparece na peca pronta.
-  const kenc = Math.max(jan.w / b.w, jan.h / b.h) * FOLGA_DO_ENCAIXE;
+  // A FOLGA VEM DA PECA, e 1,12 e' so' o valor de partida. Ver `enquadreDe`.
+  const kenc = Math.max(jan.w / b.w, jan.h / b.h) * (folga != null ? folga : FOLGA_DO_ENCAIXE);
   /* APROXIMAR E DESLIZAR ENTRAM AQUI DESDE 29/08/2026, e antes nao entravam porque esta
      conta so' era usada na fase 1, onde nada foi ajustado ainda. A revisao precisa dela
      COM o ajuste, senao a peca desenhada nao e' a que vai sair do motor.
@@ -9178,9 +9786,9 @@ function encaixeNaJanela(broll, jan, z, dx, dy) {
 
    O LIMITE E' NAO ABRIR TARJA. A filmagem anda ate' a borda dela encostar na borda do
    furo; um passo alem e o preto de fora entra na peca pronta. */
-function folgaDoDeslize(broll, jan, z) {
+function folgaDoDeslize(broll, jan, z, folga) {
   const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
-  const kenc = Math.max(jan.w / b.w, jan.h / b.h) * FOLGA_DO_ENCAIXE;
+  const kenc = Math.max(jan.w / b.w, jan.h / b.h) * (folga != null ? folga : FOLGA_DO_ENCAIXE);
   const k = kenc * (z || 1);
   return { fx: Math.max(0, (k * b.w - jan.w) / (2 * kenc)),
            fy: Math.max(0, (k * b.h - jan.h) / (2 * kenc)) };
@@ -9231,8 +9839,23 @@ function melhorVariacao(broll, variacoes) {
     escolha divergiriam caladas, que e' a mesma razao do encaixeNaJanela ser um so'. */
 function variacaoDaPeca(nome) {
   if (!TPL || !TPL.contaModelo) return null;
-  return melhorVariacao(BROLL_DE && BROLL_DE.get(nome),
-                        variacoesDaConta(TPL.contaModelo));
+  const todas = variacoesDaConta(TPL.contaModelo);
+  /* A ESCOLHA DELE VENCE A DA MEDIDA, desde 29/08/2026.
+
+     ATE' ENTAO NAO HAVIA COMO DISCORDAR. Ele fotografou um B-roll quadrado que saiu
+     cortado e disse: "por algum motivo o sistema escolheu a variacao de template mais
+     pequena, resultado: eu to com um B-roll cortado pela metade". A medida acertava a
+     variacao de maior aproveitamento em 175 das 180 pecas da leva 31, mas jogava 147
+     delas na MESMA variacao, e nao havia botao nenhum para trocar.
+
+     A ESCOLHA GRAVADA QUE NAO EXISTE MAIS CAI FORA sozinha: variacao tirada do
+     cadastro nao pode deixar a peca sem moldura, entao a medida volta a decidir. */
+  const posta = (ENQUADRES.get(nome) || {}).moldura;
+  if (posta) {
+    const dele = todas.find(v => v.id === posta);
+    if (dele) return dele;
+  }
+  return melhorVariacao(BROLL_DE && BROLL_DE.get(nome), todas);
 }
 
 /* ONDE A FILMAGEM APARECE NA PECA PRONTA, e foi aqui que a revisao mentia.
@@ -9266,7 +9889,7 @@ function lugarDaFilmagem(nome) {
   const jan = janelaDaArte(nome);
   if (!jan) return null;
   const e = enquadreDe(nome);
-  const enc = encaixeNaJanela(BROLL_DE && BROLL_DE.get(nome), jan, e.z, e.dx, e.dy);
+  const enc = encaixeNaJanela(BROLL_DE && BROLL_DE.get(nome), jan, e.z, e.dx, e.dy, e.folga);
   return { jan, k: enc.k, kenc: enc.kenc, x: enc.x, y: enc.y };
 }
 

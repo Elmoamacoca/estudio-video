@@ -1222,8 +1222,29 @@ def cor_de(texto, padrao):
         return padrao
 
 
+def folga_da_peca(enquadre) -> float:
+    """A folga do encaixe DESTA peca, com 1,12 como partida.
+
+    ELA DEIXOU DE SER LEI EM 29/08/2026. Nasceu em 27/08 para esconder o canto
+    arredondado que vem gravado nos pixels do reel baixado, e passou a valer para TODA
+    peca, inclusive as que nao tem canto nenhum. Medido nas 180 pecas da leva 31: a
+    folga sozinha deixa 20,3% da filmagem fora da janela, sempre, e sem ela a perda
+    mediana cai de 26,1% para 7,3%. Agora ela vem ligada, e a revisao desliga onde nao
+    precisa, peca a peca.
+
+    O TETO E' O PISO DE UM: folga menor que um faria a filmagem entrar MENOR que o furo,
+    e o que apareceria na diferenca e' o preto do palco, dentro da moldura.
+    """
+    e = enquadre if isinstance(enquadre, dict) else {}
+    try:
+        f = float(e.get("folga", FOLGA_DO_ENCAIXE))
+    except (TypeError, ValueError):
+        return FOLGA_DO_ENCAIXE
+    return min(2.0, max(1.0, f))
+
+
 def encaixe_na_janela(base, jan, z: float = 1.0, dx: float = 0.0,
-                      dy: float = 0.0) -> tuple | None:
+                      dy: float = 0.0, folga: float | None = None) -> tuple | None:
     """Onde a filmagem entra quando a janela e' a da ARTE, e nao a do reel de origem.
 
     Devolve `(k, x, y)`: quanto o quadro do recorte cresce e onde fica o canto de cima
@@ -1253,12 +1274,13 @@ def encaixe_na_janela(base, jan, z: float = 1.0, dx: float = 0.0,
         cyj = float(jan.get("y", 0)) + jh / 2
     except (TypeError, ValueError):
         return None
-    kenc = max(jw / bw, jh / bh) * FOLGA_DO_ENCAIXE
+    # A FOLGA VEM DA PECA, e 1,12 e' so' o valor de partida. Ver `folga_da_peca`.
+    kenc = max(jw / bw, jh / bh) * (FOLGA_DO_ENCAIXE if folga is None else folga)
     k = kenc * z
     return (k, cxj - k * cxb + kenc * dx, cyj - k * cyb + kenc * dy)
 
 
-def folga_do_deslize(base, jan, z: float = 1.0) -> tuple:
+def folga_do_deslize(base, jan, z: float = 1.0, folga: float | None = None) -> tuple:
     """Quanto `dx` e `dy` podem andar sem abrir tarja preta dentro da janela.
 
     COM FURO DE ARTE A SOBRA EXISTE SEM APROXIMAR NADA. A filmagem entra doze por cento
@@ -1286,7 +1308,7 @@ def folga_do_deslize(base, jan, z: float = 1.0) -> tuple:
         jh = max(1e-4, float(jan.get("h", 1)))
     except (TypeError, ValueError):
         return (velha, velha)
-    kenc = max(jw / bw, jh / bh) * FOLGA_DO_ENCAIXE
+    kenc = max(jw / bw, jh / bh) * (FOLGA_DO_ENCAIXE if folga is None else folga)
     k = kenc * z
     return (max(0.0, (k * bw - jw) / (2 * kenc)),
             max(0.0, (k * bh - jh) / (2 * kenc)))
@@ -1449,7 +1471,8 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
     # DESLIZAR SO' VAI ATE' A SOBRA, e quanta sobra ha' depende de onde a filmagem entra.
     # A tela ja' prende nisto; aqui a conta e' repetida porque um pedido antigo, ou
     # escrito na mao, nao passou por ela.
-    fdx, fdy = folga_do_deslize(e.get("base"), e.get("janela"), z)
+    fga = folga_da_peca(e)
+    fdx, fdy = folga_do_deslize(e.get("base"), e.get("janela"), z, fga)
     dx = max(-fdx, min(fdx, dx))
     dy = max(-fdy, min(fdy, dy))
     # A JANELA DA ARTE MANDA, QUANDO EXISTE.
@@ -1461,7 +1484,7 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
     #
     # `es`, `mx` e `my` NAO ENTRAM AQUI. Eles movem a janela, e a janela agora e' o furo
     # da arte, que nao se move: o que se move e' a filmagem dentro dela, com `z` e `d`.
-    encaixe = encaixe_na_janela(e.get("base"), e.get("janela"), z, dx, dy)
+    encaixe = encaixe_na_janela(e.get("base"), e.get("janela"), z, dx, dy, fga)
     if encaixe:
         k, fx, fy = encaixe
         ew, eh = par(int(round(tw * k))), par(int(round(th * k)))
