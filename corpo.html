@@ -770,8 +770,8 @@
             <ol class="ed-sub" id="ed_sub3">
               <li data-sub="1"><i></i>Modelo Do Template</li>
               <li data-sub="4"><i></i>Escrita Das Frases</li>
-              <li data-sub="5"><i></i>Prévia Do Resultado</li>
               <li data-sub="6"><i></i>Revisão Peça A Peça</li>
+              <li data-sub="5"><i></i>Fabricar As Peças</li>
             </ol>
           </div>
         </div>
@@ -1105,14 +1105,33 @@
             </div>
             <p class="nota mini" id="ia_recado"></p>
 
+            <!-- A BARRA E' A MESMA DO RECORTE, por ordem dele em 29/08/2026. O
+                 miolo vivo recolhe no fim e sobra o selo de verificado. -->
             <div class="caixa apl-obra" id="ia_obra" hidden>
-              <div class="apl-obra-topo">
-                <span class="cfg-girando"></span>
-                <b id="ia_obra_txt">escrevendo</b>
-                <span class="dir" id="ia_obra_tempo"></span>
+              <div class="rec-vivo" id="ia_vivo">
+                <div class="apl-obra-topo">
+                  <span class="cfg-girando"></span>
+                  <b id="ia_obra_txt">escrevendo</b>
+                  <span class="dir" id="ia_obra_tempo"></span>
+                </div>
+                <div class="rec-conta">
+                  <b id="ia_feitas">0</b><span id="ia_de">de 0 peças escritas</span>
+                  <span class="agora" id="ia_atual"></span>
+                </div>
+                <div class="rec-tiras" id="ia_tiras"></div>
+                <div class="rec-selos">
+                  <span><i class="card"></i>Escritas <b id="ia_s_feitas">0</b></span>
+                  <span><i class="cheio"></i>Sem Frase Para Ler <b id="ia_s_sem">0</b></span>
+                  <span><i class="falhou"></i>Falharam <b id="ia_s_falhou">0</b></span>
+                  <span>Correndo Há <b id="ia_s_tempo">0s</b></span>
+                </div>
+                <p class="nota" id="ia_obra_nota"></p>
               </div>
-              <div class="apl-barra"><i id="ia_barra"></i></div>
-              <p class="nota" id="ia_obra_nota"></p>
+              <div class="rec-fecho" id="ia_fecho" hidden>
+                <svg class="ok" viewBox="0 0 52 52" aria-hidden="true">
+                  <circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 14-15"/></svg>
+                <b id="ia_fecho_txt"></b>
+              </div>
             </div>
           </div>
 
@@ -1138,10 +1157,11 @@
              acontece uma vez só, no fim, já aprovada. -->
         <div class="ed-sub-tela" data-sub="5" hidden>
           <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="13" rx="2.2"/><path d="M8 20.5h8"/><path d="m10.5 9.5 4.5 2.5-4.5 2.5z"/></svg></span>Prévia Do Resultado</h2>
-            <p class="nota">Todas de uma vez, como vão ficar. É aqui que você vê o
-              conjunto e decide o que precisa de mão. Para mexer numa peça, vá para
-              <b>peça a peça</b>: lá abre uma de cada vez, com a tela inteira para ela.</p>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="13" rx="2.2"/><path d="M8 20.5h8"/><path d="m10.5 9.5 4.5 2.5-4.5 2.5z"/></svg></span>Fabricar As Peças</h2>
+            <p class="nota">A última parada. Daqui o programa monta cada peça no arquivo
+              final, com a arte, a frase e a filmagem no lugar. Para olhar ou mexer numa
+              peça antes, volte para <b>revisão peça a peça</b>: lá abre uma de cada vez,
+              com a tela inteira para ela.</p>
           </div>
 
           <div class="gal-topo">
@@ -1154,53 +1174,14 @@
               <!-- A PORTA DA QUINTA SUBETAPA. Pedido dele em 23/08/2026: "não precisa e
                    não deve aparecer todos de uma vez, o meu PC não tem memória RAM". -->
               <button class="acao mini" id="ajs_um_a_um" type="button">
-                Ajustar Peça A Peça</button>
+                Voltar À Revisão</button>
               <button class="acao forte" id="apl_montar" type="button">
                 Fabricar As Peças</button>
             </div>
           </div>
 
-          <div class="gal-grade" id="gal_grade"></div>
-
-          <!-- A PECA ABERTA, para acertar uma so'. O que se mexe aqui vale para esta
-               peça e mais nenhuma, e o template continua intacto. -->
-          <div class="gal-fundo" id="gal_fundo" hidden></div>
-          <div class="gal-lupa" id="gal_lupa" hidden>
-            <div class="gal-lupa-cab">
-              <b id="gal_lupa_nome">peça</b>
-              <button class="acao mini" id="gal_lupa_zerar" type="button">
-                Desfazer Os Ajustes Desta Peça</button>
-              <button class="gal-x" id="gal_lupa_fechar" type="button"
-                      aria-label="fechar">&times;</button>
-            </div>
-            <div class="gal-lupa-corpo">
-              <div class="gal-lupa-tela" id="gal_lupa_tela"></div>
-              <aside class="gal-lupa-lado">
-                <div class="gal-lupa-vazio" id="gal_lupa_vazio">
-                  <p class="nota">Clique num texto ou numa imagem da peça para acertar o
-                    tamanho e a posição dela.</p>
-                </div>
-                <div id="gal_lupa_props" hidden>
-                  <section class="ed-bloco">
-                    <h4>Tamanho</h4>
-                    <div class="ed-passo" id="gl_tamanho"></div>
-                  </section>
-                  <section class="ed-bloco">
-                    <h4>Posição</h4>
-                    <div class="ed-passo" id="gl_x"></div>
-                    <div class="ed-passo" id="gl_y"></div>
-                  </section>
-                  <p class="nota mini" id="gl_travado" hidden>Este item está travado no
-                    template. Mexer aqui muda só esta peça.</p>
-                </div>
-                <button class="acao mini larga" id="gl_para_todas" type="button">
-                  Usar Estes Ajustes Em Todas As Peças</button>
-              </aside>
-            </div>
-          </div>
-
           <div class="ed-pe">
-            <button class="acao" id="ed_volta_ia" type="button">Voltar À IA</button>
+            <button class="acao" id="ed_volta_ia" type="button">Voltar À Escrita</button>
             <div class="apl-resumo" id="apl_resumo"></div>
             <!-- ESTA CASA E A DE BAIXO EXISTEM PARA A OBRA PODER SE MUDAR.
 
@@ -1221,13 +1202,29 @@
 
           <div id="apl_obra_casa">
             <div class="caixa apl-obra" id="apl_obra" hidden>
-              <div class="apl-obra-topo">
-                <span class="cfg-girando"></span>
-                <b id="apl_obra_txt">fabricando</b>
-                <span class="dir" id="apl_obra_tempo"></span>
+              <div class="rec-vivo" id="apl_vivo">
+                <div class="apl-obra-topo">
+                  <span class="cfg-girando"></span>
+                  <b id="apl_obra_txt">fabricando</b>
+                  <span class="dir" id="apl_obra_tempo"></span>
+                </div>
+                <div class="rec-conta">
+                  <b id="apl_feitas">0</b><span id="apl_de">de 0 peças montadas</span>
+                  <span class="agora" id="apl_atual"></span>
+                </div>
+                <div class="rec-tiras" id="apl_tiras"></div>
+                <div class="rec-selos">
+                  <span><i class="card"></i>Montadas <b id="apl_s_feitas">0</b></span>
+                  <span><i class="falhou"></i>Falharam <b id="apl_s_falhou">0</b></span>
+                  <span>Correndo Há <b id="apl_s_tempo">0s</b></span>
+                </div>
+                <p class="nota" id="apl_obra_nota"></p>
               </div>
-              <div class="apl-barra"><i id="apl_barra"></i></div>
-              <p class="nota" id="apl_obra_nota"></p>
+              <div class="rec-fecho" id="apl_fecho" hidden>
+                <svg class="ok" viewBox="0 0 52 52" aria-hidden="true">
+                  <circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 14-15"/></svg>
+                <b id="apl_fecho_txt"></b>
+              </div>
             </div>
           </div>
         </div>
@@ -1280,7 +1277,6 @@
             </div>
 
             <div class="aj-acoes">
-              <button class="acao mini" id="aj_volta" type="button">Visão Geral</button>
               <button class="acao mini" id="aj_montar" type="button">Fabricar</button>
               <button class="acao forte" id="aj_pronta" type="button">Pronta</button>
             </div>
@@ -1313,16 +1309,15 @@
                    filmagem por baixo dele. -->
               <section class="ed-bloco" id="aj_bloco_broll">
                 <h4>O B-roll</h4>
-                <!-- SÃO DUAS COISAS DIFERENTES, e confundi-las foi o defeito.
-
-                     A JANELA é onde o B-roll fica na peça, e se move arrastando. O
-                     CONTEÚDO é que pedaço da filmagem aparece lá dentro, e se escolhe
-                     aproximando e deslizando, nos botões abaixo. Eu tinha feito só o
-                     segundo, e ele disse a diferença com todas as letras: "eu só consigo
-                     mexer dentro do quadrado, eu não consigo mexer todo o quadrado". -->
-                <p class="nota mini" id="aj_broll_dica" hidden>Arraste a filmagem na peça
-                  para mudar a janela de lugar. Os botões abaixo escolhem que pedaço dela
-                  aparece dentro da janela.</p>
+                <!-- A DICA É ESCRITA PELA TELA, e são dois casos porque o motor também
+                     tem dois. Com furo de arte a janela É o furo e não anda: o arrasto
+                     desliza a filmagem lá dentro. Sem furo (rascunho antigo), o arrasto
+                     leva a janela inteira, que foi o pedido dele de 23/08/2026: "eu só
+                     consigo mexer dentro do quadrado, eu não consigo mexer todo o
+                     quadrado". O texto aqui é o do primeiro caso, que é o de hoje. -->
+                <p class="nota mini" id="aj_broll_dica" hidden>Arraste a filmagem para
+                  escolher que pedaço dela aparece dentro da moldura. Puxe um canto para
+                  aproximar.</p>
                 <div class="ed-passo" id="aj_zoom"></div>
                 <div class="ed-passo" id="aj_bx"></div>
                 <div class="ed-passo" id="aj_by"></div>

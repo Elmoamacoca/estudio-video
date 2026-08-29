@@ -4688,6 +4688,65 @@ function desenhaOFechoDoRecorte() {
     + "</a>. Os brutos continuam onde estavam, intactos.";
 }
 
+/* A BARRA DE OBRA E' UMA SO', EM TRES LUGARES: recorte, escrita e fabricacao.
+
+   ELE PEDIU EM 29/08/2026 que a escrita e a fabricacao seguissem "o mesmo modelo do
+   recorte, aquele bonita com animacao no final". Em vez de copiar o desenho tres vezes,
+   as tres usam as mesmas classes e este mesmo pintor: uma marca por peca, os selos da
+   conta e o fecho que se desenha. Copiar seria tres lugares para divergirem.
+
+   O RECORTE TEM PINTOR PROPRIO (`desenhaTiras`) porque ele sabe de QUAL tipo cada peca
+   e' (card, tela cheia, cega), coisa que a escrita e a montagem nao tem. Aqui a marca
+   sai da contagem: as feitas primeiro, depois as que nao tinham frase, depois as que
+   falharam. */
+function pintarObra(pre, d, rotulo) {
+  const tiras = $(pre + "_tiras");
+  const total = Number(d.total) || 0;
+  if (!tiras || !total) return;
+  // A BARRA SO' SE REMONTA QUANDO O TAMANHO MUDA: refazer 180 elementos de tres em tres
+  // segundos jogaria fora a transicao de cor de cada marca.
+  if (tiras.children.length !== total) {
+    tiras.innerHTML = "";
+    for (let i = 0; i < total; i++) tiras.appendChild(document.createElement("i"));
+  }
+  const feitos = Math.max(0, Math.min(total, Number(d.feitos) || 0));
+  const sem = Math.max(0, Math.min(total - feitos, Number(d.sem) || 0));
+  const falhas = Math.max(0, Math.min(total - feitos - sem, Number(d.falhas) || 0));
+  for (let i = 0; i < total; i++) {
+    const classe = i < feitos ? "card"
+      : i < feitos + sem ? "cheio"
+        : i < feitos + sem + falhas ? "falhou" : "";
+    if (tiras.children[i].className !== classe) tiras.children[i].className = classe;
+  }
+  tiras.classList.toggle("andando", !d.fim);
+  const poe = (id, texto) => { const e = $(pre + id); if (e) e.textContent = texto; };
+  poe("_feitas", num(feitos));
+  poe("_de", " de " + num(total) + " " + rotulo);
+  poe("_atual", d.fim ? "" : (d.atual || ""));
+  poe("_s_feitas", num(feitos));
+  poe("_s_sem", num(sem));
+  poe("_s_falhou", num(falhas));
+  poe("_s_tempo", emTempo(Number(d.segundos) || 0));
+}
+
+/** A caixa volta a andar: o miolo reaparece e o selo do fecho sai da frente. */
+function reabrirObra(pre) {
+  const caixa = $(pre + "_obra"), fecho = $(pre + "_fecho");
+  if (caixa) caixa.classList.remove("fechada");
+  if (fecho) fecho.hidden = true;
+}
+
+/** O fecho: o miolo recolhe e sobra o verificado, com a conta e o que vem depois. */
+function fecharObra(pre, texto) {
+  const caixa = $(pre + "_obra"), fecho = $(pre + "_fecho");
+  if (!caixa || !fecho) return;
+  caixa.hidden = false;
+  fecho.hidden = false;
+  const b = $(pre + "_fecho_txt");
+  if (b) b.textContent = texto;
+  caixa.classList.add("fechada");
+}
+
 /* O SELO DO FECHO: a barra recolhe e sobra o verificado com a conta e a ordem de
    seguir. So' quando esta' TUDO pronto; faltando peca ou com falha, a barra fica,
    porque numero vermelho escondido atras de um selo verde seria mentira. */
@@ -5854,7 +5913,8 @@ async function pedirEscrita() {
                 mudo: 0, jaViu: false };
     $("ia_escrever").disabled = true;
     $("ia_obra").hidden = false;
-    $("ia_barra").style.width = "0%";
+    reabrirObra("ia");
+    pintarObra("ia", { total: alvos.length, feitos: 0 }, "peças escritas");
     document.querySelector("#ia_obra .cfg-girando").style.display = "";
     $("ia_obra_txt").textContent = "Pedido Deixado";
     $("ia_obra_nota").textContent = "A escrita começa em até um minuto, que é o passo do "
@@ -5968,7 +6028,9 @@ async function olharAEscrita() {
     return;
   }
   const feitos = d.feitos || 0, total = d.total || IA_OBRA.total;
-  $("ia_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
+  pintarObra("ia", { total, feitos, falhas: d.falhas, sem: d.sem_frase,
+                     atual: d.atual, segundos: d.segundos, fim: d.fim },
+             "peças escritas");
   if (!d.fim) {
     $("ia_obra_txt").textContent = `Escrevendo ${Math.min(feitos + 1, total)} de ${total}`;
     $("ia_obra_nota").textContent = d.atual ? `Agora: ${d.atual}` : "";
@@ -5987,6 +6049,13 @@ async function olharAEscrita() {
     ? `${d.parou_por} Faltam ${d.restantes} de ${d.total}. Clique em Escrever de novo `
       + "quando tiver cota: ele continua de onde parou, sem refazer as que já estão prontas."
     : (ruim ? ruim.erro : "");
+  /* O SELO SO' APARECE QUANDO NAO FALTA NADA. Com falha ou peca sem frase, a barra
+     fica de pe' com os numeros: um verificado verde por cima de uma conta que nao
+     fechou seria a tela afirmando o que nao aconteceu. */
+  if (!d.falhas && !semFrase && feitos >= total) {
+    fecharObra("ia", num(total) + (total === 1 ? " Frase Escrita" : " Frases Escritas")
+               + ", 100%: Pode Revisar");
+  }
   // O QUE ELA ESCREVEU JÁ VOLTOU PARA AS CAIXAS lá em cima, na chegada de cada olhada:
   // ver a nota "AS FRASES ENTRAM NO RASCUNHO NA HORA EM QUE CHEGAM".
   /* O ACERTO DE CABIMENTO RODA SOZINHO, e antes ele esperava um clique.
@@ -7569,9 +7638,6 @@ let PRONTAS = new Set();
 let AJ_I = 0;                     // qual peca esta' aberta na fase 5
 let AJ_SEL = null;                // qual item do molde esta' escolhido
 let AJ_VIVO = null;               // o UNICO video aberto nesta fase
-let GAL_OLHO = null;              // quem vigia o que entra e sai da vista na grade
-let GAL_ABERTA = -1;              // qual peça está aberta na lupa
-let GAL_SEL = null;               // qual elemento está escolhido dentro dela
 const MASCARAS = new Map();       // arquivo -> endereço da máscara já virada em alfa
 
 /* O RECORTE É PRETO POR FORA, E VÍDEO NÃO TEM TRANSPARÊNCIA. Foi isso que fez a cor de
@@ -7802,7 +7868,7 @@ function apagarPeca(v) {
    `container-type:size` no CSS que faz `cqh` significar isso aqui. */
 async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
   if (!TPL) return;
-  const sel = escolhido === undefined ? GAL_SEL : escolhido;
+  const sel = escolhido === undefined ? null : escolhido;
   alvo.style.background = TPL.fundoCor || "#000000";
   alvo.querySelectorAll("video").forEach(apagarPeca);
   alvo.innerHTML = "";
@@ -7817,7 +7883,6 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
   const v = document.createElement("video");
   v.muted = true; v.playsInline = true; v.loop = true; v.preload = "metadata";
   v.dataset.arq = indice;
-  v.style.transform = transformDo(enquadreDe(peca.nome));
   caixa.appendChild(v);
   /* A FILMAGEM APARECE SO' ONDE ELA VAI APARECER DE VERDADE.
 
@@ -7833,7 +7898,12 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
      for cortado num lugar e a máscara ficar em outro, o que aparece é só a interseção
      dos dois. A mudança de lugar entra logo abaixo, no `transform`. */
   const b = BROLL_DE && BROLL_DE.get(peca.nome);
-  if (b) {
+  // O FURO DA ARTE MANDA, QUANDO EXISTE. Ver a nota em `lugarDaFilmagem`.
+  const lugar = lugarDaFilmagem(peca.nome);
+  if (lugar) {
+    recortarNaJanela(caixa, lugar.jan);
+    porFilmagemNoLugar(v, lugar);
+  } else if (b) {
     const dir = Math.max(0, 1 - b.x - b.w) * 100;
     const bai = Math.max(0, 1 - b.y - b.h) * 100;
     caixa.style.clipPath = `inset(${b.y * 100}% ${dir}% ${bai}% ${b.x * 100}%)`;
@@ -7841,6 +7911,7 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
     // janela saltaria para outro lugar ao mudar de tamanho.
     caixa.style.transformOrigin = `${(b.x + b.w / 2) * 100}% ${(b.y + b.h / 2) * 100}%`;
     caixa.style.transform = transformDaJanela(enquadreDe(peca.nome));
+    v.style.transform = transformDo(enquadreDe(peca.nome));
   }
   alvo.appendChild(caixa);
   /* A MARCA DO RECORTE, e ela existe por um motivo bem concreto.
@@ -7856,8 +7927,9 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
 
      ENTAO A MARCA E' OUTRO ELEMENTO, irmao e nao filho, posto exatamente sobre a janela
      e sem recorte nenhum. Ela nao recebe clique: quem recebe continua sendo a caixa. */
-  if (b) {
-    const j = janelaDe(peca.nome) || b;   // ja' com o que ele moveu
+  const jm = lugar ? lugar.jan : (b ? (janelaDe(peca.nome) || b) : null);
+  if (jm) {
+    const j = jm;   // com furo de arte e' o furo; sem ele, a janela que ele moveu
     const marca = document.createElement("div");
     marca.className = "gal-broll-marca";
     marca.style.left = (j.x * 100) + "%";
@@ -7880,14 +7952,16 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
   const varDaPeca = variacaoDaPeca(peca.nome);
   const arteDaPeca = varDaPeca ? varDaPeca.arquivo : (TPL.fundoImagem || null);
   if (arteDaPeca) {
-    const u = await enderecoDo(arteDaPeca);
-    if (u) {
-      const im = document.createElement("img");
-      im.className = "gal-arte";
-      im.alt = "";
-      im.src = u;
-      alvo.appendChild(im);
-    }
+    /* A PECA NAO ESPERA A ARTE DESCER. Esperar aqui, com `await`, parava a pintura no
+       meio: a filmagem e a janela entravam, e a frase (que vem depois) so' aparecia
+       quando o endereco chegasse da rede. Na revisao isso se via, medido em 29/08/2026:
+       a peca abria com a moldura e SEM O TEXTO. O quadro entra vazio na ordem certa e
+       se pinta sozinho quando o endereco chega. */
+    const im = document.createElement("img");
+    im.className = "gal-arte";
+    im.alt = "";
+    alvo.appendChild(im);
+    enderecoDo(arteDaPeca).then(u => { if (u) im.src = u; }).catch(() => {});
   }
 
   /* A MOLDURA DAS ALCAS, uma so' para tudo o que se pode redimensionar.
@@ -7942,14 +8016,29 @@ async function acenderPeca(v) {
   if (!p) return;
   try {
     v.src = await urlDaMidia(p, pastaDasPecas3()) + "#t=1.5";
-    // A MASCARA VESTE A CAIXA, e nao o video: e' a janela que tem forma, e ela fica
-    // parada enquanto a filmagem se reenquadra por dentro.
-    vestirMascara(v.parentElement || v, await mascaraDe(p.nome));
+    /* COM FURO DE ARTE NAO HA' MASCARA A VESTIR, e e' o que o motor faz.
+
+       A MASCARA DO PASSO 2 E' O FORMATO DO CARD DO REEL BAIXADO, no lugar em que ele
+       estava la'. O furo da arte e' outro formato em outro lugar. Vestir os dois
+       deixava na tela a INTERSECAO deles, que nao e' nem um nem outro: e' de onde saiam
+       as linhas cortando a peca. O `camada_da_peca` do motor ja' pula a mascara quando a
+       arte tem furo proprio, e agora a tela pula pelo mesmo motivo. */
+    if (!janelaDaArte(p.nome)) {
+      // A MASCARA VESTE A CAIXA, e nao o video: e' a janela que tem forma, e ela fica
+      // parada enquanto a filmagem se reenquadra por dentro.
+      vestirMascara(v.parentElement || v, await mascaraDe(p.nome));
+    }
   } catch (e) { /* o arquivo saiu da pasta desde a leitura */ }
 }
 
+/* A CONTA DA LEVA ANTES DE FABRICAR, e nada mais desenhado.
+
+   AS PREVIAS SAIRAM EM 29/08/2026, por ordem dele: "remova todas as previas e deixe so'
+   o botao de fabricar". Desenhar 180 pecas custava a memoria da aba (ele ja' tinha dito
+   que o PC dele nao aguenta) e nao decidia nada que a Revisao Peca A Peca nao decida
+   melhor, uma de cada vez. O que fica aqui e' a CONTA: quantas escritas, quantas
+   ajustadas, quantas ele deu por prontas. */
 async function desenhaGaleria() {
-  const g = $("gal_grade");
   const pecas = pecas3();
   const campos = abertas();
   let escritas = 0, aMao = 0, encolhidas = 0, prontas = 0;
@@ -7968,159 +8057,8 @@ async function desenhaGaleria() {
     + (aMao ? `, <b>${aMao}</b> ajustadas por você` : "")
     + (prontas ? `, <b>${prontas}</b> que você já deu por prontas` : "") + ".";
 
-  g.querySelectorAll("video").forEach(apagarPeca);   // devolve a memoria da volta anterior
-  if (GAL_OLHO) { GAL_OLHO.disconnect(); GAL_OLHO = null; }
-  g.innerHTML = "";
-  /* AS IMAGENS DO MOLDE SAO AS MESMAS EM TODAS AS PECAS, entao se abrem uma vez.
-
-     O `pintaPeca` pede o endereco de cada imagem com `await`. O endereco fica guardado,
-     mas a PRIMEIRA vez vai ao disco, e como o laco abaixo espera peca por peca, as
-     noventa e duas ficavam em fila atras dessa primeira ida. Resolver antes do laco tira
-     a fila inteira. */
-  for (const el of (TPL.elementos || []))
-    if (el.tipo === "imagem") await enderecoDo(el.arquivo);
-  // AS ARTES DA CONTA TAMBEM DESCEM ANTES DO LACO, pela mesma razao: sao quatro para
-  // cento e oitenta pecas, e sem isto as 179 seguintes esperariam a fila da primeira.
-  for (const v of ((TPL && TPL.contaModelo) ? variacoesDaConta(TPL.contaModelo) : []))
-    await enderecoDo(v.arquivo);
-  // AS PECAS NASCEM FORA DA PAGINA e entram de uma vez so'. Anexar uma a uma faz o
-  // navegador recalcular a grade noventa e duas vezes.
-  const bandeja = document.createDocumentFragment();
-  const videos = [];
-  for (let i = 0; i < pecas.length; i++) {
-    const cartao = document.createElement("div");
-    cartao.className = "gal-peca" + (AJUSTES.has(pecas[i].nome) ? " mexida" : "");
-    cartao.dataset.i = i;
-    const tela = document.createElement("div");
-    tela.className = "gal-tela";
-    cartao.appendChild(tela);
-    const pe = document.createElement("div");
-    pe.className = "gal-pe";
-    pe.innerHTML = `<b>${escapa(String(pecas[i].nome).slice(0, 18))}</b>`
-      + (PRONTAS.has(pecas[i].nome) ? '<span class="gal-selo">pronta</span>'
-         : AJUSTES.has(pecas[i].nome) ? '<span class="gal-selo">ajustada</span>' : "");
-    cartao.appendChild(pe);
-    bandeja.appendChild(cartao);
-    videos.push(await pintaPeca(tela, pecas[i], i, false));
-  }
-  g.appendChild(bandeja);
-  /* SO' VIVE O QUE ESTA' A VISTA, e agora nos dois sentidos.
-
-     A VERSAO ANTERIOR SO' SABIA ACENDER. Ela esperava a peca chegar na tela, abria o
-     video e entao parava de observar aquele elemento: `unobserve`. O efeito era que
-     rolar a leva inteira acendia as noventa e duas, uma a uma, e nenhuma apagava nunca.
-     Chegar ao fim da pagina custava noventa e dois videos vivos ao mesmo tempo, que e' o
-     travamento que ele descreveu.
-
-     AGORA ELA APAGA TAMBEM, e continua observando: sai da vista, devolve a memoria;
-     volta a vista, abre de novo. A margem de 400 pixels e' folga de proposito, para
-     rolagem curta para cima e para baixo nao ficar abrindo e fechando o mesmo arquivo. */
-  if (GAL_OLHO) GAL_OLHO.disconnect();
-  GAL_OLHO = new IntersectionObserver(es => {
-    for (const e of es) {
-      if (e.isIntersecting) acenderPeca(e.target);
-      else apagarPeca(e.target);
-    }
-  }, { rootMargin: "400px" });
-  for (const v of videos) if (v) GAL_OLHO.observe(v);
   resumoDeAplicar();
 }
-
-/* ------------------------------------------------ a peça aberta, para acertar uma só */
-
-$("gal_grade").addEventListener("click", ev => {
-  const c = ev.target.closest(".gal-peca");
-  if (c) abrirLupa(Number(c.dataset.i));
-});
-
-async function abrirLupa(i) {
-  const p = pecas3()[i];
-  if (!p) return;
-  GAL_ABERTA = i;
-  GAL_SEL = null;
-  $("gal_lupa_nome").textContent = p.nome;
-  $("gal_fundo").hidden = false;
-  $("gal_lupa").hidden = false;
-  await redesenhaLupa();
-}
-
-async function redesenhaLupa() {
-  const p = pecas3()[GAL_ABERTA];
-  if (!p) return;
-  const v = await pintaPeca($("gal_lupa_tela"), p, GAL_ABERTA, true);
-  if (v) { acenderPeca(v); v.play().catch(() => {}); }
-  desenhaLupaProps();
-}
-
-function fecharLupa() {
-  GAL_ABERTA = -1;
-  GAL_SEL = null;
-  $("gal_fundo").hidden = true;
-  $("gal_lupa").hidden = true;
-  desenhaGaleria();
-}
-$("gal_lupa_fechar").onclick = fecharLupa;
-$("gal_fundo").onclick = fecharLupa;
-document.addEventListener("keydown", ev => {
-  if (ev.key === "Escape" && GAL_ABERTA >= 0) fecharLupa();
-});
-
-$("gal_lupa_tela").addEventListener("click", ev => {
-  const d = ev.target.closest(".gal-el");
-  GAL_SEL = d ? d.dataset.id : null;
-  $("gal_lupa_tela").querySelectorAll(".gal-el").forEach(x =>
-    x.classList.toggle("sel", x.dataset.id === GAL_SEL));
-  desenhaLupaProps();
-});
-
-function desenhaLupaProps() {
-  const aberta = pecas3()[GAL_ABERTA];
-  const el = aberta ? elementoDaPeca(aberta.nome, GAL_SEL) : null;
-  $("gal_lupa_vazio").hidden = !!el;
-  $("gal_lupa_props").hidden = !el;
-  $("gl_para_todas").disabled = !AJUSTES.has((pecas3()[GAL_ABERTA] || {}).nome);
-  if (!el) return;
-  const nome = pecas3()[GAL_ABERTA].nome;
-  const m = medidaDaPeca(el, nome);
-  $("gl_travado").hidden = !el.trava;
-  const guardar = (chave, valor) => {
-    const a = AJUSTES.get(nome) || {};
-    a[el.id] = Object.assign({}, a[el.id], { [chave]: valor });
-    AJUSTES.set(nome, a);
-    redesenhaLupa();
-    anotarMexida();      // seiscentos milissegundos depois de a mão parar, vai para o cofre
-  };
-  if (el.tipo === "texto") {
-    passoNovo($("gl_tamanho"), 10, 140, 2, Math.round(m.tamanho * 1000),
-              v => (v / 10).toFixed(1) + "%", v => guardar("tamanho", v / 1000));
-  } else {
-    passoNovo($("gl_tamanho"), 3, 100, 2, Math.round(el.w * 100), v => v + "%", () => {});
-  }
-  passoNovo($("gl_x"), -20, 100, 1, Math.round(m.x * 100),
-            v => "Esquerda " + v + "%", v => guardar("x", v / 100));
-  passoNovo($("gl_y"), -20, 100, 1, Math.round(m.y * 100),
-            v => "Topo " + v + "%", v => guardar("y", v / 100));
-}
-
-$("gal_lupa_zerar").onclick = () => {
-  const p = pecas3()[GAL_ABERTA];
-  if (!p) return;
-  AJUSTES.delete(p.nome);
-  redesenhaLupa();
-  anotarMexida();
-};
-
-$("gl_para_todas").onclick = () => {
-  const p = pecas3()[GAL_ABERTA];
-  const a = p && AJUSTES.get(p.nome);
-  if (!a) return;
-  for (const outra of pecas3()) {
-    AJUSTES.set(outra.nome, JSON.parse(JSON.stringify(a)));
-  }
-  parado("apl_resumo", "Os ajustes desta peça passaram para todas.");
-  redesenhaLupa();
-  anotarMexida();
-};
 
 /* ------------------------------------------------ o acerto de cabimento, em bloco
 
@@ -8144,10 +8082,27 @@ $("gl_para_todas").onclick = () => {
 
 let AJ_VEZ = 0;                   // guarda contra ele pular de peça antes de a atual abrir
 
+/* AS MOLDURAS DESCEM ANTES DE ELE CHEGAR NA PRIMEIRA PECA.
+
+   ELE CRONOMETROU: "nem sequer o template de fato apareceu... ele veio aparecer agora,
+   depois de quanto tempo". Sao quatro arquivos de 95 kB no acervo dele, entao a espera
+   nunca foi o tamanho: era a ORDEM. A moldura so' era pedida no meio do desenho da
+   peca, junto com o video daquela peca, e ficava atras dele na fila do navegador.
+
+   PEDIR TODAS DE UMA VEZ AO ENTRAR conserta pelo lado certo: sao poucas, se repetem de
+   peca em peca e `enderecoDo` ja' guarda o endereco depois da primeira. Medido na casa
+   do Estudio: 1,4 s na primeira peca com a memoria da aba vazia, 104 ms nas seguintes. */
+function descerAsMolduras() {
+  if (!TPL || !TPL.contaModelo) return;
+  // SEM `await`: quem espera e' a peca, e ela ja' sabe se pintar quando o endereco chega.
+  for (const v of variacoesDaConta(TPL.contaModelo)) enderecoDo(v.arquivo);
+}
+
 function entrarNoAjuste() {
   const n = pecas3().length;
   if (!n) return parado("aj_recado", "Não há peça nenhuma nesta leva.");
   if (AJ_I >= n) AJ_I = 0;
+  descerAsMolduras();
   desenhaAjuste();
 }
 
@@ -8259,7 +8214,10 @@ function desenhaAjustePainel() {
   }
 
   /* ---------------------------------------------------------------- a fonte */
-  const textos = (TPL.elementos || []).filter(e => e.tipo === "texto");
+  // OS TEXTOS DESTA PECA, e nao os do template: desde a excisao das caixas quem tem
+  // texto e' a faixa da variacao, e ela nasce por peca. Lendo `TPL.elementos` esta
+  // lista ficava vazia para sempre e a troca de fonte na revisao morria junto.
+  const textos = elementosDaPeca(p.nome).filter(e => e.tipo === "texto");
   $("aj_fonte_alvo").innerHTML = textos.map(e =>
     `<button type="button" class="aj-alvo${e.id === AJ_SEL ? " sel" : ""}" `
     + `data-el="${e.id}">`
@@ -8282,14 +8240,23 @@ function desenhaAjustePainel() {
   $("aj_broll_todas").disabled = !b;
   if (b) {
     const e = enquadreDe(p.nome);
-    // OS BOTÕES SÓ MEXEM NO QUE APARECE DENTRO DA JANELA. Quem move a janela é o
-    // arrasto, e a dica embaixo diz isso.
+    const jan = janelaDaArte(p.nome);
+    /* A DICA DIZ O QUE O GESTO FAZ NESTA PECA, e sao dois casos porque o motor tambem
+       tem dois. Com furo de arte a janela e' o furo e nao anda: o arrasto desliza a
+       filmagem la' dentro. Sem furo, o arrasto leva a janela inteira. */
+    $("aj_broll_dica").textContent = jan
+      ? "Arraste a filmagem para escolher que pedaço dela aparece dentro da moldura. "
+        + "Puxe um canto para aproximar."
+      : "Arraste a filmagem na peça para mudar a janela de lugar. Os botões abaixo "
+        + "escolhem que pedaço dela aparece dentro da janela.";
     $("aj_broll_dica").hidden = false;
     passoNovo($("aj_zoom"), 100, 300, 5, Math.round(e.z * 100),
               v => "Aproximar " + v + "%", v => mexerEnquadre(p.nome, "z", v / 100));
-    // SEM APROXIMAR, DESLIZAR NÃO TEM PARA ONDE IR: a filmagem ocupa a janela no
-    // tamanho exato. Desligar os botões diz isso melhor do que deixá-los sem efeito.
-    const sobra = folgaDoEnquadre(e.z) > 0.001;
+    /* SEM SOBRA, DESLIZAR NÃO TEM PARA ONDE IR, e desligar os botões diz isso melhor
+       do que deixá-los sem efeito. Com furo de arte a sobra existe desde o começo, que
+       é a folga do encaixe; sem furo, ela só nasce ao aproximar. */
+    const sobra = jan ? folgaDoDeslize(BROLL_DE.get(p.nome), jan, e.z).fx > 0.001
+                      : folgaDoEnquadre(e.z) > 0.001;
     $("aj_bx").classList.toggle("apagado", !sobra);
     $("aj_by").classList.toggle("apagado", !sobra);
     passoNovo($("aj_bx"), -60, 60, 2, Math.round(e.dx * 100),
@@ -8409,11 +8376,27 @@ function folgaDoEnquadre(z) { return Math.max(0, (z - 1) / 2); }
 function mexerEnquadre(nome, chave, valor, calado) {
   const e = enquadreDe(nome);
   e[chave] = valor;
+  const jan = janelaDaArte(nome);
+  const r = BROLL_DE && BROLL_DE.get(nome);
+  if (jan) {
+    /* COM FURO DE ARTE A JANELA NAO SE MEXE, e o motor diz isso por extenso: "es, mx e
+       my nao entram aqui; a janela agora e' o furo da arte, que nao se move". Escrever
+       esses tres seria guardar um ajuste que o arquivo nunca vai ter. */
+    e.es = 1; e.mx = 0; e.my = 0;
+    const f = folgaDoDeslize(r, jan, e.z);
+    e.dx = Math.max(-f.fx, Math.min(f.fx, e.dx));
+    e.dy = Math.max(-f.fy, Math.min(f.fy, e.dy));
+    if (e.z === 1 && !e.dx && !e.dy) ENQUADRES.delete(nome);
+    else ENQUADRES.set(nome, e);
+    A_MAO.add(nome);
+    porFilmagemNoLugar(AJ_VIVO, lugarDaFilmagem(nome));
+    if (!calado) anotarMexida();
+    return;
+  }
   // O DESLIZE DENTRO DA JANELA NUNCA PASSA DA SOBRA que a aproximação criou.
   const folga = folgaDoEnquadre(e.z);
   e.dx = Math.max(-folga, Math.min(folga, e.dx));
   e.dy = Math.max(-folga, Math.min(folga, e.dy));
-  const r = BROLL_DE && BROLL_DE.get(nome);
   if (r) {
     // A JANELA CABE NA PECA: nem menor que um quarto, nem maior que o quadro.
     e.es = Math.max(0.25, Math.min(Math.min(1 / r.w, 1 / r.h), e.es));
@@ -8484,7 +8467,8 @@ $("aj_tela").addEventListener("pointerdown", ev => {
     const el = AJ_SEL === "_broll" ? null : elementoDaPeca(p.nome, AJ_SEL);
     if (AJ_SEL !== "_broll" && !el) return;
     AJ_ARRASTO = { tipo: "tamanho", canto, nome: p.nome, quem: AJ_SEL, el, caixa,
-                   x0: ev.clientX, y0: ev.clientY, es0: e.es,
+                   x0: ev.clientX, y0: ev.clientY, es0: e.es, z0: e.z,
+                   janela: !!janelaDaArte(p.nome),
                    tam0: el ? medidaDaPeca(el, p.nome).tamanho : 0, andou: false };
     $("aj_tela").classList.add("arrastando");
     try { ev.target.setPointerCapture(ev.pointerId); } catch (x) { /* rato sumiu */ }
@@ -8515,9 +8499,17 @@ $("aj_tela").addEventListener("pointerdown", ev => {
        AGORA O GESTO É O ÓBVIO: pegar e levar, o buraco e o vídeo juntos. Sempre funciona,
        sem depender de aproximação nenhuma. Quem escolhe o pedaço da filmagem que aparece
        lá dentro continua sendo o par aproximar mais deslizar, nos botões ao lado. */
+    /* COM FURO DE ARTE, ARRASTAR DESLIZA A FILMAGEM DENTRO DO FURO.
+
+       O QUE MUDOU EM 29/08/2026: a janela passou a ser o furo da arte, e furo nao anda.
+       Arrastar continuava escrevendo `mx` e `my`, que o motor ignora desde que a arte
+       ganhou variacoes: a tela mostrava a filmagem num lugar e o arquivo sairia com ela
+       noutro. Agora o gesto escreve `dx` e `dy`, que e' o que o motor obedece. */
     const e = enquadreDe(p.nome);
+    const lug = lugarDaFilmagem(p.nome);
     AJ_ARRASTO = { tipo: "broll", nome: p.nome, x0: ev.clientX, y0: ev.clientY,
-                   ox: e.mx, oy: e.my, caixa, andou: false };
+                   janela: !!lug, kenc: lug ? lug.kenc : 1,
+                   ox: lug ? e.dx : e.mx, oy: lug ? e.dy : e.my, caixa, andou: false };
     AJ_SEL = "_broll";
   }
   marcarEscolhido();
@@ -8549,6 +8541,13 @@ $("aj_tela").addEventListener("pointermove", ev => {
        letra nao e' "texto maior" para quem olha; e' a letra que se ve'. */
     const px = a.canto.includes("w") ? -1 : 1;
     if (a.quem === "_broll") {
+      if (a.janela) {
+        /* O FURO NAO MUDA DE TAMANHO, entao a alca APROXIMA a filmagem: e' o unico
+           tamanho que existe nesta peca e e' o que o botao ao lado ja' mexia. */
+        const z = Math.max(1, Math.min(3, a.z0 * (1 + fx * px * 2)));
+        mexerEnquadre(a.nome, "z", Math.round(z * 100) / 100, true);
+        return;
+      }
       const r = BROLL_DE && BROLL_DE.get(a.nome);
       if (!r) return;
       mexerEnquadre(a.nome, "es",
@@ -8561,6 +8560,13 @@ $("aj_tela").addEventListener("pointermove", ev => {
   } else if (a.tipo === "item") {
     mexerItem(a.nome, a.el, "x", Math.round((a.ox + fx) * 1000) / 1000, true);
     mexerItem(a.nome, a.el, "y", Math.round((a.oy + fy) * 1000) / 1000, true);
+  } else if (a.janela) {
+    /* A FILMAGEM DESLIZA DENTRO DO FURO. O dedo anda em fracao do QUADRO e `dx` mede na
+       regua do encaixe, entao a conversao e' a divisao pelo `kenc`: sem ela, uma
+       filmagem que entrou 25% maior andaria 25% mais do que o dedo. O limite de nao
+       abrir tarja mora no `mexerEnquadre`, num lugar so'. */
+    mexerEnquadre(a.nome, "dx", Math.round((a.ox + fx / a.kenc) * 1000) / 1000, true);
+    mexerEnquadre(a.nome, "dy", Math.round((a.oy + fy / a.kenc) * 1000) / 1000, true);
   } else {
     // A JANELA VAI PARA ONDE O DEDO LEVA. O limite de não sair da peça mora no
     // `mexerEnquadre`, num lugar só, porque os botões também precisam dele.
@@ -8814,7 +8820,11 @@ function podeIrAoSub(n) {
 // caminho, e a faxina do mesmo dia levou as telas e o editor de elementos junto.
 // Os numeros 2 e 3 NAO se reaproveitam: rascunho antigo ainda os guarda, e quem
 // apontar para eles cai na escrita. A barrinha conta pela POSICAO no trilho.
-const POSICAO_DA_SUB = { 1: 0, 4: 1, 5: 2, 6: 3 };
+/* A ORDEM DA BARRINHA NAO E' A DOS NUMEROS. Os numeros das telas ficaram como
+   nasceram (mexer neles quebraria rascunho gravado); o que mudou em 29/08/2026 foi o
+   LUGAR de cada uma no caminho: com as previas fora, a revisao peca a peca vem antes e
+   a fabricacao passa a ser a ultima parada. */
+const POSICAO_DA_SUB = { 1: 0, 4: 1, 6: 2, 5: 3 };
 
 function irParaSub(n) {
   if (n === 2 || n === 3) n = 4;
@@ -8826,8 +8836,10 @@ function irParaSub(n) {
      4 a IA, 5 a previa, 6 a peca a peca. Os `n !==` sao os que APAGAM video: errar
      neles nao da' erro na tela, deixa filmagem viva atras dela. */
   // SAIR DA PECA A PECA FECHA O VIDEO. Sem isto ele fica vivo atras da tela.
+  //
+  // A GRADE DA PREVIA SAIU EM 29/08/2026 e com ela a segunda linha desta limpeza: nao
+  // ha' mais 180 videos desenhados de uma vez, e o unico que fica vivo e' o da revisao.
   if (n !== 6 && AJ_VIVO) { apagarPeca(AJ_VIVO); AJ_VIVO = null; }
-  if (n !== 5) $("gal_grade").querySelectorAll("video").forEach(apagarPeca);
   if (n !== 1) pararOModelo();
   if (n === 1) entrarNoModelo();
   if (n === 4) entrarNaIA();
@@ -8877,7 +8889,8 @@ $("ed_vai_ajuste").onclick = () => irParaSub(5);
 $("ed_volta_imagens").onclick = () => irParaSub(1);
 $("ed_volta_ia").onclick = () => irParaSub(4);
 $("ajs_um_a_um").onclick = () => irParaSub(6);
-$("aj_volta").onclick = () => irParaSub(5);
+// O VOLTAR A' VISAO GERAL SAIU COM A VISAO GERAL (29/08/2026). Fabricar e' o botao
+// ao lado, e o trilho continua levando a qualquer fase.
 /* FABRICAR SEM SAIR DAQUI. O botao e a barra de progresso moram na primeira olhada, e
    duplicar aquela maquinaria toda so' para ter um segundo botao seria duas verdades
    sobre a mesma obra. Entao ele volta e clica: uma linha, e o que ele ve' e' o mesmo. */
@@ -9136,13 +9149,41 @@ function variacoesDaConta(conta) {
 
 /** Onde a filmagem entra: o retangulo do B-roll da peca posto DENTRO da janela da arte.
     Devolve o canto e o tamanho do video em fracao do quadro, a mesma conta dos dois lados. */
-function encaixeNaJanela(broll, jan) {
+function encaixeNaJanela(broll, jan, z, dx, dy) {
   const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
   // COBRIR, e nao caber: sobrar tarja preta dentro da moldura seria pior que perder
   // beirada de filmagem, porque a tarja aparece na peca pronta.
-  const k = Math.max(jan.w / b.w, jan.h / b.h) * FOLGA_DO_ENCAIXE;
-  return { k, x: jan.x + jan.w / 2 - k * (b.x + b.w / 2),
-              y: jan.y + jan.h / 2 - k * (b.y + b.h / 2) };
+  const kenc = Math.max(jan.w / b.w, jan.h / b.h) * FOLGA_DO_ENCAIXE;
+  /* APROXIMAR E DESLIZAR ENTRAM AQUI DESDE 29/08/2026, e antes nao entravam porque esta
+     conta so' era usada na fase 1, onde nada foi ajustado ainda. A revisao precisa dela
+     COM o ajuste, senao a peca desenhada nao e' a que vai sair do motor.
+
+     O DESLIZE ANDA NA REGUA DO ENCAIXE (`kenc`) e nao na do quadro, exatamente como no
+     `encaixe_na_janela` do oficina.py. Duas reguas diferentes para o mesmo `dx` fariam
+     a tela e o arquivo discordarem calados. */
+  const k = kenc * (z || 1);
+  return { k, kenc,
+           x: jan.x + jan.w / 2 - k * (b.x + b.w / 2) + kenc * (dx || 0),
+           y: jan.y + jan.h / 2 - k * (b.y + b.h / 2) + kenc * (dy || 0) };
+}
+
+/* QUANTO A FILMAGEM PODE DESLIZAR DENTRO DO FURO DA ARTE.
+
+   A SOBRA JA' EXISTE SEM APROXIMAR NADA, e era jogada fora. A filmagem entra doze por
+   cento maior que o furo (a folga do encaixe, logo abaixo), e esses doze por cento sao
+   margem de verdade: na peca 0001 da leva 31 dao 4,8% do quadro de um lado e 4,4% do
+   outro. O limite velho, `(z - 1) / 2`, vem do tempo em que nao havia furo de arte
+   nenhum, e com furo ele zera o gesto: arrastar a filmagem sem aproximar antes nao fazia
+   nada, e gesto que nao faz nada se le como quebrado.
+
+   O LIMITE E' NAO ABRIR TARJA. A filmagem anda ate' a borda dela encostar na borda do
+   furo; um passo alem e o preto de fora entra na peca pronta. */
+function folgaDoDeslize(broll, jan, z) {
+  const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
+  const kenc = Math.max(jan.w / b.w, jan.h / b.h) * FOLGA_DO_ENCAIXE;
+  const k = kenc * (z || 1);
+  return { fx: Math.max(0, (k * b.w - jan.w) / (2 * kenc)),
+           fy: Math.max(0, (k * b.h - jan.h) / (2 * kenc)) };
 }
 
 /* A FOLGA DO ENCAIXE, caso real de 27/08/2026 a' noite: o recorte da fase 2
@@ -9192,6 +9233,73 @@ function variacaoDaPeca(nome) {
   if (!TPL || !TPL.contaModelo) return null;
   return melhorVariacao(BROLL_DE && BROLL_DE.get(nome),
                         variacoesDaConta(TPL.contaModelo));
+}
+
+/* ONDE A FILMAGEM APARECE NA PECA PRONTA, e foi aqui que a revisao mentia.
+
+   O DEFEITO, MEDIDO EM 29/08/2026 na peca 0001 da leva 31 e nao suposto: o furo da arte
+   vai de 0 a 100% da largura e de 25,8% a 79,6% da altura; a revisao desenhava a
+   filmagem de 5,3% a 94,7% de largura e de 29,2% a 81,0% de altura. A diferenca e' o que
+   ele fotografou: duas tarjas pretas de 5,3% dentro do furo, uma de cada lado, 3,4% de
+   preto em cima e 1,4% de filmagem passando por baixo do furo. As "linhas cortando" sao
+   essas beiradas, e o "recorte fora do lugar" e' a mesma medida vista de longe.
+
+   SAO DOIS RETANGULOS DIFERENTES E EU USAVA UM PELO OUTRO:
+
+     BROLL_DE      onde o B-roll estava no reel BAIXADO, medido pelo passo 2.
+     janela        o furo da ARTE, medido do PNG no cadastro. E' a janela da peca.
+
+   A PECA MONTADA ESTICA O PRIMEIRO ATE' COBRIR O SEGUNDO (`encaixe_na_janela`, no
+   oficina.py) e nao aplica mascara nenhuma, porque o furo da propria arte ja' e' o
+   formato. Agora a revisao faz a mesma coisa, com a mesma conta.
+
+   RASCUNHO SEM FURO NENHUM cai fora daqui e segue pelo caminho velho, que e' o mesmo
+   `else` que o motor tem: sem janela, mascara do passo 2 e a filmagem onde ela estava. */
+function janelaDaArte(nome) {
+  const v = variacaoDaPeca(nome);
+  if (v && v.janela) return v.janela;
+  return (TPL && TPL.janela) ? TPL.janela : null;
+}
+
+/** O retangulo da filmagem desta peca, ja' com o que ele aproximou e deslizou. */
+function lugarDaFilmagem(nome) {
+  const jan = janelaDaArte(nome);
+  if (!jan) return null;
+  const e = enquadreDe(nome);
+  const enc = encaixeNaJanela(BROLL_DE && BROLL_DE.get(nome), jan, e.z, e.dx, e.dy);
+  return { jan, k: enc.k, kenc: enc.kenc, x: enc.x, y: enc.y };
+}
+
+/* UM DEDO ALEM DO FURO, para o serrilhado da arte nao virar linha.
+
+   O FURO E' MEDIDO PELO PIXEL TOTALMENTE VAZIO, e a borda de um PNG desenhado tem uma
+   fileira de pixels meio transparentes logo depois dela. Cortar a filmagem exatamente no
+   retangulo medido deixaria essa fileira misturando arte com o PRETO do palco em vez de
+   com a filmagem: um fio escuro em volta do furo, que e' o tipo de linha que ele viu. */
+const RESPIRO_DO_FURO = 0.01;
+
+/** Recorta a caixa da filmagem no furo da arte, com o respiro. */
+function recortarNaJanela(caixa, jan) {
+  const r = RESPIRO_DO_FURO;
+  caixa.style.clipPath = `inset(${(jan.y - r) * 100}% ${(1 - jan.x - jan.w - r) * 100}% `
+    + `${(1 - jan.y - jan.h - r) * 100}% ${(jan.x - r) * 100}%)`;
+  caixa.style.transformOrigin = "";
+  caixa.style.transform = "";
+}
+
+/** Poe a filmagem no lugar dela dentro da peca. Em fracao do quadro, como o motor. */
+function porFilmagemNoLugar(v, lugar) {
+  if (!v || !lugar) return;
+  // O `transform` SAI DE CENA: com furo de arte, aproximar e deslizar ja' estao na
+  // medida. Deixa-lo aqui aplicaria a mesma aproximacao duas vezes.
+  v.style.transform = "";
+  v.style.left = (lugar.x * 100) + "%";
+  v.style.top = (lugar.y * 100) + "%";
+  v.style.width = (lugar.k * 100) + "%";
+  v.style.height = (lugar.k * 100) + "%";
+  // `inset:0` NO CSS PRENDE OS QUATRO LADOS, e canto mais tamanho ja' bastam.
+  v.style.right = "auto";
+  v.style.bottom = "auto";
 }
 
 /* A FRASE DA PECA MORA NA FAIXA DA VARIACAO, e nao mais numa caixa de template.
@@ -10568,6 +10676,8 @@ $("apl_montar").onclick = async () => {
 
     OBRA = { id, desde: Date.now(), total: alvos.length, qual, relogio: null };
     $("apl_obra").hidden = false;
+    reabrirObra("apl");
+    pintarObra("apl", { total: alvos.length, feitos: 0 }, "peças montadas");
     document.querySelector("#apl_obra .cfg-girando").style.display = "";
     $("apl_obra_txt").textContent = "pedido deixado";
     $("apl_obra_nota").textContent = "a montagem começa em até um minuto, que é o passo "
@@ -10680,7 +10790,8 @@ async function olharAObra() {
     return;
   }
   const feitos = d.feitos || 0, total = d.total || OBRA.total;
-  $("apl_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
+  pintarObra("apl", { total, feitos, falhas: d.falhas, atual: d.atual,
+                      segundos: d.segundos, fim: d.fim }, "peças montadas");
   if (!d.fim) {
     // A ESTEIRA APARECE COMO ESTEIRA: com as vagas trabalhando, "montando 1 de 107"
     // lia como máquina parada na primeira peça (auditoria de 25/08/2026).
@@ -10727,6 +10838,13 @@ async function olharAObra() {
     // O DIARIO DAS QUE FALHARAM, peca a peca: sem ele o "3 falharam" acima
     // obrigava a perguntar quais e por que (fecho de 25/08/2026).
     + linhasDoDiario(d.diario);
+  /* O SELO DO FECHO, igual ao do recorte, e so' quando a conta fecha. Peca que falhou
+     mantem a barra de pe' com os numeros: verificado verde por cima de falha seria a
+     tela afirmando o que nao aconteceu. */
+  if (!d.falhas && feitos >= total) {
+    fecharObra("apl", num(total) + (total === 1 ? " Peça Montada" : " Peças Montadas")
+               + ", 100%: Pode Entregar");
+  }
   desenhaFeito();
   irParaPasso(4);
 }
@@ -10754,9 +10872,15 @@ $("apl_segue").onclick = () => irParaPasso(4);
    A montagem estourava na peca 12 de 107, a barra pulava para cheia, e ao lado dela o
    texto dizia "nao deu". Quem olhasse de longe veria uma barra cheia e iria embora. */
 function pararDeOlhar(cheia) {
+  // O TOTAL E' GUARDADO ANTES DE A OBRA MORRER: e' ele que diz quantas marcas encher.
+  const OBRA_TOTAL = OBRA ? OBRA.total : 0;
   if (OBRA && OBRA.relogio) clearInterval(OBRA.relogio);
   OBRA = null;
-  if (cheia) $("apl_barra").style.width = "100%";
+  // A BARRA CHEIA agora e' a fileira inteira marcada, e nao um retangulo esticado.
+  if (cheia && OBRA_TOTAL) {
+    pintarObra("apl", { total: OBRA_TOTAL, feitos: OBRA_TOTAL, fim: true },
+               "peças montadas");
+  }
   document.querySelector("#apl_obra .cfg-girando").style.display = "none";
   resumoDeAplicar();
 }

@@ -1258,6 +1258,40 @@ def encaixe_na_janela(base, jan, z: float = 1.0, dx: float = 0.0,
     return (k, cxj - k * cxb + kenc * dx, cyj - k * cyb + kenc * dy)
 
 
+def folga_do_deslize(base, jan, z: float = 1.0) -> tuple:
+    """Quanto `dx` e `dy` podem andar sem abrir tarja preta dentro da janela.
+
+    COM FURO DE ARTE A SOBRA EXISTE SEM APROXIMAR NADA. A filmagem entra doze por cento
+    maior que o furo (`FOLGA_DO_ENCAIXE`), e esses doze por cento sao margem: na peca
+    0001 da leva 31 dao 4,8% do quadro de um lado e 4,4% do outro. O limite velho,
+    `(z - 1) / 2`, vem do tempo em que nao havia furo de arte nenhum, e com furo ele
+    ZERA o gesto: na tela, arrastar a filmagem sem aproximar antes nao fazia nada, e
+    gesto que nao faz nada se le como quebrado.
+
+    SEM JANELA O LIMITE VELHO CONTINUA VALENDO, que e' o rascunho antigo: la' a filmagem
+    ocupa o quadro inteiro e a unica sobra e' a que a aproximacao criou.
+
+    A CONTA E' A MESMA QUE A TELA FAZ (`folgaDoDeslize`, em tela.js), e tem de continuar
+    sendo: um lado prendendo mais que o outro faria o arquivo sair diferente do que ele
+    aprovou na revisao.
+    """
+    velha = max(0.0, (z - 1) / 2)
+    if not isinstance(jan, dict):
+        return (velha, velha)
+    b = base if isinstance(base, dict) else {}
+    try:
+        bw = max(1e-4, float(b.get("w", 1) or 1))
+        bh = max(1e-4, float(b.get("h", 1) or 1))
+        jw = max(1e-4, float(jan.get("w", 1)))
+        jh = max(1e-4, float(jan.get("h", 1)))
+    except (TypeError, ValueError):
+        return (velha, velha)
+    kenc = max(jw / bw, jh / bh) * FOLGA_DO_ENCAIXE
+    k = kenc * z
+    return (max(0.0, (k * bw - jw) / (2 * kenc)),
+            max(0.0, (k * bh - jh) / (2 * kenc)))
+
+
 def movimento_da_janela(enquadre: dict | None) -> tuple:
     """O que a fase 5 fez com a janela do B-roll: quanto ela cresceu e para onde andou.
 
@@ -1412,12 +1446,12 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
     except (TypeError, ValueError):
         z, dx, dy = 1.0, 0.0, 0.0
     z = min(4.0, max(1.0, z))          # menos que 1 deixaria borda preta dentro da janela
-    # DESLIZAR DENTRO DA JANELA SO' VAI ATE' A SOBRA que a aproximacao criou. A tela ja'
-    # prende nisto; aqui a conta e' repetida porque um pedido antigo, ou escrito na mao,
-    # nao passou por ela.
-    folga = max(0.0, (z - 1) / 2)
-    dx = max(-folga, min(folga, dx))
-    dy = max(-folga, min(folga, dy))
+    # DESLIZAR SO' VAI ATE' A SOBRA, e quanta sobra ha' depende de onde a filmagem entra.
+    # A tela ja' prende nisto; aqui a conta e' repetida porque um pedido antigo, ou
+    # escrito na mao, nao passou por ela.
+    fdx, fdy = folga_do_deslize(e.get("base"), e.get("janela"), z)
+    dx = max(-fdx, min(fdx, dx))
+    dy = max(-fdy, min(fdy, dy))
     # A JANELA DA ARTE MANDA, QUANDO EXISTE.
     #
     # A conta e' a mesma que a tela faz na fase 1 (`encaixeNaJanela`): a filmagem cresce

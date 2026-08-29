@@ -1941,60 +1941,6 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .gal-conta{font-size:13.5px;color:var(--muted)}
 .gal-conta b{color:var(--ink)}
 .gal-acoes{display:flex;align-items:center;gap:10px;margin-left:auto}
-.gal-grade{display:grid;gap:14px;
-  grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
-.gal-peca{border:1px solid var(--rule-solid);border-radius:12px;overflow:hidden;
-  background:var(--paper-2);cursor:pointer;transition:border-color .15s ease,
-  transform .15s ease}
-.gal-peca:hover{border-color:var(--accent);transform:translateY(-2px)}
-.gal-peca.mexida{border-color:var(--accent)}
-/* A PEÇA EM MINIATURA. `container-type:size` faz o tamanho da letra ser fração da altura
-   da peça, igual ao editor e igual ao que o `oficina.py` calcula na hora de gravar: é o
-   que garante que a miniatura mostre a mesma proporção do arquivo. */
-.gal-tela{position:relative;aspect-ratio:9/16;overflow:hidden;container-type:size;
-  background:#000}
-.gal-tela video,.gal-tela .gal-broll{position:absolute;inset:0;width:100%;height:100%;
-  object-fit:fill;display:block}
-.gal-el{position:absolute;white-space:pre-wrap;word-break:break-word;
-  line-height:1.22;pointer-events:none}
-.gal-el img{width:100%;height:100%;object-fit:contain;display:block}
-.gal-pe{display:flex;align-items:center;gap:7px;padding:8px 10px;font-size:11.5px;
-  color:var(--muted)}
-.gal-pe b{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap}
-.gal-pe .gal-selo{margin-left:auto;flex:0 0 auto;font-size:10px;padding:2px 7px;
-  border-radius:999px;background:var(--accent-tint);color:var(--accent)}
-/* A PEÇA ABERTA. Mexer aqui vale para esta peça e mais nenhuma. */
-.gal-fundo{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.62);
-  backdrop-filter:blur(2px)}
-.gal-lupa[hidden]{display:none}
-.gal-lupa{position:fixed;z-index:71;inset:50% auto auto 50%;
-  transform:translate(-50%,-50%);width:min(940px,94vw);max-height:92vh;
-  display:flex;flex-direction:column;overflow:hidden;
-  border:1px solid var(--rule-solid);border-radius:16px;background:var(--paper);
-  box-shadow:0 26px 70px rgba(0,0,0,.45)}
-.gal-lupa-cab{display:flex;align-items:center;gap:12px;padding:14px 16px;
-  border-bottom:1px solid var(--rule-solid)}
-.gal-lupa-cab b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.gal-lupa-cab .acao{margin-left:auto}
-.gal-x{width:30px;height:30px;flex:0 0 30px;border:0;border-radius:8px;cursor:pointer;
-  background:transparent;color:var(--muted);font-size:20px;line-height:1}
-.gal-x:hover{background:var(--paper-2);color:var(--ink)}
-.gal-lupa-corpo{display:flex;gap:20px;padding:18px 16px;overflow:auto}
-.gal-lupa-tela{position:relative;flex:0 0 auto;height:min(58vh,560px);aspect-ratio:9/16;
-  container-type:size;overflow:hidden;border-radius:12px;background:#000}
-.gal-lupa-tela video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
-.gal-lupa-tela .gal-el{cursor:pointer;pointer-events:auto;
-  outline:1px dashed transparent;outline-offset:2px}
-.gal-lupa-tela .gal-el:hover{outline-color:color-mix(in srgb,var(--accent) 60%,transparent)}
-.gal-lupa-tela .gal-el.sel{outline:1px solid var(--accent);outline-offset:2px}
-.gal-lupa-lado{flex:1;min-width:230px;display:flex;flex-direction:column;gap:16px}
-.gal-lupa-vazio .nota{margin:0}
-.gal-lupa-lado .acao.larga{margin-top:auto}
-@media(max-width:760px){
-  .gal-lupa-corpo{flex-direction:column}
-  .gal-lupa-tela{height:auto;width:min(260px,70vw);align-self:center}
-}
 /* ===================================================== A SUBETAPA 5, PEÇA A PEÇA
 
    UMA DE CADA VEZ, POR CAUSA DA MEMÓRIA. Ele disse em 23/08/2026: "o meu PC não tem
@@ -2087,6 +2033,16 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 
    `touch-action:none` E' OBRIGATORIO AQUI. Sem ele o navegador entende o arrasto como
    rolagem da pagina e o `pointermove` para de chegar no meio do gesto. */
+/* O ELEMENTO DESENHADO NA PECA: a frase e, em rascunho antigo, as imagens do molde.
+
+   A REGRA MORA AQUI DESDE 29/08/2026, e ela quase se perdeu: ela vivia no bloco da
+   grade da previa, e saiu junto com a grade. Sem o `position:absolute` o texto virava
+   elemento de fluxo, ia para o alto do quadro e ficava ATRAS da moldura (elemento
+   posicionado pinta por cima de elemento que nao e'), ou seja: sumia da peca sem dar
+   erro nenhum. Foi assim que a revisao abriu com a caixa de texto cheia e a peca muda. */
+.gal-el{position:absolute;white-space:pre-wrap;word-break:break-word;
+  line-height:1.22;pointer-events:none}
+.gal-el img{width:100%;height:100%;object-fit:contain;display:block}
 .aj-tela .gal-el{cursor:grab;pointer-events:auto;touch-action:none;
   outline:1px dashed transparent;outline-offset:2px}
 .aj-tela .gal-el:hover{outline-color:color-mix(in srgb,var(--accent) 60%,transparent)}
