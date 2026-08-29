@@ -1445,32 +1445,56 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
         # `esc` em cima do centro dela e anda `m`, levando a filmagem junto.
         px = int(round(tw * (-0.5 * k + cx + esc * (0.5 - cx) + esc * dx + mx)))
         py = int(round(th * (-0.5 * k + cy + esc * (0.5 - cy) + esc * dy + my)))
+    # A CAMADA JA' NASCE DO TAMANHO DA PECA (`camada_da_peca` a desenha em tw por th),
+    # entao redimensiona-la a cada quadro era trabalho jogado fora. Conferir uma vez e'
+    # barato; confiar sem conferir seria pintar torto se algum dia ela mudar de tamanho.
+    try:
+        from PIL import Image
+        with Image.open(camada) as im:
+            camada_certa = im.size == (tw, th)
+    except OSError:
+        camada_certa = False
+    c = "[1:v]" if camada_certa else "[c]"
+    prep = "" if camada_certa else f"[1:v]scale={tw}:{th}[c];"
     if z == 1 and not px and not py:
         # O CAMINHO CURTO, que e' o de quase toda peca: nada foi mexido.
-        filtro = (f"[0:v]scale={tw}:{th},setsar=1[v];"
-                  f"[1:v]scale={tw}:{th}[c];"
-                  f"[v][c]overlay=0:0:shortest=1,format=yuv420p[out]")
+        filtro = (f"[0:v]scale={tw}:{th},setsar=1[v];" + prep
+                  + f"[v]{c}overlay=0:0,format=yuv420p[out]")
     else:
-        # A FILMAGEM E' POSTA SOBRE UM FUNDO PRETO, e nao recortada do proprio quadro.
+        # O FUNDO PRETO SO' EXISTE QUANDO A FILMAGEM NAO COBRE O QUADRO.
         #
-        # `crop` SO' ANDA PARA DENTRO. Ele escolhe um pedaco do que existe, entao o
-        # deslocamento fica preso entre zero e a sobra que a aproximacao criou. Isso servia
-        # enquanto o unico movimento era deslizar dentro de uma janela parada. Nao serve
-        # mais: mover a janela pede que a filmagem ande junto, as vezes muito alem dessa
-        # sobra, e o `crop` prendia o video enquanto o buraco andava. A janela passaria a
-        # mostrar outro pedaco do video, que e' o defeito que ele descreveu.
+        # POR QUE ELE EXISTIA SEMPRE, e a nota vale para nao se repetir o engano: o
+        # `crop` SO' ANDA PARA DENTRO, entao ele nao serve quando a filmagem precisa
+        # ficar FORA do quadro (mover a janela leva a filmagem junto, as vezes muito
+        # alem do que ha' de imagem). O `overlay` aceita posicao negativa e nao tem esse
+        # limite, e por isso virou o caminho unico. So' que ele passou a pagar o preco
+        # do fundo em TODA peca, inclusive nas que nem enxergam o preto.
         #
-        # `overlay` ACEITA POSICAO NEGATIVA e nao tem esse limite. O preto que sobra nas
-        # beiradas nunca aparece: o template cobre tudo menos a janela, e a janela esta'
-        # exatamente onde a filmagem foi posta.
-        filtro = (f"[0:v]scale={ew}:{eh},setsar=1[v0];"
-                  f"color=c=black:s={tw}x{th}[fundo];"
-                  f"[fundo][v0]overlay={px}:{py}:shortest=1[v];"
-                  f"[1:v]scale={tw}:{th}[c];"
-                  f"[v][c]overlay=0:0:shortest=1,format=yuv420p[out]")
+        # A CONDICAO `cobre` E' EXATAMENTE A FRONTEIRA entre os dois casos: quando o
+        # retangulo da filmagem contem o quadro inteiro, o corte cai todo dentro do que
+        # existe e nao ha' o que prender; quando nao contem, o fundo volta a ser preciso.
+        #
+        # QUANDO ELA COBRE, e' o caso de quase toda peca com janela de arte, o preto e'
+        # inteiramente tapado pela propria filmagem: desenha-lo e' pintar por baixo do
+        # que ja' esta' opaco. Medido na casa da rua, 15 s de video: 163,2 s com o
+        # fundo, 83,6 s cortando o pedaco que aparece. O `crop` chega ao mesmo lugar
+        # que o `overlay` negativo, porque mover a janela para a esquerda e mover a
+        # imagem para a direita sao a mesma coisa vista de dois lados.
+        #
+        # E O FUNDO QUE SOBRA GANHOU CADENCIA. Sem `r=`, o `color` nasce a 25 quadros
+        # por segundo, e como ele e' a base do primeiro `overlay` a peca inteira saia a
+        # 25 num video de 30: um quadro fora a cada seis, medido no arquivo.
+        cobre = px <= 0 and py <= 0 and px + ew >= tw and py + eh >= th
+        if cobre:
+            filtro = (f"[0:v]scale={ew}:{eh},setsar=1,crop={tw}:{th}:{-px}:{-py}[v];"
+                      + prep + f"[v]{c}overlay=0:0,format=yuv420p[out]")
+        else:
+            filtro = (f"[0:v]scale={ew}:{eh},setsar=1[v0];"
+                      f"color=c=black:s={tw}x{th}:r={cadencia(video)}[fundo];"
+                      f"[fundo][v0]overlay={px}:{py}:shortest=1[v];"
+                      + prep + f"[v]{c}overlay=0:0,format=yuv420p[out]")
     r = subprocess.run(
-        ["ffmpeg", "-v", "error", "-y", "-i", str(video),
-         "-loop", "1", "-framerate", cadencia(video), "-i", str(camada),
+        ["ffmpeg", "-v", "error", "-y", "-i", str(video), "-i", str(camada),
          "-filter_complex", filtro, "-map", "[out]", "-map", "0:a?",
          "-c:v", "libx264", "-preset", PRESET, "-crf", CRF,
          "-c:a", "copy", "-movflags", "+faststart", str(saida)],

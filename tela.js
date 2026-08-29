@@ -6251,15 +6251,20 @@ async function postoDePe() {
 }
 
 /** Um pedido ao posto. Sem `corpo` é leitura; com `corpo` é escrita. */
-async function noPosto(rota, corpo) {
+async function noPosto(rota, corpo, paciencia) {
   const opcoes = corpo === undefined
     ? { cache: "no-store" }
     : { method: "POST", cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(corpo) };
-  // O PRAZO DE CORTE anda junto com o do postoDePe: sem ele, uma conexão pendurada
-  // (aceita e nunca respondida) congelava o fluxo para sempre, sem recado.
-  opcoes.signal = AbortSignal.timeout(30000);
+  /* O PRAZO DE CORTE anda junto com o do postoDePe: sem ele, uma conexão pendurada
+     (aceita e nunca respondida) congelava o fluxo para sempre, sem recado.
+
+     TRINTA SEGUNDOS NÃO SERVEM PARA TODO MUNDO, e isso apareceu na casa da rua: o
+     pedido da montagem é o maior corpo do sistema e sai logo depois de a IA escrever a
+     leva inteira, com a máquina ainda ocupada. Quem tem corpo grande pede a própria
+     paciência; o resto continua nos trinta. */
+  opcoes.signal = AbortSignal.timeout(paciencia || 30000);
   let r;
   try {
     r = await fetch(POSTO + rota, opcoes);
@@ -10574,7 +10579,12 @@ $("apl_montar").onclick = async () => {
     $("apl_montar").disabled = false;
     $("apl_obra").hidden = false;
     $("apl_obra_txt").textContent = "não deu para deixar o pedido";
-    $("apl_obra_nota").textContent = e.message;
+    // O RECADO DIZ O QUE FAZER, e nao so' o que houve: nada foi montado, nada se
+    // perdeu, e o botao ja' esta' destravado. Sem esta linha ele recarregava a pagina,
+    // que e' o gesto que apaga a prova do que aconteceu.
+    $("apl_obra_nota").textContent = e.message
+      + " Nenhuma peça foi montada e o texto escrito continua guardado: pode clicar em "
+      + "Fabricar As Peças de novo.";
   }
 };
 
@@ -10835,8 +10845,32 @@ function olharOPedido(obra, aoAndar, aoTerminar) {
 }
 
 /** Deixa um pedido na caixa do programa. Pelo posto, e a pasta liberada de plano B. */
+/* DEIXAR O PEDIDO E' O GESTO MAIS CARO DA TELA, e por isso ele insiste.
+
+   O QUE ACONTECEU EM 29/08/2026, 02:19: ele clicou em Fabricar depois de a IA escrever
+   as 180. A composicao foi gravada e o nome da pasta foi reservado (as duas coisas
+   ficaram no registro da casa), e o pedido nao chegou. Trinta e sete segundos depois
+   ele recarregou a pagina. Nada ficou de pe' para dizer por que.
+
+   ENTAO SAO TRES MUDANCAS, e cada uma cobre uma parte do que pode ter sido: paciencia
+   de noventa segundos (o corpo e' de 89 KB e a casa estava ocupada), uma segunda
+   tentativa com o batimento refeito no meio, e o recado dizendo que pode clicar de
+   novo. REPETIR E' SEGURO: o pedido leva id proprio e o segundo envio grava por cima
+   do mesmo arquivo, entao nao existe leva montada duas vezes. */
+const PACIENCIA_DO_PEDIDO = 90000;
+
 async function deixarPedido(pedido) {
-  if (await postoDePe()) { await noPosto("/pedido", pedido); return; }
+  if (await postoDePe()) {
+    try {
+      await noPosto("/pedido", pedido, PACIENCIA_DO_PEDIDO);
+    } catch (e) {
+      await new Promise(r => setTimeout(r, 1500));
+      POSTO_DE_PE = null;              // o batimento se refaz antes de insistir
+      if (!(await postoDePe())) throw e;
+      await noPosto("/pedido", pedido, PACIENCIA_DO_PEDIDO);
+    }
+    return;
+  }
   const pedidos = await pastaDo("pedidos", true);
   if (!pedidos) throw new Error(SEM_POSTO);
   const h = await pedidos.getFileHandle(`${pedido.id}.json`, { create: true });
