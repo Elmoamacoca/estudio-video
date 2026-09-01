@@ -7798,6 +7798,10 @@ function enquadreDe(nome) {
      apelido guardando coisas diferentes e' a armadilha que custou o dia 29/08/2026 com
      a palavra "janela", e ela nao se repete aqui. */
            folga: e.folga != null ? e.folga : FOLGA_DO_ENCAIXE,
+           /* O ENCAIXE DESTA PEÇA, desde 29/08/2026: `caber` mostra o B-roll inteiro,
+              `cobrir` tapa o furo com ele. Ficha sem o campo cabe, que é o padrão novo
+              da casa. Ver `kencDoEncaixe` para a medição que mudou a regra. */
+           encaixe: e.encaixe === "cobrir" ? "cobrir" : "caber",
            moldura: e.moldura || null };
 }
 
@@ -7926,7 +7930,7 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
   // O FURO DA ARTE MANDA, QUANDO EXISTE. Ver a nota em `lugarDaFilmagem`.
   const lugar = lugarDaFilmagem(peca.nome);
   if (lugar) {
-    recortarNaJanela(caixa, lugar.jan);
+    recortarNaJanela(caixa, lugar.jan, lugar, b);
     porFilmagemNoLugar(v, lugar);
   } else if (b) {
     const dir = Math.max(0, 1 - b.x - b.w) * 100;
@@ -8197,7 +8201,13 @@ async function abrirOEditor(alvo, peca, indice) {
   const v = document.createElement("video");
   v.muted = true; v.playsInline = true; v.loop = true; v.preload = "metadata";
   v.dataset.arq = indice;
-  v.style.display = "none";
+  /* O VIDEO NAO PODE SER `display:none`, e isto custou uma sonda em 29/08/2026:
+     elemento escondido assim para de decodificar quadro, e a tela de pintura passa
+     a copiar preto. Ele fica de um pixel, invisivel e fora do caminho do dedo, mas
+     VIVO. Medido na proposta publicada: com `display:none` o pixel do meio da peca
+     dava zero em todo canal, com o video inteiro carregado do lado. */
+  v.style.cssText = "position:absolute;left:0;top:0;width:1px;height:1px;"
+    + "opacity:.01;pointer-events:none";
   alvo.appendChild(v);
   await acenderPeca(v);
 
@@ -8210,22 +8220,43 @@ async function abrirOEditor(alvo, peca, indice) {
      O QUADRO ENTRA VAZIO NA ORDEM CERTA e se preenche quando o video abre. As medidas
      de origem comecam no tamanho do quadro da peca (1080 por 1920), que e' o de todo
      recorte desta casa, e sao corrigidas na hora em que o arquivo diz as dele. */
+  /* O ELEMENTO PRECISA DIZER O TAMANHO DELE, e este foi o defeito irmao do de
+     cima: a tela de pintura desenha a partir do `width` e do `height` DO
+     ELEMENTO, e video sem esses atributos traz zero nos dois. Desenhar com
+     largura zero nao da' erro nenhum, da' PRETO, que e' o pior tipo de defeito
+     para achar: tudo o mais na peca continua certo. */
+  medirOElemento(v);
+  /* O RECORTE DA FILMAGEM, e ele é a mesma regra do `recortarNaJanela` do desenho
+     antigo: a filmagem só aparece dentro do furo E dentro do retângulo do B-roll. Sem
+     ele, com o encaixe de caber, entrariam nas beiradas o canto arredondado e a barra
+     do aplicativo que vêm gravados no reel. O retângulo é reposto a cada `porNoLugar`. */
+  const recorte = new fabric.Rect({
+    originX: "left", originY: "top", absolutePositioned: true,
+    left: 0, top: 0, width: L, height: A
+  });
   const filmagem = new fabric.FabricImage(v, {
     objectCaching: false, originX: "left", originY: "top",
-    width: v.videoWidth || 1080, height: v.videoHeight || 1920,
-    lockRotation: true, hasRotatingPoint: false
+    width: v.width, height: v.height,
+    lockRotation: true, hasRotatingPoint: false,
+    /* AS ALÇAS DE FÁBRICA FICAM DESLIGADAS. Elas nascem nos cantos da FILMAGEM, e a
+       filmagem é maior que o palco: os quatro cantos caem fora da tela, e não havia
+       como pegar nenhum. Foi isso que ele encontrou como "não consigo diminuir, ele
+       fica prendendo". Quem redimensiona agora são os punhos do B-roll, que ficam
+       sempre dentro do furo; arrastar continua sendo no corpo da imagem. */
+    hasControls: false, clipPath: recorte
   });
   filmagem.nome = "Filmagem";
-  filmagem.larNat = v.videoWidth || 1080;
-  filmagem.altNat = v.videoHeight || 1920;
+  filmagem.larNat = v.width;
+  filmagem.altNat = v.height;
   tela.add(filmagem);
   if (v.readyState < 2) {
     v.addEventListener("loadeddata", () => {
       // OUTRA PECA JA' ABRIU ENQUANTO ESTA DESCIA: mexer aqui pintaria por cima dela.
       if (!EDT || EDT.video !== v) return;
-      filmagem.larNat = v.videoWidth || 1080;
-      filmagem.altNat = v.videoHeight || 1920;
-      filmagem.set({ width: filmagem.larNat, height: filmagem.altNat });
+      medirOElemento(v);
+      filmagem.larNat = v.width;
+      filmagem.altNat = v.height;
+      filmagem.set({ width: v.width, height: v.height });
       editorPorNoLugar();
       v.play().catch(() => {});
     }, { once: true });
@@ -8288,7 +8319,8 @@ async function abrirOEditor(alvo, peca, indice) {
     tela.add(frase);
   }
 
-  EDT = { tela, filmagem, moldura, frase, marca, video: v, nome: peca.nome, L, A };
+  EDT = { tela, filmagem, moldura, frase, marca, recorte,
+          video: v, nome: peca.nome, L, A };
   editorAlcas(filmagem);
   if (frase) editorAlcas(frase);
 
@@ -8312,6 +8344,17 @@ async function abrirOEditor(alvo, peca, indice) {
   editorPorNoLugar();
   editorGirar(++EDT_GERACAO);
   return v;
+}
+
+/* O TAMANHO DO ELEMENTO DE VIDEO, escrito nos atributos que a tela de pintura le'.
+
+   `videoWidth` E `width` SAO COISAS DIFERENTES: o primeiro e' o que o arquivo tem, e
+   so' existe depois de o video abrir; o segundo e' o atributo do elemento, e nasce
+   ZERO. Quem desenha le' o segundo. Enquanto o arquivo nao abriu, vale o quadro desta
+   casa (1080 por 1920), que e' o de todo recorte daqui. */
+function medirOElemento(v) {
+  v.width = v.videoWidth || 1080;
+  v.height = v.videoHeight || 1920;
 }
 
 /** As alças no padrão da casa: brasa da paleta, redondas, com contorno claro. */
@@ -8344,13 +8387,27 @@ function editorGirar(geracao) {
    todos aqui, em vez de cada um mexer no desenho do seu jeito. */
 function editorPorNoLugar() {
   if (!EDT) return;
-  const { filmagem, frase, marca, L, A, nome } = EDT;
+  const { filmagem, frase, marca, recorte, L, A, nome } = EDT;
   const lugar = lugarDaFilmagem(nome);
   if (lugar && filmagem) {
     filmagem.set({ left: lugar.x * L, top: lugar.y * A });
     filmagem.scaleX = lugar.k * L / filmagem.larNat;
     filmagem.scaleY = lugar.k * A / filmagem.altNat;
     filmagem.setCoords();
+    // O RECORTE É O FURO **E** O B-ROLL. Ver a nota em `recortarNaJanela`.
+    if (recorte) {
+      const b = (BROLL_DE && BROLL_DE.get(nome)) || { x: 0, y: 0, w: 1, h: 1 };
+      const j = lugar.jan, r = RESPIRO_DO_FURO;
+      const fx = (j.x - r) * L, fy = (j.y - r) * A;
+      const fd = (j.x + j.w + r) * L, ff = (j.y + j.h + r) * A;
+      const bx = (lugar.x + lugar.k * b.x) * L, by = (lugar.y + lugar.k * b.y) * A;
+      const bd = bx + lugar.k * b.w * L, bf = by + lugar.k * b.h * A;
+      const ex = Math.max(fx, bx), ey = Math.max(fy, by);
+      recorte.set({ left: ex, top: ey,
+                    width: Math.max(0, Math.min(fd, bd) - ex),
+                    height: Math.max(0, Math.min(ff, bf) - ey) });
+      recorte.setCoords();
+    }
   }
   if (frase && frase.campo) {
     const m = medidaDaPeca(frase.campo, nome);
@@ -8386,14 +8443,19 @@ function editorMede() {
     $("aj_med_n").textContent = pct + "%";
     caixa.className = "aj-medida " + (pct >= 88 ? "bom" : pct >= 70 ? "" : "ruim");
   }
-  const e = enquadreDe(nome);
-  const outra = aproveitamentoLimpo(nome, e.folga > 1 ? 1 : FOLGA_DO_ENCAIXE);
+  /* A SEGUNDA MEDIDA E' O PRECO DO ENCAIXE, e nao mais o que a outra folga daria.
+
+     O QUE FALTAVA ERA JUSTAMENTE O PRECO: mostrar inteiro nao corta nada, e a pergunta
+     que sobra e' quanto do furo fica com o fundo da arte. Sem esse numero do lado, a
+     escolha do encaixe seria as cegas. */
+  const vazio = vazioNoFuroDaPeca(nome);
   const c2 = $("aj_med2");
-  if (c2 && outra != null) {
-    $("aj_med2_n").textContent = outra + "%";
-    $("aj_med2_r").textContent = e.folga > 1 ? "Sem A Folga" : "Com A Folga";
-    c2.className = "aj-medida " + (outra > pct ? "bom" : "");
+  if (c2 && vazio != null) {
+    $("aj_med2_n").textContent = vazio + "%";
+    $("aj_med2_r").textContent = "Do Furo Com O Fundo";
+    c2.className = "aj-medida " + (vazio > 25 ? "ruim" : "");
   }
+  porOsPunhosNoLugar();
   /* A MARCA APARECE COM A FILMAGEM ESCOLHIDA, e some quando ele solta.
 
      ELA E' O UNICO JEITO DE VER O QUE SE PERDE. O que cai fora do furo simplesmente
@@ -8413,14 +8475,42 @@ function editorMede() {
    O ENCAIXE CENTRALIZA OS DOIS RETANGULOS, entao a sobra de cada lado e' o menor dos
    dois. Esta conta nao olha o desenho: ela responde "e se", que e' a pergunta que o
    numero do lado faz. */
-function aproveitamentoLimpo(nome, folga) {
+function aproveitamentoLimpo(nome, folga, encaixe) {
   const b = BROLL_DE && BROLL_DE.get(nome);
   const jan = janelaDaArte(nome);
   if (!b || !jan || !b.w || !b.h) return null;
   const e = enquadreDe(nome);
-  const k = Math.max(jan.w / b.w, jan.h / b.h) * folga * e.z;
+  const k = kencDoEncaixe(b, jan, folga, encaixe || e.encaixe) * e.z;
   const bl = k * b.w, ba = k * b.h;
   return Math.round(100 * (Math.min(bl, jan.w) / bl) * (Math.min(ba, jan.h) / ba));
+}
+
+/* QUANTO DO FURO ESTA' SEM FILMAGEM AGORA, medido no desenho que está na tela.
+
+   E' O IRMAO DO `aproveitamentoLimpo`: um diz quanto do B-roll sobrou, o outro quanto
+   do furo ficou vazio. Os dois juntos são a peça inteira contada dos dois lados. */
+function vazioNoFuroDaPeca(nome) {
+  const jan = janelaDaArte(nome);
+  const lugar = lugarDaFilmagem(nome);
+  const b = BROLL_DE && BROLL_DE.get(nome);
+  if (!jan || !lugar || !b || !b.w || !b.h) return null;
+  // O QUE APARECE NO FURO E' SO' O B-ROLL: fora dele o recorte não deixa passar.
+  const bx = lugar.x + lugar.k * b.x, by = lugar.y + lugar.k * b.y;
+  const bl = lugar.k * b.w, ba = lugar.k * b.h;
+  const ix = Math.max(0, Math.min(bx + bl, jan.x + jan.w) - Math.max(bx, jan.x));
+  const iy = Math.max(0, Math.min(by + ba, jan.y + jan.h) - Math.max(by, jan.y));
+  return Math.max(0, Math.round(100 * (1 - (ix * iy) / (jan.w * jan.h))));
+}
+
+/* QUANTO DO FURO FICA COM O FUNDO DA ARTE, no encaixe de caber. É o preço da regra
+   nova, e é ele que a tela mostra ao lado do ganho: sem o preço na frente, trocar o
+   encaixe seria uma escolha às cegas. */
+function sobraDoFuro(nome) {
+  const b = BROLL_DE && BROLL_DE.get(nome);
+  const jan = janelaDaArte(nome);
+  if (!b || !jan || !b.w || !b.h) return null;
+  const k = Math.min(jan.w / b.w, jan.h / b.h);
+  return Math.max(0, Math.round(100 * (1 - (k * b.w * k * b.h) / (jan.w * jan.h))));
 }
 
 /* O GESTO VIRA FICHA. Traduz o que ele fez na tela de pintura para os mesmos numeros
@@ -8438,7 +8528,7 @@ function editorGuardaGesto() {
     const jan = janelaDaArte(nome);
     if (!b || !jan) return;
     const e = enquadreDe(nome);
-    const kenc = Math.max(jan.w / b.w, jan.h / b.h) * e.folga;
+    const kenc = kencDoEncaixe(b, jan, e.folga, e.encaixe);
     /* AS TRES MEDIDAS SE LEEM DE UMA VEZ, ANTES DE GRAVAR QUALQUER UMA.
 
        O DEFEITO QUE ISTO CONSERTA, e ele custou uma sonda inteira: `mexerEnquadre`
@@ -8448,7 +8538,7 @@ function editorGuardaGesto() {
        era apagada por "nada mudou". Na tela o gesto simplesmente voltava sozinho. */
     const k = filmagem.getScaledWidth() / L;
     const esq = filmagem.left / L, alto = filmagem.top / A;
-    const z = Math.max(1, Math.min(4, k / kenc));
+    const z = Math.max(Z_MINIMO, Math.min(4, k / kenc));
     const kz = kenc * z;
     const dx = (esq - jan.x - jan.w / 2 + kz * (b.x + b.w / 2)) / kenc;
     const dy = (alto - jan.y - jan.h / 2 + kz * (b.y + b.h / 2)) / kenc;
@@ -8474,6 +8564,144 @@ function editorGuardaGesto() {
     desenhaAjustePainel();
   }
 }
+
+/* =============================== OS PUNHOS DO B-ROLL ==============================
+
+   POR QUE ELES EXISTEM. Em 29/08/2026 ele tentou diminuir a filmagem e não conseguiu:
+   "eu selecionei o vídeo, a gente fez todo esse trabalho pra que eu pudesse ajustar o
+   B-roll, e cara, eu não consigo". A causa não era trava nenhuma: as alças da biblioteca
+   nascem nos cantos da FILMAGEM, e a filmagem entra maior que o furo, então os quatro
+   cantos caem fora da borda do palco. Alça invisível é alça que não existe.
+
+   ESTES FICAM NOS CANTOS DO B-ROLL, que está sempre dentro do furo, e moram na página em
+   vez da tela de pintura: continuam do tamanho do dedo mesmo com a peça pequena. */
+
+/** O retângulo do B-roll na tela, em pixels do palco. */
+function retanguloDoBroll() {
+  if (!EDT || !EDT.filmagem) return null;
+  const b = BROLL_DE && BROLL_DE.get(EDT.nome);
+  if (!b || !b.w || !b.h) return null;
+  const lar = EDT.filmagem.getScaledWidth(), alt = EDT.filmagem.getScaledHeight();
+  return { x: EDT.filmagem.left + lar * b.x, y: EDT.filmagem.top + alt * b.y,
+           w: lar * b.w, h: alt * b.h };
+}
+
+/** Põe os quatro punhos nos cantos do B-roll, e some quando ele não está escolhido. */
+function porOsPunhosNoLugar() {
+  const casa = $("aj_punhos");
+  if (!casa) return;
+  const ligado = !!(EDT && EDT.tela && EDT.tela.getActiveObject() === EDT.filmagem
+                    && janelaDaArte(EDT.nome));
+  casa.hidden = !ligado;
+  if (!ligado) return;
+  const r = retanguloDoBroll();
+  if (!r) { casa.hidden = true; return; }
+  const onde = { nw: [r.x, r.y], ne: [r.x + r.w, r.y],
+                 se: [r.x + r.w, r.y + r.h], sw: [r.x, r.y + r.h] };
+  for (const p of casa.children) {
+    const [x, y] = onde[p.dataset.c] || [0, 0];
+    p.style.left = x + "px";
+    p.style.top = y + "px";
+  }
+}
+
+/** Muda o tamanho da filmagem deixando um canto do B-roll parado. */
+function escalarPeloPunho(z1, ax, ay, ladoX, ladoY) {
+  if (!EDT) return;
+  const nome = EDT.nome;
+  const b = BROLL_DE && BROLL_DE.get(nome);
+  const jan = janelaDaArte(nome);
+  if (!b || !jan) return;
+  const e = enquadreDe(nome);
+  const kenc = kencDoEncaixe(b, jan, e.folga, e.encaixe);
+  const z = Math.max(Z_MINIMO, Math.min(4, z1));
+  // A CONTA E' A INVERSA DA IDA: o canto esquerdo do B-roll vale
+  // `jcx - kenc*z*b.w/2 + kenc*dx`, então o deslize que segura a âncora sai daí.
+  const dx = (ax / EDT.L - (jan.x + jan.w / 2)) / kenc + ladoX * z * b.w / 2;
+  const dy = (ay / EDT.A - (jan.y + jan.h / 2)) / kenc + ladoY * z * b.h / 2;
+  mexerEnquadre(nome, "z", z, true);
+  mexerEnquadre(nome, "dx", dx, true);
+  mexerEnquadre(nome, "dy", dy);
+  desenhaAjustePainel();
+}
+
+/* O GESTO E' SEGUIDO NA JANELA, e não no próprio punho com captura de ponteiro: a
+   captura falha calada quando o dedo sai do elemento ou quando o navegador entrega o
+   gesto como mouse em vez de ponteiro. Ouvir na janela não depende de nada disso. */
+(function ligarOsPunhos() {
+  const casa = $("aj_punhos");
+  if (!casa) return;
+  let arr = null;
+  const anda = ev => {
+    if (!arr || !EDT) return;
+    const r = $("aj_tela").getBoundingClientRect();
+    const nova = Math.max(8, Math.abs(ev.clientX - r.left - arr.ax));
+    escalarPeloPunho(arr.z0 * (nova / arr.l0), arr.ax, arr.ay, arr.lx, arr.ly);
+  };
+  const solta = () => {
+    if (!arr) return;
+    arr = null;
+    window.removeEventListener("pointermove", anda);
+    window.removeEventListener("mousemove", anda);
+    anotarMexida();
+  };
+  casa.addEventListener("pointerdown", ev => {
+    const p = ev.target.closest("[data-c]");
+    if (!p || !EDT) return;
+    const r = retanguloDoBroll();
+    if (!r) return;
+    // A ÂNCORA É O CANTO OPOSTO, e o lado diz de que lado dela o B-roll cresce.
+    const a = { nw: [r.x + r.w, r.y + r.h, -1, -1], ne: [r.x, r.y + r.h, 1, -1],
+                se: [r.x, r.y, 1, 1], sw: [r.x + r.w, r.y, -1, 1] }[p.dataset.c];
+    arr = { ax: a[0], ay: a[1], lx: a[2], ly: a[3],
+            l0: r.w, z0: enquadreDe(EDT.nome).z };
+    guardarOGesto();
+    window.addEventListener("pointermove", anda);
+    window.addEventListener("mousemove", anda);
+    window.addEventListener("pointerup", solta, { once: true });
+    window.addEventListener("mouseup", solta, { once: true });
+    window.addEventListener("pointercancel", solta, { once: true });
+    ev.preventDefault();
+  });
+})();
+
+/* A RODA DO MOUSE APROXIMA E AFASTA, no ponto onde o dedo está. É o gesto que todo
+   editor tem, e sem ele o único caminho para o tamanho seria um botão. */
+(function ligarARoda() {
+  const palco = $("aj_tela");
+  if (!palco) return;
+  let ultimoGesto = 0;
+  palco.addEventListener("wheel", ev => {
+    if (!EDT || !janelaDaArte(EDT.nome)) return;
+    ev.preventDefault();
+    const nome = EDT.nome;
+    const b = BROLL_DE && BROLL_DE.get(nome);
+    const jan = janelaDaArte(nome);
+    if (!b || !jan) return;
+    // UM PASSO POR RAJADA na pilha do desfazer: rolar a roda são dezenas de eventos, e
+    // guardar um por evento faria o desfazer precisar de trinta cliques para voltar um
+    // gesto só, que é o mesmo defeito dos botões de mais e menos.
+    const agora = performance.now();
+    if (agora - ultimoGesto > 900) guardarOGesto();
+    ultimoGesto = agora;
+    const e = enquadreDe(nome);
+    const kenc = kencDoEncaixe(b, jan, e.folga, e.encaixe);
+    const r = palco.getBoundingClientRect();
+    const cx = (ev.clientX - r.left) / EDT.L, cy = (ev.clientY - r.top) / EDT.A;
+    const k0 = kenc * e.z;
+    const bcx = b.x + b.w / 2, bcy = b.y + b.h / 2;
+    const jcx = jan.x + jan.w / 2, jcy = jan.y + jan.h / 2;
+    // ONDE O DEDO ESTÁ, em fração da própria filmagem: é esse ponto que fica parado.
+    const u = (cx - (jcx - k0 * bcx + kenc * e.dx)) / k0;
+    const v = (cy - (jcy - k0 * bcy + kenc * e.dy)) / k0;
+    const z = Math.max(Z_MINIMO, Math.min(4, e.z * (ev.deltaY < 0 ? 1.06 : 1 / 1.06)));
+    const k1 = kenc * z;
+    mexerEnquadre(nome, "z", z, true);
+    mexerEnquadre(nome, "dx", (cx - jcx + k1 * (bcx - u)) / kenc, true);
+    mexerEnquadre(nome, "dy", (cy - jcy + k1 * (bcy - v)) / kenc);
+    desenhaAjustePainel();
+  }, { passive: false });
+})();
 
 /** Guarda quem está escolhido e acende a camada dele na lista. */
 function editorEscolhido(o) {
@@ -8702,6 +8930,45 @@ function porMoldura() {
   m.style.height = (a.height / t.height * 100) + "%";
 }
 
+/* O NUMERO QUE MUDA PISCA UMA VEZ. Sem isto, assinar uma peça mexe num número no alto
+   da tela e ninguém vê que ele mexeu: o gesto acontece longe de onde ele está olhando. */
+function porNumeroDaRevisao(id, valor) {
+  const el = $(id);
+  if (!el || el.textContent === String(valor)) return;
+  const primeira = el.textContent === "" || el.textContent === "0" && valor === 0;
+  el.textContent = valor;
+  const pai = el.closest(".aj-num");
+  if (!pai || primeira) return;
+  pai.classList.remove("mudou");
+  void pai.offsetWidth;                    // reinicia a animação
+  pai.classList.add("mudou");
+}
+
+/* A LEVA INTEIRA NUMA TIRA, uma marca por peça.
+
+   UMA TARJA QUE ENCHE DIZ A FRAÇÃO; uma marca por peça diz quantas são, quais já foram,
+   quais ele mexeu, e leva até cada uma com um clique. Com 15 peças ou com 180 ela é a
+   mesma tira: o que muda é a largura de cada marca. */
+function desenhaATrilha(pecas) {
+  const casa = $("aj_trilha");
+  if (!casa) return;
+  if (casa.children.length !== pecas.length) {
+    casa.innerHTML = "";
+    pecas.forEach((p, k) => {
+      const m = document.createElement("i");
+      m.title = "Peça " + (k + 1);
+      m.onclick = () => { AJ_I = k; AJ_SEL = null; desenhaAjuste(); };
+      casa.appendChild(m);
+    });
+  }
+  pecas.forEach((p, k) => {
+    const classe = (PRONTAS.has(p.nome) ? "pronta "
+      : (A_MAO.has(p.nome) || ENQUADRES.has(p.nome)) ? "tocada " : "")
+      + (k === AJ_I ? "agora" : "");
+    if (casa.children[k].className !== classe) casa.children[k].className = classe;
+  });
+}
+
 function desenhaAjustePainel() {
   const pecas = pecas3();
   const p = pecas[AJ_I];
@@ -8716,8 +8983,17 @@ function desenhaAjustePainel() {
   $("aj_conta").textContent = String(AJ_I + 1);
   $("aj_total").textContent = `de ${pecas.length}`;
   const faltam = pecas.length - PRONTAS.size;
-  $("aj_kpi_pronta").textContent = PRONTAS.size;
-  $("aj_kpi_falta").textContent = faltam;
+  /* O TERCEIRO NUMERO E' O DAS AJUSTADAS, e ele entrou a pedido dele em 29/08/2026:
+     "tem que ter tres cards aqui em cima: prontas, para ver e quantas tiveram ajuste".
+     Sem ele nao havia como saber, no fim da leva, em quantas peças ele tinha posto a
+     mão. A conta é a mesma da galeria: peça com ficha guardada é peça mexida. */
+  const mexidas = pecas.filter(x => A_MAO.has(x.nome) || ENQUADRES.has(x.nome)).length;
+  porNumeroDaRevisao("aj_kpi_pronta", PRONTAS.size);
+  porNumeroDaRevisao("aj_kpi_falta", faltam);
+  porNumeroDaRevisao("aj_kpi_mexida", mexidas);
+  $("aj_kpi_pronta_b").classList.toggle("zerado", !PRONTAS.size);
+  $("aj_kpi_mexida_b").classList.toggle("zerado", !mexidas);
+  desenhaATrilha(pecas);
   // O BOTAO DIZ O QUE FAZ EM UMA PALAVRA. "Esta está pronta, avançar" é título.
   $("aj_pronta").textContent = PRONTAS.has(p.nome) ? "Já pronta" : "Pronta";
   $("aj_pronta").classList.toggle("forte", !PRONTAS.has(p.nome));
@@ -8784,24 +9060,53 @@ function desenhaAjustePainel() {
        filmagem la' dentro. Sem furo, o arrasto leva a janela inteira. */
     $("aj_broll_dica").textContent = jan
       ? "Arraste a filmagem para escolher que pedaço dela aparece dentro da moldura. "
-        + "Puxe um canto para aproximar."
+        + "Puxe um punho verde para mudar o tamanho, ou role a roda do mouse na peça."
       : "Arraste a filmagem na peça para mudar a janela de lugar. Os botões abaixo "
         + "escolhem que pedaço dela aparece dentro da janela.";
     $("aj_broll_dica").hidden = false;
-    passoNovo($("aj_zoom"), 100, 300, 5, Math.round(e.z * 100),
+    /* A ESCOLHA DO ENCAIXE, e ela se explica com o número DESTA peça.
+
+       Só existe onde há furo de arte: sem furo não há o que caber nem o que cobrir. */
+    const caixaEnc = $("aj_encaixe");
+    if (caixaEnc) {
+      caixaEnc.hidden = !jan;
+      for (const bt of caixaEnc.children) bt.classList.toggle("on", bt.dataset.e === e.encaixe);
+    }
+    const diz = $("aj_encaixe_diz");
+    if (diz) {
+      diz.hidden = !jan;
+      if (jan) {
+        const cobrindo = aproveitamentoLimpo(p.nome, FOLGA_DO_ENCAIXE, "cobrir");
+        const sobra = sobraDoFuro(p.nome);
+        diz.innerHTML = e.encaixe === "caber"
+          ? `Aparece <b>100%</b> do B-roll, e <b>${sobra}%</b> do furo fica com o fundo `
+            + `da arte. Cobrindo, esta peça mostraria <b>${cobrindo}%</b>.`
+          : `Aparece <b>${cobrindo}%</b> do B-roll: o resto fica fora do furo. Mostrando `
+            + `inteiro, seriam <b>100%</b>, com <b>${sobra}%</b> de furo sobrando.`;
+      }
+    }
+    const regua = $("aj_regua");
+    if (regua) {
+      regua.hidden = !jan;
+      if (document.activeElement !== regua) regua.value = Math.round(e.z * 100);
+    }
+    // O PISO DESCEU DE 100 PARA 20: com o encaixe de caber a peça nasce abaixo de cem,
+    // e o botão que só subia era o mesmo "não deixa diminuir" que ele encontrou na alça.
+    passoNovo($("aj_zoom"), 20, 400, 5, Math.round(e.z * 100),
               v => "Aproximar " + v + "%", v => mexerEnquadre(p.nome, "z", v / 100));
-    /* SEM SOBRA, DESLIZAR NÃO TEM PARA ONDE IR, e desligar os botões diz isso melhor
-       do que deixá-los sem efeito. Com furo de arte a sobra existe desde o começo, que
-       é a folga do encaixe; sem furo, ela só nasce ao aproximar. */
-    const sobra = jan ? folgaDoDeslize(BROLL_DE.get(p.nome), jan, e.z, e.folga).fx > 0.001
-                      : folgaDoEnquadre(e.z) > 0.001;
+    /* COM FURO DE ARTE, DESLIZAR SEMPRE TEM PARA ONDE IR desde 29/08/2026: a trava da
+       sobra saiu junto com o encaixe de caber, porque era ela que prendia o gesto. Sem
+       furo o limite antigo continua valendo, que é o da aproximação. */
+    const sobra = jan ? true : folgaDoEnquadre(e.z) > 0.001;
     $("aj_bx").classList.toggle("apagado", !sobra);
     $("aj_by").classList.toggle("apagado", !sobra);
+    /* OS DOIS DIZIAM "CONTEÚDO", LADO A LADO E COM O MESMO NÚMERO: não havia como saber
+       qual mexia para os lados e qual mexia para cima. Cada um diz agora o que faz. */
     passoNovo($("aj_bx"), -60, 60, 2, Math.round(e.dx * 100),
-              v => "Conteúdo " + (v > 0 ? "+" : "") + v + "%",
+              v => "Lado A Lado " + (v > 0 ? "+" : "") + v + "%",
               v => mexerEnquadre(p.nome, "dx", v / 100));
     passoNovo($("aj_by"), -60, 60, 2, Math.round(e.dy * 100),
-              v => "Conteúdo " + (v > 0 ? "+" : "") + v + "%",
+              v => "Cima E Baixo " + (v > 0 ? "+" : "") + v + "%",
               v => mexerEnquadre(p.nome, "dy", v / 100));
   }
 
@@ -8833,7 +9138,10 @@ function desenhaAjustePainel() {
   if (chave) {
     chave.classList.toggle("on", eq.folga > 1);
     chave.setAttribute("aria-pressed", eq.folga > 1 ? "true" : "false");
-    chave.hidden = !temFuro;
+    /* A FOLGA SÓ EXISTE EM COBRIR. Cabendo, o que ficaria de fora do B-roll não entra
+       na peça, porque o recorte para no próprio B-roll: a chave não teria efeito
+       nenhum, e chave sem efeito é a definição de tela que mente. */
+    chave.hidden = !temFuro || eq.encaixe !== "cobrir";
   }
   /* AS MEDIDAS SO' EXISTEM ONDE HA' O QUE MEDIR (trava 2). Sem furo de arte nao ha'
      janela nenhuma para comparar, e deixar o numero da peca anterior na tela seria a
@@ -8964,8 +9272,9 @@ function folgaDoEnquadre(z) { return Math.max(0, (z - 1) / 2); }
    dela que sai a conta de ajustadas na galeria. */
 function fichaSoDoPadrao(e) {
   return (e.z || 1) === 1 && !e.dx && !e.dy && !e.mx && !e.my && (e.es || 1) === 1
-    && !e.moldura && Math.abs((e.folga != null ? e.folga : FOLGA_DO_ENCAIXE)
-                              - FOLGA_DO_ENCAIXE) < 1e-9;
+    && !e.moldura && e.encaixe !== "cobrir"
+    && Math.abs((e.folga != null ? e.folga : FOLGA_DO_ENCAIXE)
+                - FOLGA_DO_ENCAIXE) < 1e-9;
 }
 
 /** Reenquadra a filmagem desta peça. A janela não sai do lugar: quem anda é o vídeo. */
@@ -8979,9 +9288,16 @@ function mexerEnquadre(nome, chave, valor, calado) {
        my nao entram aqui; a janela agora e' o furo da arte, que nao se move". Escrever
        esses tres seria guardar um ajuste que o arquivo nunca vai ter. */
     e.es = 1; e.mx = 0; e.my = 0;
-    const f = folgaDoDeslize(r, jan, e.z, e.folga);
-    e.dx = Math.max(-f.fx, Math.min(f.fx, e.dx));
-    e.dy = Math.max(-f.fy, Math.min(f.fy, e.dy));
+    /* O DESLIZE NÃO SE PRENDE MAIS, desde 29/08/2026.
+
+       A TRAVA ERA O QUE ELE CHAMAVA DE "PRENDENDO": ela existia para impedir que
+       sobrasse vazio dentro do furo, e o preço era a peça voltar sozinha para onde a
+       conta achava certo, no meio do gesto dele. Com o encaixe de caber a peça já nasce
+       menor que o furo, então a trava zerava todo arraste antes mesmo de começar.
+
+       QUEM AVISA É A TELA, e não a trava: `editorMede` diz quanto do furo ficou sem
+       filmagem, e a decisão continua sendo de quem está olhando. */
+    e.z = Math.max(Z_MINIMO, Math.min(4, e.z || 1));
     if (fichaSoDoPadrao(e)) ENQUADRES.delete(nome);
     else ENQUADRES.set(nome, e);
     A_MAO.add(nome);
@@ -9021,6 +9337,42 @@ function mexerEnquadre(nome, chave, valor, calado) {
    anterior nao ha' caminho de volta, e o unico jeito de voltar seria zerar a peca
    inteira, levando junto tudo o que ele ja' tinha acertado nela. */
 $("aj_folga").onclick = () => { guardarOGesto(); virarAFolga(); };
+
+/* O ENCAIXE DA PEÇA: mostrar inteiro ou cobrir o furo.
+
+   TROCAR ZERA O TAMANHO E O DESLIZE, e é de propósito: a régua muda de zero junto com o
+   encaixe, e cem por cento passa a querer dizer outra coisa. Guardar o `z` antigo poria
+   a filmagem num tamanho que ele não pediu. */
+$("aj_encaixe").onclick = ev => {
+  const b = ev.target.closest("[data-e]");
+  if (!b) return;
+  const p = pecas3()[AJ_I];
+  if (!p || enquadreDe(p.nome).encaixe === b.dataset.e) return;
+  guardarOGesto();
+  mexerEnquadre(p.nome, "encaixe", b.dataset.e, true);
+  mexerEnquadre(p.nome, "z", 1, true);
+  mexerEnquadre(p.nome, "dx", 0, true);
+  mexerEnquadre(p.nome, "dy", 0);
+  desenhaAjustePainel();
+};
+
+/* A RÉGUA DO TAMANHO. Um passo por rajada na pilha, como na roda do mouse. */
+let AJ_REGUA_GESTO = 0;
+$("aj_regua").oninput = () => {
+  const p = pecas3()[AJ_I];
+  if (!p) return;
+  /* O VALOR SE LÊ ANTES DE GUARDAR O GESTO, e a prova pegou o porquê: `guardarOGesto`
+     redesenha o painel, e o painel reescreve a régua com o tamanho ANTIGO. Lendo
+     depois, o primeiro movimento do arraste voltava sozinho para onde estava. É o
+     mesmo defeito das três medidas do gesto na tela de pintura, e a lição é a mesma:
+     leia tudo o que o dedo deixou antes de mexer em qualquer coisa. */
+  const alvo = Math.max(Z_MINIMO, Math.min(4, +$("aj_regua").value / 100));
+  const agora = performance.now();
+  if (agora - AJ_REGUA_GESTO > 900) guardarOGesto();
+  AJ_REGUA_GESTO = agora;
+  mexerEnquadre(p.nome, "z", alvo);
+  desenhaAjustePainel();
+};
 $("aj_voltar_gesto").onclick = () => voltarUmGesto(AJ_PILHA, AJ_REFEITOS);
 $("aj_refazer_gesto").onclick = () => voltarUmGesto(AJ_REFEITOS, AJ_PILHA);
 
@@ -9523,7 +9875,26 @@ function moverAObraPara(sub) {
   if (feito && feito.parentElement !== casaDoFeito) casaDoFeito.appendChild(feito);
 }
 
-$("aj_montar").onclick = () => $("apl_montar").click();
+/* FABRICAR DAQUI LEVA O OLHO ATÉ A OBRA.
+
+   ELE PEDIU EM 29/08/2026: "quando clicar em fabricar, eu também quero o loading, que
+   nem tem na etapa de recorte". A barra já existia e já se mudava para esta fase, mas
+   ela mora no PÉ, abaixo da peça: clicar no topo e não ver nada acontecer é o mesmo que
+   não ter barra nenhuma. Agora a página desce até ela e a caixa acende por um instante,
+   que é o que diz "é aqui que a coisa está acontecendo". */
+$("aj_montar").onclick = () => {
+  $("apl_montar").click();
+  requestAnimationFrame(() => {
+    const casa = $("aj_obra_casa");
+    if (!casa) return;
+    casa.scrollIntoView({ behavior: "smooth", block: "end" });
+    const caixa = $("apl_obra");
+    if (!caixa) return;
+    caixa.classList.remove("chegou");
+    void caixa.offsetWidth;
+    caixa.classList.add("chegou");
+  });
+};
 
 /* RETOMAR UM RASCUNHO. O que se recupera é onde ele parou e qual template estava na
    bancada; o resto vem do disco, que é onde ele de fato mora. Enquanto as peças não
@@ -9754,14 +10125,40 @@ function variacoesDaConta(conta) {
   return artesDoAcervo().filter(a => meus.has(a.template) && a.furo && a.janela);
 }
 
+/* O TAMANHO LIMPO DA FILMAGEM, no encaixe que a peça pedir.
+
+   COBRIR ERA A ÚNICA REGRA ATÉ 29/08/2026, e era ela que comia o B-roll. A justificativa
+   escrita nos dois lados era "tarja preta dentro da moldura apareceria na peça pronta,
+   beirada de filmagem perdida não". A premissa caiu quando ele olhou peça a peça: a arte
+   dele JÁ TEM barra preta desenhada, então a tarja não é defeito, é o fundo do template.
+
+   MEDIDO NAS 180 PEÇAS DA LEVA 31, com o retângulo do passo 2 e as quatro variações:
+
+     cobrindo com a folga de 12%   73,9% do B-roll na mediana, 61,9% na pior
+     cobrindo sem a folga          92,7% na mediana
+     cabendo                       100% em todas, sem exceção
+
+   E o preço de caber é pequeno: o furo fica com 7,3% de fundo da arte na mediana, 93%
+   das peças ficam abaixo de dez por cento, e só UMA em 180 passa de vinte. A proporção
+   do B-roll é quase a do furo que a medida escolhe (0,97 contra 1,05), e mesmo assim a
+   regra mandava ampliar até transbordar.
+
+   POR ISSO CABER VIROU O PADRÃO, e cobrir virou a escolha. Ficha sem `encaixe` é ficha
+   nova: cabe. */
+function kencDoEncaixe(b, jan, folga, encaixe) {
+  const rw = jan.w / b.w, rh = jan.h / b.h;
+  // A FOLGA SÓ EXISTE EM COBRIR: cabendo, o que fica de fora do B-roll não entra na
+  // peça, porque o recorte para no próprio B-roll. Ver `recortarNaJanela`.
+  return encaixe === "cobrir"
+    ? Math.max(rw, rh) * (folga != null ? folga : FOLGA_DO_ENCAIXE)
+    : Math.min(rw, rh);
+}
+
 /** Onde a filmagem entra: o retangulo do B-roll da peca posto DENTRO da janela da arte.
     Devolve o canto e o tamanho do video em fracao do quadro, a mesma conta dos dois lados. */
-function encaixeNaJanela(broll, jan, z, dx, dy, folga) {
+function encaixeNaJanela(broll, jan, z, dx, dy, folga, encaixe) {
   const b = (broll && broll.w > 0 && broll.h > 0) ? broll : { x: 0, y: 0, w: 1, h: 1 };
-  // COBRIR, e nao caber: sobrar tarja preta dentro da moldura seria pior que perder
-  // beirada de filmagem, porque a tarja aparece na peca pronta.
-  // A FOLGA VEM DA PECA, e 1,12 e' so' o valor de partida. Ver `enquadreDe`.
-  const kenc = Math.max(jan.w / b.w, jan.h / b.h) * (folga != null ? folga : FOLGA_DO_ENCAIXE);
+  const kenc = kencDoEncaixe(b, jan, folga, encaixe);
   /* APROXIMAR E DESLIZAR ENTRAM AQUI DESDE 29/08/2026, e antes nao entravam porque esta
      conta so' era usada na fase 1, onde nada foi ajustado ainda. A revisao precisa dela
      COM o ajuste, senao a peca desenhada nao e' a que vai sair do motor.
@@ -9804,6 +10201,11 @@ function folgaDoDeslize(broll, jan, z, folga) {
    a peca: 1.10 esconde o canto do reel, 1.12 fica com margem; o preco e' perder ate'
    6% de beirada por lado, e beirada perdida nao aparece, preto alheio aparece. */
 const FOLGA_DO_ENCAIXE = 1.12;
+
+/* ATÉ ONDE A FILMAGEM DIMINUI. O piso era 1 nos dois lados, com a justificativa de que
+   "menos que 1 deixaria borda preta dentro da janela". Com o encaixe de caber a peça
+   nasce abaixo de 1 por definição, e o piso passa a ser só um limite de sanidade. */
+const Z_MINIMO = 0.15;
 
 /** O preco de vestir este B-roll com esta janela. Menor preco, melhor encaixe.
 
@@ -9889,7 +10291,8 @@ function lugarDaFilmagem(nome) {
   const jan = janelaDaArte(nome);
   if (!jan) return null;
   const e = enquadreDe(nome);
-  const enc = encaixeNaJanela(BROLL_DE && BROLL_DE.get(nome), jan, e.z, e.dx, e.dy, e.folga);
+  const enc = encaixeNaJanela(BROLL_DE && BROLL_DE.get(nome), jan,
+                              e.z, e.dx, e.dy, e.folga, e.encaixe);
   return { jan, k: enc.k, kenc: enc.kenc, x: enc.x, y: enc.y };
 }
 
@@ -9901,11 +10304,25 @@ function lugarDaFilmagem(nome) {
    com a filmagem: um fio escuro em volta do furo, que e' o tipo de linha que ele viu. */
 const RESPIRO_DO_FURO = 0.01;
 
-/** Recorta a caixa da filmagem no furo da arte, com o respiro. */
-function recortarNaJanela(caixa, jan) {
+/* RECORTA A CAIXA DA FILMAGEM NO FURO **E** NO B-ROLL, desde 29/08/2026.
+
+   O QUE SOBRA DO REEL NÃO É PEÇA. Fora do retângulo do B-roll mora o resto do quadro do
+   Instagram: canto arredondado, barra do aplicativo, nome de perfil. Cobrindo o furo
+   isso nunca aparecia, porque o B-roll tapava tudo. Com o encaixe de caber apareceria
+   nas beiradas, e a peça teria trocado corte por lixo. Cortando nos dois, o furo mostra
+   B-roll ou o fundo da arte, e mais nada. */
+function recortarNaJanela(caixa, jan, lugar, broll) {
   const r = RESPIRO_DO_FURO;
-  caixa.style.clipPath = `inset(${(jan.y - r) * 100}% ${(1 - jan.x - jan.w - r) * 100}% `
-    + `${(1 - jan.y - jan.h - r) * 100}% ${(jan.x - r) * 100}%)`;
+  let e = jan.x - r, t = jan.y - r;
+  let d = jan.x + jan.w + r, f = jan.y + jan.h + r;
+  if (lugar && broll && broll.w > 0 && broll.h > 0) {
+    const bx = lugar.x + lugar.k * broll.x, by = lugar.y + lugar.k * broll.y;
+    e = Math.max(e, bx); t = Math.max(t, by);
+    d = Math.min(d, bx + lugar.k * broll.w);
+    f = Math.min(f, by + lugar.k * broll.h);
+  }
+  caixa.style.clipPath = `inset(${t * 100}% ${(1 - d) * 100}% ${(1 - f) * 100}% `
+    + `${e * 100}%)`;
   caixa.style.transformOrigin = "";
   caixa.style.transform = "";
 }

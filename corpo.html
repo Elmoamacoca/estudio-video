@@ -1271,9 +1271,23 @@
               </label>
             </div>
 
+            <!-- O PLACAR DA REVISAO, e ele e' UM instrumento e nao tres caixas.
+
+                 A primeira versao eram cartoes soltos com um numero dentro, e ele
+                 reprovou de cara: "ficou chapado, ficou feio". Aqui os tres numeros
+                 dividem o mesmo painel, separados por um fio, e embaixo deles corre a
+                 leva inteira com uma marca por peca: o numero diz QUANTAS, a marca diz
+                 QUAIS e leva ate' ela. Verde e' assinada, brasa e' ajustada. -->
             <div class="aj-placar">
-              <span class="aj-kpi feita"><b id="aj_kpi_pronta">0</b> prontas</span>
-              <span class="aj-kpi"><b id="aj_kpi_falta">0</b> para ver</span>
+              <div class="aj-placar-topo">
+                <button class="aj-num feita" id="aj_kpi_pronta_b" type="button">
+                  <b id="aj_kpi_pronta">0</b><span>Prontas</span></button>
+                <button class="aj-num" id="aj_kpi_falta_b" type="button">
+                  <b id="aj_kpi_falta">0</b><span>Para Ver</span></button>
+                <button class="aj-num tocada" id="aj_kpi_mexida_b" type="button">
+                  <b id="aj_kpi_mexida">0</b><span>Com Ajuste</span></button>
+              </div>
+              <div class="aj-trilha" id="aj_trilha"></div>
             </div>
 
             <!-- DESFAZER E REFAZER MORAM NA BARRA, junto do resto do comando.
@@ -1292,17 +1306,25 @@
           <p class="nota mini aj-recado" id="aj_recado"></p>
           <div class="aj-corpo">
             <div class="aj-palco">
-              <div class="aj-tela" id="aj_tela"></div>
-              <!-- QUANTO DO B-ROLL SOBREVIVE AO ENCAIXE, medido na hora.
-                   Ele nao tinha como saber o preco de uma moldura antes de escolher
-                   ela: medido nas 180 pecas da leva 31, a escolha automatica deixa de
-                   fora 26% da filmagem em media, e vinte desses pontos sao so' da folga
-                   de seguranca. O numero do lado diz o que a outra opcao daria. -->
+              <div class="aj-tela-caixa">
+                <div class="aj-tela" id="aj_tela"></div>
+                <!-- OS PUNHOS DO B-ROLL (29/08/2026).
+
+                     AS ALCAS DE FABRICA FICAVAM FORA DA TELA: elas nascem nos cantos da
+                     FILMAGEM, e a filmagem entra maior que o furo, entao os quatro
+                     cantos caiam alem da borda do palco. Ele tentou diminuir e nao
+                     achou por onde: "eu selecionei o video... e cara, eu nao consigo".
+                     Estes ficam nos cantos do B-roll, que esta' sempre dentro do furo. -->
+                <div class="aj-punhos" id="aj_punhos" hidden>
+                  <i data-c="nw"></i><i data-c="ne"></i><i data-c="se"></i><i data-c="sw"></i>
+                </div>
+              </div>
+              <!-- QUANTO DO B-ROLL SOBREVIVE AO ENCAIXE, medido na hora. -->
               <div class="aj-medidas">
                 <span class="aj-medida" id="aj_med"><b id="aj_med_n">100%</b>
                   Do B-roll Aparece</span>
-                <span class="aj-medida" id="aj_med2"><b id="aj_med2_n">100%</b>
-                  <span id="aj_med2_r">Sem A Folga</span></span>
+                <span class="aj-medida" id="aj_med2"><b id="aj_med2_n">0%</b>
+                  <span id="aj_med2_r">Do Furo Com O Fundo</span></span>
               </div>
             </div>
 
@@ -1337,8 +1359,21 @@
                      consigo mexer dentro do quadrado, eu não consigo mexer todo o
                      quadrado". O texto aqui é o do primeiro caso, que é o de hoje. -->
                 <p class="nota mini" id="aj_broll_dica" hidden>Arraste a filmagem para
-                  escolher que pedaço dela aparece dentro da moldura. Puxe um canto para
-                  aproximar.</p>
+                  escolher que pedaço dela aparece dentro da moldura. Puxe um punho verde
+                  para mudar o tamanho, ou role a roda do mouse em cima da peça.</p>
+                <!-- O ENCAIXE DA PECA, e ele e' a raiz do corte que ele viu peca a peca.
+                     Medido nas 180 da leva 31: cobrindo, sobra 73,9% do B-roll na peca
+                     mediana e 61,9% na pior; cabendo, sobram 100% em todas, e o furo
+                     fica com 7,3% de fundo da arte na mediana. Ver `kencDoEncaixe`. -->
+                <div class="ed-botoes aj-encaixe" id="aj_encaixe">
+                  <button type="button" data-e="caber">Mostrar Inteiro</button>
+                  <button type="button" data-e="cobrir">Cobrir O Furo</button>
+                </div>
+                <p class="nota mini" id="aj_encaixe_diz"></p>
+                <!-- A REGUA DO TAMANHO: o gesto de arrastar foi o primeiro que ele
+                     procurou, e o botao de mais e menos sozinho nao o oferecia. -->
+                <input class="aj-regua" id="aj_regua" type="range" min="20" max="400"
+                       value="100" aria-label="Tamanho da filmagem">
                 <div class="ed-passo" id="aj_zoom"></div>
                 <div class="ed-passo" id="aj_bx"></div>
                 <div class="ed-passo" id="aj_by"></div>

@@ -98,6 +98,8 @@ QUALIDADE_DA_PLACA = "22"
 # esconde o canto do reel, 1.12 fica com margem. E' A MESMA CONTA DA TELA (tela.js,
 # FOLGA_DO_ENCAIXE): mudou aqui, muda la'.
 FOLGA_DO_ENCAIXE = 1.12
+# ATE' ONDE A FILMAGEM DIMINUI. Era 1 nos dois lados; ver `kenc_do_encaixe`.
+Z_MINIMO = 0.15
 
 
 def par(n) -> int:
@@ -1243,8 +1245,31 @@ def folga_da_peca(enquadre) -> float:
     return min(2.0, max(1.0, f))
 
 
+def kenc_do_encaixe(bw: float, bh: float, jw: float, jh: float,
+                    folga: float | None, encaixe: str | None) -> float:
+    """O tamanho limpo da filmagem, no encaixe que a peca pedir.
+
+    COBRIR ERA A UNICA REGRA ate' 29/08/2026, e a justificativa estava escrita aqui
+    mesmo: "tarja preta dentro da moldura apareceria na peca pronta". A premissa caiu
+    quando ele olhou peca a peca: a arte dele JA' TEM barra preta desenhada, entao a
+    tarja nao e' defeito, e' o fundo do template.
+
+    MEDIDO NAS 180 PECAS DA LEVA 31: cobrindo com a folga sobra 73,9% do B-roll na peca
+    mediana e 61,9% na pior; cabendo sobram 100% em todas, e o furo fica com 7,3% de
+    fundo da arte na mediana, com 93% das pecas abaixo de dez por cento.
+
+    A CONTA E' A MESMA QUE A TELA FAZ (`kencDoEncaixe`, em tela.js), pela trava 60.
+    """
+    if str(encaixe or "caber") == "cobrir":
+        return max(jw / bw, jh / bh) * (FOLGA_DO_ENCAIXE if folga is None else folga)
+    # A FOLGA SO' EXISTE EM COBRIR: cabendo, o que fica de fora do B-roll nao entra na
+    # peca, porque o recorte para no proprio B-roll.
+    return min(jw / bw, jh / bh)
+
+
 def encaixe_na_janela(base, jan, z: float = 1.0, dx: float = 0.0,
-                      dy: float = 0.0, folga: float | None = None) -> tuple | None:
+                      dy: float = 0.0, folga: float | None = None,
+                      encaixe: str | None = None) -> tuple | None:
     """Onde a filmagem entra quando a janela e' a da ARTE, e nao a do reel de origem.
 
     Devolve `(k, x, y)`: quanto o quadro do recorte cresce e onde fica o canto de cima
@@ -1274,8 +1299,7 @@ def encaixe_na_janela(base, jan, z: float = 1.0, dx: float = 0.0,
         cyj = float(jan.get("y", 0)) + jh / 2
     except (TypeError, ValueError):
         return None
-    # A FOLGA VEM DA PECA, e 1,12 e' so' o valor de partida. Ver `folga_da_peca`.
-    kenc = max(jw / bw, jh / bh) * (FOLGA_DO_ENCAIXE if folga is None else folga)
+    kenc = kenc_do_encaixe(bw, bh, jw, jh, folga, encaixe)
     k = kenc * z
     return (k, cxj - k * cxb + kenc * dx, cyj - k * cyb + kenc * dy)
 
@@ -1467,28 +1491,58 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
         dy = float(e.get("dy") or 0)
     except (TypeError, ValueError):
         z, dx, dy = 1.0, 0.0, 0.0
-    z = min(4.0, max(1.0, z))          # menos que 1 deixaria borda preta dentro da janela
-    # DESLIZAR SO' VAI ATE' A SOBRA, e quanta sobra ha' depende de onde a filmagem entra.
-    # A tela ja' prende nisto; aqui a conta e' repetida porque um pedido antigo, ou
-    # escrito na mao, nao passou por ela.
     fga = folga_da_peca(e)
-    fdx, fdy = folga_do_deslize(e.get("base"), e.get("janela"), z, fga)
-    dx = max(-fdx, min(fdx, dx))
-    dy = max(-fdy, min(fdy, dy))
+    enc_modo = e.get("encaixe")
+    com_furo = isinstance(e.get("janela"), dict)
+    if com_furo:
+        # COM FURO DE ARTE AS DUAS TRAVAS SAIRAM, em 29/08/2026.
+        #
+        # O PISO DE `z` era 1, com a justificativa de que "menos que 1 deixaria borda
+        # preta dentro da janela". Com o encaixe de caber a peca nasce abaixo de 1 por
+        # definicao, e a borda que sobra e' o fundo da arte, que ele QUER ver.
+        #
+        # E O DESLIZE NAO SE PRENDE: a trava da sobra era o que segurava o gesto dele na
+        # revisao, e prender aqui faria o arquivo sair diferente da peca que ele aprovou.
+        z = min(4.0, max(Z_MINIMO, z))
+    else:
+        # SEM FURO NADA MUDOU, e e' de proposito: la' a filmagem ocupa o quadro inteiro,
+        # nao ha' arte por cima, e afastar ou deslizar alem da sobra abre preto de
+        # verdade na peca. As duas travas continuam valendo para o rascunho antigo.
+        z = min(4.0, max(1.0, z))
+        fdx, fdy = folga_do_deslize(e.get("base"), None, z, fga)
+        dx = max(-fdx, min(fdx, dx))
+        dy = max(-fdy, min(fdy, dy))
     # A JANELA DA ARTE MANDA, QUANDO EXISTE.
     #
-    # A conta e' a mesma que a tela faz na fase 1 (`encaixeNaJanela`): a filmagem cresce
-    # ate' que o retangulo do B-roll COBRIR a janela da arte, e o meio de um cai no meio
-    # do outro. Cobrir, e nao caber: sobrar tarja preta dentro da moldura apareceria na
-    # peca pronta, e perder beirada de filmagem nao aparece.
+    # A conta e' a mesma que a tela faz (`encaixeNaJanela`): o retangulo do B-roll entra
+    # na janela da arte, e o meio de um cai no meio do outro. QUANTO ele cresce depende
+    # do encaixe da peca: cabendo, ate' o B-roll inteiro entrar; cobrindo, ate' tapar o
+    # furo. Ver `kenc_do_encaixe` para a medicao que mudou o padrao.
     #
     # `es`, `mx` e `my` NAO ENTRAM AQUI. Eles movem a janela, e a janela agora e' o furo
     # da arte, que nao se move: o que se move e' a filmagem dentro dela, com `z` e `d`.
-    encaixe = encaixe_na_janela(e.get("base"), e.get("janela"), z, dx, dy, fga)
+    encaixe = encaixe_na_janela(e.get("base"), e.get("janela"), z, dx, dy, fga, enc_modo)
+    recorte_broll = None
     if encaixe:
         k, fx, fy = encaixe
         ew, eh = par(int(round(tw * k))), par(int(round(th * k)))
         px, py = int(round(tw * fx)), int(round(th * fy))
+        # O QUE SOBRA DO REEL NAO E' PECA, e por isso a filmagem entra CORTADA no
+        # retangulo do B-roll. Fora dele mora o resto do quadro do Instagram: canto
+        # arredondado, barra do aplicativo, nome de perfil. Cobrindo o furo isso nunca
+        # aparecia, porque o B-roll tapava tudo; cabendo, apareceria nas beiradas, e a
+        # peca teria trocado corte por lixo. E' o mesmo recorte que a tela faz em
+        # `recortarNaJanela`.
+        b = e.get("base") if isinstance(e.get("base"), dict) else {}
+        try:
+            bw = float(b.get("w") or 0)
+            bh = float(b.get("h") or 0)
+            bx = float(b.get("x") or 0)
+            by = float(b.get("y") or 0)
+        except (TypeError, ValueError):
+            bw = bh = 0.0
+        if bw > 0 and bh > 0 and (bw < 1 or bh < 1):
+            recorte_broll = (bx, by, bw, bh)
     else:
         # E O QUE FOI FEITO COM A JANELA. A filmagem acompanha: ver `camada_da_peca`.
         esc, mx, my, cx, cy = movimento_da_janela(e)
@@ -1513,8 +1567,28 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
         camada_certa = False
     c = "[1:v]" if camada_certa else "[c]"
     prep = "" if camada_certa else f"[1:v]scale={tw}:{th}[c];"
-    if z == 1 and not px and not py:
-        # O CAMINHO CURTO, que e' o de quase toda peca: nada foi mexido.
+    if recorte_broll:
+        # A FILMAGEM ENTRA SO' COM O B-ROLL, e o resto do quadro fica com o preto do
+        # fundo, que e' onde a arte desenha a barra dela. As contas sao as mesmas de
+        # cima, so' que aplicadas ao pedaco: o B-roll ocupa `ew*bw` por `eh*bh` e comeca
+        # em `px + ew*bx`.
+        bx, by, bw, bh = recorte_broll
+        cw, ch = par(int(round(ew * bw))), par(int(round(eh * bh)))
+        cx0, cy0 = px + int(round(ew * bx)), py + int(round(eh * by))
+        corte = (f"[0:v]crop=iw*{bw:.6f}:ih*{bh:.6f}:iw*{bx:.6f}:ih*{by:.6f},"
+                 f"scale={cw}:{ch},setsar=1[v0];")
+        if cx0 <= 0 and cy0 <= 0 and cx0 + cw >= tw and cy0 + ch >= th:
+            # O B-ROLL TAPA O QUADRO INTEIRO: nao ha' fundo para desenhar, e o `crop`
+            # chega ao mesmo lugar por metade do tempo. Ver a nota do `cobre`, abaixo.
+            filtro = (corte + f"[v0]crop={tw}:{th}:{-cx0}:{-cy0}[v];" + prep
+                      + f"[v]{c}overlay=0:0,format=yuv420p[out]")
+        else:
+            filtro = (corte
+                      + f"color=c=black:s={tw}x{th}:r={cadencia(video)}[fundo];"
+                      f"[fundo][v0]overlay={cx0}:{cy0}:shortest=1[v];" + prep
+                      + f"[v]{c}overlay=0:0,format=yuv420p[out]")
+    elif z == 1 and not px and not py:
+        # O CAMINHO CURTO, que e' o de quase toda peca sem furo: nada foi mexido.
         filtro = (f"[0:v]scale={tw}:{th},setsar=1[v];" + prep
                   + f"[v]{c}overlay=0:0,format=yuv420p[out]")
     else:

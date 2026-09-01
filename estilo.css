@@ -1816,6 +1816,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .apl-resumo b{color:var(--ink);font-weight:650}
 .apl-obra{margin-top:20px}
 .apl-obra[hidden]{display:none}
+/* A OBRA ACENDE QUANDO CHEGA, e some com o brilho depois. Ele clica em Fabricar no topo
+   da revisão e a barra mora no pé: sem o aceno, o clique parece não ter feito nada. */
+.apl-obra.chegou{animation:obraChegou 1.6s cubic-bezier(.22,1,.36,1)}
+@keyframes obraChegou{
+  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}
+  35%{box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 22%,transparent)}
+  100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 0%,transparent)}}
 .apl-obra-topo{display:flex;align-items:center;gap:10px;font-size:14px;margin-bottom:11px}
 .apl-obra-topo .dir{margin-left:auto;font-variant-numeric:tabular-nums;
   color:var(--muted);font-size:13px}
@@ -1978,14 +1985,43 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   border:1px solid var(--rule-solid);background:var(--paper);color:var(--ink)}
 .aj-ir input:focus{outline:0;border-color:var(--accent)}
 /* O PLACAR NO MEIO, e com peso: e' a pergunta que ele fez em voz alta. */
-.aj-placar{flex:1;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
-.aj-kpi{display:inline-flex;align-items:baseline;gap:5px;padding:5px 12px;
-  border-radius:999px;background:var(--paper);border:1px solid var(--rule-solid);
-  font-size:12px;color:var(--muted);white-space:nowrap}
-.aj-kpi b{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
-.aj-kpi.feita{border-color:color-mix(in srgb,var(--accent) 45%,transparent);
-  background:var(--accent-tint)}
-.aj-kpi.feita b{color:var(--accent)}
+/* O PLACAR DA REVISAO: UM instrumento, e nao tres caixas soltas (29/08/2026).
+
+   TRES CARTOES IGUAIS FICARAM CHAPADOS e ele reprovou. Aqui os numeros dividem o mesmo
+   painel, com um fio entre eles, e embaixo corre a leva inteira: uma marca por peca,
+   clicavel, que leva direto ate' ela. */
+.aj-placar{flex:1;display:flex;flex-direction:column;gap:6px;align-items:center;
+  max-width:340px;margin:0 auto;padding:6px 4px 7px;border-radius:13px;
+  border:1px solid var(--rule-solid);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 4%,transparent),
+    transparent),var(--paper);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 6%,transparent)}
+.aj-placar-topo{display:flex;align-items:stretch;width:100%}
+.aj-num{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:0 10px;border:0;background:none;cursor:pointer;color:inherit;font:inherit;
+  border-right:1px solid var(--rule-solid);transition:.16s}
+.aj-num:last-child{border-right:0}
+.aj-num b{font-size:21px;font-weight:800;letter-spacing:-.03em;line-height:1.05;
+  font-variant-numeric:tabular-nums;transition:.16s}
+.aj-num span{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap}
+.aj-num:hover b{transform:translateY(-1px)}
+.aj-num.feita b{color:var(--accent)}
+.aj-num.tocada b{color:var(--brasa,#BA5A18)}
+.aj-num.zerado b{color:var(--muted)}
+/* O NUMERO QUE ACABOU DE MUDAR PISCA UMA VEZ: assinar uma peca mexe num numero no alto
+   da tela, e sem o pulso ninguem ve' que ele mexeu. */
+.aj-num.mudou b{animation:ajPulsa .5s cubic-bezier(.22,1,.36,1)}
+@keyframes ajPulsa{0%{transform:scale(1)}40%{transform:scale(1.2)}100%{transform:scale(1)}}
+.aj-trilha{display:flex;gap:2px;width:100%;padding:0 10px}
+.aj-trilha i{flex:1;height:7px;min-width:3px;border-radius:2px;cursor:pointer;
+  background:color-mix(in srgb,var(--ink) 17%,transparent);
+  transition:background .18s,transform .18s}
+.aj-trilha i:hover{transform:scaleY(1.7)}
+.aj-trilha i.pronta{background:var(--accent)}
+.aj-trilha i.tocada{background:var(--brasa,#BA5A18)}
+.aj-trilha i.agora{background:var(--ink);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--ink) 20%,transparent)}
 .aj-acoes{display:flex;align-items:center;gap:8px}
 /* `hidden` NAO VENCE QUEM TEM `display` ESCRITO, e `.acao` tem. Sem esta linha o botao
    de marcar pronta continuaria na barra depois de todas ficarem prontas. */
@@ -2021,14 +2057,44 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    peca terminava 38 pixels abaixo da dobra e os botoes 133 abaixo. Descontar o que vem
    antes faz a fase inteira caber sem rolar, que era a queixa. */
 .aj-corpo{display:flex;gap:26px;align-items:flex-start;justify-content:center}
-/* O DESCONTO SUBIU DE 250 PARA 296 em 29/08/2026, e o motivo esta' logo abaixo do
+/* O DESCONTO SUBIU DE 296 PARA 348 no fim de 29/08/2026, e o motivo e' o placar novo:
+   os tres numeros com a trilha da leva embaixo medem 52 pixels a mais que as duas
+   pilulas que havia ali. A prova "a peca inteira cabe na tela" pegou na hora, e agora
+   ela diz de quanto foi: media -15 px com o desconto em 330.
+
+   ANTES ELE JA' TINHA SUBIDO DE 250 PARA 296, e o motivo estava logo abaixo do
    palco: as duas medidas do aproveitamento passaram a morar ali, e sao 29 pixels de
    pilula mais 10 de folga. Sem descontar, a peca terminava abaixo da dobra e a prova
    "a peca inteira cabe na tela" reprovava, que e' exatamente a queixa que ela guarda. */
-.aj-tela{position:relative;flex:0 0 auto;height:min(calc(100vh - 296px),700px);
-  aspect-ratio:9/16;
+/* O PALCO GANHOU UMA CAIXA POR FORA, e ela existe para os punhos do B-roll morarem
+   por cima da peca sem serem apagados quando o editor se refaz (`aj_tela.innerHTML`). */
+.aj-tela-caixa{position:relative;flex:0 0 auto;height:min(calc(100vh - 348px),700px);
+  aspect-ratio:9/16}
+.aj-tela{position:absolute;inset:0;
   container-type:size;overflow:hidden;border-radius:14px;background:#000;
   border:1px solid var(--rule-solid)}
+/* OS PUNHOS DO B-ROLL. Eles moram na pagina, e nao na tela de pintura: assim continuam
+   do tamanho do dedo mesmo com a peca pequena, e nao dependem de o objeto caber na tela
+   para poder ser pegos, que era o defeito das alcas de fabrica. */
+.aj-punhos{position:absolute;inset:0;pointer-events:none;z-index:4}
+.aj-punhos i{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;
+  border-radius:50%;background:var(--accent);border:2px solid var(--paper);
+  box-shadow:0 2px 8px rgba(0,0,0,.55);pointer-events:auto;touch-action:none;
+  transition:transform .12s}
+.aj-punhos i:hover{transform:scale(1.25)}
+.aj-punhos i[data-c="nw"],.aj-punhos i[data-c="se"]{cursor:nwse-resize}
+.aj-punhos i[data-c="ne"],.aj-punhos i[data-c="sw"]{cursor:nesw-resize}
+/* A REGUA DO TAMANHO. */
+.aj-regua{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:none;
+  cursor:pointer;margin:2px 0}
+.aj-regua::-webkit-slider-runnable-track{height:5px;border-radius:99px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 70%,transparent),
+    var(--accent))}
+.aj-regua::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;
+  height:16px;margin-top:-5.5px;border-radius:50%;background:var(--ink);
+  border:3px solid var(--accent);box-shadow:0 2px 7px rgba(0,0,0,.45)}
+.aj-encaixe{margin-bottom:6px}
+.aj-encaixe button{flex:1}
 /* ARRASTAR COM O DEDO, e nao pelos botoes de mais e menos.
 
    ELE FOI DIRETO: "nem a imagem que eu subi, nem o texto eu consigo arrastar. So' tem,
@@ -2127,6 +2193,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   border-radius:999px;background:var(--soft);transition:left .16s,background .16s}
 .aj-chave.on u{background:var(--accent-tint)}
 .aj-chave.on u::after{left:17px;background:var(--accent)}
+/* MANDAR SUMIR PRECISA SUMIR DE VERDADE, e estas tres precisam da linha porque elas
+   tem `display` proprio aqui: a regra do navegador para o escondido perde para a
+   folha, e a peca ficava com a chave da folga na tela no encaixe de caber, onde ela
+   nao muda nada. Chave sem efeito e' tela que mente (trava 2). Achado em 01/09/2026,
+   na foto da revisao, com a tela dizendo `escondido` e a chave desenhada mesmo assim. */
+.aj-chave[hidden],.aj-medidas[hidden],.ed-botoes[hidden]{display:none}
 /* AS MOLDURAS DA CONTA, com o furo de verdade de cada uma no quadradinho: o que separa
    uma variacao da outra e' o desenho, nunca um rotulo (trava 62b). */
 .aj-molduras{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));
@@ -2156,7 +2228,14 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .aj-cam i{width:7px;height:7px;flex:none;border-radius:2px;background:var(--soft)}
 .aj-cam.on i{background:var(--accent)}
 
+/* O PAINEL TEM A ALTURA DA PECA, e rola por dentro quando o conteudo passa disso.
+
+   POR QUE ISTO EXISTE: a fase inteira tem de caber sem rolar a pagina, e quem manda na
+   altura do par e' o mais alto dos dois. O palco ja' se mede pelo que sobra da tela; o
+   painel crescia livre, e cada ferramenta nova (a tira do encaixe, a regua) empurrava a
+   dobra para baixo. Agora ele cabe no mesmo lugar da peca e rola sozinho. */
 .aj-lado{flex:0 1 440px;min-width:0;width:440px;
+  max-height:min(calc(100vh - 348px),700px);overflow-y:auto;padding-right:6px;
   display:flex;flex-direction:column;gap:18px}
 .aj-lado .ed-passo{margin:0 0 8px}
 .aj-lado .acao.larga{margin-top:6px}
