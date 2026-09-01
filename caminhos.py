@@ -67,6 +67,10 @@ FEITOS = PEDIDOS / "feitos"
 # com o video e a descricao dele. E' o que sobe para o Drive.
 ENTREGAS = CASA / "entregas"           # o pacote final, video mais descricao
 FONTES = CASA / "fontes"                          # as fontes que a oficina desenha
+# ONDE ELE PAROU, desde 02/09/2026. Ate' aqui o rascunho vivia SO' no guarda-volumes do
+# navegador, e sumiu com a leva 31 dentro. Todo o resto ja' morava na casa; o mapa do
+# trabalho de mao (enquadramento, ajuste, quais pecas ele deu por prontas) nao.
+RASCUNHOS = CASA / "rascunhos"                    # um json por rascunho, pelo id dele
 
 # A EDICAO DESPACHADA PARA A ESTEIRA, desde 25/08/2026. `despachos/<ficha>.json` e' o
 # manifesto que a rota de retirada do posto serve as vagas; `despachos/<ficha>/` guarda

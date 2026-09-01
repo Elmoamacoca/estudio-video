@@ -675,7 +675,10 @@
         </div>
         <div id="ed_rasc_lista"></div>
         <div class="ed-vazio" id="ed_rasc_vazio">Nenhum rascunho guardado. O que você
-          começar fica aqui sozinho, e some só quando você mandar.</div>
+          começar fica no Estúdio, e some só quando você mandar.</div>
+        <!-- ONDE O RASCUNHO ESTÁ GUARDADO, e só aparece quando é notícia: quando ele
+             está só neste navegador, ou quando o Estúdio recusou a última gravação. -->
+        <p class="nota mini" id="ed_rasc_onde" hidden></p>
       </div>
     </div>
   </div>
@@ -1104,6 +1107,11 @@
                 Apagar O Que A IA Escreveu</button>
             </div>
             <p class="nota mini" id="ia_recado"></p>
+            <!-- O QUE VOLTOU DA CASA. Frase que a IA já escreveu fica gravada no disco
+                 do Estúdio, e não só no rascunho deste navegador: quando o rascunho se
+                 perde, ela volta daqui em vez de custar a cota do dia de novo. A linha
+                 só aparece quando de fato voltou alguma, ou quando não deu para ler. -->
+            <p class="nota mini" id="ia_volta" hidden></p>
 
             <!-- A BARRA E' A MESMA DO RECORTE, por ordem dele em 29/08/2026. O
                  miolo vivo recolhe no fim e sobra o selo de verificado. -->
@@ -1341,6 +1349,13 @@
               <section class="ed-bloco">
                 <h4>A Fonte</h4>
                 <div id="aj_fonte_alvo"></div>
+                <!-- ONDE A FRASE ENCOSTA DENTRO DA CAIXA. Pedido dele em 29/08/2026:
+                     "uma opção de selecionar se eu quero que a caixa de texto fique
+                     centralizada, pro lado, pro outro lado". São três e não quatro
+                     porque o motor só desenha três: justificado sairia diferente do
+                     que a prévia mostrasse, e botão que mente é pior que botão que
+                     falta. -->
+                <div class="ed-botoes aj-alinha" id="aj_alinha" hidden></div>
                 <div class="psel" id="aj_fonte"></div>
                 <button class="acao mini larga" id="aj_fonte_todas" type="button">
                   Usar Esta Fonte Em Todas As Peças</button>

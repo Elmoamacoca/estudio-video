@@ -47,6 +47,9 @@
        border-radius:var(--r-lg);padding:20px;box-shadow:var(--sombra)}
 .caixa h3{font-size:15.5px;font-weight:650;margin:0 0 5px;color:var(--ink)}
 .nota{color:var(--muted);font-size:13.5px;margin:0}
+/* NOTA QUE AVISA NAO PODE TER COR DE NOTA DE RODAPE: e' a diferenca entre "esta' vazio"
+   e "nao consegui ler", e a segunda muda o que ele vai fazer em seguida (trava 4). */
+.nota.alerta{color:var(--ink);border-left:3px solid var(--vermelho);padding-left:10px}
 .numeros{display:grid;gap:1px;background:var(--rule-solid);border:1px solid var(--rule-solid);
          border-radius:var(--r-lg);overflow:hidden}
 .numeros.quatro{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -882,6 +885,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   text-transform:uppercase;letter-spacing:.08em}
 .ed-rascunhos-cab .nota{margin:0 0 0 auto;font-size:12px}
 .ed-vazio{padding:20px 0;font-size:13.5px;line-height:1.55;color:var(--soft)}
+/* NAO CONSEGUI LER TEM CARA DE AVISO, e nao de nota de rodape: e' a diferenca entre
+   "esta vazio" e "nao sei dizer", e ela precisa saltar aos olhos (trava 4). */
+.ed-vazio.alerta{color:var(--ink);border-left:3px solid var(--vermelho);
+  padding-left:12px;margin:12px 0}
 .ed-rasc{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;
   border:1px solid var(--rule-solid);border-radius:var(--r-md);background:var(--branco);
   margin-bottom:7px;transition:border-color .14s}
@@ -2094,6 +2101,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
   height:16px;margin-top:-5.5px;border-radius:50%;background:var(--ink);
   border:3px solid var(--accent);box-shadow:0 2px 7px rgba(0,0,0,.45)}
 .aj-encaixe{margin-bottom:6px}
+/* A TIRA DO ALINHAMENTO. Larga inteira porque ela mora numa coluna estreita, e tres
+   botoes espremidos num canto sao tres alvos ruins para o mouse. */
+.aj-alinha{display:flex;width:100%;margin:8px 0 10px}
+.aj-alinha button{flex:1}
 .aj-encaixe button{flex:1}
 /* ARRASTAR COM O DEDO, e nao pelos botoes de mais e menos.
 

@@ -3261,8 +3261,83 @@ async function nomeLivre(pasta, base) {
     + `Apague as que não servem antes de montar de novo.`);
 }
 
-/* -------------------------------------------------------------- os rascunhos */
-const listarRascunhos = () => noCofre(COFRE.rascunhos, false, s => s.getAll());
+/* -------------------------------------------------------------- os rascunhos
+
+   O RASCUNHO PASSOU A MORAR NA CASA EM 02/09/2026, e a pergunta dele foi a certa: "o
+   rascunho nao fica salvo na VPS? Que sentido tem isso?". Nenhum.
+
+   O QUE ACONTECEU. Todo o resto da leva ja' morava na casa: os recortes, as frases que a
+   IA escreveu, os templates, as pecas montadas. So' o mapa de onde ele parou e o trabalho
+   de mao (o enquadramento peca a peca, o ajuste de cada caixa, quais ele deu por prontas)
+   dependia do guarda-volumes DESTE navegador. Esse banco some ao limpar dados do site, na
+   janela anonima e em qualquer outra maquina. Sumiu, com a leva 31 dentro.
+
+   O NAVEGADOR CONTINUA GUARDANDO A COPIA. Gravar nos dois e' de proposito: a casa e' a
+   verdade, e o navegador e' quem responde quando ela nao atende (a vitrine do GitHub
+   Pages e a pagina aberta de arquivo nao tem posto nenhum atras). */
+let RASCUNHOS_DE = null;      // "casa" | "navegador" | null enquanto ninguém perguntou
+let RASCUNHO_NA_CASA = null;  // a última gravação chegou na casa? null = não tentei
+
+/* OS DOIS LADOS SE JUNTAM, e nao um substitui o outro.
+
+   POR QUE JUNTAR E NAO TROCAR: no dia em que a casa virou a verdade, tudo o que ele ja'
+   tinha estava SO' no navegador. Ler so' a casa faria a portaria abrir vazia para quem
+   tinha rascunho, que e' exatamente o susto que originou esta mudanca, agora causado pelo
+   conserto dele. Vale o mais recente de cada id, pela hora da ultima mexida.
+
+   E O QUE SO' EXISTE AQUI SOBE, uma vez por visita: rascunho que continua so' no navegador
+   continua a um clique de limpar dados do site de sumir para sempre. */
+const RASCUNHOS_QUE_SUBIRAM = new Set();
+async function listarRascunhos() {
+  let daCasa = null;
+  if (await postoDePe()) {
+    try {
+      const r = await noPosto("/rascunhos");
+      if (r && Array.isArray(r.itens)) daCasa = r.itens;
+    } catch (e) {
+      /* A CASA ATENDE MAS NAO DEU: nao e' hora de dizer que nao ha' rascunho. Vale
+         olhar a copia do navegador antes de concluir qualquer coisa. */
+    }
+  }
+  const daqui = await noCofre(COFRE.rascunhos, false, s => s.getAll());
+  if (daCasa === null && daqui === null) { RASCUNHOS_DE = null; return null; }
+  RASCUNHOS_DE = daCasa === null ? "navegador" : "casa";
+  const por = new Map();
+  for (const r of (daqui || [])) if (r && r.id) por.set(r.id, r);
+  for (const r of (daCasa || [])) {
+    if (!r || !r.id) continue;
+    const tem = por.get(r.id);
+    if (!tem || (r.mexido || 0) >= (tem.mexido || 0)) por.set(r.id, r);
+  }
+  if (daCasa !== null) {
+    const naCasa = new Set(daCasa.map(r => r && r.id));
+    for (const r of (daqui || [])) {
+      if (!r || !r.id || naCasa.has(r.id) || RASCUNHOS_QUE_SUBIRAM.has(r.id)) continue;
+      RASCUNHOS_QUE_SUBIRAM.add(r.id);
+      noPosto("/rascunhos", { r }).catch(() => RASCUNHOS_QUE_SUBIRAM.delete(r.id));
+    }
+  }
+  return [...por.values()];
+}
+
+/* GRAVAR NOS DOIS, e dizer quando um dos dois nao aceitou. Gravacao que falha calada e' a
+   propria doenca que esta secao existe para curar. */
+async function guardarRascunho(r) {
+  await noCofre(COFRE.rascunhos, true, s => s.put(r));
+  if (!(await postoDePe())) { RASCUNHO_NA_CASA = null; return; }
+  try {
+    const d = await noPosto("/rascunhos", { r });
+    RASCUNHO_NA_CASA = !!(d && d.ok);
+  } catch (e) { RASCUNHO_NA_CASA = false; }
+}
+
+/* APAGAR NOS DOIS. Apagar so' de um lado ressuscita o rascunho na visita seguinte, que e'
+   o mesmo defeito que ja' fez leva entregue voltar para a portaria. */
+async function apagarRascunho(id) {
+  await noCofre(COFRE.rascunhos, true, s => s.delete(id));
+  if (!(await postoDePe())) return;
+  try { await noPosto("/rascunho-apagar", { id }); } catch (e) { /* fica para a proxima */ }
+}
 
 /* A GRAVACAO DO RASCUNHO E' UMA POR VEZ, em fila. A fabrica dos repetidos morava
    aqui: na PRIMEIRA entrada de uma leva, a gravacao da entrada e a do relogio de
@@ -3426,7 +3501,7 @@ async function salvarRascunhoDeVerdade() {
   if (!EDIT_RASCUNHO) r.aberto = r.mexido;
   else r.aberto = EDIT_RASCUNHO.aberto || r.mexido;
   EDIT_RASCUNHO = r;
-  await noCofre(COFRE.rascunhos, true, s => s.put(r));
+  await guardarRascunho(r);
   // A LISTA SÓ SE REDESENHA QUANDO ELA ESTÁ NA FRENTE DELE. Redesenhar a portaria a cada
   // gravação significa reler o banco do navegador inteiro no meio de um arrasto.
   if (!$("ed_portaria").hidden) desenhaRascunhos();
@@ -3455,12 +3530,46 @@ function ondeParou(r) {
           "pronto para montar"][r.sub || 1] || "no template";
 }
 
+/* "NAO CONSEGUI LER" E "NAO EXISTE" SAO COISAS DIFERENTES (trava 4).
+   O `noCofre` engole a falha e devolve nada, e esta lista transformava esse nada em
+   "nenhum rascunho guardado". Guarda-volumes bloqueado pelo navegador, aba anônima ou
+   banco corrompido davam a MESMA frase de uma leva que nunca foi começada, e o trabalho
+   de dias parecia ter sumido sem deixar rastro. Agora a tela diz qual dos dois é. */
 async function desenhaRascunhos() {
-  const lista = (await listarRascunhos()) || [];
+  const bruta = await listarRascunhos();
+  const naoLeu = bruta === null;
+  const lista = bruta || [];
   lista.sort((a, b) => (b.mexido || 0) - (a.mexido || 0));
+  $("ed_rasc_vazio").textContent = naoLeu
+    ? "Não consegui ler nem o Estúdio nem o guarda-volumes deste navegador, então não "
+      + "sei dizer se há rascunho. Isto não apaga nada. Recarregue a página; se voltar "
+      + "esta mesma linha, o Estúdio está fora do ar."
+    : "Nenhum rascunho guardado. O que você começar fica no Estúdio, e some só quando "
+      + "você mandar.";
+  $("ed_rasc_vazio").classList.toggle("alerta", naoLeu);
   $("ed_rasc_vazio").hidden = lista.length > 0;
+  /* ONDE ELES ESTAO GUARDADOS FICA ESCRITO, e nao e' detalhe: rascunho que mora so' no
+     navegador some com uma limpeza de dados do site, e ele tem o direito de saber disso
+     ANTES de perder a leva, e nao depois. */
   $("ed_rasc_conta").textContent = lista.length
-    ? `${lista.length} ${lista.length === 1 ? "guardado" : "guardados"}` : "";
+    ? `${lista.length} ${lista.length === 1 ? "guardado" : "guardados"}`
+      + (RASCUNHOS_DE === "casa" ? " no Estúdio" : " só neste navegador")
+    : "";
+  const aviso = $("ed_rasc_onde");
+  if (aviso) {
+    const soAqui = !naoLeu && RASCUNHOS_DE === "navegador";
+    const naoColou = RASCUNHO_NA_CASA === false;
+    aviso.hidden = !(soAqui || naoColou);
+    aviso.classList.toggle("alerta", naoColou);
+    if (naoColou) {
+      aviso.textContent = "O Estúdio não aceitou a última gravação do rascunho. Ele "
+        + "ainda está guardado neste navegador, mas não saia daqui sem conferir: "
+        + "guardado só no navegador some se você limpar os dados do site.";
+    } else if (soAqui) {
+      aviso.textContent = "O Estúdio não respondeu, então estes rascunhos são a cópia "
+        + "deste navegador. Ela some se você limpar os dados do site.";
+    }
+  }
   $("ed_rasc_lista").innerHTML = lista.map(r => `
     <div class="ed-rasc" data-rasc="${r.id}">
       <span class="ed-rasc-n">Leva ${r.leva}</span>
@@ -3481,7 +3590,7 @@ $("ed_rasc_lista").addEventListener("click", async ev => {
   const x = ev.target.closest("[data-apagar]");
   if (x) {
     ev.stopPropagation();
-    await noCofre(COFRE.rascunhos, true, s => s.delete(x.dataset.apagar));
+    await apagarRascunho(x.dataset.apagar);
     return desenhaRascunhos();
   }
   const linha = ev.target.closest("[data-rasc]");
@@ -4158,7 +4267,17 @@ document.addEventListener("click", async ev => {
   if (EDIT_LEVA) await mostrarPecas();
 });
 
-desenhaRascunhos();
+/* A PRIMEIRA PINTURA DA PORTARIA ESPERA O PROGRAMA TERMINAR DE SER LIDO.
+
+   POR QUE A LINHA SOLTA NAO SERVE MAIS: desde 02/09/2026 a lista de rascunhos pergunta
+   ao posto, e quem guarda a resposta do posto (`POSTO_DE_PE`) só nasce duas mil linhas
+   abaixo desta. Chamada aqui, direto, ela morria com "não dá para acessar antes de
+   existir" e levava junto todo o resto do programa, que ainda nem tinha sido lido: a aba
+   de edição abria pela metade, e o único sinal era uma linha no console.
+
+   A MICROTAREFA RESOLVE SEM ADIAR NADA: ela roda assim que a leitura do arquivo acaba,
+   antes de qualquer pintura, e aí o programa inteiro já existe. */
+queueMicrotask(desenhaRascunhos);
 
 /* O F5 VOLTA PARA A LEVA ABERTA, no passo em que ele estava, com os vigias armados.
    O caminho e' o MESMO do cartao de rascunho da portaria; a unica diferenca e' que
@@ -4198,7 +4317,7 @@ async function limparRascunhosRepetidos() {
     let saiu = 0;
     for (const rep of todos) {
       if (dono.get(rep.leva).id !== rep.id) {
-        await noCofre(COFRE.rascunhos, true, s => s.delete(rep.id));
+        await apagarRascunho(rep.id);
         saiu++;
       }
     }
@@ -4506,6 +4625,77 @@ $("rec_sortear").onclick = () => verOutroReel();
 
 /* -------------------------------------------------- o que já foi recortado */
 
+/* AS FRASES DA CASA DE VOLTA PARA A TELA.
+
+   A CONTA E' SIMPLES E A LICAO CUSTOU CARO: a `oficina` grava cada frase aceita em
+   `_textos.json`, ao lado dos recortes, desde 22/08/2026. Ela gravava e ninguem lia. Em
+   02/09/2026 o rascunho dele sumiu do navegador e as 180 frases da leva 31 sumiram junto
+   PARA A TELA, com o arquivo inteiro parado no disco da casa o tempo todo. A unica saida
+   era mandar a IA escrever tudo de novo. A cota do dia nao volta; o arquivo sempre esteve
+   la'.
+
+   O QUE ESTA' NA MAO DELE VENCE SEMPRE. Só entra frase onde a peça ainda não tem nenhuma:
+   o rascunho retomado e o que ele digitou são mais novos que o disco, e sobrescrever
+   seria desfazer trabalho a pretexto de recuperar trabalho. */
+let FRASES_DA_CASA = null;   // o `_textos.json` da leva aberta, como o disco o entregou
+
+/* COMPLETA O QUE FALTA, e não mexe no que já existe.
+
+   PRECISA SER CHAMÁVEL DE NOVO porque `tentarRetomar` limpa o `ESCRITO` e o repovoa a
+   partir do rascunho: sem esta segunda passada, o `escrito` vazio de um rascunho gravado
+   antes de a IA escrever ganhava das frases que o disco tinha acabado de devolver. */
+function completarComAsFrasesDaCasa() {
+  if (!FRASES_DA_CASA) return 0;
+  let voltaram = 0;
+  for (const [nome, campos] of Object.entries(FRASES_DA_CASA)) {
+    if (!campos || typeof campos !== "object") continue;
+    const tem = ESCRITO.get(nome);
+    // JA' TEM FRASE E' JA' TEM FRASE, venha ela do rascunho ou da mao dele.
+    if (tem && Object.values(tem).some(v => String(v || "").trim())) continue;
+    ESCRITO.set(nome, { ...campos });
+    voltaram++;
+  }
+  return voltaram;
+}
+
+function recuperarAsFrases(r) {
+  const linha = $("ia_volta");
+  if (!r) return 0;
+  if (r.textos_ilegiveis) {
+    FRASES_DA_CASA = null;
+    /* NAO LI NAO E' NAO TEM (trava 4): calado aqui, a fase da IA abriria com as pecas em
+       branco, como se ela nunca tivesse passado, e ele pagaria a cota de novo sem saber
+       que havia frase guardada. */
+    if (linha) {
+      linha.hidden = false;
+      linha.textContent = "As frases guardadas desta leva existem no Estúdio, mas o "
+        + "arquivo delas não abriu. Antes de mandar a IA escrever tudo de novo, vale "
+        + "conferir: escrever de novo gasta a cota do dia pela segunda vez.";
+      linha.classList.add("alerta");
+    }
+    return 0;
+  }
+  const guardadas = r.textos;
+  if (!guardadas || typeof guardadas !== "object") {
+    FRASES_DA_CASA = null;
+    if (linha) { linha.hidden = true; linha.classList.remove("alerta"); }
+    return 0;
+  }
+  FRASES_DA_CASA = guardadas;
+  const voltaram = completarComAsFrasesDaCasa();
+  if (linha) {
+    linha.classList.remove("alerta");
+    linha.hidden = voltaram === 0;
+    if (voltaram) {
+      linha.textContent = voltaram === 1
+        ? "1 frase que a IA já tinha escrito voltou do Estúdio, sem gastar a cota."
+        : `${voltaram} frases que a IA já tinha escrito voltaram do Estúdio, sem gastar `
+          + "a cota.";
+    }
+  }
+  return voltaram;
+}
+
 /** Procura na pasta `recortes` uma leva já recortada e a carrega. */
 async function procurarRecortes() {
   // SEM ONDE OLHAR, NÃO SE APAGA O QUE JÁ SE SABE. A primeira versão zerava o estado
@@ -4555,6 +4745,17 @@ async function procurarRecortes() {
     EDIT_RECORTES = doPosto;
     RECORTADO = { pecas: doPosto.length, pasta: nomeDaLeva,
                   onde: "recortes/" + nomeDaLeva };
+    /* AS FRASES JÁ PAGAS VOLTAM DA CASA, desde 02/09/2026.
+
+       O QUE ACONTECEU EM 02/09: o rascunho dele sumiu do navegador, e com ele as 180
+       frases que a IA já tinha escrito. Elas estavam inteiras no disco da casa, em
+       `_textos.json`, e não havia caminho de volta: a única saída era mandar a IA
+       escrever tudo outra vez, queimando a cota do dia pela segunda vez na mesma leva.
+
+       O QUE ESTÁ NA MÃO DELE VENCE. Só entra frase onde a peça ainda não tem nenhuma:
+       o rascunho retomado e o que ele escreveu na mão são mais novos que o disco, e
+       sobrescrever seria desfazer trabalho para "recuperar" trabalho. */
+    recuperarAsFrases(r);
     return;
   }
   if (!EDIT_RAIZ) return;
@@ -5568,6 +5769,7 @@ async function lerAcervo() {
       const r = await noPosto("/acervo");
       ACERVO.itens = (r.tem && r.d && Array.isArray(r.d.itens)) ? r.d.itens : [];
       ACERVO.falhou = "";
+      registrarAsLetrasDele();
       return true;
     } catch (e) {
       // LEITURA QUE FALHOU NÃO É ACERVO VAZIO: o motivo fica guardado e trava a
@@ -5585,7 +5787,18 @@ async function lerAcervo() {
     const d = JSON.parse(await f.text());
     ACERVO.itens = Array.isArray(d.itens) ? d.itens : [];
   } catch (e) { ACERVO.itens = []; }   // acervo novo em folha não tem ficha ainda
+  registrarAsLetrasDele();
   return p;
+}
+
+/* AS LETRAS DELE ENTRAM NO NAVEGADOR ASSIM QUE O ACERVO CHEGA, e não na primeira vez que
+   uma peça tenta desenhar com elas. Registrar na hora de pintar chega tarde: a peça já
+   foi desenhada com a letra de reserva, e só a repintura seguinte acertaria. O registro
+   é uma vez por arquivo, e o `cdRegistrarFonte` guarda quem já entrou. */
+function registrarAsLetrasDele() {
+  for (const f of (ACERVO.itens || [])) {
+    if (f && f.tipo === "fonte" && f.arquivo) cdRegistrarFonte(f);
+  }
 }
 
 async function gravarAcervo() {
@@ -5687,7 +5900,15 @@ const FONTE_CSS = {
   courier: "'Courier New',monospace",
 };
 
-function fonteCss(n) { return FONTE_CSS[n] || "'Segoe UI',sans-serif"; }
+function fonteCss(n) {
+  if (FONTE_CSS[n]) return FONTE_CSS[n];
+  /* A LETRA DELE TAMBEM E' LETRA. Sem esta volta, tudo o que ele subiu no cadastro do
+     template desenhava em Segoe UI na previa, calado, e ele so' descobria olhando a peca
+     pronta lado a lado com o que tinha escolhido. */
+  const dele = fonteDoAcervo(n);
+  if (dele) { cdRegistrarFonte(dele); return cdCssDaFonte(dele); }
+  return "'Segoe UI',sans-serif";
+}
 
 /* ---------------------------------------------------------- o B-roll de conferência
 
@@ -7759,7 +7980,13 @@ function medidaDaPeca(el, nome) {
            x: a.x != null ? a.x : el.x, y: a.y != null ? a.y : el.y,
            // A FONTE TAMBEM PODE SER SO' DESTA PECA. Ver `ENQUADRES` para o porque.
            fonte: a.fonte != null ? a.fonte : el.fonte,
-           mexido: a.tamanho != null || a.x != null || a.y != null || a.fonte != null };
+           /* E O ALINHAMENTO, desde 02/09/2026. Ele pediu em 29/08 ("uma opcao de
+              selecionar se eu quero que a caixa de texto fique centralizada, pro lado,
+              pro outro lado") e nao foi feito. A frase nascia centralizada e nao havia
+              como discordar, peca nenhuma. */
+           alinha: a.alinha != null ? a.alinha : (el.alinha || "centro"),
+           mexido: a.tamanho != null || a.x != null || a.y != null || a.fonte != null
+                   || a.alinha != null };
 }
 
 /* O ENQUADRAMENTO DO B-ROLL DESTA PEÇA. São duas coisas diferentes, e confundi-las foi
@@ -8023,8 +8250,7 @@ async function pintaPeca(alvo, peca, indice, interativa, escolhido) {
       d.style.color = el.cor;
       d.style.fontFamily = fonteCss(m.fonte);
       d.style.fontWeight = el.peso;
-      d.style.textAlign = el.alinha === "centro" ? "center"
-        : el.alinha === "direita" ? "right" : "left";
+      d.style.textAlign = alinhamentoCss(m.alinha);
       d.style.fontSize = (m.tamanho * 100) + "cqh";
       d.textContent = textoDaPeca(el, peca.nome) || " ";
     } else {
@@ -8310,8 +8536,7 @@ async function abrirOEditor(alvo, peca, indice) {
       fontFamily: fonteCss(m.fonte).split(",")[0].replace(/["']/g, ""),
       fontSize: m.tamanho * A, fill: campo.cor || "#FFFFFF",
       fontWeight: campo.peso || 700, lineHeight: EDT_ENTRELINHA,
-      textAlign: campo.alinha === "centro" ? "center"
-        : campo.alinha === "direita" ? "right" : "left",
+      textAlign: alinhamentoCss(m.alinha),
       lockRotation: true, hasRotatingPoint: false, editable: true
     });
     frase.nome = "Frase";
@@ -9040,8 +9265,21 @@ function desenhaAjustePainel() {
   $("aj_fonte_sem").hidden = !!alvo;
   $("aj_fonte").hidden = !alvo;
   $("aj_fonte_todas").disabled = !alvo;
+  /* O ALINHAMENTO DA CAIXA, pedido dele em 29/08/2026 e feito em 02/09. Ele vive ao lado
+     da fonte porque é a mesma caixa escolhida que manda nos dois, e some pelo mesmo
+     motivo: sem caixa escolhida não há o que alinhar. */
+  const tira = $("aj_alinha");
+  if (tira) {
+    tira.hidden = !alvo;
+    if (alvo) {
+      const agora = medidaDaPeca(alvo, p.nome).alinha;
+      tira.innerHTML = ALINHAMENTOS.map(a =>
+        `<button type="button" data-a="${a.v}"`
+        + `${a.v === agora ? ' class="on"' : ""}>${a.r}</button>`).join("");
+    }
+  }
   if (alvo) {
-    pselNovo($("aj_fonte"), FONTES, medidaDaPeca(alvo, p.nome).fonte, v => {
+    pselNovo($("aj_fonte"), fontesParaEscolher(), medidaDaPeca(alvo, p.nome).fonte, v => {
       mexerItem(p.nome, alvo, "fonte", v);
       desenhaAjustePainel();
     });
@@ -9343,6 +9581,21 @@ $("aj_folga").onclick = () => { guardarOGesto(); virarAFolga(); };
    TROCAR ZERA O TAMANHO E O DESLIZE, e é de propósito: a régua muda de zero junto com o
    encaixe, e cem por cento passa a querer dizer outra coisa. Guardar o `z` antigo poria
    a filmagem num tamanho que ele não pediu. */
+/* O ALINHAMENTO ENTRA NA PILHA DO DESFAZER como qualquer outro gesto: ele pediu o
+   caminho de volta para tudo o que se mexe na peça, e meio caminho de volta é pior do
+   que nenhum, porque ensina a confiar. */
+$("aj_alinha").onclick = ev => {
+  const b = ev.target.closest("[data-a]");
+  if (!b) return;
+  const p = pecas3()[AJ_I];
+  if (!p) return;
+  const alvo = elementosDaPeca(p.nome).find(e => e.id === AJ_SEL && e.tipo === "texto");
+  if (!alvo || medidaDaPeca(alvo, p.nome).alinha === b.dataset.a) return;
+  guardarOGesto();
+  mexerItem(p.nome, alvo, "alinha", b.dataset.a);
+  desenhaAjuste();
+};
+
 $("aj_encaixe").onclick = ev => {
   const b = ev.target.closest("[data-e]");
   if (!b) return;
@@ -9941,6 +10194,12 @@ async function tentarRetomar() {
   // só depois descobre que havia texto: ele veria tudo em branco por um instante.
   ESCRITO.clear();
   for (const [k, v] of Object.entries(r.escrito || {})) ESCRITO.set(k, v);
+  /* E O QUE A CASA GUARDA COMPLETA O QUE FALTAR.
+     Retomar limpa o `ESCRITO` e o repovoa a partir do rascunho, entao ele passava por
+     cima das frases que o disco tinha acabado de devolver: rascunho gravado ANTES de a
+     IA escrever (ou de antes deste conserto) traz `escrito` vazio, e o vazio dele ganhava
+     das 180 frases ja' pagas. Aqui elas voltam para as pecas que ficaram sem nenhuma. */
+  completarComAsFrasesDaCasa();
   AJUSTES.clear();
   for (const [k, v] of Object.entries(r.ajustes || {})) AJUSTES.set(k, v);
   ENQUADRES.clear();
@@ -10366,10 +10625,55 @@ function faixaDaPeca(nome) {
   return v && v.escrita ? v.escrita : null;
 }
 
-/** A fonte do template de onde saiu esta arte. */
+/* AS TRES PALAVRAS DO ALINHAMENTO, num lugar so'.
+
+   O MOTOR SO' SABE ESTAS TRES (`alinha` em `pintar_camadas`: esquerda, direita e, em
+   qualquer outro caso, centro). Oferecer uma quarta na tela seria botao que mente: a
+   previa mostraria uma coisa e o arquivo sairia outra. */
+const ALINHAMENTOS = [
+  { v: "esquerda", r: "Esquerda" },
+  { v: "centro", r: "Centro" },
+  { v: "direita", r: "Direita" },
+];
+function alinhamentoCss(a) {
+  return a === "esquerda" ? "left" : a === "direita" ? "right" : "center";
+}
+
+/* A LETRA QUE ELE SUBIU NO CADASTRO, achada pelo id OU pelo arquivo.
+
+   POR QUE OS DOIS: o acervo guarda o id no template (`fonte: "f178..."`), e quem desenha
+   de verdade quer o ARQUIVO. O `achar_fonte` do motor procura em `templates/` por nome de
+   arquivo, e a folha de estilo desta tela registra a letra por id. Um so' dos dois nunca
+   ia bastar. */
+function fonteDoAcervo(v) {
+  if (!v) return null;
+  return (ACERVO.itens || []).find(
+    x => x && x.tipo === "fonte" && (x.id === v || x.arquivo === v)) || null;
+}
+
+/* A BIBLIOTECA QUE A REVISAO OFERECE: as dele primeiro, depois as da casa.
+
+   O QUE ELE DISSE EM 29/08/2026: "as fontes personalizadas que eu subi no cadastro de
+   template deveriam aparecer". Nao apareciam: o painel oferecia a lista fixa de trinta
+   familias da casa, e as dele so' existiam na tela de cadastro. */
+function fontesParaEscolher() {
+  const minhas = (ACERVO.itens || [])
+    .filter(x => x && x.tipo === "fonte" && x.arquivo)
+    .map(f => ({ v: f.arquivo, r: f.nome || f.arquivo, g: "Minhas" }));
+  return minhas.concat(FONTES);
+}
+
+/** A fonte do template de onde saiu esta arte, já no nome que quem desenha entende.
+
+    ELA SAIA COMO ID DO ACERVO, e ninguém sabia ler isso: `fonteCss` caía no Segoe UI da
+    prévia e o `achar_fonte` do motor caía no `segoeui.ttf` do fim da fila. A letra que ele
+    subiu no cadastro NUNCA foi usada, nem na tela nem no arquivo entregue, e em lugar
+    nenhum aparecia erro. Achado em 02/09/2026, no template Teste da conta dele. */
 function fonteDaArte(arte) {
   const t = arte && ACERVO.itens.find(x => x.id === arte.template);
-  return (t && t.fonte) || "anton";
+  const v = (t && t.fonte) || "anton";
+  const dele = fonteDoAcervo(v);
+  return dele && dele.arquivo ? dele.arquivo : v;
 }
 
 /* O CAMPO SAI DA FAIXA, e as contas sao estas:
@@ -12780,7 +13084,7 @@ async function terminouAEntrega(d) {
       // deixado registros orfaos, e sao eles que reaparecem na portaria.
       for (const r of todos) {
         if (r.leva === (EDIT_LEVA && EDIT_LEVA.numero) || r.id === (EDIT_RASCUNHO || {}).id) {
-          await noCofre(COFRE.rascunhos, true, s => s.delete(r.id));
+          await apagarRascunho(r.id);
         }
       }
       EDIT_RASCUNHO = null;

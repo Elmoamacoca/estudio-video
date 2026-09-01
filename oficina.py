@@ -1194,7 +1194,13 @@ def pintar_camadas(tpl: dict, textos: dict, tela: dict, pasta: Path,
         fonte = achar_fonte(nome_de(el, "fonte", el.get("fonte", "segoe")),
                             int(el.get("peso", 400)) >= 600, tamanho)
         linhas = quebrar(conteudo, fonte, w, d)
-        alinha = el.get("alinha", "esquerda")
+        # O PADRAO E' CENTRO NOS DOIS LADOS desde 02/09/2026, e antes eram dois: a tela
+        # nascia centralizada (`campoDaFaixa`) e aqui o padrao era esquerda. Enquanto o
+        # pedido trouxesse o campo, ninguem via; a peca de um pedido velho, sem o campo,
+        # sairia do arquivo alinhada diferente da previa que ele aprovou. Mesma lei do
+        # `encaixe_na_janela` (trava 60): conta que existe dos dois lados nao pode ter
+        # dois padroes. As tres palavras sao as do `ALINHAMENTOS` da tela.
+        alinha = el.get("alinha", "centro")
         # A ENTRELINHA E' 1,22 AQUI E NO EDITOR, e o texto desce um pouco dentro dela.
         # No navegador a caixa da linha e' 1,22 vez a letra e o desenho fica no meio dela;
         # o PIL poe o topo da letra na coordenada crua. Sem esta folga de 11%, o texto
