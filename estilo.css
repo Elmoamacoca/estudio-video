@@ -2018,16 +2018,38 @@ body:has(.ed-tela.esteira-aberta) .rodape-pagina{display:none}
    e a reserva do cabeçalho passa a ser a medida dele, e não um número redondo.
    Os 190px de antes tiravam 160 da fileira e empurravam o placar e os botões para
    dentro da tela, longe de onde a maquete os põe. */
-.ed-tela.esteira-aberta .ed-sair{position:fixed;top:29px;right:18px;z-index:32}
-.ed-tela.esteira-aberta .ed-sair .btn{height:36px;font-size:12px;padding:0 14px}
-.ed-tela.esteira-aberta .aj-cab{padding-right:142px}
+/* NA FASE 6 ELE NÃO FLUTUA: o programa o move para dentro da fileira do cabeçalho, e
+   aqui ele só desliga o posicionamento fixo das outras fases. Sem `position`, sem
+   `right` e sem reserva, não há como ele cair em cima do botão do lado. */
+.ed-tela.esteira-aberta .ed-sair{position:static;flex:none}
+/* NESTA FASE ELE É IRMÃO DOS OUTROS DOIS, e não um botão de outra família.
+
+   ELE FOTOGRAFOU E DISSE: "o botão de sair da edição tá todo bugado". Não estava
+   quebrado: era o botão animado da edição (trava 30, pílula de canto 100 com círculo e
+   duas setas) plantado ao lado de "Ver A Fila" e "Fabricar A Leva", que são `.acao`
+   quadradinhos de 12px de canto. Três controles na mesma fileira e um deles de outro
+   mundo. Aqui ele veste a roupa dos vizinhos; a animação continua valendo nas outras
+   fases da edição, onde ele está sozinho. */
+.ed-tela.esteira-aberta .ed-sair .btn{height:36px;padding:0 15px;gap:7px;
+  border-radius:var(--r-filtro);border:1px solid var(--rule-solid);
+  background:var(--branco);color:var(--ink);font:600 13px/1 inherit;
+  text-transform:none;letter-spacing:0}
+.ed-tela.esteira-aberta .ed-sair .btn:hover{border-color:var(--accent);color:var(--accent);
+  background:var(--branco)}
+/* O CÍRCULO QUE ENGOLE E A SEGUNDA SETA SÃO DA PÍLULA, e sem eles o `.txt` para de
+   deslizar sozinho: com a roupa nova, movimento de pílula dentro de um botão quadrado
+   fica parecendo defeito. */
+.ed-tela.esteira-aberta .ed-sair .circ,
+.ed-tela.esteira-aberta .ed-sair .seta-esq{display:none}
+.ed-tela.esteira-aberta .ed-sair .btn .txt{transform:none}
+.ed-tela.esteira-aberta .ed-sair .btn:hover .txt{transform:none}
+.ed-tela.esteira-aberta .ed-sair .seta-dir{position:static;transform:none;opacity:1;
+  width:15px;height:15px}
 
 /* A LARGURA DA GAVETA MORA NA OFICINA, e não na esteira: o botão de sair é irmão da
    esteira, e precisa se afastar quando ela abre. Duas variáveis para a mesma medida
    acabam discordando no meio de um arrasto. */
 .ed-tela.esteira-aberta{--aj-gaveta:378px}
-.ed-tela.esteira-aberta:has(.aj-gaveta.aberta) .ed-sair{right:calc(var(--aj-gaveta) + 18px)}
-.ed-tela.esteira-aberta .ed-sair{transition:right .34s cubic-bezier(.2,1.06,.32,1)}
 .aj-esteira{display:flex;flex-direction:column;height:100%;overflow:hidden;
   background:radial-gradient(120% 85% at 50% 0%,
     color-mix(in srgb,var(--ink) 5%,var(--paper)) 0%,var(--paper) 62%);
@@ -2060,12 +2082,6 @@ body.aj-sem-selecao{user-select:none}
   text-overflow:ellipsis;display:flex;align-items:center;gap:8px;margin:0}
 .aj-cab-dir{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:nowrap;
   flex:none}
-/* A VERSÃO FICA ESCRITA NA TELA. "Aqui não fala versão?", e ele estava certo:
-   maquete sem número de versão vira conversa de memória. */
-.aj-versao{font:700 10.5px/1 inherit;letter-spacing:.06em;text-transform:uppercase;
-  color:var(--brasa,#BA5A18);border:1px solid rgba(186,90,24,.42);
-  background:rgba(186,90,24,.12);padding:4px 8px;border-radius:6px;
-  white-space:nowrap;flex:none}
 
 /* ---------------------------------------------------------------- o placar
 
@@ -2268,7 +2284,23 @@ body.aj-arrastando .aj-gaveta{transition:none}
   border-bottom:1px solid var(--rule-solid)}
 .aj-gaveta-cab b{font-size:14px;font-weight:800}
 .aj-gaveta-cab .aj-x{margin-left:auto}
-.aj-gaveta-corpo{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;
+/* A BARRA DE ROLAGEM DA GAVETA É A DA CASA, e não a do sistema.
+
+   ELE FOTOGRAFOU O DEFEITO (02/09/2026): "o fundo é todo preto, cara. E tem barra de
+   rolagem padrão Windows, branca". Estava certo: todas as outras áreas que rolam nesta
+   tela já têm a barra fina de 9px (`.tab-rolo`, `.ajuda-corpo`, `.psel-menu`,
+   `.cd-fontes`), e as DUAS da gaveta ficaram de fora. Numa tela escura a barra branca
+   do sistema é a coisa mais clara da tela inteira, e o olho vai nela. */
+.aj-gaveta-corpo,.aj-fontes{scrollbar-width:thin;
+  scrollbar-color:var(--rule-solid) transparent}
+.aj-gaveta-corpo::-webkit-scrollbar,.aj-fontes::-webkit-scrollbar{width:9px;height:9px}
+.aj-gaveta-corpo::-webkit-scrollbar-track,
+.aj-fontes::-webkit-scrollbar-track{background:transparent}
+.aj-gaveta-corpo::-webkit-scrollbar-thumb,
+.aj-fontes::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:999px}
+.aj-gaveta-corpo::-webkit-scrollbar-thumb:hover,
+.aj-fontes::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+.aj-gaveta-corpo{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;display:flex;flex-direction:column;
   gap:18px}
 .aj-gaveta-pe{display:flex;align-items:center;gap:7px;padding:11px 16px;flex:none;
   border-top:1px solid var(--rule-solid);background:var(--paper-2)}
@@ -2358,7 +2390,11 @@ body.aj-arrastando .aj-gaveta{transition:none}
    separa uma variação da outra é o desenho, nunca um rótulo (trava 62b).
    O XADREZ ATRÁS: o furo é transparente e a arte é escura, então sobre fundo
    escuro as quatro variações viravam quatro retângulos pretos iguais. */
-.aj-molduras{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+/* AS QUATRO CABEM, SEMPRE. `repeat(4,1fr)` deixa a coluna crescer com o conteúdo, e a
+   fila estourava a largura da gaveta: era a barra de rolagem HORIZONTAL que ele
+   fotografou. `minmax(0,1fr)` é o que faz a coluna poder encolher abaixo do conteúdo
+   dela, e sem isso nenhuma grade dentro de painel estreito se comporta. */
+.aj-molduras{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .aj-mold{position:relative;border:1px solid var(--rule-solid);background:var(--paper-2);
   border-radius:8px;padding:5px;cursor:pointer;transition:.14s;color:var(--ink)}
 .aj-mold:hover{border-color:var(--accent);transform:translateY(-2px)}

@@ -8984,11 +8984,18 @@ function desenhaAsMolduras() {
   if (bloco.hidden) { casa.innerHTML = ""; return; }
   const daPeca = variacaoDaPeca(p.nome);
   const sugerida = melhorVariacao(BROLL_DE && BROLL_DE.get(p.nome), todas);
+  // O RÓTULO É A ORDEM, E NUNCA O NOME GRAVADO. Trava 62b, com as palavras dele:
+  // "Quadrado, horizontal, vertical e tela cheia? Não, irmão... não é pra ter esses
+  // nomes." O `v.nome` das variações que ele cadastrou é exatamente isso ("Teste ·
+  // Quadrado", "Teste · Horizontal"), e ele estava sendo escrito aqui, embaixo de cada
+  // miniatura, com o comentário do estilo logo acima jurando o contrário. Quem separa
+  // uma variação da outra é o DESENHO que ele vê na miniatura.
+  const rotulo = (i) => "Variação " + (i + 1);
   casa.innerHTML = todas.map((v, i) =>
     `<button type="button" class="aj-mold${daPeca && v.id === daPeca.id ? " on" : ""}" `
-    + `data-arte="${escapa(v.id)}" title="${escapa(v.nome || ("Variação " + (i + 1)))}">`
+    + `data-arte="${escapa(v.id)}" title="${escapa(rotulo(i))}">`
     + `<img alt="" data-arte-img="${escapa(v.arquivo)}">`
-    + `<span>${escapa(v.nome || ("Variação " + (i + 1)))}</span>`
+    + `<span>${escapa(rotulo(i))}</span>`
     + (sugerida && v.id === sugerida.id ? `<em class="aj-selo">Sugerida</em>` : "")
     + "</button>").join("");
   for (const im of casa.querySelectorAll("[data-arte-img]"))
@@ -9229,11 +9236,16 @@ function desenhaAjustePainel() {
   sub.textContent = PRONTAS.has(p.nome) ? "Você já assinou esta peça"
     : mexeu ? "Ajustada por você" : "Nenhum ajuste nesta peça";
   sub.classList.toggle("tocada", mexeu && !PRONTAS.has(p.nome));
-  // A LEVA E A CONTA FICAM ESCRITAS NO TOPO, do lado do número da versão.
+  // A LEVA E A CONTA FICAM ESCRITAS NO TOPO. A conta entra com inicial maiúscula, que é
+  // a lei de toda palavra de tela desta casa: ele cadastrou "conta teste" em caixa baixa
+  // e o topo saía "Leva 31 · conta teste", que ao lado de "Revisão Peça A Peça" parece
+  // texto solto e não rótulo.
   const cab = $("aj_cab_leva");
   if (cab) {
+    const conta = (TPL && TPL.contaModelo || "").replace(/(^|\s)(\p{Ll})/gu,
+      (t, antes, letra) => antes + letra.toUpperCase());
     cab.textContent = "Leva " + ((EDIT_LEVA && EDIT_LEVA.numero) || "")
-      + (TPL && TPL.contaModelo ? " · " + TPL.contaModelo : "");
+      + (conta ? " · " + conta : "");
   }
   const faltam = pecas.length - PRONTAS.size;
   /* O TERCEIRO NUMERO E' O DAS AJUSTADAS, e ele entrou a pedido dele em 29/08/2026:
@@ -10371,7 +10383,32 @@ const POSICAO_DA_SUB = { 1: 0, 4: 1, 6: 2, 5: 3 };
    cara de outra tela. Vale a pena chamar de todo lugar que muda passo ou sub-passo. */
 function porOModoEsteira() {
   const tela = document.getElementById("ed_oficina");
-  if (tela) tela.classList.toggle("esteira-aberta", EDIT_PASSO === 3 && TPL_SUB === 6);
+  const naEsteira = EDIT_PASSO === 3 && TPL_SUB === 6;
+  if (tela) tela.classList.toggle("esteira-aberta", naEsteira);
+
+  /* O SAIR ENTRA NA FILEIRA DO CABEÇALHO, e para de flutuar por cima dela.
+
+     A VERSÃO ANTERIOR ERA UM NÚMERO MÁGICO: o botão ficava `position:fixed` no canto e
+     o cabeçalho reservava um tanto de espaço para ele não cair em cima do "Fabricar A
+     Leva". Medido em 02/09/2026 com a gaveta ABERTA: o Fabricar terminava em 1400 e o
+     Sair começava em 1381, dezenove pixels DENTRO dele. A reserva de 142px tinha sido
+     calculada com o botão de 112, e ele passou a medir 143 ao ganhar a roupa nova.
+
+     RESERVA ESCRITA À MÃO ENVELHECE COM O TEXTO DO BOTÃO. Aqui ele vira o quarto item
+     do `.aj-cab-dir`, e a fileira se resolve sozinha: sem reserva, sem `right` composto
+     para fugir da gaveta, e sem como colidir. É também o que a maquete faz com os
+     controles dela, que estão todos no fluxo. */
+  const sair = document.querySelector(".ed-sair");
+  if (!sair) return;
+  const naFileira = document.querySelector(".ed-sub-tela[data-sub='6'] .aj-cab-dir");
+  const casaAntiga = document.getElementById("ed_oficina");
+  if (naEsteira && naFileira) {
+    if (sair.parentElement !== naFileira) naFileira.appendChild(sair);
+  } else if (!naEsteira && casaAntiga && sair.parentElement !== casaAntiga) {
+    // VOLTA PARA A OFICINA quando ele sai da fase: nas outras fases o botão é o canto
+    // solto de sempre, e deixá-lo dentro de um cabeçalho escondido some com ele.
+    casaAntiga.insertBefore(sair, casaAntiga.firstChild);
+  }
 }
 
 function irParaSub(n) {
