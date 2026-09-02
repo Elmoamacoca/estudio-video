@@ -36,6 +36,13 @@ MOLDE_PROGRAMA = CODIGO / "tela.js"
 
 MARCA = PROJETO / "marca"
 DOCS = PROJETO / "docs"
+# AS ESPECS, desde 02/09/2026. Ate' aqui o combinado de cada trabalho morava so' na
+# conversa: o escopo do passo 3 cresceu de "vestir a peca com a arte dele" ate' um editor de
+# nivel Canva, um pedido de boa-fe' por vez, e ninguem conseguia dizer onde ele tinha
+# comecado. Espec e' contrato em disco, com criterio de aceite em numero; quem confere se
+# ela foi cumprida e' o `aceite.py`, nunca a sessao que a construiu.
+ESPECS = DOCS / "ESPEC"
+PROPOSTAS = DOCS / "propostas"          # as maquetes clicaveis, uma pasta por proposta
 PROVAS = PROJETO / "provas"
 FOTOS = PROVAS / "fotos"
 # O CARIMBO DAS PROVAS, desde 25/08/2026: a assinatura dos fontes no estado em que a
