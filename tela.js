@@ -1977,7 +1977,7 @@ async function atualizar() {
   desenhaRegistroDeLotes(lotes);
   // A ABA DE EDIÇÃO LÊ A MESMA CAPA: leva que fica pronta aparece lá
   // sozinha, sem precisar recarregar a página.
-  desenhaLevasDaEdicao(lotes);
+  desenhaLevasDaEdicao(lotes).catch(() => {});
   // O LOTE EM CURSO É REBUSCADO A CADA VOLTA, aberto ou não: é dele que a cabeça do
   // registro fala, e é ele que muda. Os fechados não mudam mais, então só são buscados
   // quando alguém abre.
@@ -3108,6 +3108,13 @@ function pecas3() {
   return base.filter(p => !EXCLUIDAS.has(p.nome));
 }
 let EDIT_RASCUNHO = null;          // o rascunho aberto, se veio de um
+/* ELE PEDIU UMA EDIÇÃO NOVA DESTA LEVA, e não voltar à que já existe.
+
+   Vale por UMA gravação: assim que o registro novo nasce com id próprio, `EDIT_RASCUNHO`
+   passa a apontar para ele e a marca se apaga. Se ela ficasse de pé, cada gravação
+   seguinte criaria mais um, e a leva 31 acabaria com um rascunho por segundo, que é uma
+   versão pior do defeito que a trava 57 fechou. */
+let EDICAO_NOVA = false;
 /* AS LEVAS QUE JA' ACABARAM. Ver a nota dentro de `salvarRascunho`.
    Ela vive na aba, e nao no cofre, de proposito: quem manda de verdade e' a marca no
    acervo, que a tabela de minerados le'. Esta aqui so' impede a ressurreicao dentro da
@@ -3387,7 +3394,13 @@ async function salvarRascunhoDeVerdade() {
   if (EDIT_RASCUNHO && EDIT_RASCUNHO.leva !== EDIT_LEVA.numero) EDIT_RASCUNHO = null;
   // UM RASCUNHO POR LEVA, e não um por vez que ele abre a leva; havendo mais de um no
   // cofre (herança dos repetidos), vale o MAIS RECENTE, nunca o primeiro que aparecer.
-  if (!EDIT_RASCUNHO) {
+  //
+  // MENOS QUANDO ELE PEDIU UMA EDIÇÃO NOVA (02/09/2026). A adoção aqui é a defesa contra
+  // o repetido que nasce SOZINHO, e ela vale enquanto ninguém pediu o contrário: com
+  // `EDICAO_NOVA` esta gravação cria o registro dela, com id próprio, e o trabalho que
+  // já existia fica intacto na portaria. Sem esta linha o botão "Começar Do Zero" seria
+  // teatro: a primeira gravação adotaria o rascunho antigo e escreveria por cima dele.
+  if (!EDIT_RASCUNHO && !EDICAO_NOVA) {
     const todos = (await listarRascunhos()) || [];
     EDIT_RASCUNHO = todos.filter(x => x.leva === EDIT_LEVA.numero)
                          .sort((a, b) => (b.mexido || 0) - (a.mexido || 0))[0] || null;
@@ -3501,6 +3514,10 @@ async function salvarRascunhoDeVerdade() {
   if (!EDIT_RASCUNHO) r.aberto = r.mexido;
   else r.aberto = EDIT_RASCUNHO.aberto || r.mexido;
   EDIT_RASCUNHO = r;
+  // A MARCA VALE POR UMA GRAVAÇÃO SÓ. O registro novo já nasceu com id próprio na linha
+  // de cima; deixá-la de pé faria a gravação seguinte criar mais um, e mais um, porque o
+  // que a adoção impede é justamente isso.
+  EDICAO_NOVA = false;
   await guardarRascunho(r);
   // A LISTA SÓ SE REDESENHA QUANDO ELA ESTÁ NA FRENTE DELE. Redesenhar a portaria a cada
   // gravação significa reler o banco do navegador inteiro no meio de um arrasto.
@@ -3644,7 +3661,7 @@ function mostrarTela(qual, jaJa) {
 $("ed_nova").onclick = () => {
   EDIT_RASCUNHO = null;
   EDIT_LEVA = null;
-  desenhaLevasDaEdicao(ULTIMO_INDICE);
+  desenhaLevasDaEdicao(ULTIMO_INDICE).catch(() => {});
   mostrarTela("escolha");
 };
 $("ed_volta_portaria").onclick = () => mostrarTela("portaria");
@@ -3655,7 +3672,7 @@ $("ed_sair").onclick = () => {
 };
 $("ed_volta_escolha").onclick = () => {
   try { localStorage.removeItem("estudio.leva.aberta"); } catch (e) {}
-  desenhaLevasDaEdicao(ULTIMO_INDICE);
+  desenhaLevasDaEdicao(ULTIMO_INDICE).catch(() => {});
   mostrarTela("escolha");
 };
 
@@ -3665,19 +3682,52 @@ $("ed_volta_escolha").onclick = () => {
    perfis, quantas peças, se já foi guardada. A pasta sabe só que há arquivos dentro dela.
    Leva que ainda não chegou à casa do Estúdio aparece na lista, apagada, dizendo por quê:
    escondê-la faria o Gabriel procurar uma leva que ele sabe que existe. */
-function desenhaLevasDaEdicao(indice) {
+/* O TRABALHO JA' FEITO APARECE NO CARTAO, E A ESCOLHA E' DELE.
+
+   O QUE ELE ENCONTROU EM 02/09/2026: "clica em iniciar nova edicao, selecionar leva, ele
+   ja' vai la' pra aba la' da frente. Nao deveria acontecer isso." Estava certo, e o botao
+   estava mentindo: chamava-se Iniciar Nova Edicao e nunca iniciava nada, porque a escolha
+   da leva SEMPRE retomava o rascunho mais recente dela.
+
+   O COMPORTAMENTO NAO ERA BOBAGEM, e por isso ele nao morre: ele nasceu na trava 57, para
+   matar os rascunhos repetidos que a corrida de duas gravacoes fabricava ("sempre fica
+   gerando 2"). Retomar era o jeito de nao criar registro novo ao lado do existente.
+
+   A DIFERENCA E' ACIDENTE E INTENCAO. O que a trava 57 impede continua impedido: dois
+   rascunhos nascidos sozinhos, sem ninguem pedir. O que ela nao devia impedir e' ele
+   PEDIR uma edicao nova. Agora a leva com trabalho salvo diz isso no proprio cartao e
+   oferece os dois caminhos, antes de entrar: o cartao continua sendo "voltar ao
+   trabalho", e o botao ao lado comeca do zero sem tocar no que ja' existe. */
+async function desenhaLevasDaEdicao(indice) {
   const levas = ((indice && indice.lotes) || [])
     .filter(l => l.estado === "pronto" && l.limpos);
   if (!$("ed_sem_leva")) return;
   $("ed_sem_leva").hidden = levas.length > 0;
+  // O QUE JA' EXISTE, POR LEVA. Falhou a leitura, o cartao sai sem a linha: dizer "nao
+  // ha' trabalho salvo" sem ter conseguido perguntar seria a mentira da trava 2.
+  let salvos = null;
+  try { salvos = (await listarRascunhos()) || []; } catch (e) { salvos = null; }
+  const oQueTem = (n) => salvos === null ? null
+    : salvos.filter(x => x.leva === n).sort((a, b) => (b.mexido || 0) - (a.mexido || 0));
   $("ed_levas").innerHTML = levas.map(l => {
+    const jaTem = oQueTem(l.numero);
+    const antes = jaTem && jaTem.length ? jaTem[0] : null;
     const contas = l.contas || [];
     const aqui = !!l.guardado;
     // O RETRATO DO PERFIL, o mesmo que a tabela e a fileira usam. Uma leva é sempre de
     // alguém, e reconhecer de quem pela cara é mais rápido do que ler o arroba.
     const caras = contas.slice(0, 3).map(c =>
       retrato(MINERADOS.find(p => p.conta === c) || { conta: c, foto: false })).join("");
-    return `<button type="button" class="ed-leva${!aqui ? " longe" : ""}"
+    // O QUE O RASCUNHO DIZ, em palavra dele: o passo por nome, e quando foi a última
+    // mexida. "Passo 3" sozinho não diz nada a quem não conta passo de cabeça.
+    const NOME_DO_PASSO = { 1: "a seleção da leva", 2: "o recorte do B-roll",
+                            3: "a montagem da peça", 4: "a legenda e a entrega" };
+    const conta = antes
+      ? `você parou n${NOME_DO_PASSO[antes.passo] ? "" : "o passo "}`
+        + `${NOME_DO_PASSO[antes.passo] || antes.passo}, ${quando(antes.mexido)}`
+      : "";
+    return `<div class="ed-leva-linha">
+      <button type="button" class="ed-leva${!aqui ? " longe" : ""}"
         data-leva="${l.numero}"${aqui ? "" : " disabled"}>
       <span class="ed-leva-caras">${caras}</span>
       <span class="ed-leva-corpo">
@@ -3686,18 +3736,40 @@ function desenhaLevasDaEdicao(indice) {
           ? "@" + contas.join(", @") : "todos os perfis"}</span>
         <span class="ed-leva-num"><b>${num(l.limpos)}</b> peças
           <i>·</i> ${l.mb || 0} MB <i>·</i> ${quando(l.fim || l.inicio)}</span>
+        ${antes ? `<span class="ed-leva-antes">${escapa(conta)}</span>` : ""}
       </span>
-      <span class="ed-leva-pe">${aqui ? "na casa do Estúdio"
-        : "ainda não chegou à casa do Estúdio"}</span>
-    </button>`;
+      <span class="ed-leva-pe">${!aqui ? "ainda não chegou à casa do Estúdio"
+        : antes ? "voltar a este trabalho" : "na casa do Estúdio"}</span>
+      </button>
+      ${aqui && antes ? `<button type="button" class="acao ed-leva-nova"
+        data-nova="${l.numero}"
+        title="Começa uma edição do zero, sem tocar no trabalho que já está salvo">
+        Começar Do Zero</button>` : ""}
+    </div>`;
   }).join("");
 }
 
 $("ed_levas").addEventListener("click", async ev => {
+  /* COMEÇAR DO ZERO E' PEDIDO, E NAO ACIDENTE (02/09/2026).
+     O rascunho que ja' existe fica onde esta', inteiro, e continua na portaria: esta
+     edicao nasce ao lado dele, com id proprio. `EDICAO_NOVA` e' o que impede a gravacao
+     de ADOTAR o antigo no caminho, que e' o que fazia toda edicao nova virar a mesma. */
+  const zero = ev.target.closest("[data-nova]");
+  if (zero) {
+    ev.stopPropagation();
+    const n = Number(zero.dataset.nova);
+    EDIT_LEVA = (LOTES || []).find(l => l.numero === n) || { numero: n };
+    EDIT_RASCUNHO = null;
+    EDICAO_NOVA = true;
+    esquecerOsPassos();
+    await entrarNaOficina(1, undefined);
+    return;
+  }
   const b = ev.target.closest("[data-leva]");
   if (!b) return;
   const n = Number(b.dataset.leva);
   EDIT_LEVA = (LOTES || []).find(l => l.numero === n) || { numero: n };
+  EDICAO_NOVA = false;
   b.classList.add("indo");
   /* ESCOLHER A LEVA E' VOLTAR AO TRABALHO DELA, quando ja' ha' trabalho: o caminho da
      escolha entrava sempre zerado, criando registro novo ao lado do existente e
