@@ -2012,9 +2012,15 @@ body:has(.ed-tela.esteira-aberta) .rodape-pagina{display:none}
 /* A SAÍDA MORA NO CANTO E O CABEÇALHO ABRE ESPAÇO PARA ELA. Sem a reserva, ela caía
    por cima do "Fabricar A Leva", que é o botão que fecha a leva inteira: dois alvos
    empilhados no mesmo pixel é convite a clicar no errado. */
-.ed-tela.esteira-aberta .ed-sair{position:fixed;top:11px;right:18px;z-index:32}
-.ed-tela.esteira-aberta .ed-sair .btn{height:32px;font-size:12px;padding:0 14px}
-.ed-tela.esteira-aberta .aj-cab{padding-right:190px}
+/* ELE FICA NA LINHA DOS OUTROS, e não flutuando acima deles. A maquete não tem
+   botão de sair (ela é uma tela isolada), mas o sistema precisa dele: então ele
+   entra como o QUARTO controle da mesma fileira, alinhado com "Fabricar A Leva",
+   e a reserva do cabeçalho passa a ser a medida dele, e não um número redondo.
+   Os 190px de antes tiravam 160 da fileira e empurravam o placar e os botões para
+   dentro da tela, longe de onde a maquete os põe. */
+.ed-tela.esteira-aberta .ed-sair{position:fixed;top:29px;right:18px;z-index:32}
+.ed-tela.esteira-aberta .ed-sair .btn{height:36px;font-size:12px;padding:0 14px}
+.ed-tela.esteira-aberta .aj-cab{padding-right:142px}
 
 /* A LARGURA DA GAVETA MORA NA OFICINA, e não na esteira: o botão de sair é irmão da
    esteira, e precisa se afastar quando ela abre. Duas variáveis para a mesma medida
@@ -2096,8 +2102,22 @@ body.aj-sem-selecao{user-select:none}
 /* A LEVA INTEIRA NUMA TIRA, uma marca por peça e não uma tarja que enche: a tarja
    diz a fração, a marca diz quantas são, quais já foram e quais ele mexeu.
    A MARCA APAGADA PRECISA APARECER: na cor da regra ela sumia no fundo do painel. */
-.aj-trilha{display:flex;gap:2px;padding:0 11px}
-.aj-trilha i{flex:1;height:7px;min-width:3px;border-radius:2px;
+/* A TRILHA CABE NO PLACAR, E NUNCA O EMPURRA.
+
+   O DEFEITO QUE ISSO FECHA (02/09/2026): a maquete foi desenhada com 15 peças e a
+   marca tinha `min-width:3px` com vão de 2px. Com as 180 da leva 31 a conta vira
+   540 de marca mais 358 de vão mais 22 de folga = 920px de largura MÍNIMA, e o
+   placar, que na maquete mede 267px no canto direito, saía para 930px no MEIO do
+   cabeçalho. Medido na tela dele e conferido na conta, na unidade.
+
+   E ele leu a tira gigante como o que ela parecia: "barra de rolagem que não
+   existia e agora tá existindo".
+
+   O VÃO ENCOLHE ANTES DA MARCA, que é a lei da trava 39: numa leva grande o vão
+   competia com a marca e o verde virava chuvisco. Quem manda no vão é o programa,
+   que sabe quantas peças são. */
+.aj-trilha{display:flex;gap:var(--aj-vao,2px);padding:0 11px;min-width:0}
+.aj-trilha i{flex:1 1 0;height:7px;min-width:0;border-radius:2px;
   background:color-mix(in srgb,var(--ink) 17%,transparent);cursor:pointer;
   transition:background .18s,transform .18s}
 .aj-trilha i:hover{transform:scaleY(1.7)}
@@ -2111,8 +2131,12 @@ body.aj-sem-selecao{user-select:none}
    AS VIZINHAS SÃO A FILA EM PESSOA, e não um número dizendo que ela existe. */
 /* A PISTA NÃO ROLA. Sem o corte, a vizinha que não coube abria barra de rolagem
    horizontal embaixo da peça, e a peça andava de lado ao girar a roda do mouse. */
+/* O RESPIRO DA PISTA É DE 4px, e não de 16. Medido na maquete: o palco vai de 99 a
+   826 numa pista de 95 a 830, ou seja quatro pixels de cada lado. Com 16 a peça
+   perdia 24px de altura, que é o assunto inteiro da tela perdendo espaço para uma
+   folga que ninguém vê. */
 .aj-pista{flex:1;display:flex;align-items:center;justify-content:center;gap:26px;
-  min-height:0;padding:16px 0;overflow:hidden}
+  min-height:0;padding:4px 0;overflow:hidden}
 .aj-tela-caixa{position:relative;flex:none;height:100%;aspect-ratio:9/16}
 /* O PALCO E' UM CONTÊINER DE CONSULTA, e essa linha não é decoração.
 
@@ -2127,7 +2151,10 @@ body.aj-sem-selecao{user-select:none}
 .aj-vizinha{border-radius:12px;overflow:hidden;flex:none;padding:0;
   border:1px solid var(--rule-solid);background:#000;opacity:.32;cursor:pointer;
   position:relative;transition:opacity .18s,transform .18s;
-  height:34%;aspect-ratio:9/16}
+  /* 42% E' A RAZÃO DA MAQUETE, medida nela: a vizinha tem 305px de altura para 727
+     do palco, ou seja 0,4195. Com 34% ela saía 23% menor do que o desenho aprovado,
+     e a fila ao lado é justamente o que mostra que há fila. */
+  height:42%;aspect-ratio:9/16}
 .aj-vizinha:hover{opacity:.74;transform:translateY(-3px)}
 .aj-vizinha img{width:100%;height:100%;object-fit:cover;display:block}
 .aj-vizinha span{position:absolute;left:0;right:0;bottom:0;padding:7px 8px;font-size:10.5px;
@@ -2161,6 +2188,11 @@ body.aj-sem-selecao{user-select:none}
   height:19px;padding:0 5px;border-radius:5px;background:rgba(255,255,255,.22);
   color:#fff;font:700 10px/1 inherit}
 .aj-recado{margin:6px auto 0;text-align:center;min-height:0;flex:none}
+/* RECADO VAZIO NÃO OCUPA LUGAR. A margem de 6px valia mesmo sem texto nenhum, e esses
+   6px saíam da altura da peça, que é o assunto da tela. Mesma lei do `.rec-diz` da
+   trava 35: a linha continua existindo para dizer PROBLEMA, e some quando não há o
+   que dizer. */
+.aj-recado:empty{display:none}
 
 /* ---------------------------------------------------- os botões desta fase
 

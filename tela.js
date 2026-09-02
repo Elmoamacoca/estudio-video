@@ -9178,6 +9178,12 @@ function porNumeroDaRevisao(id, valor) {
 function desenhaATrilha(pecas) {
   const casa = $("aj_trilha");
   if (!casa) return;
+  // O VÃO ENCOLHE ANTES DA MARCA, e é o programa que decide porque só ele sabe
+  // quantas peças são. Com 180 e o vão fixo de 2px a tira pedia 920px de largura
+  // mínima e EMPURRAVA o placar de 267 para 930, jogando ele no meio do cabeçalho:
+  // é a mesma conta da trava 39, agora no lugar onde ela não tinha sido feita.
+  casa.style.setProperty("--aj-vao",
+    (pecas.length > 60 ? 0.5 : pecas.length > 24 ? 1 : 2) + "px");
   if (casa.children.length !== pecas.length) {
     casa.innerHTML = "";
     pecas.forEach((p, k) => {
