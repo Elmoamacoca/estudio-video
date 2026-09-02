@@ -9,9 +9,18 @@ publico da mineracao, onde o mesmo comando de video roda 32 vezes mais rapido, d
 graca), e esta oficina despacha, colhe, confere e guarda. Leva pequena, pedido marcado
 `aqui` e maquina com placa continuam locais: ver o bloco "a esteira de edicao".
 
-COMO A TELA CONVERSA COM ESTE PROGRAMA. Nao ha' servidor no meio, nem ponte, nem GitHub.
-A tela tem permissao de gravar na pasta do Estudio, entao ela deixa um pedido escrito la'
-dentro e este programa, que roda de minuto em minuto, encontra o pedido e trabalha.
+COMO A TELA CONVERSA COM ESTE PROGRAMA, e isto mudou em 25/08/2026. A conversa continua
+sendo uma CAIXA DE RECADOS no disco: a tela deixa um pedido escrito na pasta do Estudio e
+este programa, que roda de minuto em minuto, encontra o pedido e trabalha. O que mudou foi
+QUEM ESCREVE o recado: hoje quem grava e' o POSTO, a pedido da tela, e nao mais a propria
+pagina pela permissao de pasta do navegador. Recortar e montar foram os dois ultimos a
+virar, e essa virada e' o que permitiu a casa sair deste computador: permissao de pasta so'
+funciona com os arquivos na maquina de quem olha. A pasta liberada sobrou como plano B de
+quando o posto esta' fora, e so' vale em casa local.
+
+NEM PONTE NEM GITHUB ENTRAM AQUI, isso segue valendo: a ponte da Cloudflare e' assunto da
+mineracao, e o repositorio publico so' aparece na esteira de edicao, que e' despacho de
+trabalho e nao caminho de pedido.
 
     Estudio/
       levas/leva-28/*.mp4            o bruto, que este programa nunca altera
