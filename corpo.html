@@ -1249,220 +1249,322 @@
              a fonte (só nesta peça ou em todas) e o enquadramento do B-roll. O tamanho e
              a posição já existiam na lupa da olhada geral e vieram junto, para não haver
              dois lugares de fazer a mesma coisa. -->
-        <div class="ed-sub-tela" data-sub="6" hidden>
-          <!-- A BARRA DE COMANDO, e ela resolve três coisas de uma vez.
+        <!-- ============================================================
+             A ESTEIRA · VERSÃO 4.
 
-               SAIU O NOME DO ARQUIVO. "Não quero que isso fique aparecendo", ele disse, e
-               havia uma segunda razão que nem ele viu: o seletor era um menu com as 92
-               peças listadas pelo nome, e esse menu media 3.183 pixels de altura. Era ELE
-               que empurrava a página inteira para baixo. Medido no navegador, não estimado.
+             ESTA FASE É A MAQUETE QUE ELE APROVOU, e não uma adaptação dela.
+             Em 02/09/2026 ele abriu a fase, comparou com a proposta publicada e
+             disse o óbvio: "não tá nada igual". Estava certo. A versão anterior
+             tinha as PEÇAS da versão 4 (o placar, os punhos, a régua, o encaixe)
+             montadas em cima do layout velho, com o painel sempre aberto ao lado
+             da peça pequena. A maquete é outra coisa: a peça ocupa a tela, a
+             anterior e a próxima ficam de lado para a fila se ver andando,
+             aprovar é um gesto só, e as ferramentas moram numa gaveta que só
+             aparece quando ele pede.
 
-               SUBIRAM OS BOTÕES. Estavam no pé, 68 pixels abaixo da dobra, invisíveis sem
-               rolar. E os nomes eram frases: "Esta está pronta, avançar" é título, não é
-               nome de botão.
+             A fonte é `docs/propostas/esteira-v2/`, publicada em
+             estudio-esteira-v4.vercel.app. Mudou aqui, muda lá. -->
+        <div class="ed-sub-tela aj-esteira" data-sub="6" hidden>
 
-               E O QUE IMPORTA GANHOU TAMANHO: em que peça ele está, quantas já assinou e
-               quantas faltam. Era nota de rodapé, em onze pixels cinza. -->
-          <div class="aj-barra">
-            <div class="aj-passo">
-              <button class="aj-seta" id="aj_ant" type="button"
-                      aria-label="peça anterior">&lsaquo;</button>
-              <div class="aj-numero">
-                <b id="aj_conta">1</b>
-                <span id="aj_total">de 92</span>
-              </div>
-              <button class="aj-seta" id="aj_prox" type="button"
-                      aria-label="próxima peça">&rsaquo;</button>
-              <!-- PULAR PARA UMA PEÇA sem precisar de um menu de noventa e duas linhas. -->
-              <label class="aj-ir">ir para
-                <input id="aj_ir" type="number" min="1" step="1" inputmode="numeric">
-              </label>
+          <!-- ------------------------------------------------- o topo da tela -->
+          <header class="aj-cab">
+            <div class="aj-cab-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
             </div>
-
-            <!-- O PLACAR DA REVISAO, e ele e' UM instrumento e nao tres caixas.
-
-                 A primeira versao eram cartoes soltos com um numero dentro, e ele
-                 reprovou de cara: "ficou chapado, ficou feio". Aqui os tres numeros
-                 dividem o mesmo painel, separados por um fio, e embaixo deles corre a
-                 leva inteira com uma marca por peca: o numero diz QUANTAS, a marca diz
-                 QUAIS e leva ate' ela. Verde e' assinada, brasa e' ajustada. -->
-            <div class="aj-placar">
-              <div class="aj-placar-topo">
-                <button class="aj-num feita" id="aj_kpi_pronta_b" type="button">
-                  <b id="aj_kpi_pronta">0</b><span>Prontas</span></button>
-                <button class="aj-num" id="aj_kpi_falta_b" type="button">
-                  <b id="aj_kpi_falta">0</b><span>Para Ver</span></button>
-                <button class="aj-num tocada" id="aj_kpi_mexida_b" type="button">
-                  <b id="aj_kpi_mexida">0</b><span>Com Ajuste</span></button>
-              </div>
-              <div class="aj-trilha" id="aj_trilha"></div>
+            <div class="aj-cab-txt">
+              <h2>Revisão Peça A Peça</h2>
+              <!-- A VERSÃO MORA NA SEGUNDA LINHA, que é a menos disputada: com a
+                   gaveta larga o título cede espaço, e o número da versão não
+                   pode ceder junto. "Aqui não fala versão?", e ele tinha razão. -->
+              <p><span class="aj-versao">Esteira · Versão 4</span>
+                <span id="aj_cab_leva">Leva</span></p>
             </div>
+            <div class="aj-cab-dir">
+              <!-- O PLACAR DA REVISÃO.
 
-            <!-- DESFAZER E REFAZER MORAM NA BARRA, junto do resto do comando.
-                 O editor da revisao guarda cada gesto numa pilha, e sem o caminho de
-                 volta um arrasto errado obriga a zerar a peca inteira, que e' o botao
-                 do pe' e leva junto tudo o que ele ja' tinha acertado ali. -->
-            <div class="aj-acoes">
-              <button class="acao mini" id="aj_voltar_gesto" type="button"
-                      title="Desfazer o último gesto">Desfazer</button>
-              <button class="acao mini" id="aj_refazer_gesto" type="button"
-                      title="Refazer o gesto desfeito">Refazer</button>
-              <button class="acao mini" id="aj_montar" type="button">Fabricar</button>
-              <button class="acao forte" id="aj_pronta" type="button">Pronta</button>
-            </div>
-          </div>
-          <p class="nota mini aj-recado" id="aj_recado"></p>
-          <div class="aj-corpo">
-            <div class="aj-palco">
-              <div class="aj-tela-caixa">
-                <div class="aj-tela" id="aj_tela"></div>
-                <!-- OS PUNHOS DO B-ROLL (29/08/2026).
-
-                     AS ALCAS DE FABRICA FICAVAM FORA DA TELA: elas nascem nos cantos da
-                     FILMAGEM, e a filmagem entra maior que o furo, entao os quatro
-                     cantos caiam alem da borda do palco. Ele tentou diminuir e nao
-                     achou por onde: "eu selecionei o video... e cara, eu nao consigo".
-                     Estes ficam nos cantos do B-roll, que esta' sempre dentro do furo. -->
-                <div class="aj-punhos" id="aj_punhos" hidden>
-                  <i data-c="nw"></i><i data-c="ne"></i><i data-c="se"></i><i data-c="sw"></i>
+                   TRÊS CARTÕES SOLTOS FICARAM CHAPADOS, e ele reprovou: eram três
+                   caixas iguais com um número dentro. Aqui é UM instrumento só: os
+                   três números dividem o mesmo painel, e embaixo deles corre a leva
+                   inteira, uma marca por peça. O número diz quanto; a marca diz
+                   quais, e leva até ela. -->
+              <div class="aj-placar">
+                <div class="aj-placar-topo">
+                  <button class="aj-num feita" id="aj_kpi_pronta_b" type="button"
+                          data-abre="pronta">
+                    <b id="aj_kpi_pronta">0</b><span>Prontas</span></button>
+                  <button class="aj-num aberta" id="aj_kpi_falta_b" type="button"
+                          data-abre="para-ver">
+                    <b id="aj_kpi_falta">0</b><span>Para Ver</span></button>
+                  <button class="aj-num tocada" id="aj_kpi_mexida_b" type="button"
+                          data-abre="ajuste">
+                    <b id="aj_kpi_mexida">0</b><span>Com Ajuste</span></button>
                 </div>
+                <div class="aj-trilha" id="aj_trilha"></div>
               </div>
-              <!-- QUANTO DO B-ROLL SOBREVIVE AO ENCAIXE, medido na hora. -->
-              <div class="aj-medidas">
-                <span class="aj-medida" id="aj_med"><b id="aj_med_n">100%</b>
-                  Do B-roll Aparece</span>
-                <span class="aj-medida" id="aj_med2"><b id="aj_med2_n">0%</b>
-                  <span id="aj_med2_r">Do Furo Com O Fundo</span></span>
+              <button class="acao" id="aj_ver_fila" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Ver A Fila</button>
+              <button class="acao forte" id="aj_montar" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v4M3 5h4M6 17v4M4 19h4"/><path d="m13 3 2.6 6.4L22 12l-6.4 2.6L13 21l-2.6-6.4L4 12l6.4-2.6z"/></svg>
+                Fabricar A Leva</button>
+            </div>
+          </header>
+
+          <p class="nota mini aj-recado" id="aj_recado"></p>
+
+          <!-- ------------------------------------------------------- a esteira
+
+               AS VIZINHAS SÃO A FILA EM PESSOA, e não um número dizendo que ela
+               existe: a anterior e a próxima ficam de lado, e clicar nelas anda. -->
+          <div class="aj-pista">
+            <button class="aj-vizinha oculta" id="aj_viz_ant" type="button"></button>
+            <div class="aj-tela-caixa">
+              <div class="aj-tela" id="aj_tela"></div>
+              <!-- OS PUNHOS DO B-ROLL (29/08/2026).
+
+                   AS ALÇAS DE FÁBRICA FICAVAM FORA DA TELA: elas nascem nos cantos
+                   da FILMAGEM, e a filmagem entra maior que o furo, então os quatro
+                   cantos caíam além da borda do palco. Ele tentou diminuir e não
+                   achou por onde: "eu selecionei o vídeo... e cara, eu não consigo".
+                   Estes ficam nos cantos do B-roll, que está sempre dentro do furo. -->
+              <div class="aj-punhos" id="aj_punhos" hidden>
+                <i data-c="nw"></i><i data-c="ne"></i><i data-c="se"></i><i data-c="sw"></i>
               </div>
             </div>
+            <button class="aj-vizinha" id="aj_viz_prox" type="button"></button>
+          </div>
 
-            <aside class="aj-lado">
+          <!-- ---------------------------------------------------------- o rodapé -->
+          <footer class="aj-pe">
+            <div class="aj-anel">
+              <svg viewBox="0 0 52 52" width="52" height="52" aria-hidden="true">
+                <circle class="fundo" cx="26" cy="26" r="22"/>
+                <circle class="cheio" cx="26" cy="26" r="22" id="aj_anel_cheio"
+                        stroke-dasharray="0 138"/>
+              </svg>
+              <b id="aj_conta">1</b>
+            </div>
+            <div class="aj-pe-txt">
+              <b id="aj_pe_titulo">Peça 1 <span id="aj_total">de 0</span></b>
+              <span id="aj_pe_sub">Nenhum ajuste nesta peça</span>
+            </div>
+            <div class="aj-pe-dir">
+              <button class="acao" id="aj_ant" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Anterior</button>
+              <!-- O SÍMBOLO DA TECLA SAIU DAQUI POR ORDEM DELE, em 29/08/2026:
+                   "remove esse símbolo de A". O atalho continua valendo, e mora
+                   no título do botão, que é onde ele não atrapalha a leitura. -->
+              <button class="acao" id="aj_abrir_gaveta" type="button"
+                      title="Ajustar a peça (tecla A)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg>
+                Ajustar A Peça</button>
+              <button class="acao forte grande" id="aj_pronta" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                <span id="aj_pronta_txt">Pronta E Seguir</span>
+                <span class="aj-atalho">Enter</span>
+              </button>
+            </div>
+          </footer>
+
+          <!-- A CASA DA OBRA, NO PÉ DESTA FASE.
+
+               ELA NASCEU LÁ EM CIMA e ele corrigiu na hora: "ele não deveria ficar
+               na parte superior, deveria ficar na parte inferior". A barra e o aviso
+               de terminado se mudam para cá quando ele entra nesta fase, e o botão
+               de fabricar desce até ela. Ver `moverAObraPara` no tela.js. -->
+          <div id="aj_obra_casa"></div>
+
+          <!-- ------------------------------------------------------- a gaveta
+
+               ELA EMPURRA, E NÃO COBRE: cobrir a peça no exato momento em que ele
+               ajusta a peça era o pior lugar possível para pousar. E se arrasta pela
+               borda, que foi o pedido dele: quem está mexendo em fonte quer a lista
+               larga, quem está só conferindo quer a peça grande. -->
+          <aside class="aj-gaveta" id="aj_gaveta">
+            <div class="aj-puxador" id="aj_puxador" title="Arraste para alargar"></div>
+            <div class="aj-gaveta-cab">
+              <b>Ajustar A Peça <span id="aj_g_num">1</span></b>
+              <button class="aj-x" id="aj_g_fechar" type="button"
+                      title="Fechar (Esc)">&times;</button>
+            </div>
+            <div class="aj-gaveta-corpo">
+
               <!-- O TEXTO NA MÃO. A IA escreve, ele corrige. -->
-              <section class="ed-bloco">
-                <h4>O Texto</h4>
+              <section class="aj-bloco">
+                <h4>A Frase</h4>
                 <div id="aj_textos"></div>
                 <p class="nota mini" id="aj_sem_texto" hidden>Este molde não tem caixa
                   aberta para escrever.</p>
+                <div class="aj-linha">
+                  <div class="ed-passo" id="aj_tam"></div>
+                  <!-- ONDE A FRASE ENCOSTA DENTRO DA CAIXA. Pedido dele em 29/08/2026:
+                       "uma opção de selecionar se eu quero que a caixa de texto fique
+                       centralizada, pro lado, pro outro lado, justificada". São as
+                       quatro da maquete, e o motor aprendeu a justificar junto: botão
+                       que a peça não obedece seria botão que mente. -->
+                  <div class="aj-tira" id="aj_alinha" hidden></div>
+                </div>
               </section>
 
-              <!-- A FONTE, e a escolha de para quantas peças ela vale. -->
-              <section class="ed-bloco">
+              <!-- A FONTE, com a biblioteca inteira: as da casa e as que ele subiu.
+                   Cada nome escrito NA PRÓPRIA FONTE, porque é o desenho da letra
+                   que se escolhe, e não o nome dela. -->
+              <section class="aj-bloco">
                 <h4>A Fonte</h4>
                 <div id="aj_fonte_alvo"></div>
-                <!-- ONDE A FRASE ENCOSTA DENTRO DA CAIXA. Pedido dele em 29/08/2026:
-                     "uma opção de selecionar se eu quero que a caixa de texto fique
-                     centralizada, pro lado, pro outro lado". São três e não quatro
-                     porque o motor só desenha três: justificado sairia diferente do
-                     que a prévia mostrasse, e botão que mente é pior que botão que
-                     falta. -->
-                <div class="ed-botoes aj-alinha" id="aj_alinha" hidden></div>
-                <div class="psel" id="aj_fonte"></div>
+                <div class="aj-tira cheia" id="aj_fonte_filtro">
+                  <button data-q="todas" class="on" type="button">Todas</button>
+                  <button data-q="minhas" type="button">Personalizadas</button>
+                  <button data-q="favoritas" type="button">Favoritas</button>
+                </div>
+                <input class="aj-busca" id="aj_fonte_busca" type="search"
+                       placeholder="Procurar Fonte" spellcheck="false">
+                <div class="aj-fontes" id="aj_fonte"></div>
+                <p class="nota mini" id="aj_fonte_nada" hidden></p>
                 <button class="acao mini larga" id="aj_fonte_todas" type="button">
                   Usar Esta Fonte Em Todas As Peças</button>
                 <p class="nota mini" id="aj_fonte_sem" hidden>Escolha uma caixa de texto
                   na peça para trocar a fonte dela.</p>
               </section>
 
-              <!-- O ENQUADRAMENTO DO B-ROLL. O buraco não sai do lugar: quem anda é a
-                   filmagem por baixo dele. -->
-              <section class="ed-bloco" id="aj_bloco_broll">
-                <h4>O B-roll</h4>
-                <!-- A DICA É ESCRITA PELA TELA, e são dois casos porque o motor também
-                     tem dois. Com furo de arte a janela É o furo e não anda: o arrasto
-                     desliza a filmagem lá dentro. Sem furo (rascunho antigo), o arrasto
-                     leva a janela inteira, que foi o pedido dele de 23/08/2026: "eu só
-                     consigo mexer dentro do quadrado, eu não consigo mexer todo o
-                     quadrado". O texto aqui é o do primeiro caso, que é o de hoje. -->
-                <p class="nota mini" id="aj_broll_dica" hidden>Arraste a filmagem para
-                  escolher que pedaço dela aparece dentro da moldura. Puxe um punho verde
-                  para mudar o tamanho, ou role a roda do mouse em cima da peça.</p>
-                <!-- O ENCAIXE DA PECA, e ele e' a raiz do corte que ele viu peca a peca.
-                     Medido nas 180 da leva 31: cobrindo, sobra 73,9% do B-roll na peca
-                     mediana e 61,9% na pior; cabendo, sobram 100% em todas, e o furo
-                     fica com 7,3% de fundo da arte na mediana. Ver `kencDoEncaixe`. -->
-                <div class="ed-botoes aj-encaixe" id="aj_encaixe">
-                  <button type="button" data-e="caber">Mostrar Inteiro</button>
-                  <button type="button" data-e="cobrir">Cobrir O Furo</button>
-                </div>
-                <p class="nota mini" id="aj_encaixe_diz"></p>
-                <!-- A REGUA DO TAMANHO: o gesto de arrastar foi o primeiro que ele
-                     procurou, e o botao de mais e menos sozinho nao o oferecia. -->
-                <input class="aj-regua" id="aj_regua" type="range" min="20" max="400"
-                       value="100" aria-label="Tamanho da filmagem">
-                <div class="ed-passo" id="aj_zoom"></div>
-                <div class="ed-passo" id="aj_bx"></div>
-                <div class="ed-passo" id="aj_by"></div>
-                <!-- A FOLGA DEIXOU DE SER LEI E VIROU PARTIDA (29/08/2026).
-                     Ela nasceu em 27/08 para esconder o canto arredondado que vem
-                     gravado nos pixels do reel baixado, e passou a valer para TODA
-                     peca, inclusive as que nao tem canto nenhum. Medido nas 180 da
-                     leva 31: sozinha, ela corta 20,3% da filmagem sempre, e a perda
-                     mediana cai de 26,1% para 7,3% sem ela. Agora ela vem ligada,
-                     como antes, e ele desliga onde nao precisa. -->
-                <button class="aj-chave on" id="aj_folga" type="button"
-                        aria-pressed="true">
-                  <span>Folga De Segurança De 12%</span><u></u></button>
-                <button class="acao mini larga" id="aj_broll_todas" type="button">
-                  Usar Este Enquadramento Em Todas</button>
-                <p class="nota mini" id="aj_broll_sem" hidden>Esta peça não tem recorte de
-                  B-roll para reenquadrar.</p>
-              </section>
-
-              <!-- A MOLDURA DESTA PECA, e a escolha da maquina virou sugestao.
-                   Ate' 29/08/2026 `variacaoDaPeca` decidia sozinha e nao havia como
-                   discordar: ele viu um B-roll quadrado entrar na variacao errada e
-                   sair cortado, sem botao nenhum para trocar. A medida continua
-                   escolhendo primeiro, com o selo dizendo qual foi; o clique dele
-                   vence e viaja no pedido daquela peca. -->
-              <section class="ed-bloco" id="aj_bloco_moldura" hidden>
+              <!-- A MOLDURA DESTA PEÇA, e a escolha da máquina virou sugestão.
+                   Até 29/08/2026 `variacaoDaPeca` decidia sozinha e não havia como
+                   discordar: ele viu um B-roll quadrado entrar na variação errada e
+                   sair cortado, sem botão nenhum para trocar. -->
+              <section class="aj-bloco" id="aj_bloco_moldura" hidden>
                 <h4>A Moldura</h4>
                 <div class="aj-molduras" id="aj_molduras"></div>
                 <p class="nota mini" id="aj_moldura_sem" hidden>Esta conta tem uma
                   variação só, então não há o que trocar.</p>
               </section>
 
-              <!-- AS CAMADAS, para alcancar o que esta' por baixo.
-                   Com a moldura por cima da filmagem, clicar no meio da peca pega
+              <!-- A FILMAGEM. O buraco não sai do lugar: quem anda é a filmagem
+                   por baixo dele. -->
+              <section class="aj-bloco" id="aj_bloco_broll">
+                <h4>A Filmagem</h4>
+                <p class="nota mini" id="aj_broll_dica" hidden></p>
+                <!-- O ENCAIXE DA PEÇA, e ele é a raiz do corte que ele viu peça a
+                     peça. Medido nas 180 da leva 31: cobrindo, sobra 73,9% do B-roll
+                     na peça mediana e 61,9% na pior; cabendo, sobram 100% em todas, e
+                     o furo fica com 7,3% de fundo da arte na mediana. -->
+                <div class="aj-tira cheia" id="aj_encaixe">
+                  <button type="button" data-e="caber">Mostrar Inteiro</button>
+                  <button type="button" data-e="cobrir">Cobrir O Furo</button>
+                </div>
+                <p class="nota mini" id="aj_encaixe_diz"></p>
+                <!-- A RÉGUA DO TAMANHO: o gesto de arrastar foi o primeiro que ele
+                     procurou, e o botão de mais e menos sozinho não o oferecia. -->
+                <input class="aj-regua" id="aj_regua" type="range" min="15" max="400"
+                       value="100" aria-label="Tamanho da filmagem">
+                <div class="aj-linha nao-quebra">
+                  <div class="ed-passo" id="aj_zoom"></div>
+                  <button class="acao mini" id="aj_encaixar" type="button"
+                          title="Volta ao tamanho e à posição do encaixe">
+                    Voltar Ao Encaixe</button>
+                </div>
+                <div class="aj-linha nao-quebra">
+                  <div class="ed-passo" id="aj_bx"></div>
+                  <div class="ed-passo" id="aj_by"></div>
+                </div>
+                <!-- AS DUAS MEDIDAS SAIRAM DO RODAPÉ por ordem dele, em 29/08/2026:
+                     "eu não quero esses KPIs". Elas continuam existindo porque a
+                     tela não afirma o que não mediu (trava 2), e moram aqui, ao lado
+                     do botão que as muda, que é onde elas servem para decidir. -->
+                <div class="aj-medidas">
+                  <span class="aj-medida" id="aj_med"><b id="aj_med_n">100%</b>
+                    Do B-roll Aparece</span>
+                  <span class="aj-medida" id="aj_med2"><b id="aj_med2_n">0%</b>
+                    <span id="aj_med2_r">Do Furo Com O Fundo</span></span>
+                </div>
+                <!-- A FOLGA SÓ EXISTE EM COBRIR: cabendo, o que ficaria de fora do
+                     B-roll não entra na peça, porque o recorte para no próprio
+                     B-roll. Ela nasceu em 27/08 para esconder o canto arredondado
+                     que vem gravado nos pixels do reel baixado. -->
+                <button class="aj-chave on" id="aj_folga" type="button"
+                        aria-pressed="true">
+                  <span>Cobrir A Borda Do Reel</span><u></u></button>
+                <p class="nota mini" id="aj_folga_diz"></p>
+                <button class="acao mini larga" id="aj_broll_todas" type="button">
+                  Usar Este Enquadramento Em Todas</button>
+                <p class="nota mini" id="aj_broll_sem" hidden>Esta peça não tem recorte de
+                  B-roll para reenquadrar.</p>
+              </section>
+
+              <!-- AS CAMADAS, para alcançar o que está por baixo.
+                   Com a moldura por cima da filmagem, clicar no meio da peça pega
                    sempre a de cima; a lista diz o que existe e leva o gesto para a
-                   camada certa. A moldura aparece marcada como travada porque ela e'
-                   o quadro da peca: quem se move e' o que entra nela. -->
-              <section class="ed-bloco" id="aj_bloco_camadas">
+                   camada certa. A moldura aparece marcada como travada porque ela é
+                   o quadro da peça: quem se move é o que entra nela. -->
+              <section class="aj-bloco" id="aj_bloco_camadas">
                 <h4>As Camadas</h4>
                 <div class="aj-camadas" id="aj_camadas"></div>
               </section>
 
               <!-- TAMANHO E POSIÇÃO do item escolhido. -->
-              <section class="ed-bloco" id="aj_item" hidden>
+              <section class="aj-bloco" id="aj_item" hidden>
                 <h4>Tamanho E Posição</h4>
-                <div class="ed-passo" id="aj_tam"></div>
                 <div class="ed-passo" id="aj_x"></div>
                 <div class="ed-passo" id="aj_y"></div>
               </section>
+            </div>
 
-              <!-- O ROTULO DIZ O QUE ELE FAZ E SO' ISSO. Ele nao desfaz o texto: nao ha'
-                   original para voltar, porque o texto da IA foi substituido pelo dele. -->
-              <button class="acao mini larga perigo" id="aj_zerar" type="button">
-                Desfazer Os Ajustes Desta Peça</button>
-            </aside>
+            <div class="aj-gaveta-pe">
+              <button class="acao quadrada" id="aj_voltar_gesto" type="button"
+                      title="Desfazer o último gesto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.1-6.4L3 9"/></svg>
+              </button>
+              <button class="acao quadrada" id="aj_refazer_gesto" type="button"
+                      title="Refazer o gesto desfeito">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M20.5 13a9 9 0 1 1-2.1-6.4L21 9"/></svg>
+              </button>
+              <!-- O RÓTULO DIZ O QUE ELE FAZ E SÓ ISSO. Ele não desfaz o texto: não há
+                   original para voltar, porque o texto da IA foi substituído pelo dele. -->
+              <button class="acao perigo" id="aj_zerar" type="button">
+                Voltar Ao Começo</button>
+            </div>
+          </aside>
+
+          <!-- A FILA INTEIRA, sob demanda: com quinze ou com cento e oitenta, ela é
+               a mesma folha, e some assim que ele escolhe para onde ir. -->
+          <div class="aj-folha" id="aj_folha" hidden>
+            <div class="aj-folha-in">
+              <div class="aj-folha-cab">
+                <b>A Fila Da Leva</b>
+                <div class="aj-filtros" id="aj_filtros">
+                  <button data-f="todas" class="on" type="button">Todas</button>
+                  <button data-f="para-ver" type="button">Para Ver</button>
+                  <button data-f="pronta" type="button">Prontas</button>
+                  <button data-f="ajuste" type="button">Com Ajuste</button>
+                </div>
+                <!-- PULAR PARA UMA PEÇA sem precisar rolar uma fila de cento e
+                     oitenta cartões. Ele mora aqui, e não no rodapé, porque é aqui
+                     que a pergunta "para onde eu vou" está sendo feita. -->
+                <label class="aj-ir">ir para
+                  <input id="aj_ir" type="number" min="1" step="1" inputmode="numeric">
+                </label>
+                <button class="aj-x" id="aj_f_fechar" type="button">&times;</button>
+              </div>
+              <div class="aj-folha-grade" id="aj_folha_grade"></div>
+            </div>
           </div>
 
-          <!-- A CASA DA OBRA, NO PÉ DESTA FASE.
-
-               ELA NASCEU LÁ EM CIMA e ele corrigiu na hora: "ele não deveria ficar na
-               parte superior, deveria ficar na parte inferior, tipo acima do rodapé. Eu
-               quero que ele tenha um pouco mais de destaque". No alto ela disputava
-               espaço com a barra de comando e empurrava a peça para baixo; no pé ela é o
-               fim natural da leitura, que é onde uma obra em andamento pertence.
-
-               A barra e o aviso de terminado se mudam para cá quando ele entra nesta
-               fase. Ver `moverAObraPara` no tela.js. -->
-          <div id="aj_obra_casa"></div>
-
-          <!-- ESTA FASE NÃO TEM PÉ, e é de propósito. Os botões subiram para a barra de
-               comando lá em cima, porque no pé eles ficavam abaixo da dobra: medido, 68
-               pixels fora da tela numa janela de 849. Botão que só existe depois de rolar
-               é botão que não existe. "Pronta" continua sendo o que assina e grava na
-               hora, pelo mesmo motivo de antes. -->
+          <!-- FABRICAR É O FIM DA LINHA, e por isso ele pergunta antes, com o número
+               na frente. O aviso do navegador não serve: ele não é desta casa. -->
+          <div class="aj-folha meio" id="aj_folha_fab" hidden>
+            <div class="aj-folha-in">
+              <div class="aj-folha-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 3 2.6 6.4L22 12l-6.4 2.6L13 21l-2.6-6.4L4 12l6.4-2.6z"/></svg>
+              </div>
+              <b id="aj_fab_tit"></b>
+              <p class="nota" id="aj_fab_txt"></p>
+              <div class="aj-linha meio">
+                <button class="acao" id="aj_fab_nao" type="button">Voltar À Revisão</button>
+                <button class="acao forte grande" id="aj_fab_sim" type="button">
+                  Fabricar Agora</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

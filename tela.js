@@ -3825,6 +3825,7 @@ function irParaPasso(n) {
   if (n === 2) entrarNoRecorte();
   if (n === 3) entrarNoTemplate();
   if (n === 4) entrarNaLegenda();
+  porOModoEsteira();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -9207,6 +9208,27 @@ function desenhaAjustePainel() {
      que é o que ele precisa saber. */
   $("aj_conta").textContent = String(AJ_I + 1);
   $("aj_total").textContent = `de ${pecas.length}`;
+  /* O RODAPÉ DIZ ONDE ELE ESTÁ E O QUE ELE JÁ FEZ NESTA PEÇA.
+
+     O ANEL É A LEVA INTEIRA, e o número no meio dele é a peça de agora: assinar uma
+     peça faz o anel andar, que é o retorno que faltava ao gesto. */
+  $("aj_pe_titulo").innerHTML = `Peça ${AJ_I + 1} `
+    + `<span id="aj_total">de ${pecas.length}</span>`;
+  const volta = 2 * Math.PI * 22;
+  const feito = pecas.length ? PRONTAS.size / pecas.length : 0;
+  $("aj_anel_cheio").setAttribute(
+    "stroke-dasharray", `${(volta * feito).toFixed(1)} ${volta.toFixed(1)}`);
+  const mexeu = A_MAO.has(p.nome) || ENQUADRES.has(p.nome);
+  const sub = $("aj_pe_sub");
+  sub.textContent = PRONTAS.has(p.nome) ? "Você já assinou esta peça"
+    : mexeu ? "Ajustada por você" : "Nenhum ajuste nesta peça";
+  sub.classList.toggle("tocada", mexeu && !PRONTAS.has(p.nome));
+  // A LEVA E A CONTA FICAM ESCRITAS NO TOPO, do lado do número da versão.
+  const cab = $("aj_cab_leva");
+  if (cab) {
+    cab.textContent = "Leva " + ((EDIT_LEVA && EDIT_LEVA.numero) || "")
+      + (TPL && TPL.contaModelo ? " · " + TPL.contaModelo : "");
+  }
   const faltam = pecas.length - PRONTAS.size;
   /* O TERCEIRO NUMERO E' O DAS AJUSTADAS, e ele entrou a pedido dele em 29/08/2026:
      "tem que ter tres cards aqui em cima: prontas, para ver e quantas tiveram ajuste".
@@ -9219,9 +9241,11 @@ function desenhaAjustePainel() {
   $("aj_kpi_pronta_b").classList.toggle("zerado", !PRONTAS.size);
   $("aj_kpi_mexida_b").classList.toggle("zerado", !mexidas);
   desenhaATrilha(pecas);
-  // O BOTAO DIZ O QUE FAZ EM UMA PALAVRA. "Esta está pronta, avançar" é título.
-  $("aj_pronta").textContent = PRONTAS.has(p.nome) ? "Já pronta" : "Pronta";
-  $("aj_pronta").classList.toggle("forte", !PRONTAS.has(p.nome));
+  desenhaAsVizinhas(pecas);
+  // O BOTAO DIZ O QUE FAZ, e o que ele faz é assinar E SEGUIR: é um gesto só, e por
+  // isso ele é o único com fundo cheio e movimento próprio (lei 8 do Portal).
+  $("aj_pronta_txt").textContent = PRONTAS.has(p.nome) ? "Já Pronta, Seguir"
+                                                       : "Pronta E Seguir";
   /* COM TUDO PRONTO, "Pronta" SAI E "Fabricar" OCUPA O LUGAR DELE.
 
      PEDIDO DELE: "já que tem as 92 prontas, o botão substituía, o botão que tinha
@@ -9230,13 +9254,15 @@ function desenhaAjustePainel() {
      A ação seguinte passa a ser uma só, e ela fica em destaque. */
   const todasProntas = pecas.length > 0 && PRONTAS.size >= pecas.length;
   $("aj_pronta").hidden = todasProntas;
-  $("aj_montar").classList.toggle("forte", todasProntas);
+  // CHAMANDO PELO ÚLTIMO PASSO: com a leva inteira assinada, fabricar deixa de ser
+  // mais um botão na barra e passa a respirar sozinho.
+  $("aj_montar").classList.toggle("chama", todasProntas);
   $("aj_montar").disabled = $("apl_montar").disabled;
   $("aj_ant").disabled = AJ_I <= 0;
-  $("aj_prox").disabled = AJ_I >= pecas.length - 1;
   const ir = $("aj_ir");
   ir.max = pecas.length;
   if (document.activeElement !== ir) ir.value = AJ_I + 1;
+  $("aj_g_num").textContent = String(AJ_I + 1);
 
   /* ---------------------------------------------------------------- o texto na mão */
   const campos = abertas();
@@ -9265,25 +9291,20 @@ function desenhaAjustePainel() {
   $("aj_fonte_sem").hidden = !!alvo;
   $("aj_fonte").hidden = !alvo;
   $("aj_fonte_todas").disabled = !alvo;
-  /* O ALINHAMENTO DA CAIXA, pedido dele em 29/08/2026 e feito em 02/09. Ele vive ao lado
-     da fonte porque é a mesma caixa escolhida que manda nos dois, e some pelo mesmo
-     motivo: sem caixa escolhida não há o que alinhar. */
+  /* O ALINHAMENTO DA CAIXA, pedido dele em 29/08/2026 e feito em 02/09. Ele vive na
+     linha da frase porque é a mesma caixa escolhida que manda nos dois, e some pelo
+     mesmo motivo: sem caixa escolhida não há o que alinhar. */
   const tira = $("aj_alinha");
   if (tira) {
     tira.hidden = !alvo;
     if (alvo) {
       const agora = medidaDaPeca(alvo, p.nome).alinha;
       tira.innerHTML = ALINHAMENTOS.map(a =>
-        `<button type="button" data-a="${a.v}"`
-        + `${a.v === agora ? ' class="on"' : ""}>${a.r}</button>`).join("");
+        `<button type="button" data-a="${a.v}" title="${a.r}"`
+        + `${a.v === agora ? ' class="on"' : ""}>${a.svg}</button>`).join("");
     }
   }
-  if (alvo) {
-    pselNovo($("aj_fonte"), fontesParaEscolher(), medidaDaPeca(alvo, p.nome).fonte, v => {
-      mexerItem(p.nome, alvo, "fonte", v);
-      desenhaAjustePainel();
-    });
-  }
+  desenhaAsFontes(alvo && medidaDaPeca(alvo, p.nome).fonte);
 
   /* ---------------------------------------------------------------- o B-roll */
   const b = BROLL_DE && BROLL_DE.get(p.nome);
@@ -9380,6 +9401,20 @@ function desenhaAjustePainel() {
        na peça, porque o recorte para no próprio B-roll: a chave não teria efeito
        nenhum, e chave sem efeito é a definição de tela que mente. */
     chave.hidden = !temFuro || eq.encaixe !== "cobrir";
+  }
+  /* O QUE A CHAVE FAZ, ESCRITO COM O NÚMERO DESTA PEÇA. "Folga de segurança" não
+     dizia nada: ele perguntou o que era, em 29/08/2026. O nome virou o que ela faz
+     (cobrir a borda do reel) e a linha abaixo diz o preço em imagem. */
+  const dizFolga = $("aj_folga_diz");
+  if (dizFolga) {
+    dizFolga.hidden = !!$("aj_folga").hidden;
+    if (!dizFolga.hidden) {
+      const com = aproveitamentoLimpo(p.nome, FOLGA_DO_ENCAIXE, "cobrir");
+      const sem = aproveitamentoLimpo(p.nome, 1, "cobrir");
+      dizFolga.innerHTML = "O reel vem com um canto arredondado gravado nos pixels. "
+        + `Ligada, ela o esconde crescendo a filmagem 12%: aparecem <b>${com}%</b> `
+        + `dela. Desligada, aparecem <b>${sem}%</b>, e o canto pode surgir na moldura.`;
+    }
   }
   /* AS MEDIDAS SO' EXISTEM ONDE HA' O QUE MEDIR (trava 2). Sem furo de arte nao ha'
      janela nenhuma para comparar, e deixar o numero da peca anterior na tela seria a
@@ -9629,23 +9664,303 @@ $("aj_regua").oninput = () => {
 $("aj_voltar_gesto").onclick = () => voltarUmGesto(AJ_PILHA, AJ_REFEITOS);
 $("aj_refazer_gesto").onclick = () => voltarUmGesto(AJ_REFEITOS, AJ_PILHA);
 
-$("aj_ant").onclick = () => {
-  if (AJ_I <= 0) return;
-  AJ_I--; AJ_SEL = null; desenhaAjuste();
-};
-$("aj_prox").onclick = () => {
-  if (AJ_I >= pecas3().length - 1) return;
-  AJ_I++; AJ_SEL = null; desenhaAjuste();
-};
+function irParaAPeca(k) {
+  const total = pecas3().length;
+  if (!total) return;
+  const alvo = Math.max(0, Math.min(total - 1, k));
+  if (alvo === AJ_I) return;
+  AJ_I = alvo; AJ_SEL = null;
+  desenhaAjuste();
+}
 
-// PULAR PARA UMA PECA PELO NUMERO, que e' o que sobrou no lugar do menu de 92 nomes.
+$("aj_ant").onclick = () => irParaAPeca(AJ_I - 1);
+$("aj_viz_ant").onclick = () => irParaAPeca(AJ_I - 1);
+$("aj_viz_prox").onclick = () => irParaAPeca(AJ_I + 1);
+
+// PULAR PARA UMA PECA PELO NUMERO. Ele mora dentro da fila, e nao no rodape: e' ali
+// que a pergunta "para onde eu vou" esta' sendo feita.
 $("aj_ir").onchange = () => {
   const n = Number($("aj_ir").value);
   const total = pecas3().length;
   if (!Number.isFinite(n) || n < 1 || n > total) { $("aj_ir").value = AJ_I + 1; return; }
-  if (n - 1 === AJ_I) return;
-  AJ_I = n - 1; AJ_SEL = null; desenhaAjuste();
+  irParaAPeca(n - 1);
+  fecharAFila();
 };
+
+/* ============================================== A ESTEIRA, VERSÃO 4
+
+   O QUE ELE APROVOU EM 29/08/2026 e cobrou em 02/09: a peça ocupa a tela, a anterior e
+   a próxima ficam de lado para a fila se ver andando, aprovar é um gesto só, e as
+   ferramentas moram numa gaveta que empurra a peça em vez de cobri-la.
+
+   A fonte do desenho é `docs/propostas/esteira-v2/`. Mudou aqui, muda lá. */
+
+/* AS VIZINHAS SÃO A FILA EM PESSOA, e não um número dizendo que ela existe.
+
+   ELAS DESENHAM A ARTE DA PEÇA, e não a filmagem: a filmagem exige baixar o vídeo
+   inteiro para tirar um quadro, e são duas por peça, a cada troca. A arte já está na
+   mão (a moldura desceu no começo da fase) e é ela que diz de relance qual peça é. */
+function desenhaAsVizinhas(pecas) {
+  const por = (botao, k) => {
+    if (!botao) return;
+    const p = pecas[k];
+    botao.classList.toggle("oculta", !p);
+    if (!p) { botao.innerHTML = ""; return; }
+    const v = variacaoDaPeca(p.nome);
+    const marca = PRONTAS.has(p.nome) ? " · pronta" : "";
+    const arte = v && ED_IMGS.get(v.arquivo);
+    botao.innerHTML = (arte ? `<img src="${arte}" alt="">` : `<span class="vazio"></span>`)
+      + `<span>${k + 1}${marca}</span>`;
+    botao.title = "Ir para a peça " + (k + 1);
+  };
+  por($("aj_viz_ant"), AJ_I - 1);
+  por($("aj_viz_prox"), AJ_I + 1);
+}
+
+/* ------------------------------------------------------------------- a gaveta
+
+   ELA EMPURRA, E NÃO COBRE. Cobrir a peça no exato momento em que ele ajusta a peça
+   era o pior lugar possível para pousar. */
+function abrirGaveta() {
+  $("aj_gaveta").classList.add("aberta");
+  const casa = $("aj_tela").closest(".aj-esteira");
+  if (casa) casa.classList.add("com-gaveta");
+  // A PEÇA MUDA DE TAMANHO ao ser empurrada, e o editor precisa saber: sem isto a
+  // filmagem fica desenhada no tamanho de antes, e o gesto mira no lugar errado.
+  setTimeout(() => { if (typeof editorMede === "function") editorMede(); }, 360);
+}
+function fecharGaveta() {
+  $("aj_gaveta").classList.remove("aberta");
+  const casa = $("aj_tela").closest(".aj-esteira");
+  if (casa) casa.classList.remove("com-gaveta");
+  setTimeout(() => { if (typeof editorMede === "function") editorMede(); }, 360);
+}
+$("aj_abrir_gaveta").onclick = () => {
+  if ($("aj_gaveta").classList.contains("aberta")) return fecharGaveta();
+  desenhaAjustePainel();
+  abrirGaveta();
+};
+$("aj_g_fechar").onclick = fecharGaveta;
+
+/* ELA SE ARRASTA PELA BORDA, que foi o pedido dele: quem está mexendo em fonte quer a
+   lista larga, quem está só conferindo quer a peça grande. O limite de baixo é o que
+   cabe a lista de fontes sem virar uma fresta; o de cima é metade da tela. */
+(function ligarOPuxador() {
+  const puxador = $("aj_puxador");
+  if (!puxador) return;
+  let pegando = false;
+  const largura = x => {
+    const nova = Math.max(300, Math.min(window.innerWidth * 0.52, window.innerWidth - x));
+    const casa = document.getElementById("ed_oficina");
+    if (casa) casa.style.setProperty("--aj-gaveta", Math.round(nova) + "px");
+  };
+  const anda = ev => { if (pegando) largura(ev.clientX); };
+  const solta = () => {
+    if (!pegando) return;
+    pegando = false;
+    document.body.classList.remove("aj-arrastando");
+    const casa = $("aj_tela").closest(".aj-esteira");
+    if (casa) casa.classList.remove("arrastando");
+    if (typeof editorMede === "function") editorMede();
+  };
+  puxador.addEventListener("pointerdown", ev => {
+    ev.preventDefault();
+    pegando = true;
+    document.body.classList.add("aj-arrastando");
+    const casa = $("aj_tela").closest(".aj-esteira");
+    if (casa) casa.classList.add("arrastando");
+  });
+  // OS OUVINTES MORAM NA JANELA, e não no puxador: `setPointerCapture` é frágil quando
+  // o elemento é redesenhado no meio do gesto, e o arrasto morria calado.
+  window.addEventListener("pointermove", anda);
+  window.addEventListener("mousemove", anda);
+  window.addEventListener("pointerup", solta);
+  window.addEventListener("mouseup", solta);
+  window.addEventListener("pointercancel", solta);
+})();
+
+/* ------------------------------------------------------------------- as fontes
+
+   CADA NOME ESCRITO NA PRÓPRIA FONTE: é o desenho da letra que se escolhe, e não o
+   nome dela. A lista é a mesma do cadastro do template, com o mesmo filtro de
+   personalizada e de favorita, porque duas bibliotecas para a mesma coisa acabam
+   discordando. */
+let AJ_FONTE_FILTRO = "todas";
+function desenhaAsFontes(escolhida) {
+  const casa = $("aj_fonte");
+  if (!casa) return;
+  const busca = ($("aj_fonte_busca").value || "").trim().toLowerCase();
+  const lista = cdBiblioteca()
+    .map(f => ({ ...f, valor: f.minha ? f.arquivo : f.chave }))
+    .filter(f => {
+      if (AJ_FONTE_FILTRO === "minhas" && !f.minha) return false;
+      if (AJ_FONTE_FILTRO === "favoritas" && !f.favorita) return false;
+      return !busca || f.nome.toLowerCase().includes(busca);
+    });
+  casa.innerHTML = lista.map(f =>
+    `<button class="aj-fonte-b${f.valor === escolhida ? " on" : ""}" type="button"`
+    + ` data-f="${escapa(f.valor)}">`
+    + `<span class="aj-estrela${f.favorita ? " on" : ""}" data-fav="${escapa(f.chave)}">`
+    + `<svg viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8`
+    + ` 5.8 21.1 7 14.2 2 9.3l6.9-1z"/></svg></span>`
+    + `<b style="font-family:${f.css}">${escapa(f.nome)}</b>`
+    + `<span class="tipo${f.minha ? " minha" : ""}">${f.minha ? "Minha" : "Da Casa"}`
+    + `</span></button>`).join("");
+  const nada = $("aj_fonte_nada");
+  nada.hidden = lista.length > 0;
+  nada.textContent = busca
+    ? `Nenhuma fonte com "${busca}" neste filtro.`
+    : "Nenhuma fonte neste filtro.";
+}
+$("aj_fonte_filtro").onclick = ev => {
+  const b = ev.target.closest("[data-q]");
+  if (!b) return;
+  AJ_FONTE_FILTRO = b.dataset.q;
+  for (const x of $("aj_fonte_filtro").children) x.classList.toggle("on", x === b);
+  desenhaAjustePainel();
+};
+$("aj_fonte_busca").oninput = () => desenhaAjustePainel();
+$("aj_fonte").onclick = ev => {
+  const estrela = ev.target.closest("[data-fav]");
+  const p = pecas3()[AJ_I];
+  if (estrela) {
+    ev.stopPropagation();
+    const ficha = cdFichaDasFavoritas();
+    const chave = estrela.dataset.fav;
+    const onde = ficha.chaves.indexOf(chave);
+    if (onde >= 0) ficha.chaves.splice(onde, 1); else ficha.chaves.push(chave);
+    gravarAcervo().catch(() => {});
+    return desenhaAjustePainel();
+  }
+  const b = ev.target.closest("[data-f]");
+  if (!b || !p) return;
+  const alvo = elementoDaPeca(p.nome, AJ_SEL);
+  if (!alvo) return;
+  guardarOGesto();
+  mexerItem(p.nome, alvo, "fonte", b.dataset.f);
+  desenhaAjuste();
+};
+
+/* VOLTAR AO ENCAIXE: desfaz o tamanho e o deslize de uma vez, sem tocar na frase, na
+   fonte nem na moldura. É o "reset" desta peça que ele procurava no botão de zerar,
+   que apagava tudo. */
+$("aj_encaixar").onclick = () => {
+  const p = pecas3()[AJ_I];
+  if (!p) return;
+  guardarOGesto();
+  mexerEnquadre(p.nome, "z", 1, true);
+  mexerEnquadre(p.nome, "dx", 0, true);
+  mexerEnquadre(p.nome, "dy", 0);
+  desenhaAjustePainel();
+};
+
+/* --------------------------------------------------------------------- a fila
+
+   COM QUINZE OU COM CENTO E OITENTA ELA É A MESMA FOLHA, e some assim que ele escolhe
+   para onde ir. Os três números do placar abrem ela já filtrada: o número responde
+   QUANTAS, e o clique responde QUAIS. */
+let AJ_FILA_FILTRO = "todas";
+function estadoDaPeca(nome) {
+  if (PRONTAS.has(nome)) return "pronta";
+  return (A_MAO.has(nome) || ENQUADRES.has(nome)) ? "ajuste" : "para-ver";
+}
+function desenhaAFila() {
+  const casa = $("aj_folha_grade");
+  if (!casa) return;
+  const pecas = pecas3();
+  const dentro = pecas.map((p, k) => ({ p, k }))
+    .filter(({ p }) => AJ_FILA_FILTRO === "todas"
+      || (AJ_FILA_FILTRO === "para-ver" && !PRONTAS.has(p.nome))
+      || estadoDaPeca(p.nome) === AJ_FILA_FILTRO);
+  casa.innerHTML = dentro.map(({ p, k }) => {
+    const v = variacaoDaPeca(p.nome);
+    const arte = v && ED_IMGS.get(v.arquivo);
+    const estado = estadoDaPeca(p.nome);
+    return `<button class="aj-cartao${k === AJ_I ? " agora" : ""}" type="button"`
+      + ` data-k="${k}">`
+      + (arte ? `<img src="${arte}" alt="">` : `<span class="vazio"></span>`)
+      + `<span class="num">${k + 1}</span>`
+      + (estado === "pronta"
+        ? `<span class="sinal"><svg viewBox="0 0 24 24" fill="none"><path d="m20 6-11 11-5-5"/></svg></span>` : "")
+      + (estado === "ajuste" ? `<span class="toque">Ajustada</span>` : "")
+      + `</button>`;
+  }).join("");
+  const ir = $("aj_ir");
+  ir.max = pecas.length;
+  ir.value = AJ_I + 1;
+}
+function abrirAFila(filtro) {
+  AJ_FILA_FILTRO = filtro || "todas";
+  for (const b of $("aj_filtros").children) {
+    b.classList.toggle("on", b.dataset.f === AJ_FILA_FILTRO);
+  }
+  desenhaAFila();
+  $("aj_folha").hidden = false;
+}
+const fecharAFila = () => { $("aj_folha").hidden = true; };
+$("aj_ver_fila").onclick = () => abrirAFila("todas");
+$("aj_f_fechar").onclick = fecharAFila;
+$("aj_folha").onclick = ev => { if (ev.target === $("aj_folha")) fecharAFila(); };
+$("aj_filtros").onclick = ev => {
+  const b = ev.target.closest("[data-f]");
+  if (b) abrirAFila(b.dataset.f);
+};
+$("aj_folha_grade").onclick = ev => {
+  const b = ev.target.closest("[data-k]");
+  if (!b) return;
+  fecharAFila();
+  irParaAPeca(Number(b.dataset.k));
+};
+for (const [id, filtro] of [["aj_kpi_pronta_b", "pronta"], ["aj_kpi_falta_b", "para-ver"],
+                            ["aj_kpi_mexida_b", "ajuste"]]) {
+  $(id).onclick = () => abrirAFila(filtro);
+}
+
+/* ----------------------------------------------------------------- fabricar
+
+   É O FIM DA LINHA, e por isso ele pergunta antes, com o número na frente. O aviso do
+   navegador não serve: ele não é desta casa, e não sabe dizer quantas peças faltam
+   assinar. */
+function abrirOFabricar() {
+  const pecas = pecas3();
+  const faltam = pecas.length - PRONTAS.size;
+  $("aj_fab_tit").textContent = faltam
+    ? `Fabricar Com ${faltam} ${faltam === 1 ? "Peça" : "Peças"} Por Ver?`
+    : "Fabricar As " + pecas.length + " Peças?";
+  $("aj_fab_txt").textContent = faltam
+    ? `Você assinou ${PRONTAS.size} de ${pecas.length}. As que faltam vão do jeito que `
+      + "estão, com o enquadramento que a medida escolheu."
+    : "Todas as peças estão assinadas. A fabricação começa agora e você acompanha a "
+      + "barra aqui embaixo.";
+  $("aj_folha_fab").hidden = false;
+}
+$("aj_fab_nao").onclick = () => { $("aj_folha_fab").hidden = true; };
+$("aj_folha_fab").onclick = ev => {
+  if (ev.target === $("aj_folha_fab")) $("aj_folha_fab").hidden = true;
+};
+
+/* ------------------------------------------------------------- o teclado
+
+   TRÊS TECLAS, E TODAS DIZEM O QUE FAZEM NA TELA: Enter assina e segue, A abre a
+   gaveta, Esc fecha o que estiver aberto. Atalho que não está escrito em lugar nenhum
+   é atalho que só quem escreveu usa. */
+window.addEventListener("keydown", ev => {
+  if ($("ed_oficina").hidden || TPL_SUB !== 6 || EDIT_PASSO !== 3) return;
+  const onde = ev.target;
+  const escrevendo = onde && (onde.tagName === "TEXTAREA" || onde.tagName === "INPUT"
+    || onde.isContentEditable);
+  if (ev.key === "Escape") {
+    if (!$("aj_folha_fab").hidden) return void ($("aj_folha_fab").hidden = true);
+    if (!$("aj_folha").hidden) return fecharAFila();
+    if ($("aj_gaveta").classList.contains("aberta")) return fecharGaveta();
+    return;
+  }
+  if (escrevendo) return;
+  if (ev.key === "Enter" && !$("aj_pronta").hidden) { ev.preventDefault(); $("aj_pronta").click(); }
+  else if (ev.key === "a" || ev.key === "A") { ev.preventDefault(); $("aj_abrir_gaveta").click(); }
+  else if (ev.key === "ArrowLeft") irParaAPeca(AJ_I - 1);
+  else if (ev.key === "ArrowRight") irParaAPeca(AJ_I + 1);
+});
 
 /* ================================================ ARRASTAR A PEÇA COM O DEDO
 
@@ -9855,6 +10170,12 @@ $("aj_pronta").onclick = () => {
   if (!p) return;
   PRONTAS.add(p.nome);
   salvarRascunho();
+  /* O SIM ELE VÉ ACONTECER. Sem isto o clique some sem resposta, e um botão que não
+     responde é um botão que ele aperta de novo achando que falhou. */
+  const bt = $("aj_pronta");
+  bt.classList.remove("assinou");
+  void bt.offsetWidth;
+  bt.classList.add("assinou");
   if (AJ_I < pecas.length - 1) {
     AJ_I++; AJ_SEL = null;
     desenhaAjuste();
@@ -10038,6 +10359,15 @@ function podeIrAoSub(n) {
    a fabricacao passa a ser a ultima parada. */
 const POSICAO_DA_SUB = { 1: 0, 4: 1, 6: 2, 5: 3 };
 
+/* O MODO ESTEIRA VALE PARA UMA FASE SÓ, e por isso ele se decide a partir das DUAS
+   coordenadas, e não de uma. Amarrado só ao sub-passo, ele sobrevivia à volta para o
+   passo 1: a lista das 180 peças abria em tela cheia, sem trilho e sem cabeçalho, com
+   cara de outra tela. Vale a pena chamar de todo lugar que muda passo ou sub-passo. */
+function porOModoEsteira() {
+  const tela = document.getElementById("ed_oficina");
+  if (tela) tela.classList.toggle("esteira-aberta", EDIT_PASSO === 3 && TPL_SUB === 6);
+}
+
 function irParaSub(n) {
   if (n === 2 || n === 3) n = 4;
   if (!podeIrAoSub(n)) return;
@@ -10057,6 +10387,14 @@ function irParaSub(n) {
   if (n === 4) entrarNaIA();
   if (n === 5) desenhaGaleria();
   moverAObraPara(n);
+  /* A REVISÃO TOMA A TELA, e as outras fases devolvem.
+
+     A MAQUETE QUE ELE APROVOU É A TELA INTEIRA: peça no meio, vizinhas dos lados,
+     rodapé de comando embaixo. Dentro da grade de duas colunas da oficina ela nascia
+     com o trilho comendo 250 pixels e a peça sobrando com o resto, que foi exatamente
+     a diferença que ele fotografou em 02/09/2026 ("não tá nada igual"). */
+  porOModoEsteira();
+  if (n !== 6) { fecharGaveta(); fecharAFila(); $("aj_folha_fab").hidden = true; }
   if (n === 6) entrarNoAjuste();
   desenhaSubTrilho();
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -10135,12 +10473,14 @@ function moverAObraPara(sub) {
    ela mora no PÉ, abaixo da peça: clicar no topo e não ver nada acontecer é o mesmo que
    não ter barra nenhuma. Agora a página desce até ela e a caixa acende por um instante,
    que é o que diz "é aqui que a coisa está acontecendo". */
-$("aj_montar").onclick = () => {
+/* FABRICAR PERGUNTA ANTES, com o número das que faltam na frente: é o fim da linha
+   da leva inteira, e não dá para desfazer clicando de novo. */
+$("aj_montar").onclick = abrirOFabricar;
+$("aj_fab_sim").onclick = () => {
+  $("aj_folha_fab").hidden = true;
+  fecharGaveta();
   $("apl_montar").click();
   requestAnimationFrame(() => {
-    const casa = $("aj_obra_casa");
-    if (!casa) return;
-    casa.scrollIntoView({ behavior: "smooth", block: "end" });
     const caixa = $("apl_obra");
     if (!caixa) return;
     caixa.classList.remove("chegou");
@@ -10630,13 +10970,17 @@ function faixaDaPeca(nome) {
    O MOTOR SO' SABE ESTAS TRES (`alinha` em `pintar_camadas`: esquerda, direita e, em
    qualquer outro caso, centro). Oferecer uma quarta na tela seria botao que mente: a
    previa mostraria uma coisa e o arquivo sairia outra. */
+const linhasDo = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const ALINHAMENTOS = [
-  { v: "esquerda", r: "Esquerda" },
-  { v: "centro", r: "Centro" },
-  { v: "direita", r: "Direita" },
+  { v: "esquerda", r: "À Esquerda", svg: linhasDo('<path d="M3 6h18M3 12h11M3 18h15"/>') },
+  { v: "centro", r: "Centralizada", svg: linhasDo('<path d="M3 6h18M6 12h12M5 18h14"/>') },
+  { v: "direita", r: "À Direita", svg: linhasDo('<path d="M3 6h18M10 12h11M6 18h15"/>') },
+  { v: "justificado", r: "Justificada",
+    svg: linhasDo('<path d="M3 6h18M3 12h18M3 18h18"/>') },
 ];
 function alinhamentoCss(a) {
-  return a === "esquerda" ? "left" : a === "direita" ? "right" : "center";
+  return a === "esquerda" ? "left" : a === "direita" ? "right"
+       : a === "justificado" ? "justify" : "center";
 }
 
 /* A LETRA QUE ELE SUBIU NO CADASTRO, achada pelo id OU pelo arquivo.

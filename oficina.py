@@ -1208,12 +1208,25 @@ def pintar_camadas(tpl: dict, textos: dict, tela: dict, pasta: Path,
         # deixaria de valer como conferencia.
         altura_linha = int(tamanho * 1.22)
         y += int(tamanho * 0.11)
+        cor = cor_de(el.get("cor"), (255, 255, 255))
         for i, linha in enumerate(linhas):
             larg = d.textlength(linha, font=fonte)
-            px = x if alinha == "esquerda" else (x + w - larg if alinha == "direita"
-                                                else x + (w - larg) / 2)
-            d.text((px, y + i * altura_linha), linha, font=fonte,
-                   fill=cor_de(el.get("cor"), (255, 255, 255)))
+            # JUSTIFICADO ESPALHA A SOBRA ENTRE AS PALAVRAS, e a ULTIMA linha fica como
+            # esta': justificar a ultima e' o que produz aquela linha de duas palavras
+            # esticada de ponta a ponta. Mesma regra do navegador, que e' quem desenha a
+            # previa: `text-align:justify` tambem deixa a ultima linha em paz.
+            palavras = linha.split(" ")
+            if alinha == "justificado" and i < len(linhas) - 1 and len(palavras) > 1:
+                sobra = w - sum(d.textlength(pa, font=fonte) for pa in palavras)
+                vao = sobra / (len(palavras) - 1)
+                px = x
+                for pa in palavras:
+                    d.text((px, y + i * altura_linha), pa, font=fonte, fill=cor)
+                    px += d.textlength(pa, font=fonte) + vao
+                continue
+            px = x if alinha in ("esquerda", "justificado") else (
+                x + w - larg if alinha == "direita" else x + (w - larg) / 2)
+            d.text((px, y + i * altura_linha), linha, font=fonte, fill=cor)
     return fundo, frente
 
 
