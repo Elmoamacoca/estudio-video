@@ -2298,6 +2298,12 @@ body.aj-arrastando .aj-gaveta{transition:none}
    mesmo filtro de personalizada e de favorita. */
 .aj-fontes{display:flex;flex-direction:column;gap:4px;max-height:228px;overflow-y:auto;
   padding-right:3px;overscroll-behavior:contain}
+/* SEM CAIXA ESCOLHIDA, A LISTA SOME. `tela.js` esconde ela quando não há texto
+   selecionado, e sem esta linha o esconder perde para o `display:flex` de cima: a
+   gaveta mostrava as trinta fontes E, logo abaixo, o recado dizendo para escolher uma
+   caixa antes de trocar a fonte. As duas coisas ao mesmo tempo, cada uma negando a
+   outra. Terceira aparição desta armadilha (trava 66g), achada na foto de 02/09/2026. */
+.aj-fontes[hidden]{display:none}
 .aj-fonte-b{position:relative;display:flex;align-items:center;gap:9px;
   border:1px solid var(--rule-solid);background:var(--paper-2);color:var(--ink);
   border-radius:8px;padding:7px 10px 7px 8px;cursor:pointer;transition:.14s;
@@ -2480,13 +2486,24 @@ body.aj-arrastando .aj-gaveta{transition:none}
 #aj_obra_casa .apl-obra{padding:18px 20px;margin:0;background:var(--branco);
   border:1px solid var(--rule-solid);border-radius:16px;box-shadow:var(--sombra)}
 /* O AVISO DE TERMINADO TAMBÉM É UM CARTÃO AQUI. Solto, ele virava dois botões
-   flutuando por cima da peça, sem nada dizendo de onde eles vieram. */
-#aj_obra_casa .apl-feito{justify-content:center;padding:12px 16px;margin:0;
+   flutuando por cima da peça, sem nada dizendo de onde eles vieram.
+
+   AS DUAS DECLARAÇÕES VIRARAM UMA. Eram duas regras com o MESMO seletor, separadas
+   por outras duas linhas, e a de baixo era a que trazia o `display`. Foi assim que a
+   linha do escondido passou despercebida: quem lê a de cima não vê que existe outra. */
+#aj_obra_casa .apl-feito{display:flex;gap:10px;align-items:center;
+  justify-content:center;padding:12px 16px;margin:0;margin-top:14px;
   background:var(--branco);border:1px solid var(--rule-solid);border-radius:14px;
   box-shadow:var(--sombra)}
+/* E CARTÃO NENHUM APARECE ANTES DA OBRA EXISTIR. `#aj_obra_casa .apl-feito` vale 110
+   de especificidade e `.apl-feito[hidden]` vale 20: sem esta linha o esconder que o
+   programa manda PERDE para a folha, e os dois botões do fim da fabricação ficavam
+   flutuando sobre o pé da peça assim que a fase abria, com nada fabricado. Achado na
+   FOTO, e não no código, em 02/09/2026. É a trava 66g de novo, num elemento que ela
+   não cobria, e agora a prova varre a fase inteira em vez de olhar um elemento só. */
+#aj_obra_casa .apl-feito[hidden]{display:none}
 #aj_obra_casa .apl-obra-topo b{font-size:15px}
 #aj_obra_casa .apl-barra{height:10px;border-radius:999px}
-#aj_obra_casa .apl-feito{display:flex;gap:10px;align-items:center;margin-top:14px}
 
 /* ---------------------------------------------- o que é desenhado NA peça
 
