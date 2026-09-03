@@ -23,7 +23,49 @@
    "indice": 1.65,
    "etapa": "carrossel",
    "situacao": "selecionada"
+  },
+  {
+   "origem": "@liamjohnston.ai",
+   "indice": 1.32,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@omatheusdaia",
+   "indice": 1.0,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@omatheusdaia",
+   "indice": 0.72,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@liamjohnston.ai",
+   "indice": 0.68,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@omatheusdaia",
+   "indice": 0.42,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@omatheusdaia",
+   "indice": 0.35,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@omatheusdaia",
+   "indice": 0.3,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
   }
  ],
- "atualizado": 1788401700
+ "atualizado": 1788403268
 }

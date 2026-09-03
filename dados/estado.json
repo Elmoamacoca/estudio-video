@@ -1,7 +1,7 @@
 {
- "prontas": 4,
+ "prontas": 11,
  "avaliados": 11,
- "ultima_rodada": 1788401700,
+ "ultima_rodada": 1788403268,
  "perfis": [
   {
    "conta": "leisdamentemilionaria",
@@ -44,9 +44,9 @@
    "reels": 0,
    "imagens": 0,
    "carrosseis": 2,
-   "acima": 0,
+   "acima": 2,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 0,
+   "carrosseis_baixaveis": 2,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -68,9 +68,9 @@
    "reels": 0,
    "imagens": 0,
    "carrosseis": 9,
-   "acima": 4,
+   "acima": 9,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 4,
+   "carrosseis_baixaveis": 9,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
