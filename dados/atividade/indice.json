@@ -1,30 +1,30 @@
 {
  "contas": [
   {
-   "conta": "omatheusdaia",
-   "nome": "Matheus Castro | AI Coding",
-   "rotulo": "carrosséis",
-   "primeiro": 1788399874,
-   "ultimo": 1788401335,
-   "eventos": 8,
-   "falhas": 0,
-   "avisos": 7,
-   "ultimo_tipo": "sem_leitura",
-   "lidos": 9,
-   "publicacoes": 0,
-   "completo": false
-  },
-  {
    "conta": "liamjohnston.ai",
    "nome": "Liam Johnston",
    "rotulo": "carrosséis",
    "primeiro": 1788399867,
-   "ultimo": 1788401333,
+   "ultimo": 1788401685,
    "eventos": 8,
    "falhas": 0,
    "avisos": 7,
    "ultimo_tipo": "sem_leitura",
    "lidos": 2,
+   "publicacoes": 0,
+   "completo": false
+  },
+  {
+   "conta": "omatheusdaia",
+   "nome": "Matheus Castro | AI Coding",
+   "rotulo": "carrosséis",
+   "primeiro": 1788399874,
+   "ultimo": 1788401685,
+   "eventos": 8,
+   "falhas": 0,
+   "avisos": 7,
+   "ultimo_tipo": "sem_leitura",
+   "lidos": 9,
    "publicacoes": 0,
    "completo": false
   },
@@ -43,5 +43,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788401345
+ "atualizado": 1788401700
 }
