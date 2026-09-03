@@ -618,8 +618,12 @@
       <div class="carr-lote" id="carr_lote" hidden>
         <label class="carr-check" title="Marcar todos os perfis desta fileira">
           <input type="checkbox" id="carr_todos"><span>Marcar Todos</span></label>
+        <!-- A CONTA FICA FORA DO GRUPO DO BOTAO. Dentro dele, ela sumia junto com o botao
+             e a barra virava um retangulo vazio de mil pixels com uma caixinha no canto,
+             que foi o que ele fotografou em 03/09/2026. Fora, ela diz o estado da
+             marcacao o tempo todo e o botao continua so' aparecendo com alguem marcado. -->
+        <span class="carr-lote-diz" id="carr_lote_diz"></span>
         <div class="carr-lote-acao" id="carr_lote_acao" hidden>
-          <span class="carr-lote-diz" id="carr_lote_diz"></span>
           <!-- O BOTAO ANIMADO DA CASA (trava 30), e quem troca o texto dele escreve
                DENTRO do `.txt` pelo `dizNoBotao`, nunca no botao inteiro (trava 31). -->
           <button class="btn brasa" id="carr_montar_lote" type="button"

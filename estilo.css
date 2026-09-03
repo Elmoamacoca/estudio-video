@@ -533,6 +533,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
    sozinha à medida que os lotes saem. */
 .fileira{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));
             gap:12px}
+/* O RECADO DE FILEIRA VAZIA OCUPA A LINHA INTEIRA, e esta linha nasceu de um print dele em
+   03/09/2026: sem ela o recado é UM item do grid e cai numa coluna de 128px, virando uma
+   tira de texto em pé, com sete linhas de uma palavra e meia. Medido na sonda, no estado
+   de dois perfis de carrossel e nada a baixar: 128 de largura por 201 de altura dentro de
+   uma fileira de 1250. Nenhuma prova via isto porque nenhuma montava a fileira VAZIA: o
+   ensaio cheio nunca desenha o `.vazio`, que é a trava 71 pelo avesso. */
+.fileira > .vazio{grid-column:1 / -1}
 .fperfil{background:var(--branco);border:1px solid var(--rule-solid);
       border-radius:var(--r-lg);box-shadow:var(--sombra);overflow:hidden;cursor:pointer;
       display:flex;flex-direction:column;align-items:center;padding-top:18px;
@@ -3175,8 +3182,12 @@ body.aj-arrastando .aj-gaveta{transition:none}
 /* E O MONTAR DE NOVO E' BOTAO, e nao texto solto. Texto de 88x18 a 12px/400 colado numa
    pilula de 151x37 a 12,5px/700 sao duas familias de controle na mesma linha, que e' a
    queixa "todo bugado" da trava 71f com dois em vez de tres. */
+/* A ALTURA E' A DO BOTAO AO LADO, 37px, e nao a que o texto der. Ela saia com 34 contra
+   os 37 do `.btn`, e tres pixels de desnivel entre duas pilulas encostadas e' o que faz a
+   dupla parecer torta sem que se saiba dizer por que. Medido na sonda de 03/09/2026. */
 .carr-refazer{background:transparent;cursor:pointer;font:inherit;
-  font-size:12px;font-weight:600;color:var(--muted);padding:7px 14px;
+  font-size:12px;font-weight:600;color:var(--muted);padding:0 16px;height:37px;
+  display:inline-flex;align-items:center;
   border:1px solid var(--rule-solid);border-radius:100px;white-space:nowrap;
   transition:border-color .16s ease,color .16s ease}
 .carr-refazer:hover{color:var(--ink);border-color:var(--accent)}
@@ -3192,12 +3203,22 @@ body.aj-arrastando .aj-gaveta{transition:none}
    erro. As duas linhas irmas de `[hidden]` sao a trava 66g, que ja' voltou por quatro
    caminhos diferentes nesta tela: o esconder do navegador vale ZERO de especificidade e
    perde para qualquer `display` de autor. */
+/* A BORDA E' INTEIRA, E NAO TRACEJADA, desde o print dele de 03/09/2026. Tracejado com o
+   lado direito escondido (que e' o estado normal, sem ninguem marcado) desenha um
+   retangulo vazio de 1208 por 41 com uma caixinha no canto: a linguagem do tracejado e'
+   "arraste algo para ca'", e nao ha' nada para arrastar. Medido na sonda de dois perfis. */
 .carr-lote{display:flex;align-items:center;gap:14px;margin:18px 0 0;padding:10px 14px;
-  border:1px dashed var(--rule-solid);border-radius:var(--r-md)}
+  border:1px solid var(--rule-solid);border-radius:var(--r-md);
+  background:color-mix(in srgb, var(--rule-solid) 22%, transparent)}
 .carr-lote[hidden]{display:none}
-.carr-lote-acao{display:flex;align-items:center;gap:12px;margin-left:auto}
+.carr-lote-acao{display:flex;align-items:center;gap:12px}
 .carr-lote-acao[hidden]{display:none}
-.carr-lote-diz{font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+/* A CONTA MORA FORA DO GRUPO DO BOTAO, e e' ela que enche o lado direito quando nao ha'
+   ninguem marcado: o botao continua so' existindo com marcacao viva (montar nada e' botao
+   que so' pode dar erro), mas a barra deixa de ser um vao de mil pixels. */
+.carr-lote-diz{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;
+  margin-left:auto}
+.carr-lote-diz[data-marcado="sim"]{color:var(--ink)}
 .carr-lote .btn{flex:none;font-size:12.5px;padding:8px 20px;--desl:7px}
 .carr-lote .btn .seta{width:12px;height:12px}
 .carr-lote .btn .seta-dir{right:11px}

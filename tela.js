@@ -1006,15 +1006,24 @@ function desenhaABarraDoLote() {
   const acao = $("carr_lote_acao");
   if (!acao) return;
   acao.hidden = CARR_MARCADOS.size === 0;
-  if (acao.hidden) return;
   const quantos = CARR_MARCADOS.size;
   /* A CONTA DE CARROSSÉIS SAI DA FICHA DE CADA PERFIL, e não de uma estimativa: é o mesmo
      número que a coluna do cartão mostra, somado. */
   const pecas = CARR_LISTA.filter(p => CARR_MARCADOS.has(p.conta))
     .reduce((s, p) => s + (p.carrosseis_baixaveis || 0), 0);
-  $("carr_lote_diz").textContent =
-    `${num(quantos)} ${quantos === 1 ? "perfil marcado" : "perfis marcados"} · `
-    + `${num(pecas)} ${pecas === 1 ? "carrossel" : "carrosséis"}`;
+  /* A LINHA DA DIREITA É ESCRITA SEMPRE, e o `return` antecipado que existia aqui é o que
+     esvaziava a barra: com ninguém marcado ela ficava com a caixinha à esquerda e mil
+     pixels de nada até a borda, que foi o print dele de 03/09/2026. Sem marcação a frase
+     diz o que fazer, e é ela que ocupa o lugar do botão que ainda não deve existir. */
+  const diz = $("carr_lote_diz");
+  if (diz) {
+    diz.dataset.marcado = quantos ? "sim" : "nao";
+    diz.textContent = quantos
+      ? `${num(quantos)} ${quantos === 1 ? "perfil marcado" : "perfis marcados"} · `
+        + `${num(pecas)} ${pecas === 1 ? "carrossel" : "carrosséis"}`
+      : "Marque os perfis que quer baixar de uma vez";
+  }
+  if (acao.hidden) return;
   dizNoBotao("carr_montar_lote",
              quantos === 1 ? "Montar O Pacote" : "Montar Os Pacotes");
 }
