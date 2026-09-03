@@ -1,5 +1,14 @@
 {
- "dia": "2026-09-02",
+ "dia": "2026-09-03",
  "tentativas": 0,
- "perfis": {}
+ "perfis": {
+  "liamjohnston.ai": {
+   "prova": 1788399945,
+   "paradas": 0
+  },
+  "omatheusdaia": {
+   "prova": 1788399980,
+   "paradas": 0
+  }
+ }
 }
