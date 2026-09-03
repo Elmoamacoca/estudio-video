@@ -1,6 +1,6 @@
 {
  "conta": "liamjohnston.ai",
- "nome": null,
+ "nome": "Liam Johnston",
  "eventos": [
   {
    "quando": 1788406972,
@@ -8,6 +8,27 @@
    "gravidade": "aviso",
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela",
    "vezes": 2
+  },
+  {
+   "quando": 1788407079,
+   "tipo": "identificado",
+   "gravidade": "evento",
+   "texto": "Perfil aberto no Instagram: 48 posts na primeira leitura",
+   "detalhe": {
+    "publicacoes": null,
+    "seguidores": null,
+    "total": 48
+   }
+  },
+  {
+   "quando": 1788407298,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os carrosséis deste perfil: 48 no total",
+   "detalhe": {
+    "total": 48,
+    "publicacoes": 0
+   }
   }
  ]
 }

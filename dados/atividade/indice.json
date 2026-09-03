@@ -1,28 +1,30 @@
 {
  "contas": [
   {
-   "conta": "omatheusdaia",
-   "nome": null,
-   "primeiro": 1788407025,
-   "ultimo": 1788407025,
-   "eventos": 1,
+   "conta": "liamjohnston.ai",
+   "nome": "Liam Johnston",
+   "rotulo": "carrosséis",
+   "primeiro": 1788406972,
+   "ultimo": 1788407298,
+   "eventos": 3,
    "falhas": 0,
    "avisos": 1,
-   "ultimo_tipo": "aguardando",
-   "lidos": 0,
+   "ultimo_tipo": "concluido",
+   "lidos": 48,
    "publicacoes": 0,
-   "completo": false
+   "completo": true
   },
   {
-   "conta": "liamjohnston.ai",
-   "nome": null,
-   "primeiro": 1788406972,
-   "ultimo": 1788406972,
-   "eventos": 1,
+   "conta": "omatheusdaia",
+   "nome": "Matheus Castro | AI Coding",
+   "rotulo": "carrosséis",
+   "primeiro": 1788407025,
+   "ultimo": 1788407298,
+   "eventos": 3,
    "falhas": 0,
-   "avisos": 1,
-   "ultimo_tipo": "aguardando",
-   "lidos": 0,
+   "avisos": 2,
+   "ultimo_tipo": "sem_avanco",
+   "lidos": 8,
    "publicacoes": 0,
    "completo": false
   },
@@ -35,11 +37,11 @@
    "eventos": 6,
    "falhas": 0,
    "avisos": 2,
-   "ultimo_tipo": "concluido",
-   "lidos": 395,
+   "ultimo_tipo": "varredura",
+   "lidos": 0,
    "publicacoes": 0,
    "completo": true
   }
  ],
- "atualizado": 1788407028
+ "atualizado": 1788407298
 }
