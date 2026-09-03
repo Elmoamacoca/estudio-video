@@ -61,13 +61,13 @@
    }
   },
   {
-   "quando": 1788401054,
+   "quando": 1788401091,
    "tipo": "sem_leitura",
    "gravidade": "aviso",
-   "texto": "Nenhuma Página Veio (Feed): Recusa 401 Do Instagram. A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa 22.",
+   "texto": "Nenhuma Página Veio (Feed): Recusa 401 Do Instagram. A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa 23.",
    "detalhe": {
-    "seguidas": 22,
-    "vaga": 4,
+    "seguidas": 23,
+    "vaga": 6,
     "caminho": "feed",
     "resposta": "www.instagram.com recusou (401); i.instagram.com recusou (401)"
    }
