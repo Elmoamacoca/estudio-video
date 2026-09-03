@@ -1,34 +1,6 @@
 {
  "contas": [
   {
-   "conta": "liamjohnston.ai",
-   "nome": "Liam Johnston",
-   "rotulo": "carrosséis",
-   "primeiro": 1788399867,
-   "ultimo": 1788403979,
-   "eventos": 9,
-   "falhas": 0,
-   "avisos": 7,
-   "ultimo_tipo": "varredura",
-   "lidos": 3,
-   "publicacoes": 0,
-   "completo": false
-  },
-  {
-   "conta": "omatheusdaia",
-   "nome": "Matheus Castro | AI Coding",
-   "rotulo": "carrosséis",
-   "primeiro": 1788399874,
-   "ultimo": 1788403961,
-   "eventos": 8,
-   "falhas": 0,
-   "avisos": 7,
-   "ultimo_tipo": "sem_leitura",
-   "lidos": 9,
-   "publicacoes": 0,
-   "completo": false
-  },
-  {
    "conta": "leisdamentemilionaria",
    "nome": "Mente Milionária",
    "rotulo": "carrosséis",
