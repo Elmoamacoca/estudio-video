@@ -26,7 +26,13 @@
   },
   {
    "origem": "@liamjohnston.ai",
-   "indice": 1.32,
+   "indice": 1.38,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@liamjohnston.ai",
+   "indice": 1.0,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -44,7 +50,7 @@
   },
   {
    "origem": "@liamjohnston.ai",
-   "indice": 0.68,
+   "indice": 0.52,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -67,5 +73,5 @@
    "situacao": "selecionada"
   }
  ],
- "atualizado": 1788403621
+ "atualizado": 1788403979
 }
