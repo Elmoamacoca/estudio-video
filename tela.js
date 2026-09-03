@@ -2544,6 +2544,47 @@ function contasEscritas() {
   return $("fontes").value.split("\n").map(umArroba).filter(Boolean);
 }
 
+/* O PAINEL ABRE MOSTRANDO A REGUA QUE ESTA' VALENDO, e nao o padrao do HTML.
+
+   O QUE ACONTECIA ATE' 03/09/2026. As tres caixas de formato nascem `checked` no
+   `corpo.html` e os quatro campos de corte nascem em 1,5. Quem abrisse o painel via
+   sempre isso, qualquer que fosse a regua gravada no acervo. E o painel nao e' so'
+   mostrador: apertar Iniciar MANDA o que esta' nele, entao acrescentar um perfil sem
+   tocar em mais nada REESCREVIA a regua dele com reels, post, carrossel e 1,5.
+
+   Ele tinha acabado de por a regua so' em carrossel com corte ZERO, e foi preciso
+   consertar cinco lugares para esse zero chegar ao acervo (trava 74). O primeiro perfil
+   novo o teria apagado, e o cartao do pacote cairia de 48 e 160 carrosseis para o que
+   passa de 1,5 vez a mediana, sem uma palavra na tela dizendo que a regua mudou.
+
+   E' a mesma familia da trava 2, do lado da ENTRADA: a tela nao pode mandar uma escolha
+   que ele nao fez. Sem regua lida ainda (`REGUA_VALENDO` nulo na primeira carga), o
+   padrao do HTML continua valendo, que e' o unico palpite honesto quando nao se sabe. */
+function porOPainelNaReguaValendo() {
+  const r = REGUA_VALENDO;
+  if (!r) return;
+  const fs = r.formatos || [];
+  if (fs.length) {
+    for (const f of ["reels", "post", "carrossel"]) $("f_" + f).checked = fs.includes(f);
+  }
+  // `por_formato` E' BOOLEANO GRAVADO, e `!== false` e' o que a ponte usa para ler: o
+  // campo ausente vale ligado, e so' o `false` explicito desliga.
+  $("por_formato").checked = r.por_formato !== false;
+  const escrever = (campo, valor) => {
+    if (valor == null || !Number.isFinite(Number(valor))) return;
+    // PONTO, E NAO VIRGULA. O campo e' `type="number"`, e nele o navegador RECUSA um
+    // valor com virgula: `input.value = "1,5"` deixa o campo VAZIO, e aperta-se Iniciar
+    // mandando 1,5 por padrao justo quando se queria mostrar o que esta' valendo. Quem
+    // aceita a virgula e' a leitura (`reguaEscolhida` troca por ponto), e nao a escrita.
+    $(campo).value = String(Number(valor));
+  };
+  escrever("corte_unico", r.corte);
+  const c = r.cortes || {};
+  escrever("c_reels", c.reels != null ? c.reels : r.corte);
+  escrever("c_post", c.post != null ? c.post : r.corte);
+  escrever("c_carrossel", c.carrossel != null ? c.carrossel : r.corte);
+}
+
 /** Mostra só as réguas dos formatos escolhidos, e troca entre única e separada. */
 function ajustarFolha() {
   const separada = $("por_formato").checked;
@@ -2595,6 +2636,7 @@ $("iniciar").onclick = () => {
     return;
   }
   parado("ini_recado", "");
+  porOPainelNaReguaValendo();
   ajustarFolha();
   $("ini_folha").hidden = false;
 };
