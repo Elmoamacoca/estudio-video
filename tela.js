@@ -1274,6 +1274,36 @@ const filtrando = () => {
   return f.length > 0 && f.length < 3;
 };
 
+/* O PRIMEIRO NUMERO DA SITUACAO, e ele conta O QUE O ROTULO AO LADO DIZ QUE CONTA.
+
+   O QUE ELE VIU EM 03/09/2026: "406 carrosséis varridos", com ONZE carrosséis no acervo.
+   O rótulo vem dos formatos da régua (`rotuloDosFormatos`, que vira "carrosséis" com a
+   régua marcada só nele) e o número somava `lidos`, que é TODO post já gravado do perfil,
+   incluindo os 395 reels do @leisdamentemilionaria varridos semanas antes com outra
+   régua. A soma: 395 + 9 + 2 = 406.
+
+   ELE LEU O PAINEL E DISSE, COM RAZAO, "existe MUITO MAIS CARROSSEIS em ambos os casos":
+   a tela tinha acabado de lhe dizer que havia quatrocentos e seis.
+
+   A FICHA DE CADA PERFIL JA' TINHA A CONTA CERTA. O `selecionar.py` grava `reels`,
+   `imagens` e `carrosseis` desde sempre, e do que foi VARRIDO, não do que passou na
+   régua, justamente para a tabela não dizer zero quando o corte é de outro formato.
+   Faltava só o painel usá-la. Sem filtro de formato o rótulo é "publicações varridas", e
+   aí `lidos` é exatamente o número certo.
+
+   MORA FORA DO `atualizar()` PARA PODER SER PROVADO: aquela função busca meia dúzia de
+   arquivos na rede antes de chegar aqui, e prova que precisa da rede inteira de pé para
+   medir uma soma é prova que ninguém escreve. */
+const NOME_DA_CONTA_DE = { reels: "reels", post: "imagens", carrossel: "carrosseis" };
+
+function lidosDoPainel(perfis) {
+  const formatos = (REGUA_VALENDO && REGUA_VALENDO.formatos) || [];
+  const deUm = p => (filtrando()
+    ? formatos.reduce((a, f) => a + (p[NOME_DA_CONTA_DE[f]] || 0), 0)
+    : (p.lidos || 0));
+  return (perfis || []).reduce((a, p) => a + deUm(p), 0);
+}
+
 /* A GRAVIDADE É DECIDIDA AQUI, e não lida do que ficou gravado.
    O tipo do evento é o dado; a gravidade é opinião sobre ele, e opinião muda. "Rodada
    sem avanço" já foi classificada como falha e não é: com menos perfis do que vagas,
@@ -2194,12 +2224,23 @@ async function atualizar() {
 
   // a seleção é quem calcula os números da tabela; o estado é a cópia dela
   const perfis = (sel && sel.perfis) || (estado && estado.perfis) || [];
+  /* A REGUA VALENDO E' LIDA ANTES DOS NUMEROS, e nao seiscentas linhas abaixo deles.
+
+     Lida depois, a PRIMEIRA pintura contava com a régua da volta anterior (nula, na
+     carga), e o painel abria dizendo "406 carrosséis varridos" ao lado de um rótulo que
+     já dizia "carrosséis": o número da régua velha embaixo do rótulo da régua nova. Só
+     a volta seguinte, vinte e cinco segundos depois, se corrigia, e quem olha nesses
+     vinte e cinco segundos vê a coisa errada.
+
+     E' PALAVRA POR PALAVRA a lição que o rótulo ao lado já tinha aprendido, no comentário
+     logo abaixo: dois valores que se leem juntos precisam ser calculados juntos. */
+  REGUA_VALENDO = (sel && sel.criterio) || REGUA_VALENDO;
   // OS QUATRO NÚMEROS DA SITUAÇÃO, e nenhum deles é decorativo.
   // Saíram daqui dois que não mediam nada: a contagem de contas de origem, que a
   // pastilha de Minerados já mostra ao lado do nome, e o tamanho do lote montado, que
   // tem teto de 500 e por isso marcava 500 para sempre. Estes quatro mudam quando o
   // trabalho anda, que é a única razão para um número ficar grande na tela.
-  $("n_lidos").textContent = num(perfis.reduce((a, b) => a + (b.lidos || 0), 0));
+  $("n_lidos").textContent = num(lidosDoPainel(perfis));
   $("n_completos").textContent = perfis.filter(p => p.completo).length;
   // O QUE ESTA' ACIMA DA REGUA, no formato que foi pedido. Este numero contava so'
   // reels baixaveis: numa varredura de carrossel ele marcava zero para sempre, e zero
@@ -2243,8 +2284,6 @@ async function atualizar() {
   // tabela continuaria dizendo "a baixar" por vinte e cinco segundos.
   anotarLevas(lotes);
   desenhaMinerados();
-
-  REGUA_VALENDO = (sel && sel.criterio) || REGUA_VALENDO;
 
   // O CARTÃO NASCE DA LISTA DE CONTAS, e não da identificação no Instagram.
   //
