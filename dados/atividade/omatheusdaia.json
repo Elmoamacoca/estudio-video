@@ -118,6 +118,60 @@
     "total": 102,
     "publicacoes": 0
    }
+  },
+  {
+   "quando": 1788408693,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 58 carrosséis novos, 160 no total",
+   "detalhe": {
+    "rodada": 384,
+    "maquinas": 7,
+    "gravacoes": 7,
+    "passos": [
+     {
+      "quando": 1788408022,
+      "maquina": "vaga 1"
+     },
+     {
+      "quando": 1788408059,
+      "maquina": "vaga 2"
+     },
+     {
+      "quando": 1788408095,
+      "maquina": "vaga 3"
+     },
+     {
+      "quando": 1788408128,
+      "maquina": "vaga 4"
+     },
+     {
+      "quando": 1788408172,
+      "maquina": "vaga 5"
+     },
+     {
+      "quando": 1788408205,
+      "maquina": "vaga 6"
+     },
+     {
+      "quando": 1788408233,
+      "maquina": "vaga 7"
+     }
+    ],
+    "novos": 58,
+    "total": 160,
+    "publicacoes": 0
+   }
+  },
+  {
+   "quando": 1788408693,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os carrosséis deste perfil: 160 no total",
+   "detalhe": {
+    "total": 160,
+    "publicacoes": 0
+   }
   }
  ]
 }

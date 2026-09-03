@@ -5,14 +5,14 @@
    "nome": "Matheus Castro | AI Coding",
    "rotulo": "carrosséis",
    "primeiro": 1788407025,
-   "ultimo": 1788407997,
-   "eventos": 4,
+   "ultimo": 1788408693,
+   "eventos": 6,
    "falhas": 0,
    "avisos": 2,
    "ultimo_tipo": "varredura",
-   "lidos": 102,
+   "lidos": 160,
    "publicacoes": 0,
-   "completo": false
+   "completo": true
   },
   {
    "conta": "liamjohnston.ai",
@@ -43,5 +43,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788407997
+ "atualizado": 1788408693
 }
