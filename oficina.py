@@ -2,8 +2,8 @@
 
 ONDE O TRABALHO ACONTECE, e a conta mudou duas vezes. No PC do Gabriel, com placa de
 video, a leva inteira saia em vinte minutos e transportar 900 MB para montar fora nao
-pagava a viagem: tudo local. Na casa da VPS, sem placa, uma peca custa uns 6 minutos de
-recorte e 5 de montagem, e a leva de 107 vira um dia de maquina; desde 25/08/2026 a
+pagava a viagem: tudo local. Na casa da VPS, sem placa, uma peca custa uns 5 minutos de
+montagem, e a leva de 107 vira um dia de maquina; desde 25/08/2026 a
 LEVA GRANDE e' fatiada e despachada para as vagas da esteira (o mesmo repositorio
 publico da mineracao, onde o mesmo comando de video roda 32 vezes mais rapido, de
 graca), e esta oficina despacha, colhe, confere e guarda. Leva pequena, pedido marcado
@@ -13,8 +13,8 @@ COMO A TELA CONVERSA COM ESTE PROGRAMA, e isto mudou em 25/08/2026. A conversa c
 sendo uma CAIXA DE RECADOS no disco: a tela deixa um pedido escrito na pasta do Estudio e
 este programa, que roda de minuto em minuto, encontra o pedido e trabalha. O que mudou foi
 QUEM ESCREVE o recado: hoje quem grava e' o POSTO, a pedido da tela, e nao mais a propria
-pagina pela permissao de pasta do navegador. Recortar e montar foram os dois ultimos a
-virar, e essa virada e' o que permitiu a casa sair deste computador: permissao de pasta so'
+pagina pela permissao de pasta do navegador. Medir e montar foram os dois ultimos a virar,
+e essa virada e' o que permitiu a casa sair deste computador: permissao de pasta so'
 funciona com os arquivos na maquina de quem olha. A pasta liberada sobrou como plano B de
 quando o posto esta' fora, e so' vale em casa local.
 
@@ -28,9 +28,15 @@ trabalho e nao caminho de pedido.
       pedidos/<id>.json              a tela escreve aqui
       pedidos/<id>.andamento.json    este programa escreve aqui, a tela le' e mostra
       pedidos/feitos/<id>.json       o pedido cumprido, guardado
-      recortes/leva-28/*.mp4         o B-roll recortado (passo 2)
-      recortes/leva-28/_origem.json  de qual video bruto veio cada recorte
-      edicoes/leva-28/*.mp4          a peca com o template (passo 3)
+      medidas/leva-28/_origem.json   onde o B-roll de cada peca esta' no quadro
+      medidas/leva-28/_frases/*.png  a manchete do card, para a IA reescrever
+      edicoes/leva-28/*.mp4          a peca montada sobre o template
+
+   A PASTA `recortes/` SAIU EM 03/09/2026, com a espec `aba-de-edicao-a-bancada`. Ela
+   guardava um video por peca, com so' o B-roll dentro e o resto preto: 2,1 GB para os
+   787 MB de bruto que os geraram. Hoje sobra a MEDIDA, em kilobytes, e a montagem parte
+   do bruto cortando no retangulo medido. `levas/` continua sendo o bruto que este
+   programa nunca altera, e e' por isso que a ficha mora ao lado e nao dentro.
 
 O DESENHO DA MONTAGEM: o template traz uma MOLDURA, um retangulo marcando onde a midia
 entra, e o video e' recortado por ela. E' o comportamento do Canva, e foi assim que o
@@ -76,7 +82,7 @@ FEITOS = caminhos.FEITOS
 LEVAS = caminhos.LEVAS
 TEMPLATES = caminhos.TEMPLATES
 EDICOES = caminhos.EDICOES
-RECORTES = caminhos.RECORTES
+MEDIDAS = caminhos.MEDIDAS
 
 TRANCA = PEDIDOS / "_montando"
 TRANCA_VELHA = 90 * 60      # uma leva inteira leva uns 20 min; 90 e' folga larga
@@ -87,12 +93,19 @@ TRANCA_VELHA = 90 * 60      # uma leva inteira leva uns 20 min; 90 e' folga larg
 # O ultrafast economiza oito segundos e cobra tres vezes o tamanho do arquivo. Nao vale:
 # o que se ganha em maquina se perde em disco e em upload para o Instagram depois.
 PRESET = "veryfast"
-# QUANTAS PECAS RODAM AO MESMO TEMPO, e o numero e' TRES por medicao e nao por palpite.
-# Com o recorte na CPU, rodar varias juntas nao ganhava nada: a maquina ja' ficava em 98%
-# com uma so'. Com o recorte na placa a CPU sobra, e ai' varias juntas passam a valer. As
-# mesmas 12 pecas, na placa: uma de cada vez 125 s, tres 108 s, quatro 109 s. Quatro nao
-# ganha porque quem esgota agora e' o bloco de video da placa, e nao o processador.
-AO_MESMO_TEMPO = 3
+# QUANTAS PECAS SE MEDEM AO MESMO TEMPO, e o numero e' QUATRO por medicao e nao por palpite.
+#
+# O NUMERO TROCOU EM 03/09/2026, e o motivo e' que o trabalho trocou. Aqui morava
+# `AO_MESMO_TEMPO = 3`, calibrado para a CODIFICACAO de video: com o recorte na CPU rodar
+# varias juntas nao ganhava nada (a maquina ja' ficava em 98% com uma so'), e com o recorte
+# na placa tres ganhavam (12 pecas: uma de cada vez 125 s, tres 108 s, quatro 109 s, porque
+# quem esgotava era o bloco de video da placa).
+#
+# NAO SE CODIFICA MAIS NADA AQUI. A medicao le' doze quadros de uma miniatura por peca, e
+# quem limita passou a ser a leitura do disco: nao ha' placa a disputar, e quatro juntas dao
+# conta sem brigar. A `placa_de_video()` continua existindo porque `despacho_vale` decide
+# pela esteira com ela, e essa conta e' da FABRICACAO, que codifica de verdade.
+AO_MESMO_TEMPO = 4
 CRF = "20"
 # A QUALIDADE NA PLACA se pede por outro numero, e nao pelo CRF. 22 foi escolhido por
 # comparacao quadro a quadro contra o libx264 em CRF 20: dentro da janela os dois diferem
@@ -607,152 +620,10 @@ def placa_de_video() -> bool:
         except (OSError, subprocess.SubprocessError):
             _PLACA = False
         print("placa de video: " + ("Quick Sync, ligada" if _PLACA
-                                    else "nenhuma, o recorte vai no processador"))
+                                    else "nenhuma, a fabricacao vai no processador"))
         return _PLACA
 
 
-def moldura_de(mascara: Path) -> Path:
-    """O caminho da moldura RGBA que acompanha uma mascara."""
-    return mascara.with_name(mascara.stem + ".moldura.png")
-
-
-def desenhar_mascara(achado: dict, caixa: dict, arquivo: Path) -> bool:
-    """Escreve o PNG da mascara: branco onde o B-roll esta', preto no resto.
-
-    ELA NASCE JA' NO TAMANHO DA PECA, 1080 por 1920, e nao no tamanho do bruto. A
-    primeira versao desenhava em 360 de largura e deixava o ffmpeg ampliar tres vezes: o
-    canto arredondado chegava na peca borrado e com degrau, e foi o que o Gabriel viu
-    ("ele ta' cortando de forma reta"). Desenhada no tamanho final, a curva sai limpa.
-
-    `caixa` diz onde o quadro do bruto cai dentro da peca: x, y, w, h em pixels. Para reel
-    na proporcao de reels ele ocupa tudo; para os quatro fora de proporcao da leva 29 ele
-    fica no meio, com preto em volta, que e' o mesmo preto do resto.
-
-    A FORMA E' A DO B-ROLL. Se a borda e' arredondada, a mascara e' arredondada, porque
-    "e' para capturar 100% como e' o original".
-    """
-    try:
-        from PIL import Image, ImageDraw
-    except ImportError:
-        return False
-
-    tw, th = int(caixa["tela_w"]), int(caixa["tela_h"])
-    bx, by = float(caixa["x"]), float(caixa["y"])
-    bw, bh = float(caixa["w"]), float(caixa["h"])
-    emx = lambda fx: bx + fx * bw
-    emy = lambda fy: by + fy * bh
-
-    linhas = achado.get("linhas")
-    im = Image.new("L", (tw, th), 0)
-    d = ImageDraw.Draw(im)
-
-    def gravar() -> bool:
-        """Grava as duas leituras da mesma forma: a mascara e a moldura.
-
-        A MASCARA e' branco onde o B-roll passa, e e' o que o editor e a montagem leem.
-        A MOLDURA e' o negativo dela em RGBA: preto opaco onde tapa, furo onde passa. E'
-        o que a placa de video precisa, porque `overlay_qsv` cola por cima em vez de
-        multiplicar. Sao a mesma medida escrita de dois jeitos, e nascem juntas para
-        nunca poderem discordar.
-        """
-        arquivo.parent.mkdir(parents=True, exist_ok=True)
-        im.save(arquivo)
-        try:
-            import numpy as np
-            rgba = np.zeros((th, tw, 4), dtype=np.uint8)
-            rgba[..., 3] = 255 - np.asarray(im)
-            Image.fromarray(rgba, "RGBA").save(moldura_de(arquivo))
-        except (ImportError, OSError, ValueError):
-            pass                                  # sem moldura o recorte cai no libx264
-        return True
-    if not linhas:
-        d.rectangle([emx(achado.get("x", 0)), emy(achado.get("y", 0)),
-                     emx(achado.get("x", 0) + achado.get("w", 1)) - 1,
-                     emy(achado.get("y", 0) + achado.get("h", 1)) - 1], fill=255)
-        return gravar()
-
-    # QUANDO A FORMA E' UM RETANGULO DE CANTO REDONDO, e e' o caso da grande maioria dos
-    # cards, desenha-se o retangulo de verdade em vez do contorno linha a linha: o miolo
-    # fica reto sem tremer e os quatro cantos saem com a mesma curva.
-    redondo = retangulo_redondo(linhas)
-    if redondo:
-        deitado, de_pe, e, dd = redondo
-        larg_px = (dd - e) * bw
-        alt_px = achado["h"] * bh
-        raio = min(deitado * bw, de_pe * alt_px, larg_px / 2, alt_px / 2)
-    # RAIO GRANDE DEMAIS NAO E' CANTO, E' RUIDO. Num retangulo de canto redondo o raio
-    # fica numa fracao pequena do lado; quando ele passa de um quarto, o que variou nas
-    # pontas foi a imagem escurecer, e nao a borda curvar. Ai' vale mais o contorno linha
-    # a linha, que segue o que foi medido em vez de inventar uma curva.
-    if redondo and raio <= 0.25 * min(larg_px, alt_px):
-        d.rounded_rectangle([emx(e), emy(achado["y"]), emx(dd) - 1,
-                             emy(achado["y"] + achado["h"]) - 1],
-                            radius=max(0.0, raio), fill=255)
-        return gravar()
-
-    passo = (achado["h"] * bh) / max(1, len(linhas))
-    topo = emy(achado["y"])
-    esq, dir_ = [], []
-    for i, b in enumerate(linhas):
-        if not b:
-            continue
-        yy = topo + (i + 0.5) * passo
-        esq.append((emx(b[0]), yy))
-        dir_.append((emx(b[1]), yy))
-    if len(esq) < 2:
-        return False
-    # AS PONTAS SE ESTICAM ate' a primeira e a ultima linha cheias, senao a mascara nasce
-    # meia linha depois do B-roll e come uma tira dele.
-    esq = [(esq[0][0], esq[0][1] - passo / 2)] + esq + [(esq[-1][0], esq[-1][1] + passo / 2)]
-    dir_ = [(dir_[0][0], dir_[0][1] - passo / 2)] + dir_ + [(dir_[-1][0], dir_[-1][1] + passo / 2)]
-    d.polygon(esq + dir_[::-1], fill=255)
-    return gravar()
-
-
-def retangulo_redondo(linhas: list):
-    """Diz se a forma e' um retangulo de canto redondo, e com que raio.
-
-    A PROVA E' O MIOLO SER RETO: se as linhas do meio tem todas a mesma borda esquerda e a
-    mesma direita, so' o que varia sao as pontas, e isso e' canto arredondado. O raio e' o
-    quanto a borda recua na ponta.
-
-    Devolve (raio, esquerda, direita) em fracao da largura, ou None quando a forma e'
-    outra coisa e o contorno linha a linha continua sendo o caminho.
-    """
-    cheias = [b for b in linhas if b]
-    if len(cheias) < 8:
-        return None
-    a, b = int(len(cheias) * 0.30), int(len(cheias) * 0.70)
-    miolo = cheias[a:b] or cheias
-    esq = [x[0] for x in miolo]
-    dire = [x[1] for x in miolo]
-    largura = max(dire) - min(esq)
-    if largura <= 0:
-        return None
-    # o miolo tem de ser reto dentro de meio por cento da largura do quadro
-    if (max(esq) - min(esq)) > 0.005 or (max(dire) - min(dire)) > 0.005:
-        return None
-    e, dd = sum(esq) / len(esq), sum(dire) / len(dire)
-    # O RAIO SE MEDE DOS DOIS LADOS, e fica o menor. De pe' e' quantas linhas levam ate' a
-    # borda ficar reta; deitado e' o quanto ela anda para dentro. Num canto redondo de
-    # verdade os dois dao o mesmo numero. Medir so' deitado deixava uma linha torta na
-    # ponta inflar o raio, e o canto saia como um circulo grande demais.
-    tol = 0.0015
-    cima = 0
-    for x in cheias:
-        if x[0] > e + tol or x[1] < dd - tol:
-            cima += 1
-        else:
-            break
-    baixo = 0
-    for x in reversed(cheias):
-        if x[0] > e + tol or x[1] < dd - tol:
-            baixo += 1
-        else:
-            break
-    deitado = max(max(x[0] - e for x in cheias), max(dd - x[1] for x in cheias), 0.0)
-    de_pe = max(cima, baixo) / len(cheias)      # fracao da ALTURA da janela
-    return (deitado, de_pe, e, dd)
 
 
 def guardar_frase(video: Path, achado: dict, arquivo: Path) -> bool:
@@ -779,136 +650,6 @@ def guardar_frase(video: Path, achado: dict, arquivo: Path) -> bool:
     return r.returncode == 0 and arquivo.exists()
 
 
-def recortar(entrada: Path, saida: Path, achado: dict | None,
-             mascara: Path | None, tela: dict | None = None) -> dict:
-    """Deixa no quadro so' o B-roll, onde ele ja' esta', e pinta o resto de preto.
-
-    O QUE SAI DAQUI: o mesmo quadro do reel, do mesmo tamanho, com o B-roll na posicao
-    original, no tamanho original, com os pixels originais. Fora da forma dele, preto.
-
-    NAO SE CORTA, NAO SE CENTRALIZA, NAO SE REDIMENSIONA. O Gabriel cravou assim em
-    20/08/2026, e a frase e' curta: "so' o resto vira preto", "a gente deixa na posicao
-    original, ele fica igual a' versao original". Antes eu gravava o retangulo cortado
-    fora do quadro; ficava menor e mudava de lugar, e nao era isso.
-
-    A FORMA E' A FORMA DELE. Se a borda e' arredondada, o recorte sai arredondado, porque
-    "e' para capturar 100% como e' o original". Quem descreve a forma e' a mascara, e ela
-    fica gravada ao lado: o passo 3 precisa dela para poder por o B-roll sobre um fundo
-    colorido sem o preto tapar o fundo.
-
-    E SAI SEMPRE EM 1080 POR 1920, o formato de reels. Os brutos vem menores: dos 107 da
-    leva 29, 65 sao 720x1280 e 37 sao 360x640. O Gabriel cravou em 20/08/2026 que a
-    conversao acontece aqui: "e' pra sempre sair nisso", "precisa aplicar entao na hora de
-    ser convertido", porque "chegou na parte do template precisa estar com tudo isso
-    limpo". A ampliacao aconteceria de qualquer jeito la' na frente, ja' que a peca final
-    e' 1080x1920; feita aqui, ela acontece UMA VEZ so'.
-
-    BRUTO FORA DA PROPORCAO DE REELS entra inteiro e sobra preto em volta, que e' o mesmo
-    preto do resto. Na leva 29 sao quatro arquivos assim, entre 720x900 e 1280x720.
-    """
-    t0 = time.time()
-    if not shutil.which("ffmpeg"):
-        return {"erro": "o ffmpeg nao esta instalado nesta maquina"}
-    saida.parent.mkdir(parents=True, exist_ok=True)
-
-    v = ffprobe(entrada, "stream=width,height")
-    try:
-        lar, alt = int(v[0]), int(v[1])
-    except (IndexError, ValueError):
-        return {"erro": "nao consegui ler o tamanho do video"}
-
-    par_lar, par_alt = par(lar), par(alt)
-    tela = tela or {}
-    tw, th = par(tela.get("w", 1080)), par(tela.get("h", 1920))
-    # PARA O FORMATO DE REELS: cabe inteiro dentro de 1080x1920 e o que sobra vira preto,
-    # sem esticar de um lado so' e sem cortar nada.
-    escala = min(tw / par_lar, th / par_alt)
-    sw, sh = par(par_lar * escala), par(par_alt * escala)
-    virar = (f",scale={sw}:{sh},pad={tw}:{th}:{(tw - sw) // 2}:{(th - sh) // 2}:black,setsar=1")
-    corte = f"crop={par_lar}:{par_alt}:0:0,setsar=1"
-
-    # A MASCARA SE APLICA DEPOIS DE AMPLIAR, e nao antes. Aplicada no tamanho do bruto,
-    # ela era ampliada junto e chegava borrada; feita no tamanho final, a borda sai limpa.
-    tem_mascara = False
-    if achado and achado.get("modo") == "card" and mascara is not None:
-        tem_mascara = desenhar_mascara(
-            achado, {"tela_w": tw, "tela_h": th, "x": (tw - sw) // 2,
-                     "y": (th - sh) // 2, "w": sw, "h": sh}, mascara)
-    # ------------------------------------------------ o caminho rapido, dentro da placa
-    #
-    # QUANDO ELE VALE: quando a maquina tem Quick Sync, quando o bruto enche o quadro sem
-    # sobrar barra preta em volta, e quando a moldura existe no disco. Na leva 29 isso e'
-    # 103 dos 107. Os quatro de fora estao fora de proporcao (720x900, 1280x720) e
-    # precisam de barra, que a placa nao sabe pintar num passo so'.
-    #
-    # POR QUE E' MAIS RAPIDO: o quadro entra na placa ao ser decodificado e so' sai de la'
-    # ja' codificado. Ampliar, colar a moldura e codificar acontecem os tres la' dentro,
-    # sem uma volta pela memoria do processador a cada quadro. Medido numa peca de 52 s:
-    # 25,0 s no processador contra 15,9 s na placa.
-    mold = moldura_de(mascara) if (tem_mascara and mascara is not None) else None
-    cabe_inteiro = (sw == tw and sh == th)
-    r = None
-    if cabe_inteiro and placa_de_video() and (mold is None or mold.is_file()):
-        if mold is not None:
-            # A MOLDURA E' O NEGATIVO DA MASCARA. `overlay_qsv` cola por cima: preto opaco
-            # onde tapa, furo onde o B-roll passa. Da' o mesmo resultado da multiplicacao
-            # (medido: fora da janela media 0.0 e pico 10 de 255) por uma frac,ao do custo.
-            fq = (f"[0:v]vpp_qsv=w={tw}:h={th}[v];"
-                  f"[1:v]format=bgra,hwupload=extra_hw_frames=16[m];"
-                  f"[v][m]overlay_qsv=x=0:y=0:shortest=1[out]")
-            eq = ["-i", str(entrada), "-loop", "1", "-framerate", cadencia(entrada),
-                  "-i", str(mold)]
-        else:
-            fq = f"[0:v]vpp_qsv=w={tw}:h={th}[out]"
-            eq = ["-i", str(entrada)]
-        r = subprocess.run(
-            ["ffmpeg", "-v", "error", "-y", "-init_hw_device", "qsv=hw",
-             "-filter_hw_device", "hw", "-hwaccel", "qsv",
-             "-hwaccel_output_format", "qsv"] + eq
-            + ["-filter_complex", fq, "-map", "[out]", "-map", "0:a?",
-               "-c:v", "h264_qsv", "-global_quality", QUALIDADE_DA_PLACA,
-               "-c:a", "copy", "-movflags", "+faststart", str(saida)],
-            capture_output=True, text=True)
-        if r.returncode != 0 or not saida.exists():
-            r = None                    # a placa recusou esta peca: segue no processador
-
-    # ------------------------------------------- o caminho de sempre, no processador
-    if r is None:
-        if tem_mascara:
-            # MULTIPLICAR PELA MASCARA: onde ela e' branca o pixel passa inteiro, onde e'
-            # preta o pixel zera. E' exato, e nao depende de adivinhar cor de fundo como
-            # faria um `colorkey`, que comeria tambem o preto de dentro da filmagem.
-            #
-            # A MULTIPLICACAO E' EM RGB, e isto e' conserto de um erro visto na tela:
-            # feita em YUV, ela zerava so' o brilho e deixava as duas trilhas de cor
-            # inteiras, entao a peca saiu verde e a legenda aparecia como fantasma. Em
-            # `gbrp` cada canal e' multiplicado por si, e fora da mascara sobra preto.
-            filtro = (f"[0:v]{corte}{virar},format=gbrp[v];"
-                      f"[1:v]scale={tw}:{th},format=gbrp[m];"
-                      f"[v][m]blend=all_mode=multiply:shortest=1,format=yuv420p[out]")
-            entradas = ["-i", str(entrada), "-loop", "1", "-framerate", cadencia(entrada),
-                        "-i", str(mascara)]
-        else:
-            # SEM CARD, O B-ROLL E' O REEL INTEIRO. So' se acerta a paridade, porque o
-            # h264 nao aceita lado impar e ha' reel de 360x450 na leva.
-            filtro = f"[0:v]{corte}{virar},format=yuv420p[out]"
-            entradas = ["-i", str(entrada)]
-        r = subprocess.run(
-            ["ffmpeg", "-v", "error", "-y"] + entradas
-            + ["-filter_complex", filtro, "-map", "[out]", "-map", "0:a?",
-               "-c:v", "libx264", "-preset", PRESET, "-crf", CRF,
-               "-c:a", "copy", "-movflags", "+faststart", str(saida)],
-            capture_output=True, text=True)
-    if r.returncode != 0 or not saida.exists():
-        return {"erro": (r.stderr or "o ffmpeg falhou").strip()[:200]}
-
-    laudo = tirar_assinatura(saida)
-    laudo["segundos"] = round(time.time() - t0, 2)
-    laudo["bytes"] = saida.stat().st_size
-    laudo["quadro"] = {"w": tw, "h": th}
-    laudo["bruto"] = {"w": lar, "h": alt}
-    laudo["mascara"] = bool(tem_mascara)
-    return laudo
 
 
 def tirar_assinatura(arq: Path) -> dict:
@@ -1427,7 +1168,7 @@ def template_da_peca(tpl: dict, enquadre: dict | None) -> dict:
     return proprio
 
 
-def camada_da_peca(fundo, frente, mascara: Path | None, tela: dict,
+def camada_da_peca(fundo, frente, tela: dict,
                    enquadre: dict | None = None):
     """Junta fundo, buraco do B-roll e elementos numa IMAGEM SO', com transparencia.
 
@@ -1435,8 +1176,15 @@ def camada_da_peca(fundo, frente, mascara: Path | None, tela: dict,
     dentro do ffmpeg, com duas contas de mistura por quadro em 1080 por 1920. Medido aqui:
     31 a 42 segundos por peca, o que daria mais de uma hora para uma leva de cento e sete.
     Nesta versao o trabalho pesado sai do video e vai para a imagem, que e' desenhada uma
-    vez: o fundo fica opaco, o lugar do B-roll fica TRANSPARENTE no formato da mascara, e
-    os elementos entram por cima ja' opacos de novo. Ao ffmpeg sobra um `overlay`.
+    vez: o fundo fica opaco, o lugar do B-roll fica TRANSPARENTE no formato do FURO DA
+    ARTE, e os elementos entram por cima ja' opacos de novo. Ao ffmpeg sobra um `overlay`.
+
+    ELA PERDEU O PARAMETRO `mascara` EM 03/09/2026. Havia um terceiro caso aqui: quando o
+    template nao trazia furo proprio, a funcao vestia a mascara gravada pelo passo 2, um
+    PNG branco no formato do B-roll do card, com o canto arredondado do reel. Esse PNG
+    deixou de existir com a gravacao do recorte, e nao faz falta: quem abre o furo e' a arte
+    vazada dele, e quem tira a borda arredondada do reel e' o corte do `compor` no
+    retangulo do B-roll, sem apagar pixel de ninguem.
 
     A ORDEM E' FUNDO, B-ROLL, ELEMENTOS, e ela e' o pedido do Gabriel: os elementos ficam
     POR CIMA da filmagem, porque "a legenda e' o que vai entrar dentro do video".
@@ -1444,48 +1192,15 @@ def camada_da_peca(fundo, frente, mascara: Path | None, tela: dict,
     from PIL import Image
     tw, th = par(tela.get("w", 1080)), par(tela.get("h", 1920))
     camada = fundo.convert("RGBA")
-    # A MOLDURA PODE JA' TRAZER O FURO DELA. Quando o template e' uma arte do Gabriel com
-    # a janela vazada, o furo chegou aqui dentro do proprio fundo, com o canto que o
-    # desenho tem. Nesse caso nao ha' mascara a aplicar: aplicar a do passo 2 por cima
-    # devolveria o buraco para o formato do card do reel, que e' o que se quis trocar.
+    # A MOLDURA TRAZ O FURO DELA, e desde 03/09/2026 esta e' a UNICA maneira de abrir
+    # buraco numa peca. Quando o template e' uma arte dele com a janela vazada, o furo
+    # chegou aqui dentro do proprio fundo, com o canto que o desenho tem.
     #
-    # E E' AQUI QUE A PECA DE TELA CHEIA PASSA A TER MOLDURA: sem furo proprio ela caia
-    # no `putalpha(0)` la' embaixo e o template inteiro sumia.
+    # SEM FURO PROPRIO, A FILMAGEM OCUPA O QUADRO INTEIRO (o `putalpha(0)` la' embaixo), e
+    # o template nao aparece. E' o mesmo que acontecia com reel de tela cheia.
     furo_proprio = (fundo.mode == "RGBA"
                     and fundo.getchannel("A").getextrema()[0] < 250)
-    if furo_proprio:
-        pass
-    elif mascara and Path(mascara).is_file():
-        try:
-            m = Image.open(mascara).convert("L").resize((tw, th), Image.LANCZOS)
-            # A JANELA PODE TER SIDO MOVIDA NA FASE 5, e entao o buraco se muda com ela.
-            #
-            # O PEDIDO DELE, EM 23/08/2026: "eu nao consigo mexer todo o quadrado, ou
-            # seja, todo o B-roll". Mover a janela e' mover DUAS coisas ao mesmo tempo:
-            # o buraco, que e' esta mascara, e a filmagem que aparece por ele, que e' o
-            # `compor`. Mover so' uma faria a janela passar a mostrar outro pedaco do
-            # video, que e' o contrario de mudar o B-roll de lugar.
-            #
-            # O FUNDO NOVO E' PRETO, que aqui quer dizer "sem buraco": o lugar de onde a
-            # janela saiu volta a ser template opaco.
-            #
-            # CRESCER A MASCARA INTEIRA E' O MESMO QUE CRESCER A JANELA. So' o retangulo
-            # dela e' branco; o resto e' preto e continua preto por maior que fique.
-            esc, mx, my, cx, cy = movimento_da_janela(enquadre)
-            if esc != 1 or mx or my:
-                lw, lh = max(1, int(round(tw * esc))), max(1, int(round(th * esc)))
-                # O CENTRO DA JANELA TEM DE CAIR ONDE A TELA POS: `c` vira `c + m`.
-                ox = int(round((cx + mx) * tw - cx * esc * tw))
-                oy = int(round((cy + my) * th - cy * esc * th))
-                movida = Image.new("L", (tw, th), 0)
-                movida.paste(m.resize((lw, lh), Image.LANCZOS), (ox, oy))
-                m = movida
-            camada.putalpha(Image.eval(m, lambda v: 255 - v))
-        except OSError:
-            pass
-    else:
-        # SEM MASCARA E' REEL DE TELA CHEIA: ele ocupa o quadro todo e o fundo do template
-        # nao aparece em lugar nenhum.
+    if not furo_proprio:
         camada.putalpha(0)
     camada.alpha_composite(frente)
     return camada
@@ -1500,9 +1215,10 @@ def compor(camada: Path, video: Path, saida: Path, tela: dict,
     enquadramento combinado com ninguem, e as vezes o assunto cai fora da janela que o
     recorte abriu; sem isto a unica saida era descartar a peca.
 
-    A JANELA NAO SE MEXE, A FILMAGEM SE MEXE. Quem decide o buraco e' a mascara, e ela
-    continua a mesma. O que muda aqui e' o que aparece la' dentro: `scale` faz a
-    filmagem crescer, `crop` escolhe que pedaco dela fica no quadro.
+    A JANELA NAO SE MEXE, A FILMAGEM SE MEXE. Quem decide o buraco e' o FURO DA ARTE, e
+    ele e' fixo. O que muda aqui e' o que aparece la' dentro: `scale` faz a filmagem
+    crescer, `crop` escolhe que pedaco dela fica no quadro. E' o gesto do Canva, e desde
+    03/09/2026 e' o unico: a janela deixou de se mover quando a mascara saiu de cena.
 
     A CONTA E' A MESMA QUE A TELA FAZ, e tem de continuar sendo. La' e' um `transform`
     de `translate` mais `scale`; aqui e' `scale` mais `crop` com o recorte deslocado ao
@@ -1711,16 +1427,29 @@ def fundir_ficha(velha, leva, origem: Path, pecas_novas: list) -> dict:
             "pecas": [por_arquivo[k] for k in sorted(por_arquivo)]}
 
 
-def recortar_uma(origem: Path, destino: Path, peca: dict, tela: dict) -> tuple:
-    """Recorta UMA peca, do zero ao arquivo gravado. Devolve (nome, achado, laudo, modo).
+def medir_uma(origem: Path, destino: Path, peca: dict, tela: dict) -> tuple:
+    """MEDE uma peca: acha o B-roll e guarda a frase. Devolve (nome, achado, laudo, modo).
 
     ELA NAO TOCA EM CONTADOR NENHUM e nao escreve andamento: devolve o que achou, e quem
     soma e' o laco de fora, numa linha so'. E' isso que torna seguro rodar varias ao
-    mesmo tempo, e e' tambem o que deixa a MESMA peca ser recortada aqui ou numa vaga da
-    esteira (vaga_edicao.py), sem duas versoes do recorte para divergirem.
+    mesmo tempo, e e' tambem o que deixa a MESMA peca ser medida aqui ou numa vaga da
+    esteira (vaga_edicao.py), sem duas leituras do mesmo B-roll para divergirem caladas.
+
+    ELA SE CHAMAVA `recortar_uma` E GRAVAVA UM VIDEO, ate' 03/09/2026. A espec
+    `aba-de-edicao-a-bancada` tirou a gravacao do desenho, e a razao esta' nos proprios
+    prints dele do Canva: la' o reel entra INTEIRO na peca e a moldura so' decide o que
+    aparece. Gravar um recorte antes nao era so' trabalho jogado fora: ele gravava o preto e
+    a borda arredondada do reel DENTRO dos pixels, de onde nao saem mais, e era isso que
+    aparecia depois como "a borda arredondada some" e "saiu cortado pela metade".
+
+    O QUE SOBRA E' A MEDIDA, e ela e' tudo o que a peca precisa: o retangulo do B-roll e a
+    imagem da frase do card. Medido na casa: o recorte levava perto de seis minutos por peca
+    porque codificava video; a medicao le' doze quadros de uma miniatura e nao codifica nada.
+    Em disco, a leva 31 pesava 2,1 GB de recorte contra 787 MB de bruto que os geraram.
     """
     nome = str(peca.get("arquivo", ""))
     entrada = origem / nome
+    t0 = time.time()
     if not entrada.is_file():
         return nome, None, {"arquivo": nome, "erro": "arquivo nao encontrado"}, None
     try:
@@ -1744,8 +1473,13 @@ def recortar_uma(origem: Path, destino: Path, peca: dict, tela: dict) -> tuple:
         if modo == "card":
             guardar_frase(entrada, achado,
                           destino / "_frases" / (Path(nome).stem + ".png"))
-        laudo = recortar(entrada, destino / nome, achado,
-                         destino / "_mascaras" / (Path(nome).stem + ".png"), tela)
+        # NADA DE VIDEO SAI DAQUI. O laudo mantem o formato de sempre porque quem o le'
+        # (`ficha_da_peca` e o laco de fora) nao foi reescrito: `bytes` em zero e' MEDIDO,
+        # e nao "nao sei", porque nada foi escrito em disco de proposito.
+        laudo = {"segundos": round(time.time() - t0, 2), "bytes": 0,
+                 "quadro": {"w": par(tela.get("w", 1080)),
+                            "h": par(tela.get("h", 1920))},
+                 "mascara": False}
     except Exception as e:                                          # noqa: BLE001
         # UMA PECA QUEBRADA NAO DERRUBA A LEVA. Sem este cerco a excecao subiria pela
         # piscina e as outras cento e seis morreriam junto com ela.
@@ -1755,41 +1489,58 @@ def recortar_uma(origem: Path, destino: Path, peca: dict, tela: dict) -> tuple:
 
 
 def ficha_da_peca(nome: str, achado: dict | None, laudo: dict, modo) -> dict:
-    """A linha da ficha `_origem.json` de uma peca recortada, num formato so'.
+    """A linha da ficha `_origem.json` de uma peca medida, num formato so'.
 
-    Uma peca recortada aqui e uma recortada numa vaga da esteira precisam chegar na
-    MESMA ficha, senao o passo 3 leria duas verdades diferentes.
+    Uma peca medida aqui e uma medida numa vaga da esteira precisam chegar na MESMA
+    ficha, senao a bancada leria duas verdades diferentes.
     """
     return {"arquivo": nome, "origem": nome, "modo": modo,
             "frase": ("_frases/" + Path(nome).stem + ".png")
                      if modo == "card" else None,
             "quadro": laudo.get("quadro"),
-            # ONDE O B-ROLL ESTA' NO QUADRO, em fracao, para o editor do passo
-            # 3 desenhar a moldura dele sem ter de abrir o video.
+            # ONDE O B-ROLL ESTA' NO QUADRO, em fracao. E' o campo mais importante da
+            # ficha: e' com ele que a bancada desenha o aparo e que o `compor` corta,
+            # sem nenhum dos dois precisar abrir o video para descobrir de novo.
             "broll": None if not achado else
                      {k: round(achado[k], 5) for k in ("x", "y", "w", "h")},
-            "mascara": ("_mascaras/" + Path(nome).stem + ".png")
-                       if laudo.get("mascara") else None}
+            # A PECA NASCE PREENCHENDO A MOLDURA, por decisao dele em 03/09/2026: a
+            # filmagem cresce ate' tapar o furo, e caber inteiro fica a um clique.
+            #
+            # O CAMPO E' GRAVADO EXPLICITAMENTE, e nao deixado no padrao, e a diferenca
+            # importa: na tela, ficha SEM este campo quer dizer `caber`. Se o padrao fosse
+            # invertido em vez de o campo ser escrito, todo rascunho gravado antes de hoje
+            # passaria a querer dizer `cobrir`, e a peca mudaria sozinha ao reabrir, sem
+            # recado. Escrevendo o campo, ficha velha continua querendo dizer o que
+            # queria, que e' o criterio de aceite 17.
+            "encaixe": "cobrir",
+            # A CHAVE FICA, COM VALOR NULO, e isto e' de proposito. A medicao nunca grava
+            # mascara: quem abre o furo e' a arte, e quem tira a borda arredondada do reel
+            # e' o corte do `compor` no retangulo do B-roll. Apagar a chave mudaria o
+            # formato da ficha, e o criterio de aceite 2 exige que ele nao mude.
+            "mascara": None}
 
 
-def cumprir_recorte(caminho: Path, p: dict) -> None:
-    """PASSO 2: recorta o B-roll de todas as pecas da leva e deixa a ficha de origem.
+def cumprir_medicao(caminho: Path, p: dict) -> None:
+    """MEDE o B-roll de todas as pecas da leva e deixa a ficha. Nao grava video nenhum.
 
-    O QUE ESTE PASSO RESOLVE. Antes, o template era o passo 2 e o recorte acontecia
-    espremido dentro dele, obrigado a caber na proporcao da moldura. Dava errado por
-    construcao: cada reel poe o B-roll num tamanho diferente, e forcar todos na mesma
-    proporcao cortava pedaco de uns e sobrava nos outros. Agora o recorte vem ANTES e nao
-    deve satisfacao a template nenhum. Quem manda na forma e' o B-roll.
+    ELA SE CHAMAVA `cumprir_recorte` E ERA O PASSO 2, ate' 03/09/2026. O que ela fazia
+    era codificar um video por peca com so' o B-roll dentro e o resto preto, e era esse
+    arquivo que a montagem usava depois. A espec `aba-de-edicao-a-bancada` tirou a
+    gravacao: hoje a montagem parte do BRUTO, cortando no retangulo que esta funcao mede.
 
-    A FICHA DE ORIGEM E' OBRIGATORIA, e foi pedido explicito: "tem que ter uma linkagem, o
-    sistema tem que saber exatamente qual e' o video original". Ela fica em
-    `_origem.json`, ao lado dos recortes, e diz por peca de qual arquivo bruto ela veio,
-    que retangulo foi tirado e onde ele ficou no quadro. O passo 3 le' essa ficha em vez
-    de procurar o B-roll de novo.
+    O QUE ELA DEIXA EM DISCO, e sao kilobytes: `_origem.json` com o retangulo do B-roll de
+    cada peca, e `_frases/` com a imagem da manchete do card de quem tem card. Nenhum
+    video. Medido na leva 31: 2,1 GB de recorte deram lugar a uma ficha de 180 linhas.
+
+    A FICHA DE ORIGEM E' OBRIGATORIA, e foi pedido explicito dele: "tem que ter uma
+    linkagem, o sistema tem que saber exatamente qual e' o video original". Ela mora em
+    `medidas/leva-N/_origem.json`, AO LADO do bruto e nunca dentro dele, e diz por peca de
+    qual arquivo ela veio e onde o B-roll fica no quadro. A bancada le' essa ficha em vez
+    de procurar o B-roll de novo, e e' por isso que abrir uma leva medida e' instantaneo.
     """
     pid = p.get("id") or caminho.stem
     origem = LEVAS / str(p.get("pasta", ""))
-    destino = RECORTES / str(p.get("destino") or p.get("pasta", ""))
+    destino = MEDIDAS / str(p.get("destino") or p.get("pasta", ""))
     tela = p.get("tela") or {"w": 1080, "h": 1920}
     pecas = p.get("pecas") or []
 
@@ -1798,21 +1549,21 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
         arquivar(caminho, p, 0, 0, 0)   # sai da fila: ver a nota em cumprir_escrever
         return
 
-    # LEVA GRANDE VAI PARA A ESTEIRA, desde 25/08/2026: ver o bloco "a esteira de
-    # edicao". Falhando o despacho, o caminho local de sempre continua daqui.
-    if despacho_vale(pecas, p) and despachar(caminho, p, "recorte"):
-        return
-    if _disco_apertado(pid):
-        arquivar(caminho, p, 0, 0, 0)
-        return
+    # MEDIR NAO VAI PARA A ESTEIRA, E NAO OLHA O DISCO, e as duas coisas saem daqui por
+    # consequencia e nao por escolha. A esteira de vagas existia porque a codificacao
+    # custava perto de seis minutos por peca nesta maquina (60,1 s contra 1,88 s numa vaga,
+    # medido); a porta de disco apertado existia porque cada peca deixava centenas de
+    # megabytes. Sem gravacao, despachar so' pagaria o transporte de ida e volta, e recusar
+    # por disco cheio seria recusar um trabalho que ocupa kilobytes.
+    #
+    # A ESTEIRA CONTINUA VIVA para a FABRICACAO, que codifica de verdade: ver `despachar`.
 
-    # O PARALELISMO E' DA PLACA, e nao da maquina: o proprio comentario do
-    # AO_MESMO_TEMPO mediu que na CPU rodar varias juntas nao ganha nada (98% com uma
-    # so'). Na casa da VPS nao ha' placa, entao ali vai uma de cada vez, e o numero
-    # tres continua valendo onde ha' Quick Sync. Auditoria de 25/08/2026.
-    juntas = AO_MESMO_TEMPO if placa_de_video() else 1
-    print(f"pedido {pid}: recortar o B-roll de {len(pecas)} pecas de {origem.name}, "
-          f"{juntas} de cada vez")
+    # MEDIR NAO DISPUTA PLACA NENHUMA: sao doze quadros de uma miniatura por peca, e o que
+    # limita e' a leitura do disco. Quatro juntas dao conta e nao brigam, na casa ou na VPS
+    # sem placa, e por isso o numero e' um so' agora, em vez de depender do Quick Sync.
+    juntas = AO_MESMO_TEMPO
+    print(f"pedido {pid}: medir o B-roll de "
+          f"{len(pecas)} pecas de {origem.name}, {juntas} de cada vez")
     destino.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     feitos = falhas = cards = 0
@@ -1825,19 +1576,19 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
     #
     # SAO CENTO E OITENTA LETRAS numa leva de cento e oitenta pecas: cabe folgado no
     # arquivo que ja' se reescreve a cada peca, e nao ha' o que economizar aqui.
-    #   .  ainda nao chegou a vez        c  recortada pelo card
-    #   v  sem card, foi o video inteiro  ?  nao consegui olhar o video
+    #   .  ainda nao chegou a vez        c  o B-roll veio de um card
+    #   v  sem card, e' o video inteiro   ?  nao consegui olhar o video
     #   f  falhou
     marcas = ["."] * len(pecas)
-    andamento(pid, {"id": pid, "tipo": "recorte", "total": len(pecas), "feitos": 0,
+    andamento(pid, {"id": pid, "tipo": "medir", "total": len(pecas), "feitos": 0,
                     "falhas": 0, "atual": "", "fim": False, "segundos": 0,
                     "juntas": juntas, "marcas": "".join(marcas)})
 
-    # O TRABALHO DE UMA PECA MORA EM `recortar_uma`, la' em cima, fora desta funcao:
-    # e' a mesma rotina que a vaga da esteira roda (vaga_edicao.py), para o recorte
-    # local e o despachado nunca divergirem.
+    # O TRABALHO DE UMA PECA MORA EM `medir_uma`, la' em cima, fora desta funcao: e' a
+    # mesma rotina que a vaga da esteira roda (vaga_edicao.py), para a medida feita aqui
+    # e a feita la' nunca divergirem caladas.
     with ThreadPoolExecutor(max_workers=juntas) as piscina:
-        futuros = {piscina.submit(recortar_uma, origem, destino, p, tela): i
+        futuros = {piscina.submit(medir_uma, origem, destino, p, tela): i
                    for i, p in enumerate(pecas)}
         for pronto in as_completed(futuros):
             onde = futuros[pronto]
@@ -1858,8 +1609,8 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
                 else:
                     marcas[onde] = "v"
                 print(f"  {feitos + falhas}/{len(pecas)} {nome}: {modo}, "
-                      f"{laudo['segundos']}s, {laudo['bytes'] / 1e6:.1f} MB")
-            andamento(pid, {"id": pid, "tipo": "recorte", "total": len(pecas),
+                      f"{laudo['segundos']}s")
+            andamento(pid, {"id": pid, "tipo": "medir", "total": len(pecas),
                             "feitos": feitos, "falhas": falhas, "atual": nome,
                             "fim": False, "segundos": round(time.time() - t0),
                             "juntas": juntas, "marcas": "".join(marcas)})
@@ -1867,7 +1618,7 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
 
     # A FICHA SAI NA ORDEM DO PEDIDO, e nao na ordem em que as pecas terminaram. Com
     # varias rodando juntas a terceira pode acabar antes da primeira, e esta ficha e' o
-    # que o passo 3 le' para saber de qual bruto veio cada peca.
+    # que a bancada le' para saber de qual bruto veio cada peca e onde o B-roll fica.
     diario, ficha = [], []
     for item in resultados:
         if not item:
@@ -1891,12 +1642,12 @@ def cumprir_recorte(caminho: Path, p: dict) -> None:
         print(f"  nao consegui escrever a ficha de origem: {e}")
 
     gasto = round(time.time() - t0)
-    andamento(pid, {"id": pid, "tipo": "recorte", "total": len(pecas), "feitos": feitos,
+    andamento(pid, {"id": pid, "tipo": "medir", "total": len(pecas), "feitos": feitos,
                     "falhas": falhas, "atual": "", "fim": True, "segundos": gasto,
                     "pasta": str(destino), "cards": cards, "cegas": cegas,
                     "marcas": "".join(marcas), "diario": diario})
     arquivar(caminho, p, feitos, falhas, gasto)
-    print(f"  {feitos} recortadas, {falhas} falharam, {gasto//60} min {gasto%60} s"
+    print(f"  {feitos} medidas, {falhas} falharam, {gasto//60} min {gasto%60} s"
           f"  ({cards} com card, {feitos - cards - cegas} de tela cheia,"
           f" {cegas} que nao consegui medir)")
     print(f"  em {destino}")
@@ -3518,7 +3269,10 @@ def cumprir_escrever(caminho: Path, p: dict) -> None:
     preto cobrir o quadro. E' o unico lugar onde a frase original ainda existe.
     """
     pid = p.get("id") or caminho.stem
-    origem = RECORTES / str(p.get("pasta", ""))
+    # A IMAGEM DA FRASE MORA COM A FICHA, e nao com video nenhum. Ate' 03/09/2026 as duas
+    # coisas viviam na mesma pasta `recortes/` porque o recorte era gravado ao lado delas;
+    # sem recorte, `medidas/` guarda a ficha, as frases e os textos, e nada mais.
+    origem = MEDIDAS / str(p.get("pasta", ""))
     pecas = p.get("pecas") or []
     campos = p.get("campos") or []
     ia = ler_ia()
@@ -3696,10 +3450,16 @@ def cumprir(caminho: Path) -> None:
             caminho.unlink(missing_ok=True)
         return
 
-    # DOIS TIPOS DE PEDIDO NA MESMA FILA. O passo 2 manda `tipo: recorte`; o passo 3
+    # DOIS TIPOS DE PEDIDO NA MESMA FILA. A medicao manda `tipo: medir`; a fabricacao
     # manda o pedido de montagem, que nao tem tipo por ser o mais antigo dos dois.
-    if p.get("tipo") == "recorte":
-        cumprir_recorte(caminho, p)
+    #
+    # O TIPO SE CHAMAVA `recorte` ATE' 03/09/2026, e trocou de nome junto com o trabalho:
+    # ele mandava GRAVAR um video recortado por peca, e hoje manda so' MEDIR onde o B-roll
+    # esta'. Pedido antigo com `tipo: recorte` parado na fila cai no fim desta funcao e sai
+    # com o recado de tipo desconhecido, que e' o certo: o trabalho que ele pedia nao
+    # existe mais, e cumpri-lo calado gravaria arquivo que ninguem vai usar.
+    if p.get("tipo") == "medir":
+        cumprir_medicao(caminho, p)
         return
     if p.get("tipo") == "escrever":
         cumprir_escrever(caminho, p)
@@ -3716,7 +3476,14 @@ def cumprir(caminho: Path) -> None:
 
     pid = p.get("id") or caminho.stem
     tpl = ler_template(str(p.get("template", "")))
-    origem = RECORTES / str(p.get("pasta", ""))
+    # A FICHA E O VIDEO MORAM EM PASTAS DIFERENTES, desde 03/09/2026, e esta e' a linha
+    # que mais diz o que mudou na arquitetura. Antes as duas saiam do mesmo lugar, porque
+    # o video que se montava era o RECORTE, gravado ao lado da ficha. Agora a ficha vem de
+    # `medidas/` e o video e' o BRUTO da `levas/`, sem intermediario: quem tira o preto e a
+    # borda arredondada do reel e' o corte do `compor` no retangulo do B-roll, na hora de
+    # montar, e nao um arquivo gravado antes.
+    fichas = MEDIDAS / str(p.get("pasta", ""))
+    origem = LEVAS / str(p.get("pasta", ""))
     destino = EDICOES / str(p.get("destino") or p.get("pasta", ""))
     tela = p.get("tela") or {"w": 1080, "h": 1920}
     pecas = p.get("pecas") or []
@@ -3727,27 +3494,38 @@ def cumprir(caminho: Path) -> None:
         arquivar(caminho, p, 0, 0, 0)   # sai da fila: ver a nota em cumprir_escrever
         return
     if not origem.is_dir():
-        andamento(pid, {"id": pid, "erro": f"nao achei os recortes de {origem.name}",
+        andamento(pid, {"id": pid, "erro": f"nao achei os videos de {origem.name}",
                         "fim": True})
         arquivar(caminho, p, 0, 0, 0)   # sai da fila: ver a nota em cumprir_escrever
         return
 
-    # A FICHA DO PASSO 2 diz onde esta' a mascara de cada peca. Sem ela o B-roll entraria
-    # com o preto em volta e taparia o fundo do template.
-    mascaras = {}
+    # FICHA DO DESENHO ANTIGO ABRE COM RECADO, E NAO QUEBRA, e este e' o criterio de
+    # aceite 17 da espec. Ficha gravada antes de 03/09/2026 traz `mascara` apontando para
+    # um PNG de `recortes/_mascaras/`, pasta que nao existe mais. Ela nao trava a montagem:
+    # o furo hoje vem da arte vazada do template, e a mascara e' IGNORADA de proposito.
+    # Dizer isso em voz alta importa porque a peca sai diferente da que aquele rascunho
+    # tinha visto, e silencio aqui pareceria defeito.
+    velhas = 0
     try:
-        f_org = origem / "_origem.json"
+        f_org = fichas / "_origem.json"
         if f_org.is_file():
             for x in (json.loads(f_org.read_text(encoding="utf-8")).get("pecas") or []):
-                if x.get("mascara"):
-                    mascaras[x["arquivo"]] = origem / x["mascara"]
+                if isinstance(x, dict) and x.get("mascara"):
+                    velhas += 1
     except (OSError, ValueError):
-        mascaras = {}
+        pass                     # ficha ilegivel e' assunto do laco, mais abaixo
+    if velhas:
+        print(f"  atencao: {velhas} pecas com ficha do desenho antigo (mascara gravada);"
+              " o furo vem da arte e a mascara foi ignorada")
+        andamento(pid, {"id": pid, "total": len(pecas), "feitos": 0, "falhas": 0,
+                        "atual": "", "fim": False, "segundos": 0,
+                        "aviso": f"{velhas} pecas tinham mascara do desenho antigo, "
+                                 "ignorada: o furo vem da arte do template"})
 
     # LEVA GRANDE VAI PARA A ESTEIRA, desde 25/08/2026: as camadas sao pintadas aqui
     # (fontes e templates moram nesta casa) e as vagas so' compoem com o ffmpeg, que e'
     # onde o relogio vai. Falhando o despacho, o caminho local de sempre segue abaixo.
-    if despacho_vale(pecas, p) and despachar(caminho, p, "montagem", tpl, mascaras):
+    if despacho_vale(pecas, p) and despachar(caminho, p, "montagem", tpl):
         return
     if _disco_apertado(pid):
         arquivar(caminho, p, 0, 0, 0)
@@ -3810,7 +3588,7 @@ def cumprir(caminho: Path) -> None:
             try:
                 fundo, frente = guardado["par"]
                 camada = trabalho / f"camada{i}.png"
-                camada_da_peca(fundo, frente, mascaras.get(nome), tela,
+                camada_da_peca(fundo, frente, tela,
                                peca.get("enquadre")).save(camada)
                 laudo = compor(camada, entrada, destino / nome, tela,
                                peca.get("enquadre"))
@@ -3943,7 +3721,7 @@ def _sonda_da_casa(ficha: str, criado: int) -> bool:
 
 
 def despachar(caminho: Path, p: dict, tipo: str, tpl: dict | None = None,
-              mascaras: dict | None = None) -> bool:
+              ) -> bool:
     """Fatia o pedido, publica a ficha de retirada e acorda as vagas da esteira.
 
     DEVOLVE False SEM DERRUBAR NADA: qualquer falha aqui (sem chave, GitHub fora,
@@ -3975,15 +3753,11 @@ def despachar(caminho: Path, p: dict, tipo: str, tpl: dict | None = None,
         ficha_do_github = guardar.chave()
         fatias = _fatiar(pecas)
         arquivos, fatias_manifesto = [], []
-        if tipo == "recorte":
-            for fatia in fatias:
-                itens = []
-                for peca in fatia:
-                    nome = str(peca.get("arquivo", ""))
-                    arquivos.append(f"levas/{pasta}/{nome}")
-                    itens.append({"arquivo": nome, "broll": peca.get("broll")})
-                fatias_manifesto.append(itens)
-        else:
+        # UM TIPO DE DESPACHO SO', desde 03/09/2026. Aqui havia um ramo para o despacho de
+        # RECORTE, que mandava a vaga codificar um video por peca; ele saiu com a gravacao.
+        # O que continua valendo a viagem e' a FABRICACAO, e por um numero: a mesma peca
+        # leva 60,1 s nesta maquina e 1,88 s numa vaga.
+        if True:
             # AS CAMADAS SAO PINTADAS AQUI, NUNCA NA VAGA: pintar pede as fontes e o
             # acervo de templates, que moram nesta casa. A vaga recebe os PNGs prontos
             # e so' compoe com o ffmpeg, que e' onde o relogio vai.
@@ -4014,16 +3788,15 @@ def despachar(caminho: Path, p: dict, tipo: str, tpl: dict | None = None,
                         arquivos += [f"despachos/{ficha}/camada-{n}-fundo.png",
                                      f"despachos/{ficha}/camada-{n}-frente.png"]
                         pares[chave_par] = n
-                    mask = (mascaras or {}).get(nome)
-                    mask_rel = None
-                    if mask is not None and Path(mask).is_file():
-                        mask_rel = str(Path(mask).resolve()
-                                       .relative_to(CASA.resolve())).replace("\\", "/")
-                        arquivos.append(mask_rel)
-                    arquivos.append(f"recortes/{pasta}/{nome}")
+                    # A VAGA NAO LEVA MAIS MASCARA NENHUMA, desde 03/09/2026: nao ha'
+                    # PNG de mascara para levar, e o furo viaja dentro da propria camada
+                    # que esta casa pintou e mandou junto.
+                    # O QUE A VAGA RETIRA E' O BRUTO, e nao mais um recorte. E' a mesma
+                    # troca de origem do caminho local: o corte no retangulo do B-roll
+                    # acontece dentro do `compor`, na hora de montar, dos dois lados.
+                    arquivos.append(f"levas/{pasta}/{nome}")
                     itens.append({"arquivo": nome, "camada": pares[chave_par],
-                                  "enquadre": peca.get("enquadre"),
-                                  "mascara": mask_rel})
+                                  "enquadre": peca.get("enquadre")})
                 fatias_manifesto.append(itens)
 
         agora = int(time.time())
@@ -4095,8 +3868,6 @@ def despachar(caminho: Path, p: dict, tipo: str, tpl: dict | None = None,
          "atual": f"na esteira: {len(fatias_manifesto)} vagas trabalhando",
          "fim": False, "segundos": 0,
          "esteira": {"vagas": len(fatias_manifesto), "colhidas": 0}}
-    if tipo == "recorte":
-        d["tipo"] = "recorte"
     andamento(pid, d)
     print(f"pedido {pid}: {len(pecas)} pecas despachadas para a esteira em "
           f"{len(fatias_manifesto)} vagas")
@@ -4227,7 +3998,10 @@ def _colher_um(arq: Path) -> None:
         return
 
     pid, tipo = estado["id"], estado["tipo"]
-    destino = (RECORTES if tipo == "recorte" else EDICOES) / estado["destino"]
+    # SO' SOBROU UM DESTINO, desde 03/09/2026. Aqui a pasta era escolhida entre `recortes/`
+    # e `edicoes/` pelo tipo do despacho; sem o despacho de recorte, o unico trabalho que
+    # viaja para as vagas e' a FABRICACAO, e ela sempre volta para `edicoes/`.
+    destino = EDICOES / estado["destino"]
     colhidas = set(estado.get("colhidas") or [])
     mudou = False
 
@@ -4283,8 +4057,6 @@ def _colher_um(arq: Path) -> None:
                       "vagas colhidas",
              "fim": False, "segundos": int(time.time() - estado["criado"]),
              "esteira": {"vagas": estado["vagas"], "colhidas": len(colhidas)}}
-        if tipo == "recorte":
-            d["tipo"] = "recorte"
         andamento(pid, d)
 
     # OS DOIS RELOGIOS. Colheu tudo, fecha. Senao, desiste por PRAZO (a esteira ja'
@@ -4321,33 +4093,23 @@ def _colher_fatia(pid, i, estado, tipo, destino, catalogo, ficha_do_github,
 def _fechar_despacho(estado: dict, arq: Path, destino: Path,
                      faltaram: list | None = None) -> None:
     """Junta as fatias na ordem do pedido, grava a ficha e arquiva o pedido."""
-    pid, tipo, p = estado["id"], estado["tipo"], estado.get("pedido") or {}
+    pid, p = estado["id"], estado.get("pedido") or {}
     laudos = estado.get("laudos") or {}
-    diario, ficha = [], []
-    feitos = falhas = cards = cegas = 0
+    diario = []
+    feitos = falhas = 0
     for i in range(int(estado.get("vagas") or 0)):
         frag = laudos.get(str(i)) or {}
         diario += frag.get("diario") or []
-        ficha += frag.get("ficha") or []
         feitos += frag.get("feitos", 0)
         falhas += frag.get("falhas", 0)
-        cards += frag.get("cards", 0)
-        cegas += frag.get("cegas", 0)
 
-    if tipo == "recorte" and ficha:
-        # A MESMA FUSAO DO CAMINHO LOCAL: a ficha nova entra por cima da velha, peca a
-        # peca, para o recorte das faltantes nunca apagar o que ja' estava pronto.
-        velha = None
-        try:
-            velha = json.loads((destino / "_origem.json").read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            pass
-        try:
-            (destino / "_origem.json").write_text(json.dumps(
-                fundir_ficha(velha, p.get("leva"), LEVAS / estado.get("pasta", ""),
-                             ficha), ensure_ascii=False, indent=1), encoding="utf-8")
-        except OSError as e:
-            print(f"  nao consegui escrever a ficha de origem: {e}")
+    # A FICHA NAO VOLTA MAIS DAS VAGAS, desde 03/09/2026. Aqui havia a fusao da ficha das
+    # vagas em `_origem.json`, que existia porque a MEDICAO era despachada: cada vaga media
+    # a sua fatia e devolvia um pedaco da ficha. Medir nao viaja mais (le' doze quadros de
+    # uma miniatura, nao vale o transporte), entao o unico despacho que chega aqui e' o de
+    # FABRICACAO, e ele devolve video montado, nao ficha.
+    #
+    # QUEM ESCREVE A FICHA E' `cumprir_medicao`, nesta maquina, e ela e' o unico lugar.
 
     gasto = int(time.time() - estado["criado"])
     total = len(p.get("pecas") or [])
@@ -4355,8 +4117,9 @@ def _fechar_despacho(estado: dict, arq: Path, destino: Path,
          "fim": True, "segundos": gasto, "pasta": str(destino), "diario": diario,
          "esteira": {"vagas": estado.get("vagas"), "colhidas":
                      len(estado.get("colhidas") or [])}}
-    if tipo == "recorte":
-        d.update({"tipo": "recorte", "cards": cards, "cegas": cegas})
+    # OS CONTADORES DE CARD E DE CEGA ERAM DA MEDICAO, e a medicao nao viaja mais para a
+    # esteira: aqui so' chega fabricacao. Somar `cards` e `cegas` num despacho de
+    # fabricacao seria escrever zero e dar a entender que nenhuma peca tinha card.
     if faltaram:
         d["aviso"] = (f"{len(faltaram)} pecas nao voltaram da esteira no prazo "
                       "e voltaram para a fila desta maquina")

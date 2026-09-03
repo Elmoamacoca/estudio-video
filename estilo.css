@@ -3204,3 +3204,245 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .carr-recado:empty{display:none}
 .carr-recado svg{width:19px;height:19px;flex:none;fill:none;stroke:var(--vermelho);
   stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;margin-top:1px}
+
+/* ==================================================================== A BANCADA
+   (03/09/2026, espec `aba-de-edicao-a-bancada`, revisao 2)
+
+   O QUE ESTE BLOCO SUBSTITUI, e por ordem dele: "arquitetura nova, exclui a anterior".
+   A revisao peca a peca era uma PISTA de tres pecas de lado (a anterior, a atual, a
+   proxima) com as ferramentas numa gaveta que deslizava por cima da direita, e a fila
+   inteira atras de uma folha que cobria a tela. Tres desenhos para tres coisas que ele
+   olha ao mesmo tempo, e cada uma cobrindo a outra.
+
+   A BANCADA POE AS TRES DE PE' AO MESMO TEMPO, em tres colunas de largura cravada: a fila
+   a esquerda com 186, o palco no meio, as ferramentas a direita com 296. E' a maquete que
+   ele aprovou em 03/09/2026, e as medidas daqui sao as MEDIDAS DELA, conferidas pelo
+   `maquete.py` com a receita `docs/propostas/edicao-a-bancada/comparar.json`.
+
+   POR QUE O ESTILO FAZ O TRABALHO, E NAO O PROGRAMA: os elementos e os identificadores da
+   revisao continuam os mesmos, porque e' o mesmo editor de pintura por baixo (a Fabric, os
+   punhos do B-roll, o aparo, o gesto do arrasto). Trocar 254 identificadores para mudar de
+   lugar tres caixas mataria a aba, e o sintoma cairia longe da causa. Quem muda de lugar e'
+   a folha de estilo, que e' quem manda em lugar (trava da casa: esconder pelo programa
+   perde para a folha de estilo).
+
+   AS CORES SAO TODAS VARIAVEIS, e isto nao e' capricho: esta tela tem tema escuro, e a
+   maquete foi desenhada so' no claro. Cor cravada aqui sairia certa numa foto e errada na
+   outra, e as provas tiram as duas (`provas/fotos/edicao-claro.png` e `-escuro.png`). O
+   unico preto literal e' o do palco, que e' o fundo do video e e' preto nos dois temas. */
+
+/* A ABA DEIXA DE EMPURRAR PARA A GAVETA. O `padding-right` existia porque a gaveta
+   flutuava por cima; com ela virando coluna do grid, empurrar seria abrir um vazio de
+   378px na direita. */
+.aj-esteira{display:block;overflow:auto;padding-right:0}
+.aj-esteira.com-gaveta{padding-right:0}
+.ed-tela.esteira-aberta{--aj-gaveta:0px}
+
+.bn-bancada{display:grid;grid-template-columns:186px minmax(0,1fr) 296px;
+  gap:20px;align-items:start;margin-top:14px}
+
+/* ---------------------------------------------------------------- 1 · a fila */
+.bn-fila{background:var(--branco);border:1px solid var(--rule-solid);
+  border-radius:var(--r-lg);padding:12px;box-shadow:var(--sombra);
+  position:sticky;top:16px}
+.bn-fila-cab{display:flex;align-items:baseline;justify-content:space-between;
+  margin:2px 4px 11px}
+.bn-fila-cab b{font-size:14px;font-weight:750;color:var(--ink)}
+.bn-fila-cab span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* A FILA ROLA DENTRO, E NAO CRESCE PARA FORA, e esta linha e' a que a receita da maquete
+   guarda. Sem o `overflow`, cento e oitenta miniaturas esticariam a caixa ate' o pe' da
+   pagina e o palco iria junto: a altura da fila e' a unica medida que denuncia isso. */
+.bn-fila-rolo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
+  max-height:clamp(320px,61vh,590px);overflow:auto;padding-right:3px}
+.bn-fp{position:relative;border-radius:7px;overflow:hidden;cursor:pointer;
+  aspect-ratio:9/16;background:#000;border:2px solid transparent;padding:0}
+.bn-fp img{width:100%;height:100%;object-fit:cover;display:block;opacity:.72}
+.bn-fp:hover img{opacity:1}
+.bn-fp[data-est="pronta"]::after{content:"";position:absolute;inset:0;
+  background:color-mix(in srgb,var(--accent) 34%,transparent)}
+.bn-fp[data-est="pronta"]::before{content:"";position:absolute;right:4px;top:4px;
+  width:13px;height:13px;z-index:2;border-radius:999px;background:var(--accent)}
+.bn-fp[data-est="ajuste"]::after{content:"";position:absolute;inset:0;
+  background:color-mix(in srgb,var(--ambar) 26%,transparent)}
+.bn-fp.agora{border-color:var(--accent)}
+.bn-fp.agora img{opacity:1}
+.bn-fp .num{position:absolute;left:4px;bottom:3px;font-size:9.5px;font-weight:700;
+  color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);z-index:2}
+
+/* ---------------------------------------------------------------- 2 · o palco */
+.bn-palco-fora{background:var(--branco);border:1px solid var(--rule-solid);
+  border-radius:var(--r-lg);box-shadow:var(--sombra);padding:16px 16px 14px;
+  display:flex;flex-direction:column;align-items:center}
+.bn-palco-cab{width:100%;display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px}
+.bn-qual{font-size:14px;font-weight:700;color:var(--ink)}
+.bn-qual span{color:var(--muted);font-weight:500}
+.bn-modo{display:flex;gap:6px;background:var(--paper-2);padding:3px;border-radius:999px}
+.bn-modo button{border:0;background:none;padding:6px 13px;border-radius:999px;
+  font-size:12.5px;font-weight:650;color:var(--muted);cursor:pointer;height:auto}
+.bn-modo button[aria-pressed="true"]{background:var(--branco);color:var(--ink);
+  box-shadow:0 1px 3px rgba(0,0,0,.09)}
+.bn-modo button:hover{border-color:transparent}
+
+/* O PISO DA ALTURA EXISTE PORQUE A JANELA PODE MEDIR ZERO. Com a medida presa so' a
+   altura da tela (`63vh`), um quadro ainda sem medida deixa o palco com 0 por 0 e a peca
+   desaparece calada. Foi medido no navegador em 03/09/2026, e e' a mesma armadilha que
+   derrubou o palco da maquete antes de ela ser publicada.
+
+   A LARGURA SAI DA ALTURA, e nao o contrario: a peca e' 1080 por 1920, e altura e' o que
+   escasseia numa tela de computador. 612 vezes 1080/1920 da' 344, que sao as duas medidas
+   que a receita compara. */
+.bn-palco-fora .aj-tela-caixa{height:clamp(340px,63vh,612px);
+  width:calc(clamp(340px,63vh,612px) * 1080 / 1920);flex:none}
+.bn-palco-pe{width:100%;display:flex;align-items:center;justify-content:space-between;
+  margin-top:12px;font-size:12.5px;color:var(--muted)}
+.bn-palco-pe b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+
+/* AS VIZINHAS SAIRAM DE CENA. Elas eram a fila em pessoa quando nao havia fila a vista;
+   com a coluna da esquerda mostrando as cento e oitenta, duas miniaturas grandes de lado
+   so' roubariam largura do palco, que e' o assunto da tela. */
+.bn-bancada .aj-vizinha{display:none}
+.bn-bancada .aj-pista{display:block;padding:0;overflow:visible;gap:0}
+
+/* ------------------------------------------------------- 3 · as ferramentas */
+/* A GAVETA DEIXA DE FLUTUAR. Ela era `position:fixed` com 378px e um puxador para
+   arrastar a borda, porque cobria a peca e ele precisava escolher entre ver a lista e ver
+   a peca. Virando coluna, as duas ficam de pe' ao mesmo tempo e o puxador perde a razao
+   de existir: 296px e' a medida da maquete, e ela nao se arrasta. */
+/* A GAVETA FECHADA MORA FORA DA TELA POR TRES CAMINHOS AO MESMO TEMPO, e nao por um:
+   ela sai por `transform`, apaga por `opacity` e recusa o dedo por `pointer-events`. Anular
+   so' o primeiro deixou a coluna no lugar certo, com as medidas certas, e INVISIVEL. Foi o
+   que a primeira foto no navegador mostrou em 03/09/2026: os seis blocos de pe' em 296px,
+   `opacity` zero, e uma coluna vazia na tela.
+   Isto e' a trava da casa em acao: HTML certo nao e' tela funcionando. */
+.bn-ferr{position:sticky;top:16px;width:auto;inset:auto;z-index:auto;
+  transform:none;opacity:1;pointer-events:auto;transition:none;
+  box-shadow:none;border:0;background:none;padding:0;
+  display:grid;gap:14px;overflow:visible;height:auto}
+/* E A COLUNA NAO ANIMA AO TROCAR DE PECA. A `transition` existia para a gaveta deslizar
+   de fora para dentro; numa coluna que nunca sai de cena, ela so' atrasa o desenho. */
+.bn-ferr.aberta{transform:none;opacity:1;pointer-events:auto}
+.bn-ferr .aj-puxador{display:none}
+.bn-ferr .aj-gaveta-cab{display:none}
+.bn-ferr .aj-gaveta-corpo{display:grid;gap:14px;padding:0;overflow:visible}
+.bn-ferr .aj-bloco{background:var(--branco);border:1px solid var(--rule-solid);
+  border-radius:var(--r-lg);box-shadow:var(--sombra);padding:15px 16px;margin:0}
+.bn-ferr .aj-bloco h4{font-size:12px;font-weight:750;letter-spacing:.045em;
+  color:var(--muted);margin:0 0 11px;text-transform:uppercase}
+.bn-ferr .aj-gaveta-pe{position:static;padding:0;border:0;background:none;
+  display:flex;gap:8px}
+
+/* O TROCADOR DE MOLDURA E' A PRIMEIRA FERRAMENTA DA COLUNA, e a ordem responde a queixa
+   que abriu esta reforma: escolher moldura sem ver o video e' adivinhar. Quatro colunas,
+   uma por variacao da conta. */
+.bn-trocar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+
+/* O BOTAO DE APROVAR FECHA A COLUNA, com a largura dela inteira. Ele e' o gesto que se
+   repete cento e oitenta vezes numa sessao, e por isso e' o unico que nao divide linha
+   com ninguem. */
+.bn-ok{width:100%;justify-content:center}
+
+/* A COLUNA CONTEM OS FILHOS DELA, e esta correcao veio de olhar a tela no navegador, e
+   nao de ler o fonte (03/09/2026).
+
+   O QUE APARECEU: a coluna da fila media 186px, como manda a maquete, mas o miolo dela
+   media 358px e transbordava para cima do palco. A causa eram os QUATRO BOTOES DE FILTRO
+   ("Todas", "Para Ver", "Prontas", "Com Ajuste") numa linha so': eles nasceram numa folha
+   de tela cheia, onde 358px de linha e' folga, e numa coluna de 186 eles empurram a
+   caixa inteira de dentro para fora.
+
+   `minmax(0,1fr)` NAO BASTA para segurar isso: a largura minima automatica de um filho em
+   grade e' o `min-content` dele, e o `min-content` de uma linha de quatro botoes que nao
+   quebram e' a soma dos quatro. Quem segura e' o `min-width:0` em cada nivel, mais deixar
+   os botoes QUEBRAREM em duas linhas, que e' o que cabe. */
+.bn-fila{min-width:0;overflow:hidden}
+.bn-fila-in{min-width:0;width:100%;display:flex;flex-direction:column;gap:11px;padding:0}
+.bn-fila-rolo{min-width:0}
+.bn-fila .aj-filtros{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.bn-fila .aj-filtros button{flex:1 1 auto;padding:4px 8px;font-size:11px;height:auto;
+  white-space:nowrap}
+
+/* AS MINIATURAS DA FILA NAO PODEM TER LARGURA MINIMA, pelo mesmo motivo: com 186px de
+   coluna, menos 24 de respiro e menos 14 de vao, cada uma das tres fica com 49px. */
+.bn-fp{min-width:0}
+.bn-fp .vazio{position:absolute;inset:0;background:var(--paper-2)}
+
+/* O CABECALHO DA FILA EMPILHA, e nao divide linha (03/09/2026, visto na foto).
+
+   "A Fila" e "1 de 180" lado a lado pedem uns 130px de linha; a coluna tem 160 uteis, e
+   com a conta crescendo para "1 de 180 . 40 no filtro" os dois se atropelavam por cima
+   dos filtros. Empilhado cabe folgado, e a conta ganha a linha inteira, que e' a que
+   cresce. */
+.bn-fila-cab{display:block;margin:2px 2px 9px}
+.bn-fila-cab b{display:block;font-size:13.5px;line-height:1.2}
+.bn-fila-cab span{display:block;font-size:11.5px;margin-top:2px;line-height:1.3}
+
+/* O TECLADO E' A FERRAMENTA MAIS BARATA DA COLUNA, e a unica que nao tem botao: ele so'
+   diz o que as teclas fazem. Ele existe porque o assunto desta tela e' fazer cada gesto
+   caber em um segundo, cento e oitenta vezes, e gesto de teclado e' o mais rapido que
+   existe. Sem a lista a vista, ninguem descobre que a barra de espaco aprova. */
+.bn-teclas{display:grid;gap:7px}
+.bn-tecla{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted)}
+.bn-tecla kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-bottom-width:2px;border-radius:5px;
+  padding:2px 7px;color:var(--ink);font-weight:600;min-width:26px;text-align:center;
+  display:inline-block}
+
+/* O BOTAO DE APROVAR NAO PODE FICAR ABAIXO DA DOBRA, e este acerto veio da foto de
+   03/09/2026: com os seis blocos, o teclado e os dois botoes, a coluna media 1153px numa
+   tela de 1080, e "Aprovar E Seguir" so' existia depois de rolar.
+
+   BOTAO QUE SO' EXISTE DEPOIS DE ROLAR E' BOTAO QUE NAO EXISTE, e essa regra ja' estava
+   escrita na prova do rodape' desta fase, de 02/09/2026. Ela nao mudou de valor quando o
+   rodape' virou coluna.
+
+   QUEM ROLA E' O MIOLO, e nao a coluna: os seis blocos de ferramenta rolam por dentro, e
+   o teclado mais os dois botoes de andar ficam presos no pe', sempre a vista. A conta e'
+   `100vh` menos o cabecalho da fase, e o `min-height:0` e' o que deixa o miolo encolher
+   dentro do flex (sem ele, o filho pede a altura inteira do conteudo e nada rola). */
+.bn-ferr{display:flex;flex-direction:column;gap:14px;
+  max-height:calc(100vh - 124px)}
+.bn-ferr .aj-gaveta-corpo{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+  padding-right:4px}
+.bn-ferr .aj-gaveta-pe,
+.bn-ferr > .aj-bloco,
+.bn-ferr > .aj-linha,
+.bn-ferr > .bn-ok{flex:none}
+
+/* O NOME `aj-pe` VIAJOU COM A CAIXA, E O ESTILO DELE NAO (03/09/2026).
+
+   O cabecalho do palco e o pe' da coluna carregam as classes `aj-pe`, `aj-pe-txt` e
+   `aj-pe-dir` porque elas nomeiam o que essas partes SAO (o texto de qual peca, e os
+   botoes de comando), e doze provas as buscam por esse nome. O que elas NAO devem herdar
+   e' a aparencia de rodape': fundo proprio, borda em cima e a fileira horizontal que
+   valia quando a barra atravessava a fase inteira. */
+.bn-palco-cab.aj-pe{background:none;border:0;padding:0;margin-bottom:12px;
+  box-shadow:none;min-height:0;flex-wrap:nowrap}
+.bn-qual.aj-pe-txt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.bn-qual.aj-pe-txt #aj_pe_sub{font-size:12.5px;color:var(--muted);font-weight:500}
+.bn-ferr .aj-pe-dir{background:none;border:0;padding:0;box-shadow:none}
+
+/* O BOTAO DE APROVAR NAO ROLA DE LADO, e este acerto veio da prova (03/09/2026).
+
+   Ele tem tres filhos (o sinal de visto, o rotulo e o selo do atalho) e a coluna da' 296
+   px. Com o respiro de 18 de cada lado que todo `.acao` da casa tem, os tres pediam mais
+   largura do que cabia, e o navegador abria barra de rolagem HORIZONTAL dentro do proprio
+   botao. Foi a primeira coisa que ele apontou na gaveta antiga: "tem barra de rolagem
+   padrao Windows, branca. Isso nao ta' igual layout, irmao".
+
+   O RESPIRO ENCOLHE E O ROTULO GANHA A SOBRA, em vez de o botao crescer: a largura dele e'
+   a da coluna, e ela e' medida da maquete. */
+.bn-ok{padding:0 12px;gap:8px;overflow:hidden}
+.bn-ok .aj-atalho{flex:none}
+.bn-ok span:not(.aj-atalho){min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+
+/* O RESPIRO DO BOTAO PRECISA GANHAR DE `.aj-esteira .acao.grande`, que crava 24px de cada
+   lado. Com dois seletores contra um, a regra da Bancada perdia calada e o botao continuava
+   estourando a coluna: a prova dizia `bn-ok` rolando de lado e o CSS parecia certo. */
+.aj-esteira .acao.grande.bn-ok{padding:0 12px;gap:8px}
+
+/* O BOTAO PERDEU O `display:flex` no caminho, e com ele o alinhamento dos tres filhos.
+   `width:100%` num botao `block` faz o rotulo, o visto e o selo do atalho se comportarem
+   como texto corrido, e nao como fileira. */
+.aj-esteira .acao.grande.bn-ok{display:flex;align-items:center;justify-content:center}

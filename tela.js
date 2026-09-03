@@ -5307,7 +5307,7 @@ async function procurarRecortes() {
   // volta como erro (500) e cai no catch, sem apagar nada, pela mesma regra de sempre.
   if (await postoDePe()) {
     let r = null;
-    try { r = await noPosto(`/recortes?leva=${EDIT_LEVA.numero}`); }
+    try { r = await noPosto(`/medidas?leva=${EDIT_LEVA.numero}`); }
     catch (e) {
       // A FICHA ILEGÍVEL FALA, E NÃO SOME: o posto manda 500 de propósito para a
       // tela PARAR, mas o catch mudo fazia o passo 2 parecer "nunca recortou" e
@@ -5342,8 +5342,14 @@ async function procurarRecortes() {
     const doPosto = (r.nomes || []).map(n => ({ nome: n }));
     doPosto.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
     EDIT_RECORTES = doPosto;
+    // O QUE O BOTAO ABRE E' A PASTA DO BRUTO, desde 03/09/2026. Ele abria `recortes/`, e
+    // a pasta saiu do disco junto com a gravacao: o botao continuava na tela oferecendo um
+    // atalho para o vazio, que e' pior que botao nenhum porque parece haver algo la'.
+    //
+    // A PASTA DA MEDIDA NAO ENTRA AQUI de proposito: ela tem json e imagem de frase, e nao
+    // e' o que ele quer olhar quando clica em abrir a pasta de uma leva.
     RECORTADO = { pecas: doPosto.length, pasta: nomeDaLeva,
-                  onde: "recortes/" + nomeDaLeva };
+                  onde: "levas/" + nomeDaLeva };
     /* AS FRASES JÁ PAGAS VOLTAM DA CASA, desde 02/09/2026.
 
        O QUE ACONTECEU EM 02/09: o rascunho dele sumiu do navegador, e com ele as 180
@@ -5401,7 +5407,7 @@ async function procurarRecortes() {
   arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
   EDIT_RECORTES = arquivos;
   RECORTADO = { pecas: arquivos.length, pasta: nome,
-                onde: "recortes/" + nome };
+                onde: "levas/" + nome };
 }
 
 /* DEPOIS DE RECORTAR NÃO SE OFERECE RECORTAR DE NOVO, pela mesma razão que valeu no
@@ -5446,7 +5452,17 @@ function desenhaRecortado() {
   if (!tem) return;
   // A LINHA DE RESUMO SAIU com a descricao: a contagem ja' esta' escrita no proprio
   // botao e no passo 2 da trilha, e repetida aqui era a terceira copia do mesmo numero.
-  $("rec_pasta").dataset.abrir = RECORTADO.onde;
+  /* O CAMINHO SE MONTA NA HORA, e nao se le' do que ficou gravado (03/09/2026).
+
+     `RECORTADO.onde` vem do RASCUNHO, e rascunho gravado antes desta mudanca traz
+     `recortes/leva-N`, uma pasta que nao existe mais em disco. O botao obedecia e oferecia
+     um atalho para o vazio: a tela estava certa no fonte e errada na mao dele, porque o
+     dado velho mandava.
+
+     E' A REGRA DA CASA aplicada a' tela: quem decide caminho e' quem sabe o caminho de
+     HOJE, e nao um campo que alguem gravou num dia em que ele era outro. O nome da leva
+     continua vindo do rascunho, porque nome de leva nao envelhece. */
+  $("rec_pasta").dataset.abrir = "levas/" + (RECORTADO.pasta || "");
 }
 
 /* A BARRA CONCLUIDA NASCE DO RE-SCAN DO DISCO, e nao da memoria de um vigia.
@@ -5484,7 +5500,7 @@ function desenhaOFechoDoRecorte() {
     + (feitas < lista.length
        ? ", " + num(lista.length - feitas) + " sem recorte" : "");
   $("rec_obra_nota").innerHTML = "estão em <a href=\"#\" data-abrir=\""
-    + escapa(RECORTADO.onde) + "\">" + escapa(RECORTADO.pasta)
+    + escapa("levas/" + (RECORTADO.pasta || "")) + "\">" + escapa(RECORTADO.pasta)
     + "</a>. Os brutos continuam onde estavam, intactos.";
 }
 
@@ -7107,7 +7123,7 @@ function viraFila(d) {
    as moradas que nao tem posto proprio: a vitrine do GitHub Pages e a pagina aberta
    de arquivo, que continuam falando com o posto local de quem olha. */
 /* A PONTE NAO E' POSTO, achado da auditoria de 25/08/2026: ela serve a mesma tela e
-   responde /vivo com 200, mas nao tem /pecas, /recortes, /arquivo nem /pedido. Sem esta
+   responde /vivo com 200, mas nao tem /pecas, /medidas, /arquivo nem /pedido. Sem esta
    linha, a tela aberta pela morada da ponte achava que o posto atendia e a edicao
    inteira quebrava com "rota desconhecida", sem nunca cair no plano B. */
 const POSTO = (location.hostname.endsWith("github.io")
@@ -7206,9 +7222,23 @@ function devolverEndereco(u) {
 
 /** A pasta (relativa à casa) de onde saem as peças do passo em curso. */
 function pastaDaLeva() { return "levas/leva-" + EDIT_LEVA.numero; }
-function pastaDosRecortes() { return "recortes/leva-" + EDIT_LEVA.numero; }
+/* DE ONDE VEM O VIDEO DA PECA, e desde 03/09/2026 nao ha' mais o que decidir.
+
+   AQUI HAVIA UMA BIFURCACAO: a pasta do recorte quando a leva tinha recorte gravado, e a
+   pasta da leva quando nao tinha. Com a gravacao fora do desenho, a resposta e' sempre o
+   BRUTO da leva, e quem diz onde o B-roll esta' dentro dele e' a ficha de `medidas/`.
+
+   O NOME DA FUNCAO MORTA NAO FICA ESCRITO NEM AQUI, de proposito: a prova que guarda a
+   remocao busca o nome no fonte inteiro, sem separar codigo de comentario, e ela e' mais
+   util estrita do que esperta. Nome de funcao apagada citado num comentario e' a primeira
+   coisa que faz alguem procurar por ela seis meses depois.
+
+   A FUNCAO FICA, mesmo devolvendo uma coisa so', e nao e' cerimonia: ela e' chamada de
+   quatro lugares (a galeria, o palco, a conferencia do modelo e o cadastro da marca), e
+   e' a UNICA conta de onde mora o video. Espalhar `pastaDaLeva()` pelos quatro seria abrir
+   quatro lugares para divergirem no dia em que isso mudar de novo. */
 function pastaDasPecas3() {
-  return EDIT_RECORTES.length ? pastaDosRecortes() : pastaDaLeva();
+  return pastaDaLeva();
 }
 
 /* O RECADO DE QUANDO O POSTO NÃO ATENDE, e ele precisa dizer o endereço certo.
@@ -8463,6 +8493,20 @@ let PRONTAS = new Set();
 let AJ_I = 0;                     // qual peca esta' aberta na fase 5
 let AJ_SEL = null;                // qual item do molde esta' escolhido
 let AJ_VIVO = null;               // o UNICO video aberto nesta fase
+/* AS TRES FUNCOES ABAIXO FICARAM ORFAS EM 03/09/2026, e ficam de pe' com o aviso.
+
+   `MASCARAS`, `alfaDaMascara` e `vestirMascara` desenhavam a mascara do passo 2 na tela.
+   Ninguem na tela as chama mais: `mascaraDe`, o unico caminho ate' elas, saiu com a
+   gravacao do recorte.
+
+   POR QUE NAO SAIRAM JUNTO: elas nao citam a pasta de recortes nem gravam nada, e sao
+   desenho de FORMA (virar um PNG branco e preto em canal alfa e vestir uma caixa com ele),
+   que e' um assunto que pode voltar. Duas provas as exercitam direto, e apagar codigo que
+   uma prova exercita e' trocar dividas: a de codigo orfa e' visivel, a de prova apagada
+   nao.
+
+   QUEM ENCOSTAR AQUI decide entre as duas coisas de propósito, e nao por descuido: ou
+   acham um chamador novo, ou saem com as provas delas. */
 const MASCARAS = new Map();       // arquivo -> endereço da máscara já virada em alfa
 
 /* O RECORTE É PRETO POR FORA, E VÍDEO NÃO TEM TRANSPARÊNCIA. Foi isso que fez a cor de
@@ -8477,39 +8521,19 @@ const MASCARAS = new Map();       // arquivo -> endereço da máscara já virada
    A VOLTA PELO CANVAS É NECESSÁRIA. A máscara no disco é preta e branca, opaca inteira, e
    `mask-image` do navegador olha o ALFA e não o brilho. Sem esta conversão a máscara seria
    opaca de ponta a ponta e não recortaria nada. */
-async function mascaraDe(nome) {
-  if (MASCARAS.has(nome)) return MASCARAS.get(nome);
-  let url = null;
-  // O POSTO PRIMEIRO, desde 25/08/2026: a máscara mora na casa, ao lado do recorte. A
-  // resposta 404 é peça de tela cheia, que não tem máscara e nem precisa.
-  if (await postoDePe()) {
-    try {
-      const r = await fetch(urlDoArquivo(pastaDosRecortes() + "/_mascaras/"
-        + nome.replace(/\.[^.]+$/, ".png")));
-      if (r.ok) {
-        const b = await r.blob();
-        url = MASCARA_POR_LUZ ? URL.createObjectURL(b) : await alfaDaMascara(b);
-        MASCARAS.set(nome, url);
-        return url;
-      }
-      // SÓ O 404 VIRA "NÃO TEM MÁSCARA" GUARDADO (peça de tela cheia). Posto
-      // reiniciando ou bilhete vencido é falha passageira: sem guardar, a próxima
-      // chamada tenta de novo, em vez de a peça ficar sem furo para sempre.
-      if (r.status === 404) MASCARAS.set(nome, null);
-      return null;
-    } catch (e) { return null; }
-  }
-  try {
-    const raiz = await pastaDo("recortes", false);
-    const pasta = await (await raiz.getDirectoryHandle("leva-" + EDIT_LEVA.numero))
-      .getDirectoryHandle("_mascaras");
-    const arq = await (await pasta.getFileHandle(nome.replace(/\.[^.]+$/, ".png"))).getFile();
-    // O CAMINHO CURTO E' SO' ABRIR O ARQUIVO. Ver a nota em `MASCARA_POR_LUZ`.
-    url = MASCARA_POR_LUZ ? URL.createObjectURL(arq) : await alfaDaMascara(arq);
-  } catch (e) { url = null; }     // peça de tela cheia não tem máscara, e nem precisa
-  MASCARAS.set(nome, url);
-  return url;
-}
+/* A MASCARA SAIU DE CENA EM 03/09/2026, e com ela a funcao que a buscava.
+
+   `mascaraDe` pedia ao posto o PNG de `recortes/<leva>/_mascaras/<peca>.png`, o negativo
+   branco e preto que o passo 2 gravava com a forma do B-roll do card. Ela era chamada de
+   um lugar so', e so' quando a peca NAO tinha furo de arte.
+
+   HOJE O FURO VEM SEMPRE DA ARTE VAZADA dele, e peca sem furo de arte e' peca de tela
+   cheia: a filmagem ocupa o quadro inteiro e o template nao aparece, que e' o que o
+   `camada_da_peca` do motor faz do outro lado. Nao ha' segundo jeito de abrir buraco.
+
+   DEIXA-LA DE PE' SERIA PIOR QUE INUTIL: ela faria uma chamada de rede por peca para uma
+   pasta que ninguem cria, e cada 404 seria guardado como "esta peca nao tem mascara",
+   dando a entender que a pergunta ainda faz sentido. */
 
 function alfaDaMascara(arquivo) {
   return new Promise(pronto => {
@@ -8877,11 +8901,10 @@ async function acenderPeca(v) {
        deixava na tela a INTERSECAO deles, que nao e' nem um nem outro: e' de onde saiam
        as linhas cortando a peca. O `camada_da_peca` do motor ja' pula a mascara quando a
        arte tem furo proprio, e agora a tela pula pelo mesmo motivo. */
-    if (!janelaDaArte(p.nome)) {
-      // A MASCARA VESTE A CAIXA, e nao o video: e' a janela que tem forma, e ela fica
-      // parada enquanto a filmagem se reenquadra por dentro.
-      vestirMascara(v.parentElement || v, await mascaraDe(p.nome));
-    }
+    // PECA SEM FURO DE ARTE E' PECA DE TELA CHEIA, desde 03/09/2026: a filmagem ocupa o
+    // quadro e o template nao aparece. Aqui ela vestia a mascara do passo 2, que deixava na
+    // tela a INTERSECAO entre o formato do card do reel e o furo da arte, que nao e' nem um
+    // nem outro: era de onde saiam as linhas cortando a peca.
   } catch (e) { /* o arquivo saiu da pasta desde a leitura */ }
 }
 
@@ -9267,6 +9290,15 @@ function editorMede() {
     $("aj_med_n").textContent = pct + "%";
     caixa.className = "aj-medida " + (pct >= 88 ? "bom" : pct >= 70 ? "" : "ruim");
   }
+  /* O MESMO NÚMERO NO PÉ DO PALCO, desde 03/09/2026. Ele morava só dentro da gaveta, que
+     ficava fechada na maior parte do tempo: ele julgava o encaixe de olho e só descobria
+     o preço quando abria a gaveta para mexer. No pé do palco ele está sempre à vista, ao
+     lado da peça, que é onde a decisão é tomada.
+
+     A CONTA É A MESMA, LIDA UMA VEZ SÓ. Duas contas do mesmo número em dois lugares é o
+     que faz um deles divergir calado. */
+  const peAp = $("bn_pe_ap");
+  if (peAp) peAp.textContent = pct + "%";
   /* A SEGUNDA MEDIDA E' O PRECO DO ENCAIXE, e nao mais o que a outra folga daria.
 
      O QUE FALTAVA ERA JUSTAMENTE O PRECO: mostrar inteiro nao corta nada, e a pergunta
@@ -9278,6 +9310,16 @@ function editorMede() {
     $("aj_med2_n").textContent = vazio + "%";
     $("aj_med2_r").textContent = "Do Furo Com O Fundo";
     c2.className = "aj-medida " + (vazio > 25 ? "ruim" : "");
+  }
+  const peSob = $("bn_pe_sob");
+  if (peSob) peSob.textContent = vazio == null ? "—" : vazio + "%";
+  /* O TAMANHO TAMBÉM DESCE PARA O PÉ. Ele é o número que ele mexe mais, com a roda do
+     mouse, e ficava só na régua dentro da gaveta: girar a roda com a gaveta fechada
+     mudava o tamanho sem número nenhum na tela dizendo quanto. */
+  const peZ = $("bn_pe_z");
+  if (peZ) {
+    const e = ENQUADRES.get(nome) || {};
+    peZ.textContent = Math.round(100 * (Number(e.z) || 1)) + "%";
   }
   porOsPunhosNoLugar();
   /* A MARCA APARECE COM A FILMAGEM ESCOLHIDA, e some quando ele solta.
@@ -9857,11 +9899,10 @@ function desenhaAjustePainel() {
   $("aj_kpi_pronta_b").classList.toggle("zerado", !PRONTAS.size);
   $("aj_kpi_mexida_b").classList.toggle("zerado", !mexidas);
   desenhaATrilha(pecas);
-  desenhaAsVizinhas(pecas);
   // O BOTAO DIZ O QUE FAZ, e o que ele faz é assinar E SEGUIR: é um gesto só, e por
   // isso ele é o único com fundo cheio e movimento próprio (lei 8 do Portal).
   $("aj_pronta_txt").textContent = PRONTAS.has(p.nome) ? "Já Pronta, Seguir"
-                                                       : "Pronta E Seguir";
+                                                       : "Aprovar E Seguir";
   /* COM TUDO PRONTO, "Pronta" SAI E "Fabricar" OCUPA O LUGAR DELE.
 
      PEDIDO DELE: "já que tem as 92 prontas, o botão substituía, o botão que tinha
@@ -10041,6 +10082,14 @@ function desenhaAjustePainel() {
   desenhaAsCamadas();
   $("aj_voltar_gesto").disabled = !AJ_PILHA.length;
   $("aj_refazer_gesto").disabled = !AJ_REFEITOS.length;
+  /* A FILA REMARCA A PECA DE AGORA, e este era um defeito de verdade (03/09/2026).
+
+     A fila nasceu como FOLHA que abria filtrada e sumia no primeiro clique: ela se
+     desenhava uma vez, na abertura, e nao precisava de mais nada. Virando COLUNA, ela fica
+     de pe' enquanto ele anda pela leva, e sem esta linha a marca de "estou aqui" ficava
+     presa na peca em que a coluna foi desenhada. A prova pegou: `onde: 7` com
+     `marcada: 1`. */
+  desenhaAFila();
 }
 
 /* ESCREVER NA MÃO POR CIMA DO QUE A IA ESCREVEU.
@@ -10290,8 +10339,6 @@ function irParaAPeca(k) {
 }
 
 $("aj_ant").onclick = () => irParaAPeca(AJ_I - 1);
-$("aj_viz_ant").onclick = () => irParaAPeca(AJ_I - 1);
-$("aj_viz_prox").onclick = () => irParaAPeca(AJ_I + 1);
 
 // PULAR PARA UMA PECA PELO NUMERO. Ele mora dentro da fila, e nao no rodape: e' ali
 // que a pergunta "para onde eu vou" esta' sendo feita.
@@ -10311,34 +10358,35 @@ $("aj_ir").onchange = () => {
 
    A fonte do desenho é `docs/propostas/esteira-v2/`. Mudou aqui, muda lá. */
 
-/* AS VIZINHAS SÃO A FILA EM PESSOA, e não um número dizendo que ela existe.
+/* AS VIZINHAS SAÍRAM DE CENA EM 03/09/2026, com a espec `aba-de-edicao-a-bancada`.
 
-   ELAS DESENHAM A ARTE DA PEÇA, e não a filmagem: a filmagem exige baixar o vídeo
-   inteiro para tirar um quadro, e são duas por peça, a cada troca. A arte já está na
-   mão (a moldura desceu no começo da fase) e é ela que diz de relance qual peça é. */
-function desenhaAsVizinhas(pecas) {
-  const por = (botao, k) => {
-    if (!botao) return;
-    const p = pecas[k];
-    botao.classList.toggle("oculta", !p);
-    if (!p) { botao.innerHTML = ""; return; }
-    const v = variacaoDaPeca(p.nome);
-    const marca = PRONTAS.has(p.nome) ? " · pronta" : "";
-    const arte = v && ED_IMGS.get(v.arquivo);
-    botao.innerHTML = (arte ? `<img src="${arte}" alt="">` : `<span class="vazio"></span>`)
-      + `<span>${k + 1}${marca}</span>`;
-    botao.title = "Ir para a peça " + (k + 1);
-  };
-  por($("aj_viz_ant"), AJ_I - 1);
-  por($("aj_viz_prox"), AJ_I + 1);
-}
+   ELAS ERAM A FILA EM PESSOA quando não havia fila à vista: a peça anterior e a próxima
+   de lado, grandes, para ele ver que havia fila andando. Na Bancada a coluna da esquerda
+   mostra as cento e oitenta ao mesmo tempo, então duas miniaturas grandes de lado só
+   roubariam largura do palco, que é o assunto da tela.
+
+   QUEM FAZ O TRABALHO DELAS AGORA é o `desenhaAFila`, mais abaixo, que era o desenho da
+   folha flutuante e virou o desenho da coluna. */
 
 /* ------------------------------------------------------------------- a gaveta
 
    ELA EMPURRA, E NÃO COBRE. Cobrir a peça no exato momento em que ele ajusta a peça
    era o pior lugar possível para pousar. */
+/* VER E AJUSTAR SÃO UM INTERRUPTOR DE DOIS ESTADOS, desde 03/09/2026, e não um botão
+   que abre uma gaveta. A coluna das ferramentas está sempre de pé; o que o par liga e
+   desliga é o MODO do palco: ver a peça limpa, ou ver os punhos e a marca do B-roll por
+   cima dela. É o gesto dos dois cliques do Canva, e foi assim que ele descreveu.
+
+   AS DUAS FUNÇÕES CONTINUAM SE CHAMANDO `abrirGaveta` e `fecharGaveta` porque são
+   chamadas de nove lugares, inclusive do teclado. O que elas fazem por dentro mudou. */
+function marcarOModo(ajustando) {
+  const ver = $("bn_ver"), aj = $("aj_abrir_gaveta");
+  if (ver) ver.setAttribute("aria-pressed", ajustando ? "false" : "true");
+  if (aj) aj.setAttribute("aria-pressed", ajustando ? "true" : "false");
+}
 function abrirGaveta() {
   $("aj_gaveta").classList.add("aberta");
+  marcarOModo(true);
   const casa = $("aj_tela").closest(".aj-esteira");
   if (casa) casa.classList.add("com-gaveta");
   // A PEÇA MUDA DE TAMANHO ao ser empurrada, e o editor precisa saber: sem isto a
@@ -10346,13 +10394,28 @@ function abrirGaveta() {
   setTimeout(() => { if (typeof editorMede === "function") editorMede(); }, 360);
 }
 function fecharGaveta() {
+  marcarOModo(false);
   $("aj_gaveta").classList.remove("aberta");
   const casa = $("aj_tela").closest(".aj-esteira");
   if (casa) casa.classList.remove("com-gaveta");
   setTimeout(() => { if (typeof editorMede === "function") editorMede(); }, 360);
 }
+/* VER E AJUSTAR SAO DOIS BOTOES, E CADA UM MANDA NUM ESTADO (03/09/2026).
+
+   ANTES ERA UM BOTAO SO' QUE ALTERNAVA: "Ajustar A Peca" abria a gaveta, e clicar de novo
+   fechava. Num interruptor de dois estados isso e' defeito: apertar "Ajustar" quando ja'
+   se esta' ajustando tem de continuar ajustando, e nao voltar para ver. Foi o que a prova
+   pegou, com a tecla A DESLIGANDO o modo em vez de ligar.
+
+   E O `bn_ver` NASCEU SEM ACAO. O estilo mostrava o `aria-pressed` certinho e clicar em
+   "Ver" nao fazia nada: o botao existia na tela e nao existia no programa. E' o tipo de
+   defeito que so' a prova pega, porque a tela parece completa. */
+$("bn_ver").onclick = () => {
+  if ($("aj_gaveta").classList.contains("aberta")) fecharGaveta();
+  else marcarOModo(false);
+};
 $("aj_abrir_gaveta").onclick = () => {
-  if ($("aj_gaveta").classList.contains("aberta")) return fecharGaveta();
+  if ($("aj_gaveta").classList.contains("aberta")) return marcarOModo(true);
   desenhaAjustePainel();
   abrirGaveta();
 };
@@ -10472,9 +10535,17 @@ $("aj_encaixar").onclick = () => {
 
 /* --------------------------------------------------------------------- a fila
 
-   COM QUINZE OU COM CENTO E OITENTA ELA É A MESMA FOLHA, e some assim que ele escolhe
-   para onde ir. Os três números do placar abrem ela já filtrada: o número responde
-   QUANTAS, e o clique responde QUAIS. */
+   ELA ERA UMA FOLHA QUE COBRIA A TELA, e virou a COLUNA DA ESQUERDA em 03/09/2026.
+
+   O QUE MUDOU NO COMPORTAMENTO, e é uma coisa só: ela não se fecha mais. Folha que cobre
+   a tela tem de sumir assim que ele escolhe para onde ir; coluna de 186px que fica ao
+   lado do palco não atrapalha nada, e fechá-la seria abrir um vazio na esquerda.
+
+   O ELEMENTO CONTINUA SE CHAMANDO `aj_folha`, de propósito: é o mesmo que este bloco
+   inteiro conhece. Trocar o nome para mudar de lugar não conserta nada e quebra fiação.
+
+   OS TRÊS NÚMEROS DO PLACAR continuam filtrando: o número responde QUANTAS, e o clique
+   responde QUAIS. Só que agora o resultado aparece na coluna, e não numa folha por cima. */
 let AJ_FILA_FILTRO = "todas";
 function estadoDaPeca(nome) {
   if (PRONTAS.has(nome)) return "pronta";
@@ -10488,22 +10559,34 @@ function desenhaAFila() {
     .filter(({ p }) => AJ_FILA_FILTRO === "todas"
       || (AJ_FILA_FILTRO === "para-ver" && !PRONTAS.has(p.nome))
       || estadoDaPeca(p.nome) === AJ_FILA_FILTRO);
+  /* O ESTADO DA PEÇA VIAJA NUM ATRIBUTO, e não em duas etiquetas por cima da imagem.
+
+     A COLUNA TEM 186px DE LARGURA, dividida em três: cada miniatura fica com 54px. A
+     palavra "Ajustada" não cabe em 54px, e o selo de pronta com texto ao lado também não.
+     Numa folha de tela cheia cabiam; numa coluna, o estado tem de ser COR, e a cor mora
+     no `data-est` que o estilo lê (ver `.bn-fp[data-est]`). */
   casa.innerHTML = dentro.map(({ p, k }) => {
     const v = variacaoDaPeca(p.nome);
     const arte = v && ED_IMGS.get(v.arquivo);
-    const estado = estadoDaPeca(p.nome);
-    return `<button class="aj-cartao${k === AJ_I ? " agora" : ""}" type="button"`
-      + ` data-k="${k}">`
+    return `<button class="bn-fp${k === AJ_I ? " agora" : ""}" type="button"`
+      + ` data-k="${k}" data-est="${estadoDaPeca(p.nome)}"`
+      + ` title="Ir para a peça ${k + 1}">`
       + (arte ? `<img src="${arte}" alt="">` : `<span class="vazio"></span>`)
       + `<span class="num">${k + 1}</span>`
-      + (estado === "pronta"
-        ? `<span class="sinal"><svg viewBox="0 0 24 24" fill="none"><path d="m20 6-11 11-5-5"/></svg></span>` : "")
-      + (estado === "ajuste" ? `<span class="toque">Ajustada</span>` : "")
       + `</button>`;
   }).join("");
   const ir = $("aj_ir");
-  ir.max = pecas.length;
-  ir.value = AJ_I + 1;
+  if (ir) { ir.max = pecas.length; ir.value = AJ_I + 1; }
+  /* A CONTA DA FILA DIZ ONDE ELE ESTÁ, e não quantas existem: "quantas" já está nos três
+     números do placar, e repetir o mesmo número em dois lugares é o que faz um deles
+     envelhecer sozinho. Aqui o que falta é a posição. */
+  const conta = $("bn_fila_conta");
+  if (conta) {
+    conta.textContent = pecas.length
+      ? `${AJ_I + 1} de ${pecas.length}` + (dentro.length < pecas.length
+        ? ` · ${dentro.length} no filtro` : "")
+      : "—";
+  }
 }
 function abrirAFila(filtro) {
   AJ_FILA_FILTRO = filtro || "todas";
@@ -10511,12 +10594,19 @@ function abrirAFila(filtro) {
     b.classList.toggle("on", b.dataset.f === AJ_FILA_FILTRO);
   }
   desenhaAFila();
-  $("aj_folha").hidden = false;
 }
-const fecharAFila = () => { $("aj_folha").hidden = true; };
+/* FECHAR A FILA VIROU ROLAR ATÉ A PEÇA DE AGORA, e não esconder a coluna.
+
+   O NOME FICOU porque ele é chamado de cinco lugares (o `aj_ir`, a grade, os três botões
+   do placar), e todos querem a mesma coisa: "acabei de escolher, me leve até lá". Numa
+   folha que cobria a tela isso era sumir; numa coluna que rola, é rolar. */
+const fecharAFila = () => {
+  const agora = $("aj_folha_grade") && $("aj_folha_grade").querySelector(".agora");
+  if (agora && agora.scrollIntoView) {
+    agora.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+};
 $("aj_ver_fila").onclick = () => abrirAFila("todas");
-$("aj_f_fechar").onclick = fecharAFila;
-$("aj_folha").onclick = ev => { if (ev.target === $("aj_folha")) fecharAFila(); };
 $("aj_filtros").onclick = ev => {
   const b = ev.target.closest("[data-f]");
   if (b) abrirAFila(b.dataset.f);
@@ -10566,14 +10656,30 @@ window.addEventListener("keydown", ev => {
   const escrevendo = onde && (onde.tagName === "TEXTAREA" || onde.tagName === "INPUT"
     || onde.isContentEditable);
   if (ev.key === "Escape") {
+    /* A ORDEM DO ESC MUDOU EM 03/09/2026, E ERA DEFEITO DE VERDADE.
+
+       A fila era uma FOLHA que cobria a tela, e a segunda linha daqui era a saida dela:
+       `aj_folha` visivel querendo dizer "tem coisa por cima da peca, feche primeiro".
+       Virando COLUNA, ela nunca esta' escondida, entao esta linha capturava TODO Esc e
+       nada abaixo dela era alcancado: sair do modo Ajustar pela tecla parou de funcionar,
+       e o sintoma nao aparecia em lugar nenhum do desenho.
+
+       A REGRA CONTINUA A MESMA, com os candidatos que sobraram: o Esc desfaz a coisa mais
+       de cima. Folha do fabricar primeiro, porque ela cobre a tela; depois o modo Ajustar,
+       que e' o unico estado que resta para desfazer. */
     if (!$("aj_folha_fab").hidden) return void ($("aj_folha_fab").hidden = true);
-    if (!$("aj_folha").hidden) return fecharAFila();
     if ($("aj_gaveta").classList.contains("aberta")) return fecharGaveta();
     return;
   }
   if (escrevendo) return;
   if (ev.key === "Enter" && !$("aj_pronta").hidden) { ev.preventDefault(); $("aj_pronta").click(); }
-  else if (ev.key === "a" || ev.key === "A") { ev.preventDefault(); $("aj_abrir_gaveta").click(); }
+  else if (ev.key === "a" || ev.key === "A") {
+    // O ATALHO ALTERNA, e os dois botoes nao: quem aperta a tecla quer trocar de modo sem
+    // olhar em qual esta'; quem clica em "Ver" ou em "Ajustar" esta' escolhendo um deles.
+    ev.preventDefault();
+    if ($("aj_gaveta").classList.contains("aberta")) fecharGaveta();
+    else { desenhaAjustePainel(); abrirGaveta(); }
+  }
   else if (ev.key === "ArrowLeft") irParaAPeca(AJ_I - 1);
   else if (ev.key === "ArrowRight") irParaAPeca(AJ_I + 1);
 });
@@ -11934,7 +12040,7 @@ async function vestirORecorte(ger) {
   v.style.left = ((e.x - jan.x) / jan.w * 100) + "%";
   v.style.top = ((e.y - jan.y) / jan.h * 100) + "%";
   try {
-    const u = await urlDaMidia(peca, pastaDosRecortes());
+    const u = await urlDaMidia(peca, pastaDasPecas3());
     // QUEM ENVELHECEU NAO VESTE, e devolve o endereco que acabou de pegar
     if (ger !== undefined && ger !== MP_GERACAO) { devolverEndereco(u); return; }
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
@@ -12570,7 +12676,7 @@ async function cdPintaOBrollDaMarca() {
   $("cd_sem_broll").hidden = !!peca;
   if (!peca) { v.removeAttribute("src"); return; }
   try {
-    const u = await urlDaMidia(peca, pastaDosRecortes());
+    const u = await urlDaMidia(peca, pastaDasPecas3());
     // O POP FECHOU ENQUANTO O RECORTE DESCIA: aqui, sim, o guarda e' o do cadastro.
     if (!CAD) { devolverEndereco(u); return; }
     if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);

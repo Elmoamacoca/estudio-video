@@ -70,7 +70,22 @@ FLUXOS = PROJETO / ".github" / "workflows"
 CASA = Path(os.environ.get("ESTUDIO_CASA") or (Path.home() / "Estudio"))
 
 LEVAS = CASA / "levas"                            # o bruto ja' limpo, uma pasta por leva
-RECORTES = CASA / "recortes"                      # o B-roll cortado, no passo 2
+# A FICHA DA LEVA, E NENHUM VIDEO, desde 03/09/2026, com a espec `aba-de-edicao-a-bancada`.
+#
+# ATE' AQUI ISTO SE CHAMAVA `recortes` e guardava, por leva, um video recortado por peca:
+# 2,1 GB para os 787 MB de bruto que os geraram, quase o triplo. O recorte foi apagado do
+# desenho porque ele grava o preto e a borda arredondada do reel DENTRO dos pixels, de onde
+# nao saem mais, e porque na bancada o reel entra inteiro e a moldura so' decide o que
+# aparece, do mesmo jeito que ele faz no Canva.
+#
+# SOBRA A MEDIDA, e ela pesa kilobytes: `_origem.json` com o retangulo do B-roll de cada
+# peca, `_frases/` com a imagem da manchete do card, e `_textos.json` com o que a IA
+# escreveu. Uma pasta por leva, como antes.
+#
+# POR QUE NAO MORA DENTRO DE `levas/`: o cabecalho do `oficina.py` declara que `levas/` e' o
+# bruto e que este programa nunca o altera, e essa regra e' o que garante que remedir uma
+# leva seja sempre possivel. Ficha ao lado do bruto, e nao dentro dele.
+MEDIDAS = CASA / "medidas"                        # a ficha da leva: retangulo, frase, texto
 EDICOES = CASA / "edicoes"                        # a peca montada sobre o template
 TEMPLATES = CASA / "templates"                    # o acervo de templates
 PEDIDOS = CASA / "pedidos"                        # a caixa de recados entre tela e oficina
@@ -189,8 +204,8 @@ def leva(numero) -> Path:
     return LEVAS / f"leva-{numero}"
 
 
-def recortes_da_leva(numero) -> Path:
-    return RECORTES / f"leva-{numero}"
+def medidas_da_leva(numero) -> Path:
+    return MEDIDAS / f"leva-{numero}"
 
 
 def edicoes_da_leva(numero) -> Path:

@@ -1338,7 +1338,7 @@
               <svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
             </div>
             <div class="aj-cab-txt">
-              <h2>Revisão Peça A Peça</h2>
+              <h2>A Bancada</h2>
               <!-- A VERSÃO MORA NA SEGUNDA LINHA, que é a menos disputada: com a
                    gaveta larga o título cede espaço, e o número da versão não
                    pode ceder junto. "Aqui não fala versão?", e ele tinha razão. -->
@@ -1387,8 +1387,76 @@
 
                AS VIZINHAS SÃO A FILA EM PESSOA, e não um número dizendo que ela
                existe: a anterior e a próxima ficam de lado, e clicar nelas anda. -->
+
+          <!-- ============================================== A BANCADA, EM TRES COLUNAS
+               (03/09/2026, espec `aba-de-edicao-a-bancada`, revisao 2)
+
+               A FILA, O PALCO E AS FERRAMENTAS DE PE' AO MESMO TEMPO. Antes eram tres
+               desenhos que se cobriam: uma pista com a peca anterior e a proxima de lado,
+               uma gaveta que deslizava por cima da direita, e a fila atras de uma folha
+               que tapava a tela. Ele olha as tres ao mesmo tempo, entao elas ficam de pe'
+               ao mesmo tempo: 186px para a fila, o resto para o palco, 296px para as
+               ferramentas. Sao as medidas da maquete que ele aprovou.
+
+               OS IDENTIFICADORES SAO OS MESMOS DE ANTES, de proposito: por baixo continua
+               o mesmo editor de pintura, com os punhos do B-roll, o aparo e o gesto do
+               arrasto. Quem mudou de lugar foi a folha de estilo. -->
+          <div class="bn-bancada">
+
+            <!-- ------------------------------------------------- 1 · a fila -->
+          <div class="aj-folha bn-fila" id="aj_folha">
+            <div class="bn-fila-in">
+              <div class="bn-fila-cab">
+                <b>A Fila</b><span id="bn_fila_conta">1 de 0</span>
+                <div class="aj-filtros" id="aj_filtros">
+                  <button data-f="todas" class="on" type="button">Todas</button>
+                  <button data-f="para-ver" type="button">Para Ver</button>
+                  <button data-f="pronta" type="button">Prontas</button>
+                  <button data-f="ajuste" type="button">Com Ajuste</button>
+                </div>
+                <!-- PULAR PARA UMA PEÇA sem precisar rolar uma fila de cento e
+                     oitenta cartões. Ele mora aqui, e não no rodapé, porque é aqui
+                     que a pergunta "para onde eu vou" está sendo feita. -->
+              </div>
+              <div class="bn-fila-rolo" id="aj_folha_grade"></div>
+            </div>
+          </div>
+
+
+            <!-- ------------------------------------------------------- 2 · o palco -->
+            <div class="bn-palco-fora">
+              <!-- QUAL PECA, E EM QUE MODO. O anel de progresso e o texto do rodape
+                   subiram para ca': o rodape' inteiro saiu, e a pergunta "que peca e'
+                   esta" pertence ao topo do palco, nao ao pe' da pagina. -->
+              <div class="bn-palco-cab aj-pe">
+                <div class="bn-qual aj-pe-txt">
+                  <div class="aj-anel">
+                    <!-- QUARENTA E QUATRO, E NAO TRINTA E QUATRO. O anel e' um ALVO,
+                         e nao um enfeite: ele nasceu porque o numero da peca era uma
+                         linha de onze pixels cinza e ele reclamou de nao achar em que
+                         peca estava. Encolhi para 34 ao mudar de lugar, e a prova pegou
+                         (ela exige 40 no minimo). -->
+                    <svg viewBox="0 0 52 52" width="44" height="44" aria-hidden="true">
+                      <circle class="fundo" cx="26" cy="26" r="22"/>
+                      <circle class="cheio" cx="26" cy="26" r="22" id="aj_anel_cheio"
+                              stroke-dasharray="0 138"/>
+                    </svg>
+                    <b id="aj_conta">1</b>
+                  </div>
+                  <b id="aj_pe_titulo">Peça 1 <span id="aj_total">de 0</span></b>
+                  <span id="aj_pe_sub">Nenhum ajuste nesta peça</span>
+                </div>
+                <!-- VER E AJUSTAR, e o segundo e' o `aj_abrir_gaveta` de sempre: era um
+                     botao de rodape' chamado "Ajustar A Peça" e virou o par de um
+                     interruptor de dois estados, que e' o gesto do Canva. -->
+                <div class="bn-modo">
+                  <button id="bn_ver" type="button" aria-pressed="true">Ver</button>
+                  <button id="aj_abrir_gaveta" type="button" aria-pressed="false"
+                          title="Ajustar a peça (tecla A)">Ajustar</button>
+                </div>
+              </div>
+
           <div class="aj-pista">
-            <button class="aj-vizinha oculta" id="aj_viz_ant" type="button"></button>
             <div class="aj-tela-caixa">
               <div class="aj-tela" id="aj_tela"></div>
               <!-- OS PUNHOS DO B-ROLL (29/08/2026).
@@ -1402,57 +1470,20 @@
                 <i data-c="nw"></i><i data-c="ne"></i><i data-c="se"></i><i data-c="sw"></i>
               </div>
             </div>
-            <button class="aj-vizinha" id="aj_viz_prox" type="button"></button>
           </div>
 
-          <!-- ---------------------------------------------------------- o rodapé -->
-          <footer class="aj-pe">
-            <div class="aj-anel">
-              <svg viewBox="0 0 52 52" width="52" height="52" aria-hidden="true">
-                <circle class="fundo" cx="26" cy="26" r="22"/>
-                <circle class="cheio" cx="26" cy="26" r="22" id="aj_anel_cheio"
-                        stroke-dasharray="0 138"/>
-              </svg>
-              <b id="aj_conta">1</b>
-            </div>
-            <div class="aj-pe-txt">
-              <b id="aj_pe_titulo">Peça 1 <span id="aj_total">de 0</span></b>
-              <span id="aj_pe_sub">Nenhum ajuste nesta peça</span>
-            </div>
-            <div class="aj-pe-dir">
-              <button class="acao" id="aj_ant" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                Anterior</button>
-              <!-- O SÍMBOLO DA TECLA SAIU DAQUI POR ORDEM DELE, em 29/08/2026:
-                   "remove esse símbolo de A". O atalho continua valendo, e mora
-                   no título do botão, que é onde ele não atrapalha a leitura. -->
-              <button class="acao" id="aj_abrir_gaveta" type="button"
-                      title="Ajustar a peça (tecla A)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg>
-                Ajustar A Peça</button>
-              <button class="acao forte grande" id="aj_pronta" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
-                <span id="aj_pronta_txt">Pronta E Seguir</span>
-                <span class="aj-atalho">Enter</span>
-              </button>
-            </div>
-          </footer>
-
-          <!-- A CASA DA OBRA, NO PÉ DESTA FASE.
-
-               ELA NASCEU LÁ EM CIMA e ele corrigiu na hora: "ele não deveria ficar
-               na parte superior, deveria ficar na parte inferior". A barra e o aviso
-               de terminado se mudam para cá quando ele entra nesta fase, e o botão
-               de fabricar desce até ela. Ver `moverAObraPara` no tela.js. -->
+              <!-- O QUE ESTA' SENDO MEDIDO, no pe' do palco: os mesmos numeros que
+                   moravam dentro da gaveta, agora a vista sem abrir nada. -->
+              <div class="bn-palco-pe">
+                <span>Tamanho <b id="bn_pe_z">100%</b></span>
+                <span>Da filmagem aparece <b id="bn_pe_ap">—</b></span>
+                <span>Sobrou de moldura <b id="bn_pe_sob">—</b></span>
+              </div>
           <div id="aj_obra_casa"></div>
+            </div>
 
-          <!-- ------------------------------------------------------- a gaveta
-
-               ELA EMPURRA, E NÃO COBRE: cobrir a peça no exato momento em que ele
-               ajusta a peça era o pior lugar possível para pousar. E se arrasta pela
-               borda, que foi o pedido dele: quem está mexendo em fonte quer a lista
-               larga, quem está só conferindo quer a peça grande. -->
-          <aside class="aj-gaveta" id="aj_gaveta">
+            <!-- ------------------------------------------- 3 · as ferramentas -->
+          <aside class="aj-gaveta bn-ferr" id="aj_gaveta">
             <div class="aj-puxador" id="aj_puxador" title="Arraste para alargar"></div>
             <div class="aj-gaveta-cab">
               <b>Ajustar A Peça <span id="aj_g_num">1</span></b>
@@ -1503,9 +1534,9 @@
                    Até 29/08/2026 `variacaoDaPeca` decidia sozinha e não havia como
                    discordar: ele viu um B-roll quadrado entrar na variação errada e
                    sair cortado, sem botão nenhum para trocar. -->
-              <section class="aj-bloco" id="aj_bloco_moldura" hidden>
+              <section class="aj-bloco bn-1a" id="aj_bloco_moldura" hidden>
                 <h4>A Moldura</h4>
-                <div class="aj-molduras" id="aj_molduras"></div>
+                <div class="aj-molduras bn-trocar" id="aj_molduras"></div>
                 <p class="nota mini" id="aj_moldura_sem" hidden>Esta conta tem uma
                   variação só, então não há o que trocar.</p>
               </section>
@@ -1594,31 +1625,58 @@
               <button class="acao perigo" id="aj_zerar" type="button">
                 Voltar Ao Começo</button>
             </div>
-          </aside>
 
-          <!-- A FILA INTEIRA, sob demanda: com quinze ou com cento e oitenta, ela é
-               a mesma folha, e some assim que ele escolhe para onde ir. -->
-          <div class="aj-folha" id="aj_folha" hidden>
-            <div class="aj-folha-in">
-              <div class="aj-folha-cab">
-                <b>A Fila Da Leva</b>
-                <div class="aj-filtros" id="aj_filtros">
-                  <button data-f="todas" class="on" type="button">Todas</button>
-                  <button data-f="para-ver" type="button">Para Ver</button>
-                  <button data-f="pronta" type="button">Prontas</button>
-                  <button data-f="ajuste" type="button">Com Ajuste</button>
+              <!-- O TECLADO. Ele nao tem botao nenhum: so' diz o que as teclas fazem,
+                   porque o assunto desta tela e' fazer cada gesto caber em um segundo,
+                   cento e oitenta vezes seguidas. -->
+              <section class="aj-bloco">
+                <h4>O Teclado</h4>
+                <div class="bn-teclas">
+                  <div class="bn-tecla"><kbd>1</kbd><kbd>4</kbd> trocar de moldura</div>
+                  <div class="bn-tecla"><kbd>↑</kbd><kbd>↓</kbd> mover a filmagem</div>
+                  <div class="bn-tecla"><kbd>+</kbd><kbd>−</kbd> tamanho</div>
+                  <div class="bn-tecla"><kbd>A</kbd> ver ou ajustar</div>
+                  <div class="bn-tecla"><kbd>Enter</kbd> aprovar e ir para a próxima</div>
                 </div>
-                <!-- PULAR PARA UMA PEÇA sem precisar rolar uma fila de cento e
-                     oitenta cartões. Ele mora aqui, e não no rodapé, porque é aqui
-                     que a pergunta "para onde eu vou" está sendo feita. -->
+              </section>
+
+              <!-- ANDAR NA FILA, no fim da coluna. Eram o rodape' da fase inteira. -->
+              <div class="aj-linha nao-quebra aj-pe-dir" style="margin-top:2px">
+                <button class="acao" id="aj_ant" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  Anterior</button>
                 <label class="aj-ir">ir para
                   <input id="aj_ir" type="number" min="1" step="1" inputmode="numeric">
                 </label>
-                <button class="aj-x" id="aj_f_fechar" type="button">&times;</button>
               </div>
-              <div class="aj-folha-grade" id="aj_folha_grade"></div>
-            </div>
+              <button class="acao forte grande bn-ok" id="aj_pronta" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                <span id="aj_pronta_txt">Aprovar E Seguir</span>
+                <span class="aj-atalho">Enter</span>
+              </button>
+          </aside>
+
           </div>
+
+
+          <!-- ---------------------------------------------------------- o rodapé -->
+
+          <!-- A CASA DA OBRA, NO PÉ DESTA FASE.
+
+               ELA NASCEU LÁ EM CIMA e ele corrigiu na hora: "ele não deveria ficar
+               na parte superior, deveria ficar na parte inferior". A barra e o aviso
+               de terminado se mudam para cá quando ele entra nesta fase, e o botão
+               de fabricar desce até ela. Ver `moverAObraPara` no tela.js. -->
+
+          <!-- ------------------------------------------------------- a gaveta
+
+               ELA EMPURRA, E NÃO COBRE: cobrir a peça no exato momento em que ele
+               ajusta a peça era o pior lugar possível para pousar. E se arrasta pela
+               borda, que foi o pedido dele: quem está mexendo em fonte quer a lista
+               larga, quem está só conferindo quer a peça grande. -->
+
+          <!-- A FILA INTEIRA, sob demanda: com quinze ou com cento e oitenta, ela é
+               a mesma folha, e some assim que ele escolhe para onde ir. -->
 
           <!-- FABRICAR É O FIM DA LINHA, e por isso ele pergunta antes, com o número
                na frente. O aviso do navegador não serve: ele não é desta casa. -->

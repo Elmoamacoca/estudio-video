@@ -1,14 +1,14 @@
 """A vaga de edicao: uma maquina da esteira recortando ou montando UMA fatia da leva.
 
 POR QUE ISTO EXISTE, decisao de 25/08/2026. Na casa da VPS nao ha' placa de video e uma
-peca custa uns 6 minutos de recorte; o Gabriel vetou maquina paga maior e vetou voltar
+peca custa uns 5 minutos de montagem; o Gabriel vetou maquina paga maior e vetou voltar
 trabalho para o computador dele. A vaga da esteira e' a saida medida no mesmo dia: o
 mesmo comando de video que leva 60,1 s na casa leva 1,88 s aqui, o repositorio publico
 roda de graca, e vinte vagas cabem ao mesmo tempo.
 
 O DESENHO E' O DA MINERACAO: a oficina da casa fatia o pedido, publica uma ficha de
 retirada com validade, e cada vaga baixa SO' os arquivos da fatia dela, trabalha com AS
-MESMAS FUNCOES da oficina (recortar_uma, ficha_da_peca, camada_da_peca, compor; nada e'
+MESMAS FUNCOES da oficina (camada_da_peca e compor; nada e'
 reescrito aqui, para o local e o despachado nunca divergirem) e devolve um pacote com
 os arquivos prontos e um `_laudo.json`. Quem confere, funde a ficha e guarda na casa e'
 o colhedor da oficina, nunca a vaga: a vaga nao tem chave de nada e nao escreve em
@@ -99,46 +99,25 @@ def main() -> int:
     # desistir dela. Com o laudo sempre presente, fatia incompleta e' fatia contada.
     sinais = ""
     try:
-        if tipo == "recorte":
-            origem = CASA_LOCAL / "levas" / pasta
-            for peca in fatia:
-                nome = str(peca.get("arquivo", ""))
-                # CADA PECA NUM CERCO PROPRIO: um download que falha (posto reiniciou,
-                # rede caiu) vira falha DAQUELA peca, e nao a morte da fatia inteira.
-                try:
-                    baixar(base, ficha, f"levas/{pasta}/{nome}", origem / nome)
-                    nome, achado, laudo, modo = oficina.recortar_uma(
-                        origem, SAIDA, peca, tela)
-                except Exception as e:                              # noqa: BLE001
-                    achado, modo = None, None
-                    laudo = {"arquivo": nome, "erro": f"{type(e).__name__}: {e}"}
-                diario.append(laudo)
-                if laudo.get("erro"):
-                    falhas += 1
-                    print(f"  {feitos + falhas}/{len(fatia)} {nome}: {laudo['erro']}")
-                else:
-                    feitos += 1
-                    if modo == "card":
-                        cards += 1
-                    elif modo == "nao consegui olhar":
-                        cegas += 1
-                    ficha_pecas.append(oficina.ficha_da_peca(nome, achado, laudo, modo))
-                    print(f"  {feitos + falhas}/{len(fatia)} {nome}: {modo}, "
-                          f"{laudo['segundos']}s")
-                # A LETRA DESTA PECA VAI PARA A CASA NA HORA, com o mesmo alfabeto
-                # da barra da tela: c=card, v=cheio, ?=nao consegui olhar, f=falhou.
-                sinais += ("f" if laudo.get("erro")
-                           else "c" if modo == "card"
-                           else "?" if modo == "nao consegui olhar" else "v")
-                avisar(base, ficha, numero, sinais, nome)
-                # O DISCO DA VAGA E' PEQUENO E EMPRESTADO: o bruto ja' usado sai na hora.
-                (origem / nome).unlink(missing_ok=True)
-        else:
+        # O RAMO DE RECORTE SAIU DAQUI EM 03/09/2026, com a espec
+        # `aba-de-edicao-a-bancada`. Ele baixava o bruto de cada peca, chamava
+        # `oficina.recortar_uma` e devolvia um video recortado mais um pedaco da ficha.
+        #
+        # A MEDICAO DEIXOU DE VIAJAR, e nao por defeito: ela le' doze quadros de uma
+        # miniatura por peca e nao codifica nada, entao o transporte de ida e volta
+        # custaria mais que o trabalho. O que continua valendo a viagem e' a FABRICACAO,
+        # por um numero medido: a mesma peca leva 60,1 s na casa e 1,88 s aqui.
+        #
+        # A VAGA PASSOU A TER UM TRABALHO SO', e o `if` de tipo saiu com o segundo ramo.
+        if True:
             from PIL import Image
             camadas: dict[int, tuple] = {}
             for peca in fatia:
                 nome = str(peca.get("arquivo", ""))
-                rel_video = f"recortes/{pasta}/{nome}"
+                # O QUE A VAGA RETIRA E' O BRUTO, e nao mais um recorte (03/09/2026):
+                # o corte no retangulo do B-roll acontece dentro do `compor`, na hora de
+                # montar, do mesmo jeito nos dois lados.
+                rel_video = f"levas/{pasta}/{nome}"
                 try:
                     baixar(base, ficha, rel_video, CASA_LOCAL / rel_video)
                     n = int(peca.get("camada") or 0)
@@ -156,13 +135,12 @@ def main() -> int:
                                        / f"camada-{n}-fundo.png").convert("RGBA"),
                             Image.open(CASA_LOCAL / "despachos" / ficha
                                        / f"camada-{n}-frente.png").convert("RGBA"))
-                    mascara = None
-                    if peca.get("mascara"):
-                        mascara = CASA_LOCAL / str(peca["mascara"])
-                        baixar(base, ficha, str(peca["mascara"]), mascara)
+                    # NAO HA' MAIS MASCARA A BAIXAR, desde 03/09/2026: quem abre o
+                    # furo e' a arte vazada, e ela viaja dentro do proprio PNG da camada
+                    # que a casa pintou. `camada_da_peca` perdeu o parametro.
                     fundo, frente = camadas[n]
                     camada_png = RAIZ / "camada-da-vez.png"
-                    oficina.camada_da_peca(fundo, frente, mascara, tela,
+                    oficina.camada_da_peca(fundo, frente, tela,
                                            peca.get("enquadre")).save(camada_png)
                     laudo = oficina.compor(camada_png, CASA_LOCAL / rel_video,
                                            SAIDA / nome, tela, peca.get("enquadre"))
