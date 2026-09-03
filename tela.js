@@ -780,6 +780,29 @@ function celulaBaixar(p) {
    mudança. */
 const CARR_VIGIA = { id: null, relogio: null, conta: null };
 
+/* O LOTE E A PÁGINA (03/09/2026, espec `carrossel-em-lote`). Três ordens dele na mesma
+   mensagem, com print: marcar mais de um perfil e baixar tudo num arquivo só com cada um
+   separado dentro, paginar a fileira, e o botão de baixar DENTRO do cartão.
+
+   A MARCAÇÃO MORA NUM CONJUNTO, e não no `checked` das caixinhas. A fileira é redesenhada
+   a cada volta de vinte e cinco segundos e a cada troca de página: guardada no elemento, a
+   marcação some sozinha nas duas coisas, e ele marcaria o Matheus na página 2 para achar
+   só o Liam marcado ao voltar. É a mesma lição da escolha de perfis apagada por uma volta
+   ruim de leitura, fechada em 24/08/2026. */
+const CARR_MARCADOS = new Set();
+let CARR_PAGINA = 1;
+let CARR_LISTA = [];
+/* O QUE O DISCO DIZ, e não o que a aba lembra: os pacotes por perfil e o arquivo único.
+   Os dois sobrevivem ao F5 porque vêm do posto, e é dali que sai o rótulo dos botões. */
+let CARR_PACOTES = {};
+let CARR_LOTE = null;
+
+/* SEIS POR PÁGINA. Medido no cartão de hoje: cada linha mede 71px de altura mais 10 de
+   vão, então seis dão 476px de fileira, que cabe na tela sem empurrar o passo seguinte
+   para fora. Com doze a lista já rola sozinha, e paginar deixaria de resolver o que ele
+   pediu. */
+const CARR_POR_PAGINA = 6;
+
 /** Quantos carrosséis dá para baixar de cada perfil, e se a régua já sabe disso. */
 function carrosseisDosPerfis(perfis) {
   const todos = perfis || [];
@@ -820,7 +843,77 @@ function desenhaCarrossel(perfis) {
     naoLido.textContent = dizer ? "A régua ainda não contou carrossel neste acervo. "
       + "Rode uma varredura com carrossel marcado para o pacote aparecer aqui." : "";
   }
-  if (!lista.length) return;
+  if (!lista.length) {
+    /* FILEIRA VAZIA NÃO APAGA A MARCAÇÃO DELE. Lista vazia tem duas causas e elas não são
+       a mesma coisa (trava 2): pode não haver perfil com carrossel, ou a leitura do
+       `selecao.json` e do `estado.json` pode ter falhado nesta volta, e aí `perfis` vem
+       `[]` sem que nada tenha mudado no acervo. Apagando aqui, uma tosse de rede levava
+       catorze perfis marcados embora, calada: medido pelo revisor de código.
+
+       A MARCAÇÃO SÓ SE PODA COM A FILEIRA DE PÉ, logo abaixo. Marca de perfil que saiu de
+       verdade viajaria escondida no próximo pedido, e o posto recusaria o lote por causa
+       de um arroba que a tela não mostra mais. */
+    CARR_LISTA = [];
+    return;
+  }
+  CARR_LISTA = lista;
+  for (const c of [...CARR_MARCADOS]) {
+    if (!lista.some(p => p.conta === c)) CARR_MARCADOS.delete(c);
+  }
+  desenhaOsCartoes();
+  // E O QUE JÁ ESTÁ NO DISCO VOLTA À TELA, mesmo depois do F5. Só quando não há trabalho
+  // em curso: a vigia é mais nova que o disco e não pode ser atropelada por ele.
+  if (!CARR_VIGIA.relogio) acharPacoteNoDisco();
+}
+
+/** Quantas páginas a fileira tem hoje. Nunca menos de uma. */
+function paginasDoCarrossel() {
+  return Math.max(1, Math.ceil(CARR_LISTA.length / CARR_POR_PAGINA));
+}
+
+/** O peso de um arquivo, como ele lê: uma casa decimal e vírgula. */
+function pesoEmMB(bytes) {
+  return ((bytes || 0) / 1048576).toFixed(1).replace(".", ",") + " MB";
+}
+
+/** O rótulo do botão de baixar um perfil: quantos carrosséis e quanto pesa, do disco. */
+function rotuloDoPacote(feito) {
+  /* O NÚMERO SÓ ENTRA QUANDO O POSTO CONSEGUIU CONTAR AS PASTAS DENTRO DO ZIP. Nulo quer
+     dizer "não consegui ler o arquivo", e escrever "0 carrosséis" para isso seria a trava
+     2 no rótulo de um botão que ele vai apertar.
+
+     E ELE DIZ "NO PACOTE", porque na MESMA linha existe outro número de carrosséis: o
+     grande, que é o da régua. Com 41 na coluna e 38 no botão, sem palavra que separe os
+     dois, ele lê que três sumiram. Achado pelo revisor de tela. */
+  const n = feito && feito.pastas;
+  return "Baixar · " + (n ? `${num(n)} no pacote · ` : "")
+    + pesoEmMB(feito && feito.bytes);
+}
+
+/* A MARCAÇÃO DO BOTÃO ANIMADO, escrita uma vez só. São três botões iguais nesta tela (o
+   de montar, o de baixar do cartão e o do lote), e três cópias da mesma marcação divergem
+   no primeiro conserto. O texto entra dentro do `.txt`, que é o que faz o círculo e as
+   duas setas sobreviverem (trava 31). */
+function botaoAnimado(classe, atributos, texto) {
+  return `<button class="btn ${classe}" type="button" ${atributos}
+    ><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"
+      ><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg
+    ><span class="txt">${escapar(texto)}</span><svg class="seta seta-dir"
+      viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>`;
+}
+
+/** Os cartões da página de agora, mais o paginador e a barra do lote. */
+function desenhaOsCartoes() {
+  const alvo = $("carr_perfis");
+  if (!alvo) return;
+  /* A PÁGINA VOLTA QUANDO A FILEIRA ENCOLHE. Estando ele na página 3 e a fileira caindo
+     para seis perfis, sem esta linha a tela desenharia uma página vazia com o paginador
+     dizendo "3 de 1", que é a tela afirmando o que não existe (trava 2). */
+  const paginas = paginasDoCarrossel();
+  CARR_PAGINA = Math.min(Math.max(1, CARR_PAGINA), paginas);
+  const inicio = (CARR_PAGINA - 1) * CARR_POR_PAGINA;
+  const nesta = CARR_LISTA.slice(inicio, inicio + CARR_POR_PAGINA);
+
   /* O CARTAO DO PERFIL, e nao uma linha de tabela.
 
      Ele era o arroba, um numero apagado ao lado e um botao verde chapado, tudo na mesma
@@ -828,41 +921,106 @@ function desenhaCarrossel(perfis) {
      e `nome`, e o endereco da imagem e' o mesmo que a tabela de Minerados usa), o nome em
      cima do arroba, o numero como FIGURA, e o botao animado da casa.
 
-     O BOTAO E' O `.btn` DE SEMPRE (trava 30), com a marcacao inteira dele: o circulo que
-     cresce do meio, as duas setas que trocam de lado e o texto que desliza. Quem escreve
-     dentro dele usa o `dizNoBotao`, nunca `textContent`, senao a animacao e' varrida
-     (trava 31). Aqui ninguem troca o texto, so' o `disabled`. */
-  const html = lista.map(p => `
-    <div class="carr-perfil" data-conta="${p.conta}">
+     E O BOTAO DE BAIXAR MORA AQUI DENTRO desde 03/09/2026, por ordem dele com print e
+     circulo vermelho em volta do botao antigo, que ficava no pe' do cartao: "era pro botao
+     estar no card daquele que eu botei pra baixar. Ai bota um botao desse em destaque".
+
+     COM PACOTE PRONTO, O DESTAQUE E' O DE BAIXAR, e o de montar vira um texto discreto ao
+     lado. Ele continua existindo porque o endereco de midia do Instagram vence em horas: a
+     unica saida para um pacote velho e' montar de novo, e esconder esse caminho deixaria o
+     perfil preso no ZIP de ontem. */
+  const html = nesta.map(p => {
+    const feito = CARR_PACOTES[p.conta];
+    const acoes = feito
+      ? `<button class="carr-refazer" type="button" data-carr="${escapar(p.conta)}"
+          >Montar De Novo</button>`
+        + botaoAnimado("brasa", `data-carr-baixar="${escapar(p.conta)}"`,
+                       rotuloDoPacote(feito))
+      : botaoAnimado("brasa", `data-carr="${escapar(p.conta)}"`, "Montar O Pacote");
+    return `
+    <div class="carr-perfil" data-conta="${escapar(p.conta)}">
+      <label class="carr-check carr-check-um" title="Marcar @${escapar(p.conta)}"
+        ><input type="checkbox" data-carr-marca="${escapar(p.conta)}"></label>
       ${retrato(p)}
       <span class="carr-quem">
-        <b class="carr-nome">${p.nome || "@" + p.conta}</b>
-        <span class="carr-arroba">@${p.conta}</span>
+        <b class="carr-nome">${escapar(p.nome || "@" + p.conta)}</b>
+        ${p.nome ? `<span class="carr-arroba">@${escapar(p.conta)}</span>` : ""}
       </span>
       <span class="carr-numero">
         <b>${num(p.carrosseis_baixaveis)}</b>
         <i>${p.carrosseis_baixaveis === 1 ? "carrossel" : "carrosséis"}</i>
       </span>
-      <button class="btn brasa" type="button" data-carr="${p.conta}"
-        ><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"
-          ><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg
-        ><span class="txt">Montar O Pacote</span><svg class="seta seta-dir"
-          viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-    </div>`).join("");
-  const alvo = $("carr_perfis");
+      <div class="carr-acoes">${acoes}</div>
+    </div>`;
+  }).join("");
   // Desenho igual não se redesenha, a mesma regra da fileira acima: reescrever apagaria o
   // botão sob o cursor a cada volta de vinte e cinco segundos.
   if (alvo.dataset.desenho !== html) {
     alvo.innerHTML = html;
     alvo.dataset.desenho = html;
   }
-  // E O QUE JÁ ESTÁ NO DISCO VOLTA À TELA, mesmo depois do F5. Só quando não há trabalho
-  // em curso: a vigia é mais nova que o disco e não pode ser atropelada por ele.
-  if (!CARR_VIGIA.relogio) acharPacoteNoDisco(lista);
+  /* A MARCAÇÃO SE PINTA DEPOIS, e nunca dentro do desenho. Fosse o `checked` parte do
+     texto, cada clique numa caixinha reescreveria a fileira inteira: o cartão sob o dele
+     some e nasce de novo no mesmo instante do clique, e o segundo clique cai no vazio. */
+  aplicarAMarcacao();
+
+  const pag = $("carr_pag");
+  if (pag) {
+    // PAGINADOR DE UMA PÁGINA SÓ É ENFEITE que promete navegação inexistente.
+    pag.hidden = paginas < 2;
+    const diz = $("carr_pag_diz");
+    if (diz) diz.textContent = `Página ${CARR_PAGINA} de ${paginas}`;
+    pag.querySelectorAll("[data-carr-pag]").forEach(b => {
+      const passo = Number(b.dataset.carrPag);
+      b.disabled = CARR_PAGINA + passo < 1 || CARR_PAGINA + passo > paginas;
+    });
+  }
+  desenhaABarraDoLote();
 }
 
-/** Pergunta ao posto que perfis já têm pacote pronto, e redesenha o botão de baixar. */
-async function acharPacoteNoDisco(lista) {
+/** Põe as caixinhas e o realce de cada cartão de acordo com o conjunto de marcados. */
+function aplicarAMarcacao() {
+  document.querySelectorAll("#carr_perfis .carr-perfil").forEach(L => {
+    const marcado = CARR_MARCADOS.has(L.dataset.conta);
+    L.dataset.marcado = marcado ? "sim" : "nao";
+    const caixa = L.querySelector("[data-carr-marca]");
+    if (caixa) caixa.checked = marcado;
+  });
+  const todos = $("carr_todos");
+  if (todos) {
+    todos.checked = CARR_LISTA.length > 0 && CARR_MARCADOS.size === CARR_LISTA.length;
+    /* O TRAÇO DO MEIO-MARCADO é o único jeito honesto de desenhar "alguns": marcado
+       cheio com dois de catorze diria que está tudo marcado, e vazio esconderia que há
+       marcação viva noutra página. */
+    todos.indeterminate = CARR_MARCADOS.size > 0
+      && CARR_MARCADOS.size < CARR_LISTA.length;
+  }
+}
+
+/** A linha de cima: marcar todos, quantos estão marcados, e montar os pacotes. */
+function desenhaABarraDoLote() {
+  const barra = $("carr_lote");
+  if (!barra) return;
+  // COM UM PERFIL SÓ NÃO HÁ LOTE: marcar seria o mesmo que apertar o botão do cartão dele.
+  barra.hidden = CARR_LISTA.length < 2;
+  const acao = $("carr_lote_acao");
+  if (!acao) return;
+  acao.hidden = CARR_MARCADOS.size === 0;
+  if (acao.hidden) return;
+  const quantos = CARR_MARCADOS.size;
+  /* A CONTA DE CARROSSÉIS SAI DA FICHA DE CADA PERFIL, e não de uma estimativa: é o mesmo
+     número que a coluna do cartão mostra, somado. */
+  const pecas = CARR_LISTA.filter(p => CARR_MARCADOS.has(p.conta))
+    .reduce((s, p) => s + (p.carrosseis_baixaveis || 0), 0);
+  $("carr_lote_diz").textContent =
+    `${num(quantos)} ${quantos === 1 ? "perfil marcado" : "perfis marcados"} · `
+    + `${num(pecas)} ${pecas === 1 ? "carrossel" : "carrosséis"}`;
+  dizNoBotao("carr_montar_lote",
+             quantos === 1 ? "Montar O Pacote" : "Montar Os Pacotes");
+}
+
+/** Pergunta ao posto o que já está pronto no disco: os pacotes por perfil e o lote. */
+async function acharPacoteNoDisco() {
   if (!(await postoDePe())) return;
   let r;
   try {
@@ -870,18 +1028,43 @@ async function acharPacoteNoDisco(lista) {
   } catch (e) {
     return;                      // silêncio de uma volta não é falha, e não apaga nada
   }
-  const feitos = (r && r.d) || {};
-  const meu = (lista || []).map(p => p.conta).find(c => feitos[c]);
-  if (!meu || CARR_VIGIA.relogio) return;
-  /* O NÚMERO DE CARROSSÉIS NÃO SE INVENTA AQUI. O disco sabe o tamanho do arquivo e a hora,
-     e não quantos carrosséis entraram: dizer um número seria a trava 2. O botão diz o que
-     dá para medir, e o resto fica de fora. */
-  const mb = (feitos[meu].bytes || 0) / 1048576;
-  $("carr_baixar_txt").textContent = `Baixar O Pacote De @${meu} · `
-    + `${mb.toFixed(1).replace(".", ",")} MB`;
-  $("carr_baixar").dataset.conta = meu;
-  $("carr_pe").hidden = false;
-  $("carr_conta").textContent = `@${meu}: pacote pronto, montado ${quando(feitos[meu].quando)}.`;
+  if (!r || r.erro) return;      // "não consegui ler" não apaga da tela o que está no disco
+  CARR_PACOTES = r.d || {};
+  /* O MAIS NOVO É O QUE O BOTÃO OFERECE. O posto já devolve a lista ordenada por hora, e
+     o lote de ontem em cima do de agora daria o download errado com cara de certo. */
+  CARR_LOTE = (r.lotes || [])[0] || null;
+  /* E ARQUIVO ÚNICO QUE O POSTO ACHOU MAS NÃO SOUBE LER DIZ ISSO. Some da lista porque não
+     dá para escrever o rótulo dele sem inventar, e some COM RECADO, em vez de sumir calado
+     como se não existisse (trava 2). */
+  if (r.erro_do_lote) dizNoCarrossel(r.erro_do_lote);
+  if (CARR_VIGIA.relogio) return;   // a vigia é mais nova que o disco: ela não é atropelada
+  desenhaOsCartoes();
+  desenhaOPeDoLote();
+}
+
+/** O pé do cartão: só o arquivo único de vários perfis, e só quando ele existe. */
+function desenhaOPeDoLote() {
+  const pe = $("carr_pe");
+  if (!pe) return;
+  pe.hidden = !CARR_LOTE;
+  if (!CARR_LOTE) return;
+  /* O RÓTULO SAI DO DISCO, e nunca de uma soma feita aqui (trava 2): o número de perfis
+     vem da ficha gravada ao lado do arquivo, e o peso vem do tamanho do próprio arquivo. */
+  const n = CARR_LOTE.perfis.length;
+  dizNoBotao("carr_baixar", n === 1
+    ? `Baixar O Arquivo De @${CARR_LOTE.perfis[0]} · ` + pesoEmMB(CARR_LOTE.bytes)
+    : `Baixar Os ${num(n)} Perfis Juntos · ` + pesoEmMB(CARR_LOTE.bytes));
+  $("carr_baixar").dataset.lote = CARR_LOTE.id;
+  $("carr_baixar").title = "Um arquivo com " + CARR_LOTE.perfis.map(c => "@" + c).join(", ");
+  /* A IDADE DO ARQUIVO FICA DITA, e não escondida no `title`. O endereço de mídia do
+     Instagram vence em horas, então "de quando é este ZIP" é a pergunta que decide entre
+     baixar e montar de novo. Ela sai do `quando` do disco, e some quando não há disco que
+     responda: inventar "agora" seria a trava 2. */
+  const quandoDiz = $("carr_pe_quando");
+  if (quandoDiz) {
+    quandoDiz.textContent = CARR_LOTE.quando
+      ? `Montado ${quando(CARR_LOTE.quando)}.` : "";
+  }
 }
 
 /** As fichas dos carrosséis de um perfil, na ordem da régua. */
@@ -891,31 +1074,57 @@ function carrosseisDaConta(conta) {
   }));
 }
 
-async function pedirOPacote(conta) {
-  const recado = $("carr_recado");
-  recado.textContent = "";
-  const carrosseis = carrosseisDaConta(conta);
-  if (!carrosseis.length) {
-    return dizNoCarrossel("A régua conta carrosséis neste perfil, mas nenhum deles tem a "
-      + "lista de lâminas gravada. Rode a varredura de novo com carrossel marcado.");
+/** Manda UM pedido com todos os perfis pedidos. `contas` é o arroba ou uma lista deles. */
+async function pedirOPacote(contas) {
+  const quais = (Array.isArray(contas) ? contas : [contas]).filter(Boolean);
+  dizNoCarrossel("");
+  /* UM PERFIL SEM LISTA DE LÂMINAS NÃO DERRUBA OS OUTROS (trava 7), e o que ficou de fora
+     é dito em voz alta. O contrário seria pior dos dois jeitos: cancelar o lote inteiro
+     por causa de um, ou seguir calado deixando ele achar que baixou tudo. */
+  const perfis = [];
+  const sem = [];
+  for (const c of quais) {
+    const carrosseis = carrosseisDaConta(c);
+    if (carrosseis.length) perfis.push({ conta: c, carrosseis });
+    else sem.push(c);
+  }
+  if (!perfis.length) {
+    return dizNoCarrossel("A régua conta carrosséis "
+      + (quais.length === 1 ? "neste perfil" : "nestes perfis")
+      + ", mas nenhum deles tem a lista de lâminas gravada. Rode a varredura de novo com "
+      + "carrossel marcado.");
   }
   const id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  const b = document.querySelector(`[data-carr="${conta}"]`);
-  if (b) b.disabled = true;
+  const total = perfis.reduce((s, p) => s + p.carrosseis.length, 0);
+  const botoes = [...document.querySelectorAll("[data-carr]"), $("carr_montar_lote")]
+    .filter(Boolean);
+  botoes.forEach(b => { b.disabled = true; });
   try {
     /* PACIÊNCIA MAIOR QUE A PADRÃO: o corpo leva a lista de lâminas de todos os
-       carrosséis do perfil, que é o segundo maior pedido do sistema depois da montagem. */
-    const r = await noPosto("/carrossel", { id, conta, carrosseis }, 60000);
+       carrosséis de todos os perfis, que é o segundo maior pedido do sistema depois da
+       montagem. Com dois perfis grandes ele dobra, e por isso o prazo dobrou junto. */
+    const r = await noPosto("/carrossel", { id, perfis }, 120000);
+    /* O RECADO ENTRA DEPOIS DA VIGIA, e não antes. A primeira coisa que `vigiarOPacote`
+       faz é limpar o cartão vermelho, então escrever antes dela é escrever e apagar no
+       MESMO tique: medido pelo revisor de tela, os dois em 4675 ms. Um lote de oito
+       perfis prometia 142 carrosséis, pedia 40, e a tela não dizia uma palavra sobre os
+       sete que ficaram de fora; e o 202 do posto ("o pedido ficou guardado, mas eu não
+       consegui começar agora") era engolido igual, com a barra desenhada por cima
+       afirmando que estava baixando. É a trava 2 pela ordem das linhas. */
+    vigiarOPacote(id, perfis.map(p => p.conta), total);
     // ACORDEI FALSO NÃO É FALHA: o pedido ficou gravado e a resposta diz o que fazer. O
     // recado aparece e a vigia começa mesmo assim, porque um `--fila` na casa o cumpre.
     if (r && r.erro) dizNoCarrossel(r.erro);
-    vigiarOPacote(id, conta, carrosseis.length);
+    else if (sem.length) {
+      dizNoCarrossel(`Fiquei sem a lista de lâminas de ${sem.map(c => "@" + c).join(", ")}`
+        + ", e por isso esses ficaram de fora. Os outros estão sendo montados.");
+    }
   } catch (e) {
     // O `noPosto` já traduz o 409 do clique repetido e o 401 da sessão vencida na
     // mensagem do erro; escrever outra por cima esconderia a que sabe o motivo.
     dizNoCarrossel(String((e && e.message) || e));
   } finally {
-    if (b) b.disabled = false;
+    botoes.forEach(b => { b.disabled = false; });
   }
 }
 
@@ -982,48 +1191,125 @@ function desenhaOPacote(a, conta, total) {
      o botão eram de UM deles e não diziam qual: lido de cima para baixo, "40 carrosséis"
      seguido de "7 de 7 carrosséis" era a lista contradizendo o recado ao lado. Achado pelo
      revisor de tela em 02/09/2026, medido com três perfis. */
-  const quem = conta ? `@${conta}: ` : "";
-  $("carr_conta").textContent = quem
-    + `${num(feitas)} de ${num(quantos)} ${quantos === 1 ? "carrossel" : "carrosséis"}`
-    + (parciais ? ` · ${num(parciais)} com lâmina faltando` : "")
-    + (falhados ? ` · ${num(falhados)} não saíram` : "")
-    + (deuErro ? " · o pacote não foi montado" : "");
-  // E A LINHA DO PERFIL DE QUE A BARRA FALA FICA ACESA, para o olho achar de qual é.
+  /* DE QUAL PERFIL É A VEZ QUEM DIZ É O ANDAMENTO, e não quem armou a vigia. Num lote a
+     casa anda de perfil em perfil, e o arroba que a tela mostra tem de andar junto: o
+     nome fixo do começo diria "@liamjohnston.ai" durante a meia hora do @omatheusdaia. */
+  const dele = a.conta || conta || "";
+  const quem = dele ? `@${dele}: ` : "";
+  const quantosPerfis = a.perfis_total || 0;
+  const ondeEstamos = (quantosPerfis > 1
+    ? ` · perfil ${num(a.perfil_n || 1)} de ${num(quantosPerfis)}` : "");
+  /* A PRIMEIRA LÂMINA LEVA DEZENAS DE SEGUNDOS, e a espera continua tendo nome enquanto
+     ela desce. O nome era escrito por `vigiarOPacote` e sobrevivia DOZE MILISSEGUNDOS: o
+     posto grava o andamento antes mesmo de acordar o processo, então a primeira volta já
+     traz dado e esta linha reescrevia por cima com "0 de 40 carrosséis". Cronometrado pelo
+     revisor de tela, e é a mesma regressão que o comentário do `vigiarOPacote` diz ter
+     consertado em 02/09/2026. Toda espera tem nome nesta casa. */
+  /* O NÚMERO DA FRENTE É O QUE FICOU PRONTO, e não o que foi TENTADO. `feitas` anda a cada
+     carrossel tentado, inclusive o que falhou, e com isso a linha saía "40 de 40
+     carrosséis · 40 não saíram", que se contradiz sozinha. Medido pelo revisor de tela.
+     Prontos mais falhados dá o total tentado, e as duas metades fecham a conta. */
+  const prontos = (a.completos || 0) + parciais;
+  $("carr_conta").textContent = (!feitas && !deuErro)
+    ? `Baixando As Lâminas De @${dele} · 0 de ${num(quantos)} `
+      + (quantos === 1 ? "carrossel" : "carrosséis") + ondeEstamos
+    : quem
+      + `${num(prontos)} de ${num(quantos)} ${quantos === 1 ? "carrossel" : "carrosséis"}`
+      + ondeEstamos
+      + (parciais ? ` · ${num(parciais)} com lâmina faltando` : "")
+      + (falhados ? ` · ${num(falhados)} não saíram` : "")
+      + (deuErro ? " · o pacote não foi montado" : "");
+  /* O PACOTE DE CADA PERFIL APARECE NO CARTÃO DELE ASSIM QUE ELE ACABA, e não no fim do
+     lote: a casa empacota perfil a perfil de propósito, e guardar isso para o fim faria o
+     primeiro perfil ficar meia hora pronto e mudo enquanto o segundo baixa.
+
+     OS NÚMEROS SAEM DO DISCO, e nunca de uma soma feita aqui (trava 2). O ZIP comprime,
+     então somar o que entrou mostraria no botão um peso que o download desmente no minuto
+     seguinte. */
+  let mudou = false;
+  const anotarPacote = (c, p) => {
+    if (!c || !p || !p.ok) return;
+    /* O NÚMERO DE CARROSSÉIS NÃO VEM DAQUI, E O VELHO NÃO FICA PENDURADO. O andamento sabe
+       quantos ARQUIVOS entraram (o PDF, a descrição e o `faltou.txt` de cada um), que é
+       outro número: quem conta as pastas é quem abre o ZIP, e isso é do lado do posto.
+
+       O ESPALHAMENTO DO QUE JÁ ESTAVA GUARDADO carregava o `pastas` da rodada ANTERIOR
+       junto com o peso da rodada de agora, e o botão saía "Baixar · 48 carrosséis ·
+       0,4 MB" numa remontagem que trouxe um carrossel só. Medido pelo revisor de código.
+       Peso novo apaga a conta velha; ela volta na primeira leitura do disco. */
+    const antes = CARR_PACOTES[c];
+    if (antes && antes.bytes === p.bytes) return;
+    CARR_PACOTES[c] = { bytes: p.bytes };
+    mudou = true;
+  };
+  for (const p of (a.perfis || [])) anotarPacote(p.conta, p.pacote);
+  /* PEDIDO DE UM PERFIL SÓ continua guardando o pacote no campo antigo, e a casa também o
+     escreve assim. COM VÁRIOS PERFIS ELE NÃO SERVE: no meio do lote a casa já trocou o
+     `conta` para o perfil da vez e ainda não trocou o `pacote`, então casar os dois
+     pendurava o ZIP do perfil 1 no cartão do perfil 2, com o botão prometendo 31,6 MB
+     sobre zero carrossel em disco. Medido pelo revisor de tela, com o clique navegando a
+     aba para um 404. Com lote, quem manda é a lista `perfis`, que traz os dois juntos. */
+  if ((a.perfis_total || 1) <= 1) anotarPacote(dele, a.pacote);
+  if (mudou) desenhaOsCartoes();
+
+  /* E A LINHA DO PERFIL DE QUE A BARRA FALA FICA ACESA, para o olho achar de qual é. Ela
+     vem DEPOIS do redesenho: escrita antes, o `innerHTML` novo a apagava, e o realce só
+     aparecia na terceira volta. Medido pelo revisor de tela: nada aceso em 300 ms e em
+     1000 ms, e a linha certa só em 2500 ms. */
   document.querySelectorAll("#carr_perfis .carr-perfil").forEach(L => {
-    L.dataset.escolhido = L.dataset.conta === conta ? "sim" : "nao";
+    L.dataset.escolhido = L.dataset.conta === dele ? "sim" : "nao";
   });
 
-  const pe = $("carr_pe");
-  const pacote = a.pacote || {};
-  const pronto = a.estado === "pronto" && pacote.ok;
-  pe.hidden = !pronto;
-  if (pronto) {
-    /* OS DOIS NÚMEROS SAEM DO DISCO, e nunca de uma soma feita aqui (critério 21 e trava
-       2). O ZIP comprime, então somar o que entrou mostraria no botão um peso que o
-       download desmente no minuto seguinte. */
-    const mb = (pacote.bytes || 0) / 1048576;
-    $("carr_baixar_txt").textContent = `Baixar O Pacote De @${conta} · `
-      + `${num((a.completos || 0) + parciais)} carrosséis, `
-      + `${mb.toFixed(1).replace(".", ",")} MB`;
-    $("carr_baixar").dataset.conta = conta;
+  const lote = a.lote || null;
+  if (lote && lote.ok) {
+    CARR_LOTE = { id: lote.id, perfis: lote.perfis || [], bytes: lote.bytes,
+                  quando: Math.floor(Date.now() / 1000) };
+    desenhaOPeDoLote();
+  } else if (lote && lote.erro) {
+    /* LOTE QUE NÃO SAIU DIZ QUE NÃO SAIU. Sem este ramo a casa escrevia o motivo no
+       andamento, a tela lia e não fazia nada com ele, e o pé continuava oferecendo o
+       arquivo do lote ANTERIOR como se fosse o resultado do gesto de agora. Medido pelo
+       revisor de código, com o `data-lote` inalterado antes e depois. */
+    dizNoCarrossel(lote.erro);
   }
   if (deuErro) dizNoCarrossel(a.erro || "O pacote não foi montado.");
+  else if (a.sem_pacote && a.sem_pacote.length) {
+    // UM PERFIL QUE FALHOU NÃO APAGA OS OUTROS, e não some calado: o relatório diz o que
+    // NÃO foi feito com o mesmo destaque do que deu certo.
+    dizNoCarrossel(`Não saiu pacote de ${a.sem_pacote.map(c => "@" + c).join(", ")}. Os `
+      + "endereços de mídia do Instagram vencem em horas: minere de novo e peça o pacote "
+      + "em seguida.");
+  }
 }
 
-function vigiarOPacote(id, conta, total) {
+function vigiarOPacote(id, contas, total) {
+  const quais = Array.isArray(contas) ? contas : [contas];
+  const conta = quais[0] || "";
   if (CARR_VIGIA.relogio) clearInterval(CARR_VIGIA.relogio);
   CARR_VIGIA.id = id;
   CARR_VIGIA.conta = conta;
   dizNoCarrossel("");
   desenhaAsMarcas(".".repeat(total), total);
+  /* E O OLHO VAI ATE' A RESPOSTA. Medido pelo revisor de tela numa janela de 1920 por 907:
+     ele aperta um botão que está no alto 518, e a barra nasce no alto 1060, a linha em
+     1076 e o cartão vermelho de 1056 a 1102, com `scrollY` em zero antes e depois. A folha
+     esconde a barra de rolagem, então nem ela sugeria que havia algo embaixo: na prática o
+     clique não mudava nada na tela. É a trava 64f, que a fase 6 já tinha aprendido. */
+  const caixa = $("cx_carrossel");
+  if (caixa && caixa.scrollIntoView) {
+    caixa.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
   /* TODA ESPERA TEM NOME nesta casa ("Abrindo O Reel", "Medindo O Reel", "Descendo A
      Filmagem"): tela parada e calada ele chama de bugada, e está certo. Aqui a primeira
      lâmina leva dezenas de segundos, e a versão anterior dizia apenas "0 de 2 carrosséis"
      por quase um minuto. Achado pelo revisor de tela, cronometrado. */
   $("carr_conta").textContent = `Baixando As Lâminas De @${conta} · 0 de ${num(total)} `
-    + (total === 1 ? "carrossel" : "carrosséis");
+    + (total === 1 ? "carrossel" : "carrosséis")
+    + (quais.length > 1 ? ` · perfil 1 de ${num(quais.length)}` : "");
   $("carr_trilha").dataset.erro = "nao";
-  $("carr_pe").hidden = true;
+  /* O PÉ NÃO SE ESCONDE AQUI. Ele oferece um arquivo que está no disco: montar um lote
+     novo não apaga o de antes, e apagá-lo da tela enquanto o arquivo existe seria a tela
+     negando o que ela mesma acabou de ler do disco. */
 
   const olhar = async () => {
     let r;
@@ -1048,26 +1334,95 @@ function vigiarOPacote(id, conta, total) {
     if (a.estado === "pronto" || a.estado === "erro") {
       clearInterval(CARR_VIGIA.relogio);
       CARR_VIGIA.relogio = null;
+      /* E O DISCO DÁ A ÚLTIMA PALAVRA, na hora. O andamento sabe quantos ARQUIVOS entraram
+         no ZIP; quantos CARROSSÉIS são só o próprio arquivo diz, e quem o abre é o posto.
+         Sem esta linha o rótulo ficaria sem a conta até a volta de vinte e cinco segundos,
+         e ele leria "Baixar · 33,1 MB" logo depois de a barra ter contado 48. */
+      acharPacoteNoDisco();
     }
   };
   olhar();
   CARR_VIGIA.relogio = setInterval(olhar, 1500);
 }
 
-/* OS DOIS CLIQUES DO CARTÃO. `data-carr` é atributo NOVO, e não emprestado de outro gesto:
+/* O DOWNLOAD VAI PELO NAVEGADOR, e não por `fetch`. O ZIP tem dezenas de megabytes e
+   buscá-lo por programa poria tudo na memória da aba antes de gravar. As duas rotas mandam
+   `Content-Disposition: attachment`, então o navegador grava direto, com barra própria.
+
+   E ELE VAI POR UM QUADRO ESCONDIDO, e não pela própria aba. Com `location.assign`, uma
+   resposta que NÃO é anexo (o 404 de um pacote apagado do disco, o 400 de um id torto)
+   troca a página inteira pelo JSON do erro: medido pelo revisor de tela, o Estúdio saiu do
+   ar com um lote em curso, levando junto a barra e a vigia. No quadro escondido o anexo
+   baixa igual e o erro cai onde ninguém vê. */
+function baixarDoPosto(rota) {
+  const sumidouro = $("carr_sumidouro");
+  if (!sumidouro) return window.location.assign(POSTO + rota);
+  /* E O ERRO NÃO FICA MUDO LÁ DENTRO. Anexo que baixa nem chega a carregar o quadro; o que
+     carrega é a resposta de erro, e ela é do MESMO endereço, então dá para ler e trazer
+     para o cartão vermelho. Sem isto, o clique num pacote que sumiu do disco não faria
+     nada nenhuma vez, que é a outra metade da trava 2. */
+  sumidouro.onload = () => {
+    try {
+      const corpo = (sumidouro.contentDocument
+        && sumidouro.contentDocument.body
+        && sumidouro.contentDocument.body.innerText) || "";
+      if (!corpo.includes('"erro"')) return;
+      const d = JSON.parse(corpo);
+      if (d && d.erro) dizNoCarrossel(d.erro);
+    } catch (e) {
+      // quadro que não deixa ler é quadro que baixou: não há erro para contar
+    }
+  };
+  sumidouro.src = POSTO + rota;
+}
+
+/* OS CLIQUES DO CARTÃO. Cada gesto tem atributo PRÓPRIO, e nenhum é emprestado de outro:
    em 27/08/2026 o Abrir do cardzinho reusou o `data-abrir` dos links de pasta e o ouvinte
    global do documento atendeu junto, escrevendo "essa pasta mora na casa do Estúdio" dentro
    do botão. Atributo com ouvinte global nunca se reusa. */
 document.addEventListener("click", ev => {
   const montar = ev.target.closest("[data-carr]");
-  if (montar) return pedirOPacote(montar.dataset.carr);
-  const baixar = ev.target.closest("#carr_baixar");
-  if (!baixar || !baixar.dataset.conta) return;
-  /* O DOWNLOAD VAI PELO NAVEGADOR, e não por `fetch`. O ZIP tem dezenas de megabytes e
-     buscá-lo por programa poria tudo na memória da aba antes de gravar. A rota manda
-     `Content-Disposition: attachment`, então o navegador grava direto, com barra própria. */
-  window.location.assign(
-    POSTO + "/carrossel-pacote?conta=" + encodeURIComponent(baixar.dataset.conta));
+  if (montar) return pedirOPacote([montar.dataset.carr]);
+
+  const umZip = ev.target.closest("[data-carr-baixar]");
+  if (umZip) {
+    return baixarDoPosto("/carrossel-pacote?conta="
+      + encodeURIComponent(umZip.dataset.carrBaixar));
+  }
+
+  const oLote = ev.target.closest("#carr_baixar");
+  if (oLote && oLote.dataset.lote) {
+    return baixarDoPosto("/carrossel-lote?id=" + encodeURIComponent(oLote.dataset.lote));
+  }
+
+  const pagina = ev.target.closest("[data-carr-pag]");
+  if (pagina) {
+    CARR_PAGINA += Number(pagina.dataset.carrPag);
+    return desenhaOsCartoes();
+  }
+
+  const juntos = ev.target.closest("#carr_montar_lote");
+  if (juntos) return pedirOPacote([...CARR_MARCADOS]);
+});
+
+/* A MARCAÇÃO É `change`, E NÃO `click`. Caixinha marcada pelo teclado (barra de espaço)
+   não dispara clique em navegador nenhum, e o gesto ficaria mudo para quem não usa mouse. */
+document.addEventListener("change", ev => {
+  const uma = ev.target.closest("[data-carr-marca]");
+  if (uma) {
+    const conta = uma.dataset.carrMarca;
+    if (uma.checked) CARR_MARCADOS.add(conta); else CARR_MARCADOS.delete(conta);
+    aplicarAMarcacao();
+    return desenhaABarraDoLote();
+  }
+  if (!ev.target.closest("#carr_todos")) return;
+  /* MARCAR TODOS É A FILEIRA INTEIRA, e não a página. Marcar seis de catorze e chamar isso
+     de "todos" seria a tela dizendo o que ela não fez, e o pedido sairia com oito perfis a
+     menos sem uma linha em lugar nenhum. */
+  CARR_MARCADOS.clear();
+  if (ev.target.checked) CARR_LISTA.forEach(p => CARR_MARCADOS.add(p.conta));
+  aplicarAMarcacao();
+  desenhaABarraDoLote();
 });
 
 function desenhaMinerados() {

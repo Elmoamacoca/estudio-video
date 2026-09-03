@@ -3138,8 +3138,99 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .carr-perfil:hover{border-color:color-mix(in srgb, var(--accent) 40%, var(--rule-solid));
   transform:translateY(-1px)}
 .carr-perfil[data-escolhido="sim"]{border-color:var(--accent);background:var(--accent-tint)}
+/* MARCADO E EM CURSO SAO ESTADOS DIFERENTES, e por isso desenham diferente: o marcado
+   ganha um traco a' esquerda, o em curso pinta o cartao inteiro. Fossem os dois iguais,
+   ele nao teria como saber qual perfil a barra esta' contando. */
+.carr-perfil[data-marcado="sim"]{border-color:color-mix(in srgb,var(--accent) 55%,
+  var(--rule-solid));box-shadow:inset 3px 0 0 var(--accent)}
 .carr-perfil .pcard-retrato{flex:0 0 42px;width:42px;height:42px}
 .carr-perfil .pcard-avatar{border-width:2px;font-size:16px}
+
+/* A CAIXINHA DE MARCAR E' A MESMA MECANICA DA `.escolha` dos filtros, e nao um desenho
+   novo: o mesmo quadrado de 16px, o mesmo risco branco, a mesma cor de marca. Copiar o
+   desenho a mao e' como esta tela ja' desenhou o miolo ampliado de uma foto. */
+.carr-check{display:flex;align-items:center;gap:8px;cursor:pointer;flex:none;
+  font-size:12.5px;color:var(--muted);user-select:none}
+.carr-check input{appearance:none;-webkit-appearance:none;flex:none;width:16px;height:16px;
+  border:1.5px solid var(--rule-solid);border-radius:5px;
+  background:var(--paper);cursor:pointer;position:relative}
+.carr-check input:checked{border-color:var(--accent);background:var(--accent)}
+.carr-check input:checked::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;
+  height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+/* O TRACO DO MEIO-MARCADO. Marcado cheio com dois de catorze diria que esta' tudo
+   marcado; vazio esconderia que ha' marcacao viva noutra pagina. */
+.carr-check input:indeterminate{border-color:var(--accent);background:var(--accent)}
+.carr-check input:indeterminate::after{content:"";position:absolute;left:3px;top:6px;
+  width:8px;height:2px;background:#fff;border-radius:1px}
+.carr-check-um{gap:0}
+
+/* AS ACOES DO CARTAO. Com pacote pronto sao duas: o destaque e' o de baixar, e o de
+   montar de novo fica ao lado dele, menor.
+   A LARGURA MINIMA E' O QUE MANTEM A COLUNA RETA. Medido pelo revisor de tela: sem ela, a
+   linha que tem pacote pronto empurra o numero de x=1306 para x=1133, cento e setenta e
+   tres pixels, e a coluna quebra no MEIO da fileira. */
+.carr-acoes{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:none}
+
+/* E AS CINCO COLUNAS SAO AS MESMAS EM TODA A FILEIRA, com `subgrid`.
+   Medido pelo revisor de tela: com cada cartao sendo uma caixa flexivel propria, a linha
+   que tem pacote pronto empurrava o numero de x=1306 para x=1133, cento e setenta e tres
+   pixels, e a coluna quebrava no MEIO da fileira. Largura minima nas acoes nao resolve:
+   a caixa delas mede 356px com "48 no pacote" e cresceria com "160 no pacote", entao
+   qualquer numero cravado envelhece na primeira leva maior.
+   O `@supports` existe porque `subgrid` e' recente; sem ele, a fileira volta a ser a
+   coluna de caixas flexiveis de antes, que desalinha mas nao quebra. */
+@supports (grid-template-columns: subgrid) {
+  .carr-perfis{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto auto}
+  .carr-perfil{display:grid;grid-column:1 / -1;grid-template-columns:subgrid;
+    align-items:center}
+  .carr-numero{margin-left:0}
+}
+/* E O MONTAR DE NOVO E' BOTAO, e nao texto solto. Texto de 88x18 a 12px/400 colado numa
+   pilula de 151x37 a 12,5px/700 sao duas familias de controle na mesma linha, que e' a
+   queixa "todo bugado" da trava 71f com dois em vez de tres. */
+.carr-refazer{background:transparent;cursor:pointer;font:inherit;
+  font-size:12px;font-weight:600;color:var(--muted);padding:7px 14px;
+  border:1px solid var(--rule-solid);border-radius:100px;white-space:nowrap;
+  transition:border-color .16s ease,color .16s ease}
+.carr-refazer:hover{color:var(--ink);border-color:var(--accent)}
+.carr-refazer:disabled{opacity:.45;cursor:default}
+
+/* O SUMIDOURO DO DOWNLOAD nao ocupa nada, e nao e' `hidden`: quadro escondido pelo
+   atributo pode nao carregar em navegador nenhum, e e' o carregamento dele que faz o
+   arquivo baixar. Fora de fluxo e de tamanho zero e' o unico jeito que serve. */
+#carr_sumidouro{position:absolute;width:0;height:0;border:0;visibility:hidden}
+
+/* A BARRA DO LOTE, acima da fileira. Ela so' existe com dois perfis ou mais, e o grupo da
+   direita so' existe com alguem marcado: botao de montar nada e' botao que so' pode dar
+   erro. As duas linhas irmas de `[hidden]` sao a trava 66g, que ja' voltou por quatro
+   caminhos diferentes nesta tela: o esconder do navegador vale ZERO de especificidade e
+   perde para qualquer `display` de autor. */
+.carr-lote{display:flex;align-items:center;gap:14px;margin:18px 0 0;padding:10px 14px;
+  border:1px dashed var(--rule-solid);border-radius:var(--r-md)}
+.carr-lote[hidden]{display:none}
+.carr-lote-acao{display:flex;align-items:center;gap:12px;margin-left:auto}
+.carr-lote-acao[hidden]{display:none}
+.carr-lote-diz{font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+.carr-lote .btn{flex:none;font-size:12.5px;padding:8px 20px;--desl:7px}
+.carr-lote .btn .seta{width:12px;height:12px}
+.carr-lote .btn .seta-dir{right:11px}
+.carr-lote .btn:hover .seta-esq{left:11px}
+
+/* O PAGINADOR. Ele fica embaixo da fileira, centrado, e some com uma pagina so'. */
+.carr-pag{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}
+.carr-pag[hidden]{display:none}
+.carr-pag-diz{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;
+  min-width:110px;text-align:center}
+.carr-pag-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;
+  padding:0;cursor:pointer;border:1px solid var(--rule-solid);border-radius:var(--r-sm);
+  background:var(--paper-2);color:var(--ink);
+  transition:border-color .16s ease,color .16s ease}
+.carr-pag-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.carr-pag-btn:disabled{opacity:.35;cursor:default}
+/* O DESENHO DA SETA TEM TAMANHO PROPRIO, porque o `.carr-pag-btn` nao dimensiona svg. E'
+   a licao da trava 73h: sem esta regra o icone sai no tamanho natural dele e vaza para
+   fora do botao, e a comparacao com a maquete passa verde do mesmo jeito. */
+.carr-pag-btn svg{width:16px;height:16px;flex:none}
 
 /* NOME EM CIMA, ARROBA EMBAIXO: sao duas coisas, e a que ele reconhece e' o nome.
    `min-width:0` para o nome comprido cortar em vez de empurrar o resto do cartao. */
@@ -3164,7 +3255,11 @@ body.aj-arrastando .aj-gaveta{transition:none}
 /* O BOTAO DO CARTAO E' MENOR QUE O `.btn` PADRAO, porque ele divide a linha com o
    retrato e o numero. O `--desl` encolhe junto: num botao de folga pequena, um passo
    grande joga a palavra por cima da seta da direita (a razao esta' escrita no `.btn`). */
-.carr-perfil .btn{flex:none;font-size:12.5px;padding:8px 20px;--desl:7px}
+/* E A FOLGA DA DIREITA CABE O DESLIZE. Medido na foto de 03/09/2026: com `padding` de
+   20px e `--desl` de 7, o "Baixar · 3 carrosséis · 5,2 MB" passava do canto no hover e o
+   "MB" ficava cortado pela borda arredondada. O rotulo do botao cresceu quando o download
+   mudou para dentro do cartao, e a folga tinha sido calibrada com "Montar O Pacote". */
+.carr-perfil .btn{flex:none;font-size:12.5px;padding:8px 24px;--desl:5px}
 .carr-perfil .btn .seta{width:12px;height:12px}
 .carr-perfil .btn .seta-dir{right:11px}
 .carr-perfil .btn:hover .seta-esq{left:11px}

@@ -113,6 +113,12 @@ CARROSSEIS = CASA / "carrosseis"                  # uma pasta por perfil, com as
 CARROSSEIS_PEDIDOS = CARROSSEIS / "pedidos"       # a caixa de recados da tela para ca'
 CARROSSEIS_PACOTES = CARROSSEIS / "pacotes"       # o ZIP que ele baixa, um por perfil
 
+# O LOTE E' SUBPASTA DOS PACOTES, e nao vizinha, por uma razao de codigo: quem lista os
+# pacotes por perfil faz `pacotes/*.zip`, e esse molde nao enxerga subpasta. Fosse o lote
+# um `pacotes/lote-xxx.zip`, cada lote apareceria na tela como se fosse um PERFIL chamado
+# `lote-xxx`, e a conta de quem tem pacote pronto passaria a mentir a cada lote montado.
+CARROSSEIS_LOTES = CARROSSEIS_PACOTES / "_lotes"  # o arquivo unico de varios perfis
+
 # A EDICAO DESPACHADA PARA A ESTEIRA, desde 25/08/2026. `despachos/<ficha>.json` e' o
 # manifesto que a rota de retirada do posto serve as vagas; `despachos/<ficha>/` guarda
 # as camadas pintadas que viajam junto; `pedidos/despachados/` e' o estado de cada
@@ -187,7 +193,22 @@ ACERVO_CRU = f"https://raw.githubusercontent.com/{DONO}/{REPO}/main"
 CASA_PUBLICA = os.environ.get("ESTUDIO_ENDERECO") or "https://estudio.borusa.com.br"
 PONTE = "https://estudio-ponte.gabrieltorres.workers.dev"
 VITRINE = f"https://{DONO.lower()}.github.io"
-PORTA_DO_POSTO = 8787
+# A PORTA DO POSTO, e a variavel de ambiente existe por causa de DUAS COPIAS DO PROJETO no
+# mesmo disco. Medido pelo revisor de provas em 03/09/2026: com o posto de outra pasta
+# segurando a 8787, o `ver.py` e o `maquete.py` mediam a arvore do vizinho e chamavam de
+# verde (1.537.677 bytes servidos contra 1.531.684 no disco desta). Quem confere isso e' o
+# `ver.quem_ele_serve`; esta variavel e' a saida para quem quer as duas de pe' ao mesmo
+# tempo, e o padrao continua sendo o de sempre.
+def _porta_do_posto() -> int:
+    cru = os.environ.get("ESTUDIO_PORTA_DO_POSTO")
+    try:
+        n = int(cru) if cru else 0
+    except ValueError:
+        n = 0
+    return n if 1024 <= n <= 65535 else 8787
+
+
+PORTA_DO_POSTO = _porta_do_posto()
 
 
 def criar(pasta: Path) -> Path:

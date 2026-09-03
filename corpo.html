@@ -605,25 +605,80 @@
       <p class="nota">O carrossel não passa pela esteira: a casa baixa direto e monta um
         PDF por carrossel, com as lâminas na ordem e a descrição ao lado.</p>
 
+      <!-- ==================================== A BARRA DO LOTE (03/09/2026)
+
+           Ordem dele: "eu nao consigo selecionar mais de uma pessoa pra baixar... eu
+           quiser voltar pra montar o pacote de todos de uma vez e baixar todos de uma
+           vez e o arquivo RAR separar cada um". Espec `carrossel-em-lote`.
+
+           A LINHA INTEIRA SO' EXISTE COM DOIS PERFIS OU MAIS, porque com um perfil so'
+           marcar e' o mesmo que apertar o botao do cartao dele. E O GRUPO DA DIREITA
+           (a conta e o botao) so' existe com alguem marcado: botao de montar nada e'
+           botao que so' pode dar erro. -->
+      <div class="carr-lote" id="carr_lote" hidden>
+        <label class="carr-check" title="Marcar todos os perfis desta fileira">
+          <input type="checkbox" id="carr_todos"><span>Marcar Todos</span></label>
+        <div class="carr-lote-acao" id="carr_lote_acao" hidden>
+          <span class="carr-lote-diz" id="carr_lote_diz"></span>
+          <!-- O BOTAO ANIMADO DA CASA (trava 30), e quem troca o texto dele escreve
+               DENTRO do `.txt` pelo `dizNoBotao`, nunca no botao inteiro (trava 31). -->
+          <button class="btn brasa" id="carr_montar_lote" type="button"
+            ><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"
+              ><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg
+            ><span class="txt">Montar Os Pacotes</span><svg
+              class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path
+              d="m12 5 7 7-7 7"/></svg></button>
+        </div>
+      </div>
+
       <div class="carr-perfis" id="carr_perfis"></div>
+
+      <!-- ==================================== O PAGINADOR
+
+           Ordem dele na mesma mensagem: "eu tambem nao tenho a opcao de paginar". Ele
+           SO' EXISTE COM MAIS DE UMA PAGINA: paginador de uma pagina so' e' enfeite que
+           promete navegacao que nao existe. -->
+      <div class="carr-pag" id="carr_pag" hidden>
+        <button type="button" class="carr-pag-btn" data-carr-pag="-1"
+                aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <span class="carr-pag-diz" id="carr_pag_diz"></span>
+        <button type="button" class="carr-pag-btn" data-carr-pag="1"
+                aria-label="Próxima página"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
 
       <div class="carr-trilha" id="carr_trilha" hidden></div>
       <p class="carr-conta" id="carr_conta"></p>
 
+      <!-- O PE' E' SO' DO ARQUIVO UNICO, desde 03/09/2026. O download de UM perfil mudou
+           para dentro do cartao dele por ordem dele, com print e circulo vermelho em
+           volta deste botao: "o botao pra baixar deve ficar no card e nao abaixo... era
+           pro botao estar no card daquele que eu botei pra baixar".
+
+           O LOTE FICA AQUI porque ele nao tem cartao onde morar: ele e' de VARIOS perfis,
+           e pendurar num deles diria que o arquivo e' daquele perfil. -->
       <div class="carr-pe" id="carr_pe" hidden>
-        <!-- O BOTAO ANIMADO DA CASA (trava 30), e o `carr_baixar_txt` E' O `.txt` dele:
-             quem escreve o rotulo (`desenhaOPacote` e `acharPacoteNoDisco`) escreve DENTRO
-             do span, e por isso o circulo e as duas setas sobrevivem. Escrever no botao
-             inteiro varreria a animacao e deixaria uma pilula muda (trava 31). -->
         <button class="btn brasa grande" id="carr_baixar" type="button"
           ><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"
             ><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg
-          ><span class="txt" id="carr_baixar_txt">Baixar O Pacote</span><svg
+          ><span class="txt" id="carr_baixar_txt">Baixar O Arquivo Único</span><svg
             class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path
             d="m12 5 7 7-7 7"/></svg></button>
-        <span class="nota mini">O arquivo fica no seu computador. A casa não apaga o que
-          baixou.</span>
+        <span class="nota mini">Um arquivo só, com uma pasta por perfil dentro. Ele fica
+          no seu computador, e a casa não apaga o que baixou.
+          <b id="carr_pe_quando"></b></span>
       </div>
+
+      <!-- O SUMIDOURO DO DOWNLOAD. As duas rotas de baixar mandam o arquivo como anexo, e
+           anexo não troca a página; mas a resposta de ERRO delas é JSON, e com
+           `location.assign` ela trocava o Estúdio inteiro por um 404 escrito em fonte de
+           código, levando junto a barra e a vigia de um lote em curso. Achado pelo revisor
+           de tela em 03/09/2026, clicando de verdade. Aqui o anexo baixa igual, o erro cai
+           dentro do quadro, e a tela o lê e mostra no cartão vermelho. -->
+      <iframe id="carr_sumidouro" title="o canal do download" aria-hidden="true"></iframe>
 
       <!-- O recado só ocupa espaço quando tem o que dizer (`.carr-recado:empty`). -->
       <div class="carr-recado" id="carr_recado"></div>
