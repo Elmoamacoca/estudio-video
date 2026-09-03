@@ -4752,6 +4752,17 @@
  ],
  "marcador": null,
  "completo": true,
- "atualizado": 1787688702,
- "marcador_reels": null
+ "atualizado": 1788406973,
+ "marcador_reels": null,
+ "relendo": false,
+ "marcador_novo": "3937798088565366302_71429431731",
+ "releitura_em": 0,
+ "vistas": 24,
+ "regua_da_epoca": {
+  "rotulo": "carrosséis",
+  "alvo": null,
+  "formatos": [
+   "carrossel"
+  ]
+ }
 }
