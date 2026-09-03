@@ -27,13 +27,13 @@
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela"
   },
   {
-   "quando": 1788400021,
+   "quando": 1788400055,
    "tipo": "sem_leitura",
    "gravidade": "aviso",
-   "texto": "Nenhuma Página Veio (Feed): Recusa 401 Do Instagram. A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa 1.",
+   "texto": "Nenhuma Página Veio (Feed): Recusa 401 Do Instagram. A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa 2.",
    "detalhe": {
-    "seguidas": 1,
-    "vaga": 6,
+    "seguidas": 2,
+    "vaga": 8,
     "caminho": "feed",
     "resposta": "www.instagram.com recusou (401); i.instagram.com recusou (401)"
    }
