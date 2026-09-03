@@ -1,6 +1,6 @@
 {
  "conta": "omatheusdaia",
- "nome": null,
+ "nome": "Matheus Castro | AI Coding",
  "eventos": [
   {
    "quando": 1788399874,
@@ -36,6 +36,28 @@
     "vaga": 20,
     "caminho": "feed",
     "resposta": "www.instagram.com recusou (401); i.instagram.com recusou (401)"
+   }
+  },
+  {
+   "quando": 1788399980,
+   "tipo": "identificado",
+   "gravidade": "evento",
+   "texto": "Perfil aberto no Instagram: 9 posts na primeira leitura",
+   "detalhe": {
+    "publicacoes": null,
+    "seguidores": null,
+    "total": 9
+   }
+  },
+  {
+   "quando": 1788400284,
+   "tipo": "sem_avanco",
+   "gravidade": "aviso",
+   "texto": "Rodada sem avanço nesta vaga: o endereço dela já tinha sido usado",
+   "detalhe": {
+    "rodada": 370,
+    "gravacoes": 1,
+    "total": 9
    }
   }
  ]

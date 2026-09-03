@@ -1,35 +1,37 @@
 {
  "contas": [
   {
-   "conta": "omatheusdaia",
-   "nome": null,
-   "primeiro": 1788399874,
-   "ultimo": 1788399921,
-   "eventos": 4,
+   "conta": "liamjohnston.ai",
+   "nome": "Liam Johnston",
+   "rotulo": "carrosséis",
+   "primeiro": 1788399867,
+   "ultimo": 1788400284,
+   "eventos": 7,
    "falhas": 0,
-   "avisos": 4,
-   "ultimo_tipo": "aguardando",
-   "lidos": 0,
+   "avisos": 6,
+   "ultimo_tipo": "sem_avanco",
+   "lidos": 2,
    "publicacoes": 0,
    "completo": false
   },
   {
-   "conta": "liamjohnston.ai",
-   "nome": null,
-   "primeiro": 1788399867,
-   "ultimo": 1788399916,
-   "eventos": 4,
+   "conta": "omatheusdaia",
+   "nome": "Matheus Castro | AI Coding",
+   "rotulo": "carrosséis",
+   "primeiro": 1788399874,
+   "ultimo": 1788400284,
+   "eventos": 7,
    "falhas": 0,
-   "avisos": 4,
-   "ultimo_tipo": "aguardando",
-   "lidos": 0,
+   "avisos": 6,
+   "ultimo_tipo": "sem_avanco",
+   "lidos": 9,
    "publicacoes": 0,
    "completo": false
   },
   {
    "conta": "leisdamentemilionaria",
    "nome": "Mente Milionária",
-   "rotulo": "reels",
+   "rotulo": "carrosséis",
    "primeiro": 1787687417,
    "ultimo": 1787688813,
    "eventos": 6,
@@ -41,5 +43,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788399924
+ "atualizado": 1788400284
 }
