@@ -3100,3 +3100,80 @@ body.aj-arrastando .aj-gaveta{transition:none}
   border-width:0 3px 3px 0;transform:rotate(45deg);margin-top:-6px}
 .mp-aplicando.feita .mp-apl-selo{display:flex;animation:mp-apl-nasce .5s ease}
 @keyframes mp-apl-nasce{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ================================================= O PACOTE DE CARROSSEIS
+
+   Espec `carrossel-de-ponta-a-ponta`, 02/09/2026. A maquete e' `docs/propostas/
+   coleta-carrossel/`, e o `maquete.py` compara as duas com 40 carrosseis na tela.
+
+   TODA REGRA DE `display` AQUI TEM A LINHA IRMA DO ESCONDIDO. O `[hidden]` do navegador
+   vale ZERO de especificidade e perde para qualquer `display` de autor: sem a irma, o
+   programa manda esconder, a tela jura que mandou, e o elemento continua desenhado. E' a
+   trava 66g, e ela ja' voltou por tres caminhos diferentes nesta folha (a caixa do fim da
+   fabricacao, a lista de fontes e a chave da folga). */
+/* A MARGEM E' DESTE CARTAO, e nao herdada do vizinho. O `.lote-montar` tem
+   `margin-bottom:14px` proprio e o `.caixa` nao tem margem nenhuma: o cartao novo ganhava
+   o vao de cima e dava ZERO embaixo, entao a fileira de perfis encostava nele. Medido pelo
+   revisor de tela: 14,0px acima e 0,0px abaixo. */
+.cx-carr{display:block;margin-bottom:14px}
+.cx-carr[hidden]{display:none}
+
+.carr-tit{display:flex;align-items:center;gap:10px}
+.carr-tit svg{width:19px;height:19px;stroke:var(--accent);flex:none}
+.carr-tit h3{margin:0}
+
+/* O ICONE DENTRO DO BOTAO SE MEDE POR AREA, e nao na regra base do `.acao`.
+   Este e' o molde da casa (`.kon-topo .acao svg`, `.aj-esteira .acao svg`): o `.acao` nao
+   e' flex nem dimensiona svg, porque quase todo botao daqui e' so' texto. Sem a linha, o
+   desenho sai no tamanho natural dele (uns 300px de altura), o botao cresce junto e o texto
+   cai POR FORA da pilula. Foi assim que este cartao saiu na primeira foto, e a comparacao
+   com a maquete passou verde: a geometria conferia a caixa, a fileira, a barra, a conta e o
+   rodape, e nenhum par media o botao. Quem pegou foi a FOTO. */
+.cx-carr .acao{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
+.cx-carr .acao svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;
+  stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+.carr-perfis{display:flex;flex-direction:column;gap:8px;margin:16px 0 0}
+.carr-perfis:empty{display:none}
+.carr-perfil{display:flex;align-items:center;gap:12px;padding:11px 14px;
+  border:1px solid var(--rule-solid);border-radius:var(--r-md);background:var(--paper-2)}
+.carr-perfil[data-escolhido="sim"]{border-color:var(--accent);background:var(--accent-tint)}
+.carr-nome{font-weight:600;font-size:14px}
+.carr-quantos{color:var(--muted);font-size:13px}
+.carr-perfil .dir{margin-left:auto;display:flex;align-items:center;gap:10px}
+
+/* UMA MARCA POR CARROSSEL, e nao uma tarja que enche (trava 37): a tarja diz a fracao, a
+   marca diz quantas sao, quantas ja' foram e QUAIS deram problema.
+
+   E A MARCA NAO TEM LARGURA MINIMA. Foi um `min-width:3px` numa barra igual a esta que
+   empurrou o placar da fase 6 de 267 para 930 pixels com 180 pecas, em 02/09/2026: com
+   largura minima a barra EMPURRA em vez de dividir. Quem encolhe e' o vao, e quem decide
+   e' o programa, porque so' ele sabe quantos itens sao (trava 39 e 70a). */
+.carr-trilha{display:flex;gap:var(--carr-vao,2px);height:7px;margin:18px 0 0}
+.carr-trilha[hidden]{display:none}
+.carr-marca{flex:1 1 0;min-width:0;border-radius:2px;background:var(--rule-solid)}
+.carr-marca[data-m="c"]{background:var(--accent)}
+.carr-marca[data-m="p"]{background:var(--ambar)}
+.carr-marca[data-m="f"]{background:var(--vermelho)}
+/* A BARRA DESBOTA QUANDO O PACOTE FALHOU. Ela continua dizendo a verdade peca a peca, mas
+   cheia e verde ela e' a coisa maior e mais clara da caixa, e afirmava sucesso com o cartao
+   vermelho logo abaixo dizendo o contrario. Sumir com ela seria pior: as laminas desceram
+   mesmo, e essa informacao serve. Achado pelo revisor de tela em 02/09/2026. */
+.carr-trilha[data-erro="sim"]{opacity:.32;filter:saturate(.35)}
+.carr-conta{margin-top:9px;font-size:13px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.carr-conta:empty{display:none}
+
+.carr-pe{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.carr-pe[hidden]{display:none}
+
+/* AVISO E' CARTAO COM SIMBOLO, e nunca frase solta de rodape: ordem dele em 25/08/2026
+   ("bota um card, bota um simbolo de alerta"). E ele some quando nao ha' o que dizer, que
+   e' a mesma lei do `.rec-diz` (trava 35) e da `.aj-recado` (trava 70b): margem cobrada
+   por texto que nao existe abre um buraco que ninguem explica olhando a tela. */
+.carr-recado{margin-top:14px;display:flex;gap:11px;align-items:flex-start;padding:12px 14px;
+  border-radius:var(--r-md);border:1px solid rgba(178,58,58,.34);
+  background:rgba(178,58,58,.08);color:var(--ink);font-size:13.5px}
+.carr-recado:empty{display:none}
+.carr-recado svg{width:19px;height:19px;flex:none;fill:none;stroke:var(--vermelho);
+  stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;margin-top:1px}

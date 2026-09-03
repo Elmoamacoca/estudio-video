@@ -18,6 +18,12 @@ import statistics
 import sys
 from pathlib import Path
 
+# O TETO DA LEGENDA MORA NO MINERADOR, e e' importado em vez de repetido: quem escreve a
+# ficha e quem a encolhe para a vitrine tem de concordar, senao um dia um dos dois muda
+# sozinho. Os dois sobem sempre juntos no PADRAO do `publicar.py`, e o import e' de leitura:
+# `minerar.py` nao faz nada ao ser carregado.
+import minerar
+
 PASTA = Path("dados/perfis")
 SAIDA = Path("dados/selecao.json")
 REGUA = Path("dados/regua.json")
@@ -95,6 +101,25 @@ def sinal(post: dict) -> tuple[int, str]:
     return post.get("curtidas") or 0, "curtidas"
 
 
+def legenda_da_vitrine(p: dict) -> str:
+    """Quanto da legenda viaja no `selecao.json`, que e' o arquivo que a TELA le'.
+
+    POR QUE ELA ENCOLHE AQUI. A ficha completa mora em `dados/perfis` e guarda os 2.200
+    caracteres desde 02/09/2026. Este arquivo copia o post INTEIRO ate' 500 vezes, e ja'
+    pesa 824 KB: a trava 17 teve de tirar ele da janela da verdade porque sao trinta
+    segundos pela ponte. Com a legenda cheia em tudo seriam 1,1 MB a mais, no unico arquivo
+    que ja' era o gargalo.
+
+    E POR QUE O CARROSSEL E' EXCECAO. A descricao inteira dele nao e' enfeite de tela: e'
+    ENTREGA, porque vira o `descricao.txt` dentro do pacote. Cortar aqui entregaria a ele um
+    arquivo de texto picado. Sao poucos itens perto dos reels, entao o peso nao volta.
+    """
+    legenda = p.get("legenda") or ""
+    if p.get("formato") == "carrossel":
+        return legenda
+    return legenda[:minerar.TETO_NA_VITRINE]
+
+
 def mede_perfil(dados: dict, r: dict) -> list[dict]:
     """Devolve os posts do perfil com o indice de desempenho calculado."""
     conta = (dados.get("perfil") or {}).get("conta", "?")
@@ -123,6 +148,7 @@ def mede_perfil(dados: dict, r: dict) -> list[dict]:
         interacao = (p.get("curtidas") or 0) + (p.get("comentarios") or 0)
         saida.append({
             **p,
+            "legenda": legenda_da_vitrine(p),
             "conta": conta,
             "escala": escala,
             "mediana_do_formato": round(mediana),
@@ -228,7 +254,21 @@ def selecionar(r: dict | None = None) -> dict:
     maus = ja_reprovados()
     baixados_por_perfil: dict[str, int] = {}
     reprovados_por_perfil: dict[str, int] = {}
+    # O CARROSSEL TEM CONTA PROPRIA, e nao entra em `baixaveis`.
+    #
+    # POR QUE NAO SOMAR OS DOIS NUM NUMERO SO': `baixaveis` menos `baixados` menos
+    # `reprovados` e' o que faz a fileira de Baixar encolher, e essa conta e' de reels, com
+    # o livro de reels atras. Um carrossel somado ali inflaria a fileira com material que a
+    # esteira do GitHub nunca vai buscar, porque quem baixa carrossel e' a casa (espec
+    # `carrossel-de-ponta-a-ponta`, caminho B). Duas coisas diferentes, dois numeros.
+    #
+    # E O CRITERIO E' TER LAMINA COM ENDERECO, e nao ser do formato: carrossel minerado
+    # antes de 02/09/2026 nao tem a lista de pecas, e prometer download dele seria a trava 2.
+    carrosseis_por_perfil: dict[str, int] = {}
     for x in escolhidos:
+        if x["formato"] == "carrossel" and any(
+                (p or {}).get("arquivo") for p in (x.get("pecas") or [])):
+            carrosseis_por_perfil[x["conta"]] = carrosseis_por_perfil.get(x["conta"], 0) + 1
         if x["formato"] == "reels" and x.get("arquivo"):
             reels_por_perfil[x["conta"]] = reels_por_perfil.get(x["conta"], 0) + 1
             if x["codigo"] in feitos.get(x["conta"], ()):
@@ -241,6 +281,7 @@ def selecionar(r: dict | None = None) -> dict:
     for pf in perfis:
         pf["acima"] = acima_por_perfil.get(pf["conta"], 0)
         pf["baixaveis"] = reels_por_perfil.get(pf["conta"], 0)
+        pf["carrosseis_baixaveis"] = carrosseis_por_perfil.get(pf["conta"], 0)
         pf["baixados"] = baixados_por_perfil.get(pf["conta"], 0)
         pf["reprovados"] = reprovados_por_perfil.get(pf["conta"], 0)
         # O QUE A FILEIRA DE BAIXAR MOSTRA. Zero aqui tira o perfil da fileira, e e' o

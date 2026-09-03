@@ -530,6 +530,11 @@ document.getElementById("sub-menu").addEventListener("click", ev => {
    tabela custou quadro de 61 ms ao rolar, fez a barra de rolagem piscar e deixou
    artefato preto na passagem do mouse. Tabela não é galeria. */
 let MINERADOS = [], minPagina = 1;
+/* AS FICHAS DE CARROSSEL DA RÉGUA, e só elas. O pedido do pacote leva a lista de lâminas
+   dentro (a casa não lê o acervo do GitHub), então a tela precisa guardá-la entre a carga e
+   o clique. Guardar `sel.itens` inteiro seria carregar quinhentos itens com a legenda de
+   2.200 caracteres dentro; carrossel é um punhado. */
+let CARROSSEIS_DA_REGUA = [];
 
 /* AS DUAS LISTAS DO SISTEMA: os mercados e as etiquetas que existem.
    Elas nascem vazias e são preenchidas pelo acervo a cada volta. Enquanto não chegam, a
@@ -729,7 +734,19 @@ function celulaBaixar(p) {
   const leva = LEVAS_POR_CONTA[p.conta];
   if (leva && (leva.estado === "em curso" || leva.estado === "pedida"))
     return pinoBaixar("indo", "em curso", leva.numero ? `leva ${leva.numero}` : "");
-  if (!podem) return pinoBaixar("off", "sem material", "");
+  if (!podem) {
+    /* "SEM MATERIAL" ERA MENTIRA EM PERFIL DE CARROSSEL, e foi essa a queixa que abriu a
+       espec `carrossel-de-ponta-a-ponta`: a coluna contava os carrosséis certinho ali ao
+       lado e, na hora de coletar, dizia que não havia nada. Havia: o que faltava era
+       caminho para baixar.
+
+       E A PALAVRA "REELS" SAIU DAQUI TAMBÉM, algumas linhas abaixo. Um perfil de doze
+       carrosséis chegou a dizer "a baixar · 12 reels", com a palavra cravada no código. */
+    const carr = p.carrosseis_baixaveis || 0;
+    if (carr) return pinoBaixar("", "no pacote",
+      `${num(carr)} ${carr === 1 ? "carrossel" : "carrosséis"}`);
+    return pinoBaixar("off", "sem material", "");
+  }
   if (restam === 0) {
     /* TRÊS FINAIS DIFERENTES, e eles não querem dizer a mesma coisa:
 
@@ -744,8 +761,304 @@ function celulaBaixar(p) {
     return pinoBaixar("ok", onde, num(veio) + (leva ? ` · leva ${leva.numero}` : ""));
   }
   if (veio) return pinoBaixar("meio", "pela metade", `${num(veio)} de ${num(podem)}`);
+  /* "REELS" NÃO SE ESCREVE AQUI À MÃO. Esta conta é a da esteira, e a esteira é de vídeo,
+     mas a palavra cravada já mentiu: perfil de doze carrosséis dizia "a baixar · 12 reels".
+     Hoje `baixaveis` conta só reels de propósito (o carrossel tem número próprio), então o
+     rótulo é o do formato, e não a palavra. */
   return pinoBaixar("", "a baixar", `${num(restam)} reels`);
 }
+
+/* =============================================== O PACOTE DE CARROSSÉIS (02/09/2026)
+
+   Espec `carrossel-de-ponta-a-ponta`. O carrossel NÃO passa pela esteira do GitHub: a casa
+   baixa direto, monta um PDF por carrossel e empacota num ZIP por perfil. A tela fala com
+   três rotas do posto: `POST /carrossel`, `GET /carrossel?id=` e `GET /carrossel-pacote`.
+
+   O PEDIDO LEVA OS CARROSSÉIS DENTRO. A casa não lê o acervo do GitHub, e a tela já tem a
+   lista em memória (é dela que sai a coluna). Mandar a lista pronta evita a casa precisar
+   de token e evita uma segunda cópia da régua do lado de lá, que divergiria na primeira
+   mudança. */
+const CARR_VIGIA = { id: null, relogio: null, conta: null };
+
+/** Quantos carrosséis dá para baixar de cada perfil, e se a régua já sabe disso. */
+function carrosseisDosPerfis(perfis) {
+  const todos = perfis || [];
+  const lista = todos.filter(p => (p.carrosseis_baixaveis || 0) > 0);
+  /* TRÊS ESTADOS DE LEITURA, E NÃO DOIS (trava 2). Ficha SEM o campo quer dizer que a régua
+     ainda não rodou depois desta mudança; ficha COM o campo em zero quer dizer que não há
+     carrossel. Desenhar "não tem" para os dois esconderia o único caso que tem conserto:
+     rodar a varredura com carrossel marcado.
+
+     E O TERCEIRO ESTADO É A LISTA VAZIA, que é o que este `houvePerfil` guarda. Sem ele,
+     uma leitura que falhasse (`selecao.json` e `estado.json` fora do ar, e aí `perfis` vem
+     `[]`) mandava ele rodar uma varredura inteira por causa de um arquivo que não desceu.
+     Achado pelo revisor de tela em 02/09/2026, medido com `desenhaCarrossel([])`. */
+  const houvePerfil = todos.length > 0;
+  const jaContou = todos.some(p => p.carrosseis_baixaveis != null);
+  return { lista, jaContou, houvePerfil };
+}
+
+function desenhaCarrossel(perfis) {
+  const caixa = $("cx_carrossel");
+  if (!caixa) return;
+  const { lista, jaContou, houvePerfil } = carrosseisDosPerfis(perfis);
+  // NÃO OCUPA ESPAÇO quando não há carrossel coletado (critério 20 da espec). O `hidden`
+  // sozinho não bastaria: a folha tem `display` próprio para `.cx-carr`, e o esconder do
+  // navegador perde para ela. A linha irmã `.cx-carr[hidden]` é quem faz valer.
+  caixa.hidden = !lista.length;
+  /* "NÃO TEM" E "NÃO LI" SÃO COISAS DIFERENTES, e mostrar a mesma tela para as duas é a
+     trava 2 escrita no dado. Ficha sem o campo quer dizer que a régua não rodou depois
+     desta mudança, e isso tem conserto: marcar carrossel na varredura. Ficha com o campo em
+     zero quer dizer que não há, e aí não há o que fazer. O recado tem elemento próprio, e
+     não emprestado, porque quando ele vale o cartão está escondido. */
+  const naoLido = $("carr_naolido");
+  if (naoLido) {
+    // SEM PERFIL NENHUM, ELE NÃO DIZ NADA: não saber é diferente de saber que não há, e
+    // mandar minerar de novo por causa de uma leitura que falhou é pior que ficar calado.
+    const dizer = houvePerfil && !jaContou;
+    naoLido.hidden = !dizer;
+    naoLido.textContent = dizer ? "A régua ainda não contou carrossel neste acervo. "
+      + "Rode uma varredura com carrossel marcado para o pacote aparecer aqui." : "";
+  }
+  if (!lista.length) return;
+  const html = lista.map(p => `
+    <div class="carr-perfil" data-conta="${p.conta}">
+      <span class="carr-nome">@${p.conta}</span>
+      <span class="carr-quantos">${num(p.carrosseis_baixaveis)} ${
+        p.carrosseis_baixaveis === 1 ? "carrossel" : "carrosséis"}</span>
+      <span class="dir">
+        <button class="acao forte" type="button" data-carr="${p.conta}">
+          <!-- CAIXA FECHANDO, e nunca a seta de baixar.
+               Os dois botoes deste cartao tinham o MESMO fundo, o MESMO texto e o MESMO
+               desenho de seta para baixo, a 126 pixels um do outro: um comeca um trabalho
+               de minutos a horas, o outro grava o arquivo, e clicar no errado recomeca a
+               coleta inteira. Achado pelo revisor de tela em 02/09/2026. -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M2 4h20v4H2zM10 12h4"/></svg>
+          Montar O Pacote</button>
+      </span>
+    </div>`).join("");
+  const alvo = $("carr_perfis");
+  // Desenho igual não se redesenha, a mesma regra da fileira acima: reescrever apagaria o
+  // botão sob o cursor a cada volta de vinte e cinco segundos.
+  if (alvo.dataset.desenho !== html) {
+    alvo.innerHTML = html;
+    alvo.dataset.desenho = html;
+  }
+  // E O QUE JÁ ESTÁ NO DISCO VOLTA À TELA, mesmo depois do F5. Só quando não há trabalho
+  // em curso: a vigia é mais nova que o disco e não pode ser atropelada por ele.
+  if (!CARR_VIGIA.relogio) acharPacoteNoDisco(lista);
+}
+
+/** Pergunta ao posto que perfis já têm pacote pronto, e redesenha o botão de baixar. */
+async function acharPacoteNoDisco(lista) {
+  if (!(await postoDePe())) return;
+  let r;
+  try {
+    r = await noPosto("/carrossel-pacotes");
+  } catch (e) {
+    return;                      // silêncio de uma volta não é falha, e não apaga nada
+  }
+  const feitos = (r && r.d) || {};
+  const meu = (lista || []).map(p => p.conta).find(c => feitos[c]);
+  if (!meu || CARR_VIGIA.relogio) return;
+  /* O NÚMERO DE CARROSSÉIS NÃO SE INVENTA AQUI. O disco sabe o tamanho do arquivo e a hora,
+     e não quantos carrosséis entraram: dizer um número seria a trava 2. O botão diz o que
+     dá para medir, e o resto fica de fora. */
+  const mb = (feitos[meu].bytes || 0) / 1048576;
+  $("carr_baixar_txt").textContent = `Baixar O Pacote De @${meu} · `
+    + `${mb.toFixed(1).replace(".", ",")} MB`;
+  $("carr_baixar").dataset.conta = meu;
+  $("carr_pe").hidden = false;
+  $("carr_conta").textContent = `@${meu}: pacote pronto, montado ${quando(feitos[meu].quando)}.`;
+}
+
+/** As fichas dos carrosséis de um perfil, na ordem da régua. */
+function carrosseisDaConta(conta) {
+  return CARROSSEIS_DA_REGUA.filter(x => x.conta === conta).map((x, i) => ({
+    codigo: x.codigo, legenda: x.legenda || "", ordem: i + 1, pecas: x.pecas || [],
+  }));
+}
+
+async function pedirOPacote(conta) {
+  const recado = $("carr_recado");
+  recado.textContent = "";
+  const carrosseis = carrosseisDaConta(conta);
+  if (!carrosseis.length) {
+    return dizNoCarrossel("A régua conta carrosséis neste perfil, mas nenhum deles tem a "
+      + "lista de lâminas gravada. Rode a varredura de novo com carrossel marcado.");
+  }
+  const id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const b = document.querySelector(`[data-carr="${conta}"]`);
+  if (b) b.disabled = true;
+  try {
+    /* PACIÊNCIA MAIOR QUE A PADRÃO: o corpo leva a lista de lâminas de todos os
+       carrosséis do perfil, que é o segundo maior pedido do sistema depois da montagem. */
+    const r = await noPosto("/carrossel", { id, conta, carrosseis }, 60000);
+    // ACORDEI FALSO NÃO É FALHA: o pedido ficou gravado e a resposta diz o que fazer. O
+    // recado aparece e a vigia começa mesmo assim, porque um `--fila` na casa o cumpre.
+    if (r && r.erro) dizNoCarrossel(r.erro);
+    vigiarOPacote(id, conta, carrosseis.length);
+  } catch (e) {
+    // O `noPosto` já traduz o 409 do clique repetido e o 401 da sessão vencida na
+    // mensagem do erro; escrever outra por cima esconderia a que sabe o motivo.
+    dizNoCarrossel(String((e && e.message) || e));
+  } finally {
+    if (b) b.disabled = false;
+  }
+}
+
+function dizNoCarrossel(texto) {
+  const caixa = $("carr_recado");
+  caixa.textContent = "";
+  if (!texto) return;
+  /* O TEXTO ENTRA COMO TEXTO, e nunca por `innerHTML`. Ele vem do posto e de erros do
+     sistema de arquivos: um caminho com sinal de menor dentro quebrava o cartão inteiro, e
+     o recado que existe para explicar o problema virava o problema. Achado pelo revisor de
+     tela em 02/09/2026. O desenho é fixo, então ele sim se monta aqui. */
+  const marca = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  marca.setAttribute("viewBox", "0 0 24 24");
+  for (const d of ["M12 9v5M12 17.5v.01",
+                   "M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"]) {
+    const risco = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    risco.setAttribute("d", d);
+    marca.appendChild(risco);
+  }
+  const frase = document.createElement("span");
+  frase.textContent = texto;
+  caixa.append(marca, frase);
+}
+
+/** Desenha a barra: uma marca por carrossel, no lugar dele na fila. */
+function desenhaAsMarcas(marcas, total) {
+  const trilha = $("carr_trilha");
+  /* COM MENOS DE TRÊS, A BARRA NÃO EXISTE. Com um item a marca mede a barra inteira e vira
+     exatamente a tarja que a trava 37 proibiu: uma tarja diz a fração, uma marca por peça
+     diz quantas são e quais deram problema, e com uma peça só as duas coisas são a mesma.
+     A linha de texto ao lado já diz tudo. Medido pelo revisor de tela: 1 item = 1186px de
+     verde de ponta a ponta. */
+  trilha.hidden = total < 3;
+  if (trilha.hidden) return;
+  /* O VÃO ENCOLHE ANTES DA MARCA, e quem decide é o programa porque só ele sabe quantos
+     são. Com 180 itens e vão de 1,5px o vão comia 41% da barra e o verde virava chuvisco
+     (trava 39); e marca com largura mínima EMPURRA em vez de dividir, que foi o que jogou
+     o placar da fase 6 para 930 pixels (trava 70a). */
+  trilha.style.setProperty("--carr-vao", total > 60 ? "0.5px" : "2px");
+  if (trilha.children.length !== total) {
+    trilha.innerHTML = Array.from({ length: total },
+      () => '<i class="carr-marca"></i>').join("");
+  }
+  [...trilha.children].forEach((m, i) => {
+    const c = (marcas || "")[i];
+    if (c && c !== ".") m.dataset.m = c; else m.removeAttribute("data-m");
+  });
+}
+
+function desenhaOPacote(a, conta, total) {
+  const feitas = a.feitas || 0;
+  const quantos = a.total || total;
+  const parciais = a.parciais || 0;
+  const falhados = a.falhados || 0;
+  const deuErro = a.estado === "erro";
+  desenhaAsMarcas(a.marcas || "", quantos);
+  /* A BARRA DESBOTA QUANDO O PACOTE FALHOU. Ela continua dizendo a verdade peça a peça (as
+     lâminas desceram mesmo), mas cheia e verde ela é a coisa maior e mais clara da caixa, e
+     afirmava sucesso com o cartão vermelho logo abaixo dizendo o contrário. Achado pelo
+     revisor de tela, fotografado nos dois temas. */
+  $("carr_trilha").dataset.erro = deuErro ? "sim" : "nao";
+
+  /* O NOME DO PERFIL VEM NA FRENTE, sempre. Com três perfis na fileira, a barra, a conta e
+     o botão eram de UM deles e não diziam qual: lido de cima para baixo, "40 carrosséis"
+     seguido de "7 de 7 carrosséis" era a lista contradizendo o recado ao lado. Achado pelo
+     revisor de tela em 02/09/2026, medido com três perfis. */
+  const quem = conta ? `@${conta}: ` : "";
+  $("carr_conta").textContent = quem
+    + `${num(feitas)} de ${num(quantos)} ${quantos === 1 ? "carrossel" : "carrosséis"}`
+    + (parciais ? ` · ${num(parciais)} com lâmina faltando` : "")
+    + (falhados ? ` · ${num(falhados)} não saíram` : "")
+    + (deuErro ? " · o pacote não foi montado" : "");
+  // E A LINHA DO PERFIL DE QUE A BARRA FALA FICA ACESA, para o olho achar de qual é.
+  document.querySelectorAll("#carr_perfis .carr-perfil").forEach(L => {
+    L.dataset.escolhido = L.dataset.conta === conta ? "sim" : "nao";
+  });
+
+  const pe = $("carr_pe");
+  const pacote = a.pacote || {};
+  const pronto = a.estado === "pronto" && pacote.ok;
+  pe.hidden = !pronto;
+  if (pronto) {
+    /* OS DOIS NÚMEROS SAEM DO DISCO, e nunca de uma soma feita aqui (critério 21 e trava
+       2). O ZIP comprime, então somar o que entrou mostraria no botão um peso que o
+       download desmente no minuto seguinte. */
+    const mb = (pacote.bytes || 0) / 1048576;
+    $("carr_baixar_txt").textContent = `Baixar O Pacote De @${conta} · `
+      + `${num((a.completos || 0) + parciais)} carrosséis, `
+      + `${mb.toFixed(1).replace(".", ",")} MB`;
+    $("carr_baixar").dataset.conta = conta;
+  }
+  if (deuErro) dizNoCarrossel(a.erro || "O pacote não foi montado.");
+}
+
+function vigiarOPacote(id, conta, total) {
+  if (CARR_VIGIA.relogio) clearInterval(CARR_VIGIA.relogio);
+  CARR_VIGIA.id = id;
+  CARR_VIGIA.conta = conta;
+  dizNoCarrossel("");
+  desenhaAsMarcas(".".repeat(total), total);
+  /* TODA ESPERA TEM NOME nesta casa ("Abrindo O Reel", "Medindo O Reel", "Descendo A
+     Filmagem"): tela parada e calada ele chama de bugada, e está certo. Aqui a primeira
+     lâmina leva dezenas de segundos, e a versão anterior dizia apenas "0 de 2 carrosséis"
+     por quase um minuto. Achado pelo revisor de tela, cronometrado. */
+  $("carr_conta").textContent = `Baixando As Lâminas De @${conta} · 0 de ${num(total)} `
+    + (total === 1 ? "carrossel" : "carrosséis");
+  $("carr_trilha").dataset.erro = "nao";
+  $("carr_pe").hidden = true;
+
+  const olhar = async () => {
+    let r;
+    try {
+      r = await noPosto(`/carrossel?id=${encodeURIComponent(id)}`);
+    } catch (e) {
+      /* SILÊNCIO DE UMA VOLTA NÃO É FALHA. O posto atende várias linhas e o download está
+         ocupando a rede; desistir na primeira tosse pintaria erro num trabalho em curso. */
+      return;
+    }
+    if (r && r.ilegivel) {
+      clearInterval(CARR_VIGIA.relogio);
+      return dizNoCarrossel(r.erro || "o andamento existe mas não deu para ler");
+    }
+    const a = (r && r.d) || null;
+    if (!a) return;
+    if (a.fila) {
+      $("carr_conta").textContent = "Na fila, esperando a casa pegar o pedido.";
+      return;
+    }
+    desenhaOPacote(a, conta, total);
+    if (a.estado === "pronto" || a.estado === "erro") {
+      clearInterval(CARR_VIGIA.relogio);
+      CARR_VIGIA.relogio = null;
+    }
+  };
+  olhar();
+  CARR_VIGIA.relogio = setInterval(olhar, 1500);
+}
+
+/* OS DOIS CLIQUES DO CARTÃO. `data-carr` é atributo NOVO, e não emprestado de outro gesto:
+   em 27/08/2026 o Abrir do cardzinho reusou o `data-abrir` dos links de pasta e o ouvinte
+   global do documento atendeu junto, escrevendo "essa pasta mora na casa do Estúdio" dentro
+   do botão. Atributo com ouvinte global nunca se reusa. */
+document.addEventListener("click", ev => {
+  const montar = ev.target.closest("[data-carr]");
+  if (montar) return pedirOPacote(montar.dataset.carr);
+  const baixar = ev.target.closest("#carr_baixar");
+  if (!baixar || !baixar.dataset.conta) return;
+  /* O DOWNLOAD VAI PELO NAVEGADOR, e não por `fetch`. O ZIP tem dezenas de megabytes e
+     buscá-lo por programa poria tudo na memória da aba antes de gravar. A rota manda
+     `Content-Disposition: attachment`, então o navegador grava direto, com barra própria. */
+  window.location.assign(
+    POSTO + "/carrossel-pacote?conta=" + encodeURIComponent(baixar.dataset.conta));
+});
 
 function desenhaMinerados() {
   const q = ($("min-q").value || "").trim().toLowerCase();
@@ -1806,6 +2119,11 @@ function desenhaProntos(perfis) {
   // guardado ja com o saldo resolvido, para a contagem nao repetir a conta
   ULTIMOS_PRONTOS = filtrados.map(p => ({ ...p, restam: saldoDe(p) }));
   contarLote(ULTIMOS_PRONTOS, nome);
+  /* O CARTÃO DO CARROSSEL LÊ DE `perfis`, E NÃO DE `comSaldo`. Perfil só de carrossel tem
+     `baixaveis` zero de propósito (a conta de reels é da esteira, e carrossel não passa por
+     ela), então filtrar pelo saldo esconderia justamente o caso que este cartão existe para
+     resolver. */
+  desenhaCarrossel(perfis);
 }
 
 /** A conta do lote: quantos perfis estão marcados e quanto eles somam. */
@@ -1905,6 +2223,11 @@ async function atualizar() {
 
   // a tabela quer o que a varredura descobriu, e não só o avanço
   const itens = (sel && sel.itens) || [];
+  // A ORDEM AQUI É A DA RÉGUA, e é ela que vira o número da pasta no pacote (critério 12).
+  // A seleção já chega ordenada por desempenho; reordenar depois faria o carrossel 07 do
+  // ZIP não ser o sétimo que ele viu na tela.
+  CARROSSEIS_DA_REGUA = itens.filter(
+    x => x.formato === "carrossel" && (x.pecas || []).some(q => q && q.arquivo));
   MINERADOS = perfis.map(p => {
     const meus = itens.filter(i => i.conta === p.conta);
     const r = (retratos && retratos[p.conta]) || {};

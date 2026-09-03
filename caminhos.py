@@ -45,6 +45,11 @@ ESPECS = DOCS / "ESPEC"
 PROPOSTAS = DOCS / "propostas"          # as maquetes clicaveis, uma pasta por proposta
 PROVAS = PROJETO / "provas"
 FOTOS = PROVAS / "fotos"
+# AS RESPOSTAS DE VERDADE, GRAVADAS UMA VEZ, desde 02/09/2026. Doze criterios da espec do
+# carrossel medem a FORMA da resposta do Instagram; prova que chama a rede quebra sozinha no
+# dia em que uma conta virar privada, e o susto manda a proxima sessao procurar defeito onde
+# nao ha'. Confere-se com a rede uma vez, grava-se, e a prova roda contra a copia.
+ENSAIOS = PROVAS / "ensaios"
 # O CARIMBO DAS PROVAS, desde 25/08/2026: a assinatura dos fontes no estado em que a
 # suite inteira passou. Quem escreve e' o `provar.py` (so' sem filtro), quem le' e' o
 # `publicar.py`, que recusa mandar arquivo com assinatura diferente da carimbada. Fica
@@ -78,6 +83,20 @@ FONTES = CASA / "fontes"                          # as fontes que a oficina dese
 # navegador, e sumiu com a leva 31 dentro. Todo o resto ja' morava na casa; o mapa do
 # trabalho de mao (enquadramento, ajuste, quais pecas ele deu por prontas) nao.
 RASCUNHOS = CASA / "rascunhos"                    # um json por rascunho, pelo id dele
+
+# O CARROSSEL, desde 02/09/2026, e ele NAO passa pela esteira do GitHub.
+#
+# POR QUE UMA PASTA SO' DELE, longe de `levas` e de `pedidos`: a esteira e' de video, e
+# carrossel dentro dela morre em quatro lugares (o `limpar.py` sai com erro sem `.mp4`, o
+# `registro.py` nunca o tira da fileira, o `guardar.py` nao o traz e o livro conta zero).
+# Nenhum desses e' defeito: e' o preco de passar imagem por um caminho de video. A espec
+# `carrossel-de-ponta-a-ponta` escolheu o caminho curto, em que a casa baixa direto.
+#
+# E `pedidos/` E' DA OFICINA, e de mais ninguem: ela trata QUALQUER json de la' como pedido
+# de edicao dela. Um pedido de carrossel ali dentro seria lido como leva.
+CARROSSEIS = CASA / "carrosseis"                  # uma pasta por perfil, com as laminas
+CARROSSEIS_PEDIDOS = CARROSSEIS / "pedidos"       # a caixa de recados da tela para ca'
+CARROSSEIS_PACOTES = CARROSSEIS / "pacotes"       # o ZIP que ele baixa, um por perfil
 
 # A EDICAO DESPACHADA PARA A ESTEIRA, desde 25/08/2026. `despachos/<ficha>.json` e' o
 # manifesto que a rota de retirada do posto serve as vagas; `despachos/<ficha>/` guarda

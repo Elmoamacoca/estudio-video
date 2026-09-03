@@ -264,13 +264,49 @@ def pagina_de_reels(uid: str, marcador: str | None) -> dict | None:
     }
 
 
+# O TETO DA LEGENDA. Ate' 02/09/2026 era 400, e o corte estava comendo a descricao de TODO
+# post minerado, e nao so' a de carrossel: medidas as doze legendas da primeira pagina do
+# perfil dele, as DOZE passavam de 400, e a maior tinha 1.887 caracteres. 2.200 e' o teto do
+# proprio Instagram, entao acima disso nao existe texto para perder.
+TETO_DA_LEGENDA = 2200
+# O QUE VAI PARA A TELA e' outro numero, bem menor, e a razao esta' no `selecionar.py`: a
+# ficha completa mora em `dados/perfis`, mas o `selecao.json` copia o post INTEIRO ate' 500
+# vezes, e ele ja' pesa 824 KB. Com a legenda cheia seriam 1,1 MB a mais no unico arquivo que
+# a trava 17 teve de tirar da janela da verdade por demorar trinta segundos pela ponte.
+TETO_NA_VITRINE = 300
+
+
+def peca_do_carrossel(bruto: dict, ordem: int) -> dict:
+    """Uma lamina de carrossel: onde ela esta', de que tipo e' e que tamanho tem.
+
+    A MAIOR VERSAO, E NAO A PRIMEIRA DA LISTA. O Instagram devolve a mesma imagem em muitos
+    tamanhos (medidos 14 em 02/09/2026, e 11 meia hora depois no mesmo perfil: o numero
+    varia). A ordem da lista nao promete nada, entao quem escolhe e' a largura.
+
+    E PECA DE VIDEO TRAZ AS DUAS COISAS: o video E uma capa. Medido no ensaio, a peca de
+    video tem 11 versoes de imagem ate' 640px e 3 de video ate' 720px. Guardar a capa daria
+    um arquivo que abre, parece certo, e nao e' o post.
+    """
+    imagens = (bruto.get("image_versions2") or {}).get("candidates") or []
+    videos = bruto.get("video_versions") or []
+    fonte = videos or imagens
+    melhor = max(fonte, key=lambda v: v.get("width") or 0) if fonte else None
+    return {
+        "ordem": ordem,
+        "formato": "video" if videos else "imagem",
+        "arquivo": melhor.get("url") if melhor else None,
+        "largura": melhor.get("width") if melhor else None,
+        "altura": melhor.get("height") if melhor else None,
+    }
+
+
 def limpa_post(bruto: dict) -> dict:
     """Guarda so o que serve para medir e para baixar depois. O resto e' peso morto."""
     tipo = bruto.get("media_type")
     videos = bruto.get("video_versions") or []
     melhor = max(videos, key=lambda v: v.get("width", 0)) if videos else None
     legenda = (bruto.get("caption") or {}).get("text") or ""
-    return {
+    p = {
         "codigo": bruto.get("code"),
         "formato": FORMATOS.get(tipo, "outro"),
         "data": bruto.get("taken_at"),
@@ -278,11 +314,25 @@ def limpa_post(bruto: dict) -> dict:
         "curtidas": bruto.get("like_count") or 0,
         "comentarios": bruto.get("comment_count") or 0,
         "duracao": round(bruto.get("video_duration") or 0, 1),
-        "legenda": legenda[:400],
+        "legenda": legenda[:TETO_DA_LEGENDA],
         # o link do arquivo vence em horas: serve para baixar agora, nao para guardar
         "arquivo": melhor.get("url") if melhor else None,
         "largura": melhor.get("width") if melhor else None,
     }
+    # A LISTA DE LAMINAS, e ela SO' NASCE em post de carrossel.
+    #
+    # POR QUE O CAMPO NAO EXISTE NOS OUTROS FORMATOS: ficha sem o campo quer dizer "este post
+    # nao e' carrossel", e ficha COM o campo em lista vazia quer dizer "e' carrossel e a
+    # resposta veio sem laminas". Sao coisas diferentes, e po-las as duas como `[]` seria a
+    # trava 2 escrita no dado: a tela nao teria como distinguir "nao tem" de "nao li".
+    if tipo == 8:
+        laminas = bruto.get("carousel_media") or []
+        p["pecas"] = [peca_do_carrossel(x, i) for i, x in enumerate(laminas, 1)]
+        # O CONTADOR DELES, GUARDADO SEPARADO do tamanho da lista, de proposito: os dois
+        # bateram nos cinco carrosseis do ensaio, mas se um dia nao baterem, quem le' precisa
+        # saber que a lista veio curta em vez de achar que o post encolheu.
+        p["pecas_ditas"] = bruto.get("carousel_media_count")
+    return p
 
 
 def carrega(conta: str) -> dict:

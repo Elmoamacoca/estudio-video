@@ -563,6 +563,60 @@
       <p class="nota mini" id="recado_filtros" hidden></p>
     </div>
 
+    <!-- A RÉGUA AINDA NÃO CONTOU CARROSSEL. Recado PRÓPRIO, e não emprestado do
+         `recado_filtros`: aquele já tem dono (o aviso de mercado e etiqueta), e escrever
+         por cima faria os dois se apagarem em rodadas alternadas. É a lição de 27/08/2026,
+         quando o Abrir do cardzinho reusou o `data-abrir` dos links de pasta e o ouvinte
+         global do documento atendeu junto. Elemento com dono nunca se reusa.
+
+         E ele vive FORA do cartão do pacote, porque justamente quando este recado vale o
+         cartão está escondido. -->
+    <p class="nota mini" id="carr_naolido" hidden></p>
+
+    <!-- ============================================ O PACOTE DE CARROSSÉIS
+
+         CARTÃO SEPARADO, E NÃO UM BOTÃO DENTRO DO MONTAR LEVA. Ordem dele em
+         02/09/2026: "esse botão é exclusivo, por hora. Apenas pra carrossel". E há um
+         motivo de desenho junto: são dois caminhos inteiros diferentes. A leva de vídeo
+         vai para a esteira do GitHub e volta pela `guardar.py`; o carrossel é baixado
+         pela casa, direto, porque dentro da esteira ele morre em quatro lugares (o
+         `limpar.py` sai com erro sem `.mp4`, o `registro.py` nunca o tira da fileira, o
+         `guardar.py` não o traz e o livro conta zero). Está tudo na espec
+         `carrossel-de-ponta-a-ponta`.
+
+         ELE NÃO OCUPA ESPAÇO quando não há carrossel coletado: o `hidden` do elemento
+         mais a linha irmã na folha de estilo, porque `[hidden]` do navegador vale zero
+         de especificidade e perde para qualquer `display` de autor. É a trava 66g, que
+         já voltou por três caminhos diferentes nesta tela. -->
+    <div class="caixa cx-carr" id="cx_carrossel" hidden>
+      <div class="carr-tit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+             stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="12" height="14" rx="2"/><path d="M18 7v10M21 9v6"/></svg>
+        <h3>Pacote De Carrosséis</h3>
+      </div>
+      <p class="nota">O carrossel não passa pela esteira: a casa baixa direto e monta um
+        PDF por carrossel, com as lâminas na ordem e a descrição ao lado.</p>
+
+      <div class="carr-perfis" id="carr_perfis"></div>
+
+      <div class="carr-trilha" id="carr_trilha" hidden></div>
+      <p class="carr-conta" id="carr_conta"></p>
+
+      <div class="carr-pe" id="carr_pe" hidden>
+        <button class="acao forte" id="carr_baixar" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+          <span id="carr_baixar_txt">Baixar O Pacote</span></button>
+        <span class="nota mini">O arquivo fica no seu computador. A casa não apaga o que
+          baixou.</span>
+      </div>
+
+      <!-- O recado só ocupa espaço quando tem o que dizer (`.carr-recado:empty`). -->
+      <div class="carr-recado" id="carr_recado"></div>
+    </div>
+
     <div class="fileira" id="prontos"><div class="vazio">Carregando.</div></div>
   </div>
 
