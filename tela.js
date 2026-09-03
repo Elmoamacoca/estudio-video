@@ -821,23 +821,33 @@ function desenhaCarrossel(perfis) {
       + "Rode uma varredura com carrossel marcado para o pacote aparecer aqui." : "";
   }
   if (!lista.length) return;
+  /* O CARTAO DO PERFIL, e nao uma linha de tabela.
+
+     Ele era o arroba, um numero apagado ao lado e um botao verde chapado, tudo na mesma
+     altura: nada mandava em nada. Agora tem o retrato do perfil (a ficha ja' traz `foto`
+     e `nome`, e o endereco da imagem e' o mesmo que a tabela de Minerados usa), o nome em
+     cima do arroba, o numero como FIGURA, e o botao animado da casa.
+
+     O BOTAO E' O `.btn` DE SEMPRE (trava 30), com a marcacao inteira dele: o circulo que
+     cresce do meio, as duas setas que trocam de lado e o texto que desliza. Quem escreve
+     dentro dele usa o `dizNoBotao`, nunca `textContent`, senao a animacao e' varrida
+     (trava 31). Aqui ninguem troca o texto, so' o `disabled`. */
   const html = lista.map(p => `
     <div class="carr-perfil" data-conta="${p.conta}">
-      <span class="carr-nome">@${p.conta}</span>
-      <span class="carr-quantos">${num(p.carrosseis_baixaveis)} ${
-        p.carrosseis_baixaveis === 1 ? "carrossel" : "carrosséis"}</span>
-      <span class="dir">
-        <button class="acao forte" type="button" data-carr="${p.conta}">
-          <!-- CAIXA FECHANDO, e nunca a seta de baixar.
-               Os dois botoes deste cartao tinham o MESMO fundo, o MESMO texto e o MESMO
-               desenho de seta para baixo, a 126 pixels um do outro: um comeca um trabalho
-               de minutos a horas, o outro grava o arquivo, e clicar no errado recomeca a
-               coleta inteira. Achado pelo revisor de tela em 02/09/2026. -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M2 4h20v4H2zM10 12h4"/></svg>
-          Montar O Pacote</button>
+      ${retrato(p)}
+      <span class="carr-quem">
+        <b class="carr-nome">${p.nome || "@" + p.conta}</b>
+        <span class="carr-arroba">@${p.conta}</span>
       </span>
+      <span class="carr-numero">
+        <b>${num(p.carrosseis_baixaveis)}</b>
+        <i>${p.carrosseis_baixaveis === 1 ? "carrossel" : "carrosséis"}</i>
+      </span>
+      <button class="btn brasa" type="button" data-carr="${p.conta}"
+        ><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"
+          ><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg
+        ><span class="txt">Montar O Pacote</span><svg class="seta seta-dir"
+          viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
     </div>`).join("");
   const alvo = $("carr_perfis");
   // Desenho igual não se redesenha, a mesma regra da fileira acima: reescrever apagaria o

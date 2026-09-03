@@ -611,11 +611,16 @@
       <p class="carr-conta" id="carr_conta"></p>
 
       <div class="carr-pe" id="carr_pe" hidden>
-        <button class="acao forte" id="carr_baixar" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
-          <span id="carr_baixar_txt">Baixar O Pacote</span></button>
+        <!-- O BOTAO ANIMADO DA CASA (trava 30), e o `carr_baixar_txt` E' O `.txt` dele:
+             quem escreve o rotulo (`desenhaOPacote` e `acharPacoteNoDisco`) escreve DENTRO
+             do span, e por isso o circulo e as duas setas sobrevivem. Escrever no botao
+             inteiro varreria a animacao e deixaria uma pilula muda (trava 31). -->
+        <button class="btn brasa grande" id="carr_baixar" type="button"
+          ><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"
+            ><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg
+          ><span class="txt" id="carr_baixar_txt">Baixar O Pacote</span><svg
+            class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path
+            d="m12 5 7 7-7 7"/></svg></button>
         <span class="nota mini">O arquivo fica no seu computador. A casa não apaga o que
           baixou.</span>
       </div>

@@ -3122,25 +3122,52 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .carr-tit svg{width:19px;height:19px;stroke:var(--accent);flex:none}
 .carr-tit h3{margin:0}
 
-/* O ICONE DENTRO DO BOTAO SE MEDE POR AREA, e nao na regra base do `.acao`.
-   Este e' o molde da casa (`.kon-topo .acao svg`, `.aj-esteira .acao svg`): o `.acao` nao
-   e' flex nem dimensiona svg, porque quase todo botao daqui e' so' texto. Sem a linha, o
-   desenho sai no tamanho natural dele (uns 300px de altura), o botao cresce junto e o texto
-   cai POR FORA da pilula. Foi assim que este cartao saiu na primeira foto, e a comparacao
-   com a maquete passou verde: a geometria conferia a caixa, a fileira, a barra, a conta e o
-   rodape, e nenhum par media o botao. Quem pegou foi a FOTO. */
-.cx-carr .acao{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
-.cx-carr .acao svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;
-  stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* O CARTAO DO PERFIL. Ele era uma linha rasa: arroba, numero apagado ao lado e um botao
+   verde chapado, tudo na mesma altura e sem nada mandando em nada. Agora tem retrato,
+   nome sobre arroba, o numero como FIGURA e o botao animado da casa (trava 30).
 
-.carr-perfis{display:flex;flex-direction:column;gap:8px;margin:16px 0 0}
+   O RETRATO E' O MESMO DA TABELA DE MINERADOS, e nao uma copia: `.pcard-retrato` e
+   `.pcard-avatar` vem do sistema, e aqui so' se diz o TAMANHO. Foi copia a mao dessas
+   classes que ja' fez esta tela desenhar o miolo ampliado de uma foto. */
+.carr-perfis{display:flex;flex-direction:column;gap:10px;margin:18px 0 0}
 .carr-perfis:empty{display:none}
-.carr-perfil{display:flex;align-items:center;gap:12px;padding:11px 14px;
-  border:1px solid var(--rule-solid);border-radius:var(--r-md);background:var(--paper-2)}
+.carr-perfil{display:flex;align-items:center;gap:14px;padding:14px 16px;
+  border:1px solid var(--rule-solid);border-radius:var(--r-lg);
+  background:var(--paper-2);
+  transition:border-color .25s ease, background .25s ease, transform .25s ease}
+.carr-perfil:hover{border-color:color-mix(in srgb, var(--accent) 40%, var(--rule-solid));
+  transform:translateY(-1px)}
 .carr-perfil[data-escolhido="sim"]{border-color:var(--accent);background:var(--accent-tint)}
-.carr-nome{font-weight:600;font-size:14px}
-.carr-quantos{color:var(--muted);font-size:13px}
-.carr-perfil .dir{margin-left:auto;display:flex;align-items:center;gap:10px}
+.carr-perfil .pcard-retrato{flex:0 0 42px;width:42px;height:42px}
+.carr-perfil .pcard-avatar{border-width:2px;font-size:16px}
+
+/* NOME EM CIMA, ARROBA EMBAIXO: sao duas coisas, e a que ele reconhece e' o nome.
+   `min-width:0` para o nome comprido cortar em vez de empurrar o resto do cartao. */
+.carr-quem{display:flex;flex-direction:column;gap:2px;min-width:0}
+.carr-nome{font-weight:600;font-size:14.5px;line-height:1.25;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.carr-arroba{color:var(--muted);font-size:12.5px;line-height:1.2}
+
+/* O NUMERO E' FIGURA, e o rotulo dele fica embaixo, menor. E' a mesma ordem das caixas
+   de Situacao: valor primeiro, palavra depois. Alinhado a' direita e encostado no botao,
+   com `margin-left:auto` empurrando os dois para la'. */
+/* E ELE RESPIRA LONGE DO BOTAO. Com o vao de 14px da fileira, o "48" encostava na borda
+   da pilula e os dois viravam um bloco so': o numero e' informacao, o botao e' gesto, e
+   eles nao se leem juntos. */
+.carr-numero{margin-left:auto;margin-right:8px;display:flex;flex-direction:column;
+  align-items:flex-end;gap:1px;line-height:1;text-align:right}
+.carr-numero b{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em}
+.carr-numero i{font-style:normal;font-size:11.5px;color:var(--muted);
+  letter-spacing:.02em}
+
+/* O BOTAO DO CARTAO E' MENOR QUE O `.btn` PADRAO, porque ele divide a linha com o
+   retrato e o numero. O `--desl` encolhe junto: num botao de folga pequena, um passo
+   grande joga a palavra por cima da seta da direita (a razao esta' escrita no `.btn`). */
+.carr-perfil .btn{flex:none;font-size:12.5px;padding:8px 20px;--desl:7px}
+.carr-perfil .btn .seta{width:12px;height:12px}
+.carr-perfil .btn .seta-dir{right:11px}
+.carr-perfil .btn:hover .seta-esq{left:11px}
 
 /* UMA MARCA POR CARROSSEL, e nao uma tarja que enche (trava 37): a tarja diz a fracao, a
    marca diz quantas sao, quantas ja' foram e QUAIS deram problema.
