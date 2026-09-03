@@ -32,7 +32,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 import atividade
-from minerar import (CABECALHO, PASTA, abre_pelo_arroba, limpa_post,
+from minerar import (CABECALHO, PASTA, POR_PAGINA, abre_pelo_arroba, limpa_post,
                      pagina_de_reels, grava)
 
 FONTES = Path("dados/fontes.json")
@@ -157,27 +157,67 @@ def ja_basta(estado: dict, r: dict) -> bool:
     return sum(1 for p in posts if p.get("formato") in formatos) >= alvo
 
 
-def _uma_pagina(uid: str, marcador: str | None) -> tuple[dict | None, str]:
+def _uma_pagina(uid: str, marcador: str | None,
+                conta: str | None = None) -> tuple[dict | None, str]:
     """Uma página do feed, e junto o que veio quando nada veio.
 
     A segunda coisa devolvida é a resposta da recusa (código HTTP ou nome da queda de
     rede). Antes ela morria impressa no log do Actions, que ninguém lê; agora o ramo
     de falha a leva para o livro do perfil.
+
+    O CAMINHO PELO ARROBA VEM PRIMEIRO, E ISSO E' O CONSERTO DE 03/09/2026.
+
+    O QUE ESTAVA ACONTECENDO. A abertura de um perfil usa o `abre_pelo_arroba` do
+    `minerar.py`, pelo endereço `/feed/user/<CONTA>/username/`, e ela passa. A partir da
+    SEGUNDA página a esteira vinha aqui, e aqui o endereço era `/feed/user/<UID>/`, que
+    é outro caminho. Ele responde 401 com o corpo `{"message": "Aguarde alguns minutos
+    antes de tentar novamente.", "require_login": true}`.
+
+    Resultado na tela dele: os dois perfis de carrossel que ele pôs em 03/09/2026 pararam
+    em 9 e em 2 posts, com "Nenhuma Página Veio (Feed): Recusa 401 Do Instagram,
+    Tentativa 54" e a pastilha "sem leitura" por mais de uma hora. Cada rodada abria a
+    primeira página de novo, não avançava, e queimava uma tentativa.
+
+    MEDIDO NESTA MAQUINA, EM 03/09/2026, com segundos entre as chamadas:
+
+        /feed/user/<CONTA>/username/?count=12                    200, 12 posts
+        /feed/user/<CONTA>/username/?count=12&max_id=<marcador>  200, 12 posts NOVOS
+        a terceira, com o marcador da segunda                    200, 12 posts NOVOS
+        /feed/user/<UID>/?count=12                               401
+        /feed/user/<UID>/?count=12&max_id=<marcador>             401
+        o mesmo por i.instagram.com                              401
+        o mesmo sem o X-IG-App-ID                                401
+
+    Ou seja: o endereço do arroba ACEITA `max_id` e pagina de verdade, e o limite nunca
+    foi do Instagram inteiro nem do endereço de saída: era DESTE caminho, exatamente como
+    o `pagina_de_reels` já tinha descoberto para o caminho dele em 18/08/2026.
+
+    O CAMINHO POR UID FICA COMO RESERVA, e não sai daqui. Ele já foi o principal, pode
+    voltar a passar num endereço de saída que o do arroba recuse, e tirá-lo trocaria um
+    caminho que às vezes falha por um caminho só. Sem o `conta` (chamador antigo) ele
+    continua sendo o único, que é o comportamento de antes.
     """
     rabo = f"&max_id={marcador}" if marcador else ""
-    motivos = []
+    vias = []
+    if conta:
+        vias.append(("o arroba",
+                     f"https://www.instagram.com/api/v1/feed/user/{conta}/username/"
+                     f"?count={POR_PAGINA}{rabo}"))
     for dominio in ("www.instagram.com", "i.instagram.com"):
-        url = f"https://{dominio}/api/v1/feed/user/{uid}/?count=12{rabo}"
+        vias.append((dominio,
+                     f"https://{dominio}/api/v1/feed/user/{uid}/?count=12{rabo}"))
+    motivos = []
+    for rotulo, url in vias:
         try:
             req = urllib.request.Request(url, headers=CABECALHO)
             with urllib.request.urlopen(req, timeout=25) as r:
                 return json.loads(r.read()), ""
         except urllib.error.HTTPError as e:
-            print(f"  {dominio} recusou ({e.code})")
-            motivos.append(f"{dominio} recusou ({e.code})")
+            print(f"  {rotulo} recusou ({e.code})")
+            motivos.append(f"{rotulo} recusou ({e.code})")
         except Exception as e:
-            print(f"  {dominio} falhou ({type(e).__name__})")
-            motivos.append(f"{dominio} falhou ({type(e).__name__})")
+            print(f"  {rotulo} falhou ({type(e).__name__})")
+            motivos.append(f"{rotulo} falhou ({type(e).__name__})")
         time.sleep(2)
     return None, "; ".join(motivos)
 
@@ -222,9 +262,38 @@ def quer_reler(conta: str, estado: dict, pedidas: set[str], quando: int) -> bool
     return conta in pedidas and quando > int(estado.get("releitura_em") or 0)
 
 
+def falta_formato(estado: dict, r: dict) -> bool:
+    """O perfil está completo, mas de um formato que a régua de HOJE não pede mais?
+
+    `completo` É MARCA DO PERFIL, E NÃO DO FORMATO, e essa confusão custou a tarde dele em
+    03/09/2026. O @leisdamentemilionaria foi varrido em 25/08 com a régua só em reels: 395
+    reels, `completo: true`, marcador no fim do perfil. Quando ele marcou CARROSSEL na
+    régua, aquele perfil continuou fora da fila para sempre, e a tela dizia "acabaram os
+    carrosséis do perfil" num perfil onde carrossel nunca foi procurado uma vez.
+
+    Ou seja: MARCAR UM FORMATO NOVO NUNCA TRAZIA ESSE FORMATO DOS PERFIS ANTIGOS. O único
+    caminho de volta era o `revisitar.json`, que nenhum botão da tela escreve.
+
+    AQUI SE COMPARA O QUE FOI VARRIDO COM O QUE SE PEDE. A régua da época vem da ficha;
+    ficha velha, sem o campo, responde pelo que ela TEM (a mesma medida que o
+    `atividade.rotulo_medido` faz para a etiqueta). Formato pedido que não está em nenhum
+    dos dois quer dizer que este perfil nunca foi lido para ele.
+
+    E ELE VOLTA PELO COMEÇO, com marcador próprio: a releitura já tem esse mecanismo
+    (`marcador_novo`), e reusar o marcador antigo pularia justamente o histórico onde os
+    carrosséis dele estão.
+    """
+    pedidos = formatos_pedidos(r)
+    da_epoca = set((estado.get("regua_da_epoca") or {}).get("formatos") or ())
+    if not da_epoca:
+        da_epoca = {x.get("formato") for x in (estado.get("posts") or [])}
+    return bool(pedidos - da_epoca)
+
+
 def pendentes(contas: list[str]) -> list[str]:
     """Perfis que ainda faltam, do menos varrido em proporção para o mais varrido."""
     pedidas, quando = releitura_pedida()
+    r = regua()
     fila = []
     for c in contas:
         e = estado_de(c)
@@ -236,7 +305,7 @@ def pendentes(contas: list[str]) -> list[str]:
         if e.get("so_logado"):
             continue
         if e.get("completo"):
-            if not quer_reler(c, e, pedidas, quando):
+            if not quer_reler(c, e, pedidas, quando) and not falta_formato(e, r):
                 continue
             # releitura entra no fim da fila: ela é curta, e quem nunca foi varrido
             # até o fim tem mais a ganhar com a vaga.
@@ -450,7 +519,7 @@ def anotar_abertura_falhada(conta: str, vaga: int, fala: str) -> None:
     atividade.anotar_de_novo(
         livro, "falha_abertura", int(time.time()),
         f"Abertura Pelo Arroba Não Passou: {_resumo_da_resposta(fala)}. "
-        f"A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa {tentativa}.",
+        f"{tentativa}ª Tentativa De Abertura.",
         tentativa=tentativa, vaga=vaga, resposta=fala.strip()[-280:] or None)
     atividade.gravar(livro)
 
@@ -465,15 +534,28 @@ def anotar_vaga_sem_leitura(conta: str, vaga: int, caminho: str, fala: str) -> N
     """
     livro = atividade.carregar(conta)
     ev = livro["eventos"]
-    seguidas = 1
+    # O CONTADOR CONTA RODADA, E NAO VAGA, e essa era a origem do "Tentativa 54" em uma
+    # hora. Com dois perfis na fila e vinte vagas, DEZ vagas caem no mesmo perfil a cada
+    # rodada (`posicao = (vaga - 1) % len(fila)`), e cada uma somava um. O numero subia
+    # dez vezes mais rapido que a realidade e nao media nada que se pudesse usar.
+    rodada_agora = str(os.environ.get("GITHUB_RUN_NUMBER") or "")
+    seguidas, vagas = 1, 1
     if ev and ev[-1].get("tipo") == "sem_leitura":
-        seguidas = int((ev[-1].get("detalhe") or {}).get("seguidas") or 0) + 1
+        antes = ev[-1].get("detalhe") or {}
+        mesma = rodada_agora and str(antes.get("rodada") or "") == rodada_agora
+        seguidas = int(antes.get("seguidas") or 0) + (0 if mesma else 1)
+        vagas = int(antes.get("vagas") or 0) + 1 if mesma else 1
+    # E O PRAZO NAO VAI GRAVADO. O livro e' permanente e a esteira EMENDA a propria
+    # rodada (trava 22): "em ate 30 min" fica escrito para sempre e contradiz a propria
+    # tela, que le' o `/vivo` e sabe quando a esteira volta de verdade. O evento diz o que
+    # ACONTECEU; quem diz quando volta e' quem esta' olhando a hora.
     atividade.anotar_de_novo(
         livro, "sem_leitura", int(time.time()),
         f"Nenhuma Página Veio ({caminho.capitalize()}): {_resumo_da_resposta(fala)}. "
-        f"A Próxima Rodada Tenta De Novo Em Até 30 Min, Tentativa {seguidas}.",
-        seguidas=seguidas, vaga=vaga, caminho=caminho,
-        resposta=fala.strip()[-280:] or None)
+        + (f"{seguidas}ª Rodada Seguida Sem Página"
+           + (f", {vagas} Vagas Recusadas Nesta." if vagas > 1 else ".")),
+        seguidas=seguidas, vagas=vagas, rodada=rodada_agora or None,
+        vaga=vaga, caminho=caminho, resposta=fala.strip()[-280:] or None)
     atividade.gravar(livro)
 
 
@@ -482,8 +564,7 @@ def anotar_estouro(conta: str, vaga: int, erro: str) -> None:
     livro = atividade.carregar(conta)
     atividade.anotar_de_novo(
         livro, "estouro", int(time.time()),
-        f"A Vaga Estourou No Meio Do Trabalho: {erro}. "
-        f"A Próxima Rodada Tenta De Novo Em Até 30 Min.",
+        f"A Vaga Estourou No Meio Do Trabalho: {erro}.",
         vaga=vaga, erro=erro)
     atividade.gravar(livro)
 
@@ -516,10 +597,22 @@ def main() -> int:
 
     estado = estado_de(conta)
     pedidas, quando = releitura_pedida()
-    relendo = bool(estado.get("completo")) and quer_reler(conta, estado, pedidas, quando)
+    # A REGUA SOBE PARA CA' porque a decisao de reler ja' precisa dela: ela era lida cem
+    # linhas abaixo, depois do ponto em que o perfil completo era descartado.
+    r = regua()
+    # FORMATO QUE NUNCA FOI PROCURADO NESTE PERFIL ENTRA COMO RELEITURA, e nao como
+    # "ja' completo". Um perfil varrido so' de reels esta' completo DE REELS; marcar
+    # carrossel na regua depois nunca o trazia de volta, e a tela ainda dizia "acabaram os
+    # carrosseis do perfil" (03/09/2026). A releitura ja' tem o mecanismo certo para isso:
+    # comeca do topo, com marcador proprio, sem perder o lugar da varredura profunda.
+    falta = estado.get("completo") and falta_formato(estado, r)
+    relendo = bool(estado.get("completo")) and (
+        quer_reler(conta, estado, pedidas, quando) or falta)
     if estado.get("completo") and not relendo:
         print(f"[{conta}] já ficou completo enquanto eu esperava")
         return 0
+    if falta:
+        print(f"[{conta}] completo de outro formato; releio pelo que a régua pede agora")
 
     # A RELEITURA COMEÇA DO TOPO, e não de onde a varredura parou. O que é novo está na
     # primeira página; o marcador guardado aponta para o fundo do histórico, que já está
@@ -610,7 +703,6 @@ def main() -> int:
               f"{len(aberto['posts'])} posts já na primeira página")
         return 0
 
-    r = regua()
     vistos = {p["codigo"] for p in estado["posts"]}
     novos = 0
     paginas = 0
@@ -661,7 +753,11 @@ def main() -> int:
     # DUAS PÁGINAS POR VAGA, e não uma. Medido: o corte vem na terceira leitura.
     while paginas < PAGINAS_POR_VAGA:
         marcador = estado.get("marcador_novo") if relendo else estado.get("marcador")
-        j, fala = _uma_pagina(estado["perfil"]["id"], marcador)
+        # O ARROBA VAI JUNTO porque e' por ele que a pagina 2 em diante passa (veja o
+        # bloco de medicao no `_uma_pagina`). Sem ele, a varredura de carrossel para na
+        # primeira pagina e repete a tentativa para sempre.
+        j, fala = _uma_pagina(estado["perfil"]["id"], marcador,
+                              estado["perfil"].get("conta") or conta)
         if j is None:
             # mesmo critério do caminho dos reels: recusa depois de página lida é o
             # fim natural da vaga, e só a vaga de mãos vazias fica escrita no livro
@@ -763,8 +859,7 @@ if __name__ == "__main__":
                 anotar_estouro(_CONTA_DA_VEZ, int(os.environ.get("VAGA", "1")), erro)
             else:
                 atividade.anotar_saude(
-                    f"Uma Vaga Da Esteira Estourou Antes De Escolher Perfil: {erro}. "
-                    f"A Próxima Rodada Tenta De Novo Em Até 30 Min.",
+                    f"Uma Vaga Da Esteira Estourou Antes De Escolher Perfil: {erro}.",
                     vaga=int(os.environ.get("VAGA", "1")), erro=erro)
         except Exception as e2:
             # até a rede de segurança pode falhar; que fique ao menos no log

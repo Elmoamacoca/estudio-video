@@ -164,7 +164,22 @@ jobs:
             echo "nada novo nesta vaga"
             exit 0
           fi
-          git commit -m "vaga ${{ matrix.elo }}"
+          # NOTA DE FALHA NAO E' AVANCO, e o nome do commit precisa dizer isso.
+          #
+          # O passo "Emendar a proxima rodada" conta LINHAS de commit que comecam por
+          # "vaga" para decidir se a rodada trouxe post novo. So' que a vaga que NAO
+          # conseguiu ler tambem grava: ela deixa a nota do 401 em `dados/atividade/`, e
+          # isso virava um commit chamado "vaga N", contado como avanco. Em 03/09/2026 a
+          # esteira emendou de seis em seis minutos com as vinte vagas levando 401, e foi
+          # assim que o contador do perfil dele chegou a "Tentativa 54" numa hora.
+          #
+          # O criterio e' o CONTEUDO: mexeu so' no livro, e' nota; mexeu na ficha do
+          # perfil, e' leitura de verdade.
+          if git diff --staged --name-only | grep -qv '^dados/atividade/'; then
+            git commit -m "vaga ${{ matrix.elo }}"
+          else
+            git commit -m "nota da vaga ${{ matrix.elo }}"
+          fi
           # com vinte maquinas gravando junto, disputa e' o normal, nao a excecao.
           # Espera embaralhada para as vagas nao voltarem todas no mesmo instante.
           for tentativa in 1 2 3 4 5 6 7 8; do

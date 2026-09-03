@@ -206,6 +206,33 @@ def rotulo() -> str:
     return nomes[0] if len(nomes) == 1 else " e ".join([", ".join(nomes[:-1]), nomes[-1]])
 
 
+def rotulo_medido(posts: list) -> str:
+    """Como chamar o que ESTE perfil tem, medido nos posts dele.
+
+    O FALLBACK ANTIGO ERA A REGUA DE HOJE, e foi ele que pos na tela dele, em
+    03/09/2026, a linha:
+
+        "@leisdamentemilionaria - 395 CARROSSEIS, acabaram os CARROSSEIS do perfil"
+
+    Aquele perfil tem 395 reels e ZERO carrossel. A ficha dele e' anterior ao campo
+    `regua_da_epoca` (conferido: as chaves do topo sao perfil, marcador, completo,
+    atualizado e marcador_reels, e nao ha' `regua_da_epoca`), entao a capa caia na regua
+    ATUAL, que ele tinha acabado de marcar so' em carrossel. O comentario logo abaixo ja'
+    previa esse caminho ("acervo antigo, sem o campo, cai na regua atual como antes") sem
+    notar que ele nomeia o historico inteiro com a etiqueta errada.
+
+    A RESPOSTA HONESTA NAO E' A REGUA DE HOJE NEM A DE ONTEM: e' o que esta' no disco.
+    Ficha sem a regua da epoca ainda sabe dizer o que ela guarda, post por post, e e' a
+    trava 2 aplicada ao rotulo: mede-se, nao se deduz.
+    """
+    tem = {x.get("formato") for x in (posts or [])} & TODOS
+    if len(tem) != 1:
+        # zero formatos (ficha vazia) ou mais de um: nenhum nome de formato e' verdade,
+        # e a palavra neutra e' a unica que nao mente.
+        return "publicações"
+    return NOMES[next(iter(tem))]
+
+
 def contas_na_lista() -> list[str]:
     if not FONTES.exists():
         return []
@@ -417,6 +444,7 @@ def reconstruir_indice() -> dict:
             continue
         estado_perfil = {}
         da_epoca = {}
+        medido = ""
         pa = PERFIS / f"{livro['conta']}.json"
         if pa.exists():
             try:
@@ -431,6 +459,18 @@ def reconstruir_indice() -> dict:
                 da_epoca = d.get("regua_da_epoca") or {}
                 formatos_da_epoca = set(da_epoca.get("formatos") or [])
                 posts = d.get("posts") or []
+                # O QUE A FICHA TEM DE VERDADE, para quando ela nao souber dizer com que
+                # regua foi varrida. Sem isto, a capa cai na regua de HOJE e reetiqueta o
+                # historico (395 reels viraram "395 carrosséis" na tela dele em 03/09).
+                medido = rotulo_medido(posts)
+                # E O NUMERO JA' ESTAVA CERTO, o que so' ficou claro conferindo ao
+                # contrario. A revisao de 03/09/2026 apontou este `lidos` como o outro
+                # lado da mentira do rotulo; a conferencia mostrou que nao e'. Sem regua
+                # da epoca, `lidos` e' o total de posts da ficha, e o rotulo medido nomeia
+                # exatamente os formatos que estao la' dentro: para o perfil dele sao 395
+                # posts, todos reels, rotulados "reels". Deduzir os formatos aqui daria o
+                # MESMO numero em todo caso possivel, e codigo que nao muda resultado
+                # nenhum e' pior que codigo nenhum: ele finge que consertou algo.
                 lidos = (len([x for x in posts
                               if x.get("formato") in formatos_da_epoca])
                          if formatos_da_epoca and formatos_da_epoca != set(TODOS)
@@ -444,7 +484,10 @@ def reconstruir_indice() -> dict:
                 pass
         # o alvo entra como meta quando ha' filtro de formato: e' contra ele que a tela
         # compara, e nao contra o total de publicacoes do perfil, que nunca sera' lido
-        rot = str(da_epoca.get("rotulo") or rotulo())
+        # A ORDEM E' ESTA, E CADA DEGRAU E' MENOS PALPITE QUE O SEGUINTE: o que a ficha
+        # gravou na hora da varredura; senao o que a ficha TEM, medido; e so' quando nao
+        # ha' ficha nenhuma, a regua de hoje, que ai' e' a unica coisa que existe.
+        rot = str(da_epoca.get("rotulo") or medido or rotulo())
         if rot != "publicações" and estado_perfil:
             # META SO' EXISTE SE ALGUEM PEDIU UM ALVO. Aqui havia um "ou 200" herdado do
             # tempo em que a varredura parava sozinha: sem alvo, o cartao continuava
@@ -466,13 +509,23 @@ def reconstruir_indice() -> dict:
             # depois da correcao.
             "falhas": sum(1 for e in ev if peso(e) == "falha"),
             "avisos": sum(1 for e in ev if peso(e) == "aviso"),
-            "ultimo_tipo": ev[-1]["tipo"],
+            # O MAIS RECENTE PELO RELOGIO, e nao o ultimo da lista. Sao coisas diferentes
+            # quando duas vagas gravam fora de ordem, e o carimbo do cartao ja' andava para
+            # tras sozinho por causa disso.
+            "ultimo_tipo": max(ev, key=lambda e: e.get("quando") or 0)["tipo"],
             # O CONTADOR DE TENTATIVAS DE ABERTURA vai na capa porque e' a capa que os
             # cartoes leem: com ele aqui, o cartao mostra "Tentativa N" sem abrir o
             # livro. Ele so' aparece enquanto ha' fila de tentativas em curso; quando a
             # abertura passa, o rodada.py zera o campo e ele some daqui.
             **({"tentativas_id": int(livro.get("tentativas_id") or 0)}
                if livro.get("tentativas_id") else {}),
+            # QUANTAS RODADAS SEGUIDAS SEM PAGINA, na capa, porque e' a capa que a tela le'
+            # sem abrir o cartao. E' com este numero que ela distingue rodizio (uma vaga
+            # vazia entre outras que leram) de parede (todas vazias, rodada apos rodada), e
+            # sem ele a tela chamava as duas coisas de revezamento.
+            **({"sem_pagina": int((ev[-1].get("detalhe") or {}).get("seguidas") or 0),
+                "vagas_recusadas": int((ev[-1].get("detalhe") or {}).get("vagas") or 0)}
+               if ev and ev[-1].get("tipo") == "sem_leitura" else {}),
             **estado_perfil,
         })
     contas.sort(key=lambda c: c["ultimo"], reverse=True)

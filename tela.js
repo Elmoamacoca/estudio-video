@@ -1108,8 +1108,11 @@ function desenhaMinerados() {
                        !== "publicações";
     const cob = p.publicacoes ? Math.round(100 * p.lidos / p.publicacoes) : 0;
     const coluna = filtrado
+      // A CONTAGEM E' DO FORMATO QUE O ROTULO NOMEIA. Com `p.lidos` a coluna dizia
+      // "todos / 395 carrosséis" num perfil de 395 reels e zero carrossel (03/09/2026);
+      // a ficha do perfil ja' traz `reels`, `imagens` e `carrosseis` separados.
       ? (p.completo
-          ? `<span class="tab-dupla">todos<i>${num(p.lidos)} ${
+          ? `<span class="tab-dupla">todos<i>${num(lidosDoPerfil(p))} ${
               rotuloDosFormatos(null, LIVRO.find(c => c.conta === p.conta))}</i></span>`
           : `<span class="tab-dupla">em curso<i>${num(p.lidos)} até agora</i></span>`)
       : p.publicacoes
@@ -1296,12 +1299,16 @@ const filtrando = () => {
    medir uma soma é prova que ninguém escreve. */
 const NOME_DA_CONTA_DE = { reels: "reels", post: "imagens", carrossel: "carrosseis" };
 
-function lidosDoPainel(perfis) {
+/** Quantos daquele perfil, contando SO' os formatos que a régua pede. */
+function lidosDoPerfil(p) {
   const formatos = (REGUA_VALENDO && REGUA_VALENDO.formatos) || [];
-  const deUm = p => (filtrando()
+  return filtrando()
     ? formatos.reduce((a, f) => a + (p[NOME_DA_CONTA_DE[f]] || 0), 0)
-    : (p.lidos || 0));
-  return (perfis || []).reduce((a, p) => a + deUm(p), 0);
+    : (p.lidos || 0);
+}
+
+function lidosDoPainel(perfis) {
+  return (perfis || []).reduce((a, p) => a + lidosDoPerfil(p), 0);
 }
 
 /* A GRAVIDADE É DECIDIDA AQUI, e não lida do que ficou gravado.
@@ -1318,6 +1325,17 @@ const PESO = {
    falha deles de "evento" esconderia exatamente o que a lei manda mostrar. */
 const pesoDe = e => PESO[e.tipo] || e.gravidade || "evento";
 
+/* COMO CADA EVENTO SE CHAMA NA TELA, e por que a lista tem de estar COMPLETA.
+
+   Em 03/09/2026 o Gabriel fotografou os dois perfis dele com a pastilha escrita
+   `sem_leitura`, com sublinhado e tudo: a chave interna do programa, na cara dele. Sete
+   dos treze tipos que o `atividade.py` grava não tinham tradução aqui, e o desenho cai no
+   próprio tipo quando não acha. Os que faltavam eram justamente os ramos de FALHA, ou
+   seja, os únicos que ele lê quando algo dá errado.
+
+   QUEM MANDA NA LISTA É O `GRAVIDADE` do `atividade.py`, e a prova cruza os dois: chave
+   gravada lá sem tradução aqui reprova. Lista escrita à mão dos dois lados diverge no
+   primeiro tipo novo, e foi exatamente o que aconteceu. */
 const TIPOS = {
   aguardando: "aguardando identificação",
   vazio: "sem posts públicos",
@@ -1328,7 +1346,57 @@ const TIPOS = {
   limite: "limite do Instagram",
   sem_avanco: "sem avanço",
   lote: "lote baixado",
+  sem_leitura: "o Instagram recusou",
+  falha_abertura: "não abriu pelo arroba",
+  estouro: "a vaga estourou",
+  vigia: "reaberto pelo vigia",
+  casa: "lido pela casa",
+  resgate: "resgate",
 };
+
+// OS TRES JEITOS DE O INSTAGRAM DIZER NAO. Para quem olha a tela, "quem está preso?" é
+// uma pergunta só, e o filtro precisa respondê-la sem exigir que ele saiba os três nomes.
+const RECUSAS = new Set(["sem_leitura", "falha_abertura", "estouro"]);
+
+/* A FRASE QUANDO A RECUSA JÁ VIROU PAREDE, e vazio quando ainda é rodízio.
+
+   O `rodada.py` grava no evento quantas RODADAS seguidas ficaram sem página e quantas
+   vagas foram recusadas na atual. Uma vaga vazia entre outras que leram é o rodízio de
+   endereços funcionando; todas vazias, rodada após rodada, é o Instagram fechado para
+   este perfil, e chamar isso de revezamento faz quem lê esperar calmo por uma coisa que
+   não vai acontecer. Foi o que ele leu por uma hora em 03/09/2026. */
+function recusaSeguida(b) {
+  // O NUMERO MORA NA CAPA DO LIVRO, e nao no bilhete: o bilhete conta o que a vaga leu,
+  // e aqui a pergunta é sobre as vagas que NÃO leram.
+  const c = LIVRO.find(x => x.conta === (b && b.conta)) || {};
+  const rodadas = Number(c.sem_pagina || 0);
+  const vagas = Number(c.vagas_recusadas || 0);
+  if (rodadas < 2) return "";
+  return `O Instagram está recusando este perfil de todos os endereços da esteira: `
+    + `${num(rodadas)} rodadas seguidas sem página`
+    + (vagas > 1 ? `, ${num(vagas)} vagas recusadas na última.` : ".");
+}
+
+/* A PASTILHA DIZ O ESTADO DO PERFIL, e o motivo vai ao lado.
+
+   O QUE ELE VIU EM 03/09/2026: dois perfis que JA' TINHAM LIDO 9 e 2 posts, marcados
+   "sem leitura". Os dois estavam sendo varridos; o que não tinha lido nada era a ÚLTIMA
+   VAGA, que é outra coisa. É a trava 2 na etiqueta: "não consegui ler agora" e "não leu
+   nada" são estados diferentes, e mostrar a mesma palavra para os dois esconde qual é.
+
+   A ORDEM É: já leu e acabou; já leu e continua; nunca leu. O tipo do último evento
+   continua aparecendo, mas como MOTIVO, e não como estado. */
+function etiquetaDoPerfil(c) {
+  const motivo = TIPOS[c.ultimo_tipo] || c.ultimo_tipo || "";
+  if (c.completo) return TIPOS.concluido;
+  if (c.lidos > 0) {
+    // RECUSA NUMA VAGA NÃO APAGA O QUE JÁ FOI LIDO: o perfil está varrendo, e a recusa é
+    // o que aconteceu na última tentativa.
+    return motivo && c.ultimo_tipo !== "varredura"
+      ? `Varrendo · ${motivo}` : "Varrendo";
+  }
+  return motivo || "na fila";
+}
 
 function dataHora(ts) {
   return new Date(ts * 1000).toLocaleString("pt-BR",
@@ -1461,8 +1529,14 @@ function linhaDoAgora(b) {
         // vinte máquinas se revezam e a que pega endereço já usado volta sem página:
         // mandar esperar meia hora nessa hora é conselho errado, e assusta.
         + (ESTEIRA_NO_AR
-            ? "A rodada está no ar agora: as vagas se revezam, e a que volta sem página "
-              + "é endereço já usado."
+            // RODIZIO E PAREDE NAO SAO A MESMA COISA, e a frase precisa saber qual das
+            // duas esta' vendo. Rodizio e' UMA vaga vazia entre outras que leram; parede
+            // e' todas vazias. Em 03/09/2026 dez vagas por rodada levaram 401 no mesmo
+            // perfil e a tela chamava isso de revezamento, o que faz quem le' esperar
+            // calmo por uma coisa que nao vai acontecer. O livro ja' guarda o numero.
+            ? (recusaSeguida(b) ? recusaSeguida(b)
+               : "A rodada está no ar agora: as vagas se revezam, e a que volta sem "
+                 + "página é endereço já usado.")
             : `A esteira emenda ao fim de cada rodada, ou às ${proximaRodadaAs()} se parar`)
       : paradoHa > 90
         ? `Varredura em curso: última página há ${Math.round(paradoHa / 60)} min. `
@@ -1713,7 +1787,11 @@ function livroFiltrado() {
   return LIVRO.filter(c => {
     if (q && !((c.conta || "") + " " + (c.nome || "")).toLowerCase().includes(q))
       return false;
-    if (livroTipo && c.ultimo_tipo !== livroTipo) return false;
+    // "Recusados" e' um GRUPO, e nao um tipo: os tres ramos em que o Instagram diz
+    // nao sao a mesma pergunta para quem olha.
+    if (livroTipo === "recusados") {
+      if (!RECUSAS.has(c.ultimo_tipo)) return false;
+    } else if (livroTipo && c.ultimo_tipo !== livroTipo) return false;
     if (livroDesde && c.ultimo < livroDesde) return false;
     return true;
   });
@@ -1788,7 +1866,7 @@ function desenhaLivro() {
               // só existe na lista de origem ainda não foi tocada pela esteira, e o
               // rótulo diz exatamente em que degrau ela está.
               c.aguardando ? "Na Fila, Esperando A Esteira"
-              : TIPOS[c.ultimo_tipo] || c.ultimo_tipo || "na fila"}</span></span>
+              : etiquetaDoPerfil(c)}</span></span>
           <span class="liv-sub">@${c.conta} · ${
             c.vivo ? '<b class="liv-vivo">varrendo agora</b>'
             // SEM SINAL NOVO NO PRAZO, o card rebaixa a afirmação sozinho: diz há
@@ -1986,7 +2064,17 @@ window.montarSelect("liv-tipo", [
   { v: "varredura", r: "Em Varredura" },
   { v: "limite", r: "Fechados No Limite" },
   { v: "concluido", r: "Concluídos" },
-  { v: "sem_avanco", r: "Com Falha Na Última" },
+  // O ROTULO DIZ O QUE O PROPRIO CODIGO DIZ NAO SER FALHA: `sem_avanco` e' AVISO na
+  // tabela de gravidade ("varias vagas caem no mesmo perfil e as ultimas voltam
+  // vazias, que e' o rodizio funcionando").
+  { v: "sem_avanco", r: "Sem Avanço Na Última" },
+  // E A PERGUNTA QUE ELE FAZ olhando esta tela e' "quem esta' preso?". Nenhuma das
+  // seis opcoes respondia: os tres tipos de recusa (`sem_leitura`, `falha_abertura`
+  // e `estouro`) nao estavam na lista, entao os dois perfis travados dele nao
+  // apareciam em filtro nenhum, em 03/09/2026.
+  { v: "recusados", r: "Recusados Pelo Instagram" },
+  { v: "sem_leitura", r: "Sem Página Na Última" },
+  { v: "falha_abertura", r: "Não Abriram Pelo Arroba" },
   { v: "identificado", r: "Só Identificados" },
 ], "", v => { livroTipo = v; livroMostra = POR_LEVA; desenhaLivro(); });
 
@@ -2077,7 +2165,13 @@ $("exp_baixar").onclick = async () => {
    os mesmos três cartões. */
 function desenhaProntos(perfis) {
   const alvo = $("prontos");
-  const nome = rotuloDosFormatos(null, LIVRO[0] || null);
+  /* A FILEIRA DE BAIXAR FALA DE REELS, SEMPRE, e por isso ela nao usa o rotulo da regua.
+
+     O numero que ela mostra e' `restam`, e o `selecionar.py` o calcula so' com
+     `x["formato"] == "reels"` (trava 73d: carrossel tem conta propria porque quem o
+     baixa e' a casa, e nao a esteira). Com a regua marcada em carrossel, a frase saia
+     "40 carrosseis esperando" para um numero que nunca teve um carrossel dentro. */
+  const nome = "reels";
   // O SALDO VEM DO SELETOR, mas a tela sabe se virar sem ele. `restam` nasceu hoje, e
   // o acervo so' passa a trazer o campo depois que o seletor rodar de novo: sem esta
   // saida, a fileira abriria vazia dizendo que tudo ja' foi baixado, que e' o contrario
@@ -2188,7 +2282,7 @@ document.addEventListener("click", ev => {
   if (ESCOLHIDOS.has(conta)) ESCOLHIDOS.delete(conta);
   else ESCOLHIDOS.add(conta);
   card.classList.toggle("marcado", ESCOLHIDOS.has(conta));
-  contarLote(ULTIMOS_PRONTOS, rotuloDosFormatos(null, LIVRO[0] || null));
+  contarLote(ULTIMOS_PRONTOS, "reels");
 });
 
 /* ---------------------------------------------------------------- atualização */
@@ -2325,7 +2419,13 @@ async function atualizar() {
   // anterior: na primeira carga a lista está vazia, e o painel abria dizendo
   // "publicações varridas" numa varredura de carrossel, corrigindo-se 25 segundos
   // depois. Quem olha nesses 25 segundos vê a coisa errada.
-  const rot = rotuloDosFormatos(null, LIVRO[0] || null);
+  /* O ROTULO SAI DA MESMA AUTORIDADE QUE O NUMERO, e por isso ignora a ficha.
+
+     `lidosDoPainel` soma pelos formatos de `REGUA_VALENDO`; passando a ficha aqui, o
+     rótulo tomava um atalho pelo `rotulo` gravado dela (o do PRIMEIRO perfil da lista, o
+     que já é arbitrário) e os dois lados da frase podiam discordar. Dois valores que se
+     leem juntos respondem a uma autoridade só. */
+  const rot = rotuloDosFormatos(null, null);
   $("rot_lidos").textContent = rot === "publicações" ? "publicações varridas"
                                                      : rot + " varridos";
   // COMEÇA NA HORA: se há perfil sem identificação, a primeira tentativa sai agora, e
