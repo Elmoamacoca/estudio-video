@@ -1,6 +1,20 @@
 {
  "contas": [
   {
+   "conta": "omatheusdaia",
+   "nome": "Matheus Castro | AI Coding",
+   "rotulo": "carrosséis",
+   "primeiro": 1788407025,
+   "ultimo": 1788407997,
+   "eventos": 4,
+   "falhas": 0,
+   "avisos": 2,
+   "ultimo_tipo": "varredura",
+   "lidos": 102,
+   "publicacoes": 0,
+   "completo": false
+  },
+  {
    "conta": "liamjohnston.ai",
    "nome": "Liam Johnston",
    "rotulo": "carrosséis",
@@ -13,20 +27,6 @@
    "lidos": 48,
    "publicacoes": 0,
    "completo": true
-  },
-  {
-   "conta": "omatheusdaia",
-   "nome": "Matheus Castro | AI Coding",
-   "rotulo": "carrosséis",
-   "primeiro": 1788407025,
-   "ultimo": 1788407298,
-   "eventos": 3,
-   "falhas": 0,
-   "avisos": 2,
-   "ultimo_tipo": "sem_avanco",
-   "lidos": 8,
-   "publicacoes": 0,
-   "completo": false
   },
   {
    "conta": "leisdamentemilionaria",
@@ -43,5 +43,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788407298
+ "atualizado": 1788407997
 }

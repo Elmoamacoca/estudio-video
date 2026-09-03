@@ -30,6 +30,94 @@
     "gravacoes": 1,
     "total": 8
    }
+  },
+  {
+   "quando": 1788407997,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 94 carrosséis novos, 102 no total",
+   "detalhe": {
+    "rodada": 380,
+    "maquinas": 18,
+    "gravacoes": 18,
+    "passos": [
+     {
+      "quando": 1788407325,
+      "maquina": "vaga 1"
+     },
+     {
+      "quando": 1788407360,
+      "maquina": "vaga 2"
+     },
+     {
+      "quando": 1788407392,
+      "maquina": "vaga 3"
+     },
+     {
+      "quando": 1788407435,
+      "maquina": "vaga 4"
+     },
+     {
+      "quando": 1788407463,
+      "maquina": "vaga 5"
+     },
+     {
+      "quando": 1788407497,
+      "maquina": "vaga 6"
+     },
+     {
+      "quando": 1788407568,
+      "maquina": "vaga 8"
+     },
+     {
+      "quando": 1788407601,
+      "maquina": "vaga 9"
+     },
+     {
+      "quando": 1788407637,
+      "maquina": "vaga 10"
+     },
+     {
+      "quando": 1788407677,
+      "maquina": "vaga 11"
+     },
+     {
+      "quando": 1788407705,
+      "maquina": "vaga 12"
+     },
+     {
+      "quando": 1788407743,
+      "maquina": "vaga 13"
+     },
+     {
+      "quando": 1788407783,
+      "maquina": "vaga 14"
+     },
+     {
+      "quando": 1788407814,
+      "maquina": "vaga 15"
+     },
+     {
+      "quando": 1788407847,
+      "maquina": "vaga 16"
+     },
+     {
+      "quando": 1788407917,
+      "maquina": "vaga 17"
+     },
+     {
+      "quando": 1788407951,
+      "maquina": "vaga 19"
+     },
+     {
+      "quando": 1788407988,
+      "maquina": "vaga 20"
+     }
+    ],
+    "novos": 94,
+    "total": 102,
+    "publicacoes": 0
+   }
   }
  ]
 }
