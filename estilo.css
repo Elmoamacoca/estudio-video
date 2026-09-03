@@ -1299,33 +1299,20 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .acao.mini{height:30px;padding:0 12px;font-size:12.5px}
 .acao.mini.ativa{border-color:var(--accent);background:var(--accent-tint);
   color:var(--accent);font-weight:600}
-/* ---------------------------------------------------- os sub-passos no trilho
+/* ------------------------------------------- os sub-passos no trilho, ATE' 03/09/2026
 
-   ELES SÓ EXISTEM DENTRO DO PASSO 2. Fora dele o trilho volta a ser uma linha por
-   passo: quatro sub-itens abertos o tempo todo transformariam a espinha num índice. */
-.ed-sub{list-style:none;margin:10px 0 0;padding:0;display:none;flex-direction:column;
-  gap:7px}
-/* AS SUBETAPAS APARECEM NO PASSO EM QUE ELE ESTA', e nao no passo 3.
+   AS VINTE E DUAS LINHAS DE `.ed-sub` SAIRAM DAQUI, e nao foram comentadas: a lista
+   aninhada dentro do passo deixou de existir quando o trilho virou a tira de seis abas
+   rasas da maquete aprovada. Cada fase do passo 3 virou uma aba irma das outras, e o que
+   pinta a aba de agora e' `pintarOTrilho` no `tela.js`, lendo o par (passo, sub).
 
-   A REGRA NASCEU PRESA AO 3 porque so' o 3 tinha subetapas. Quando o 4 ganhou as
-   dele, em 23/08/2026, elas simplesmente nao apareciam: ele entrava no passo 4 e o
-   trilho continuava mostrando a lista do 3, com "peca a peca" em verde. A tela
-   dizia que ele estava num lugar e o conteudo era de outro.
+   POR QUE APAGAR EM VEZ DE DEIXAR DORMINDO: regra de folha que nao casa com elemento
+   nenhum e' invisivel para quem le' e ressuscita sozinha no dia em que alguem reusar o
+   nome da classe. E a prova de `provar_as_descricoes` exige a ausencia dela, justamente
+   para que ninguem a mantenha viva so' para agradar o portao.
 
-   E `ativo` NAO SERVE PARA ISTO: ele marca todo passo ja' vencido, entao o 3
-   continua ativo quando ele esta' no 4. Quem responde "e' aqui que eu estou" e'
-   `agora`, e e' um passo so' por vez. */
-.ed-ponto.agora .ed-sub{display:flex}
-.ed-sub li{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);
-  cursor:pointer;opacity:.55;transition:opacity .18s,color .18s}
-.ed-sub li i{flex:0 0 7px;width:7px;height:7px;border-radius:50%;
-  border:1.5px solid currentColor;transition:background .18s,transform .18s}
-.ed-sub li:hover{opacity:.85}
-.ed-sub li.feito{opacity:1;color:var(--ink)}
-.ed-sub li.feito i{background:var(--rule-solid);border-color:var(--rule-solid)}
-.ed-sub li.agora{opacity:1;color:var(--accent);font-weight:600}
-.ed-sub li.agora i{background:var(--accent);border-color:var(--accent);
-  transform:scale(1.25)}
+   O QUE FICA E' `.ed-sub-tela`, que e' outra coisa apesar do nome parecido: sao as telas
+   de conteudo do passo 3 e do passo 4, e elas continuam todas de pe'. */
 .ed-sub-tela[hidden]{display:none}
 @keyframes sub-entra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .ed-sub-tela{animation:sub-entra .24s cubic-bezier(.16,1,.3,1) both}
@@ -3541,3 +3528,526 @@ body.aj-arrastando .aj-gaveta{transition:none}
    `width:100%` num botao `block` faz o rotulo, o visto e o selo do atalho se comportarem
    como texto corrido, e nao como fileira. */
 .aj-esteira .acao.grande.bn-ok{display:flex;align-items:center;justify-content:center}
+
+/* ================================================================= O TRILHO RASO
+   (03/09/2026, espec `docs/ESPEC/bancada-front/o-trilho.md`)
+
+   O QUE ESTE BLOCO SUBSTITUI, por ordem dele: os quatro passos com miolo viraram as SEIS
+   ETAPAS RASAS da maquete aprovada, mais a Entrega que ele mandou virar aba. A coluna de
+   250 pixels a' esquerda sai, a tira horizontal entra, e o palco fica com a largura toda.
+
+   AS MEDIDAS SAO AS DA MAQUETE, conferidas em `docs/propostas/edicao-a-bancada/index.html`
+   linhas 42 a 55: bolinha de 23, nome de 14 em peso 650, folga de 8 entre abas, recheio de
+   11 por 14 por 12, fio de 2 embaixo da aba de agora e fio de 1 embaixo da tira inteira.
+
+   AS CORES SAO TODAS VARIAVEIS, e nao e' capricho: esta tela tem tema escuro e a maquete
+   foi desenhada so' no claro. Cor cravada aqui sairia certa numa foto e errada na outra.
+   O unico literal e' o `#fff` da tinta sobre o destaque, que e' o mesmo que a casa ja' usa.
+
+   POR QUE A FOLHA FAZ O TRABALHO, E NAO O PROGRAMA: os identificadores continuam todos de
+   pe', e quem manda em lugar e' a folha. Foi assim que A Bancada foi construida.
+
+   A ORDEM NO ARQUIVO E' O QUE FAZ ISTO FUNCIONAR. Estas regras tem a mesma forca das
+   antigas (`.ed-tela` na 1025, `.ed-trilho` na 1061, `.ed-ponto-n` na 1070); quem vence e'
+   a de baixo. Colar este bloco no meio do arquivo inverte tudo sem erro nenhum na tela. */
+
+/* ---------------------------------------------- 1 · a oficina vira uma coluna so' */
+/* O `trilho-fechado` continua sendo escrito pelo programa, e um "1" guardado no navegador
+   de ontem ainda chega aqui. Com a trilha horizontal ele nao tem o que fechar, entao as
+   duas larguras sao a mesma e o miolo da aba nao pode desbotar. */
+/* O `align-content:start` NAO E' ENFEITE, e ele custou uma foto para ser entendido.
+
+   A grade tem duas linhas, a tira e o palco, e o `.ed-focado .ed-tela` traz
+   `min-height:100vh`. Com o padrao (`stretch`), a sobra vertical e' REPARTIDA entre as duas
+   linhas: numa aba de conteudo curto como Fabricar sao 326 pixels de sobra, e a metade que
+   coube na linha da tira empurrou o titulo da fase para 312 quando ele devia estar em 164.
+   Medido no navegador em 03/09/2026, comparando a aba 4 (conteudo alto, 36px de vao) com a
+   aba 5 (conteudo curto, 184px de vao). No desenho aprovado todas as abas comecam coladas
+   na tira, e nenhuma flutua no meio da tela. */
+.ed-tela,
+.ed-tela.trilho-fechado,
+.ed-focado .ed-tela,
+.ed-focado .ed-tela.trilho-fechado{grid-template-columns:1fr;gap:0;align-content:start}
+.ed-tela.trilho-fechado .ed-ponto-corpo,
+.ed-tela.trilho-fechado .ed-voltar{opacity:1;pointer-events:auto}
+
+/* ------------------------------------------------------------- 2 · a tira das abas */
+.ed-trilho.raso{position:sticky;top:0;z-index:20;
+  display:flex;flex-direction:row;align-items:flex-end;flex-wrap:wrap;gap:8px;
+  height:auto;min-height:0;padding:0;margin:0 0 22px;overflow:visible;
+  border-right:0;border-bottom:1px solid var(--rule-solid);background:var(--paper)}
+/* O PUXADOR E O BOLSO SAEM DE CENA, e nao do documento: ver a nota do corpo.html. */
+.ed-trilho.raso .ed-puxador,
+.ed-trilho.raso .ed-guardados,
+.ed-trilho.raso .ed-barra{display:none}
+/* O TROCAR DE LEVA VAI PARA A ESQUERDA DA TIRA, alinhado com as abas. */
+.ed-trilho.raso .ed-voltar{order:-1;margin:0 14px 10px 0;align-self:center}
+
+/* ------------------------------------------------------------------- 3 · cada aba */
+.ed-trilho.raso .ed-ponto{flex:0 0 auto;display:flex;flex-direction:row;
+  align-items:center;gap:9px;padding:11px 14px 12px;margin:0 0 -1px;
+  border:0;border-bottom:2px solid transparent;
+  border-radius:var(--r-md) var(--r-md) 0 0;
+  background:none;color:inherit;font:inherit;text-align:left;
+  cursor:pointer;opacity:1;transition:background-color .16s,border-color .16s}
+.ed-trilho.raso .ed-ponto:hover{opacity:1;background:var(--paper-2)}
+.ed-trilho.raso .ed-ponto:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ed-trilho.raso .ed-ponto.agora{background:var(--branco);border-bottom-color:var(--accent)}
+
+/* A BOLINHA E' A DA MAQUETE: 23 por 23, letra de 12. A regra da linha 1070 continua
+   valendo para quem nao e' `.raso`. */
+.ed-trilho.raso .ed-ponto-n{flex:0 0 23px;width:23px;height:23px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;line-height:1;border:0;border-radius:999px;
+  background:var(--paper-2);color:var(--muted);
+  transition:background-color .2s,color .2s}
+.ed-trilho.raso .ed-ponto.agora .ed-ponto-n{background:var(--accent);color:#fff;
+  border-color:var(--accent)}
+
+.ed-trilho.raso .ed-ponto-corpo{display:flex;flex:0 0 auto}
+.ed-trilho.raso .ed-ponto-txt{display:block;padding:0}
+.ed-trilho.raso .ed-ponto-txt h3{margin:0;font-size:14px;font-weight:650;
+  letter-spacing:0;color:var(--muted);white-space:nowrap;transition:color .2s}
+.ed-trilho.raso .ed-ponto.ativo .ed-ponto-txt h3,
+.ed-trilho.raso .ed-ponto.agora .ed-ponto-txt h3{color:var(--ink)}
+
+/* A LINHA DE ESTADO SAI DA ABA, e a maquete e' quem manda: aba e' numero e nome, e mais
+   nada. O elemento fica porque o programa escreve nele de quatro lugares, tres deles sem
+   guarda de nulo, e porque tres provas leem o texto dele. */
+.ed-trilho.raso .ed-ponto-txt p{display:none}
+
+/* A ABA TRANCADA DIZ QUE ESTA' TRANCADA. O portao fecha em silencio hoje, e aba que nao
+   reage ao clique sem dizer por que' e' a queixa que ele fez do passo 4 em 23/08/2026. */
+.ed-trilho.raso .ed-ponto.travado{opacity:.42}
+.ed-trilho.raso .ed-ponto.travado:hover{background:none}
+
+/* ------------------------------------------- 4 · a Bancada nao engole mais a tira */
+/* HOJE O TRILHO SOME NA BANCADA (`.ed-tela.esteira-aberta > .ed-trilho{display:none}`,
+   linha 2000), porque a fase tomava a tela inteira e a navegacao ficava no rodape dela.
+   Na maquete a tira esta' de pe' em todas as abas, inclusive na Bancada: e' por ela que
+   ele vai da Bancada para As Frases. Entao a tira vira faixa fixa no alto e o palco
+   comeca logo abaixo. O `inset` e' reescrito, e nao apagado: apagar a regra original
+   tiraria o `position:fixed` e a Bancada voltaria para dentro da grade. */
+.ed-tela.esteira-aberta{--tr-alto:57px}
+.ed-tela.esteira-aberta > .ed-trilho.raso{display:flex;position:fixed;
+  top:0;left:0;right:0;z-index:26;margin:0;
+  padding:0 clamp(20px,3vw,44px);background:var(--paper);box-shadow:var(--sombra)}
+.ed-tela.esteira-aberta > .ed-palco{inset:var(--tr-alto) 0 0 0}
+
+/* ---------------------------------------------------- 5 · a entrada em escadinha */
+/* A `ed-sobe` termina em opacidade .42, que era o desbotado do trilho vertical. Na tira,
+   aba desbotada quer dizer aba trancada, entao todas entram pela `ed-sobe-ativo`.
+   O `nth-of-type` conta por tipo de tag, e as seis abas sao os unicos `div` filhos da
+   tira, entao a contagem bate com o numero da aba. */
+.ed-trilho.raso.entrou .ed-ponto{animation-name:ed-sobe-ativo}
+.ed-trilho.raso.entrou .ed-ponto:nth-of-type(5){animation-delay:.24s}
+.ed-trilho.raso.entrou .ed-ponto:nth-of-type(6){animation-delay:.3s}
+
+/* ------------------------------- 6 · a coluna das ferramentas devolve os 57 pixels */
+/* A TIRA PASSOU A OCUPAR O ALTO DA BANCADA, e a coluna da direita nao soube disso: a
+   altura dela era `100vh` menos 124, contados quando nada morava acima do palco. Com a
+   tira de pe', o "Ja' Pronta, Seguir" saiu da tela por 57 pixels.
+
+   FOI A PROVA QUE PEGOU, e nao o olho: `aprovarNaTela` veio `False` no grupo da esteira,
+   com a regra de 02/09/2026 atras dela, botao que so' existe depois de rolar e' botao que
+   nao existe. A conta agora desconta a tira pela mesma variavel que a posiciona, entao
+   mudar a altura dela num lugar so' continua bastando. */
+.ed-tela.esteira-aberta .bn-ferr{max-height:calc(100vh - 124px - var(--tr-alto))}
+
+/* -------------------------------------------------------- 7 · a tela mais apertada */
+@media(max-width:820px){
+  .ed-trilho.raso{position:static;margin-bottom:16px}
+  .ed-trilho.raso .ed-ponto{padding:9px 11px 10px}
+  .ed-trilho.raso .ed-ponto-txt h3{font-size:13px}
+}
+
+/* ====================================================================== A LEVA
+   (03/09/2026, espec `docs/ESPEC/bancada-front/a-leva.md`)
+
+   O QUE ESTE BLOCO SUBSTITUI: a lista de levas em linha estreita de 760px, com retrato
+   redondo de 46 e o cartao inteiro sendo um `<button>`. A maquete aprovada pede outra
+   coisa: CAIXA de 900px, miniatura de 58 por 103 com a cara do reel, e um botao `Abrir`
+   de verdade a' direita.
+
+   AS MEDIDAS SAO AS DELA (`index.html` linhas 73 a 82): 900 de largura maxima, 14 entre
+   caixas, 18 de respiro dentro, 16 por 18 de recheio, miniatura de 58 por 103, nome de 16
+   em peso 750, detalhe de 13,5, pilula de 12 em peso 700 com recheio de 4 por 10.
+
+   AS CORES NAO SAO: a maquete e' clara e esta tela tem tema escuro. O unico preto literal
+   e' o da miniatura, que e' o fundo do video, preto nos dois temas pela mesma razao que o
+   palco da Bancada. */
+
+/* A COLUNA ABRE DE 760 PARA 900, que e' a medida do desenho. Esta regra vem depois da
+   original e ganha dela por ordem de fonte. */
+.ed-escolha-in{width:min(900px,100%)}
+.ed-levas{display:grid;gap:14px;max-width:900px}
+
+/* ---------------------------------------------------------------- a caixa da leva */
+.lv-caixa{display:flex;align-items:center;gap:18px;padding:16px 18px;
+  background:var(--branco);border:1px solid var(--rule-solid);border-radius:var(--r-lg);
+  box-shadow:var(--sombra);cursor:pointer;
+  transition:border-color .16s,transform .16s,box-shadow .16s}
+.lv-caixa:hover{border-color:var(--accent);transform:translateY(-2px)}
+.lv-caixa.indo{border-color:var(--accent);transform:scale(.985)}
+
+/* A LEVA ENTREGUE FICA A 55%, que e' o desenho dele, e nao 50 nem 60: com a entregue na
+   mesma lista da que falta fazer, e' a opacidade que separa as duas de longe. */
+.lv-caixa.entregue{opacity:.55}
+/* LEVA QUE AINDA NAO DESCEU APARECE, apagada e sem clique. `pointer-events` no lugar do
+   `disabled` de antes, porque a caixa deixou de ser botao: o `Abrir` dentro dela continua
+   `disabled`, e este e' o cinto de seguranca de fora. */
+.lv-caixa.longe{opacity:.5;cursor:not-allowed;box-shadow:none;pointer-events:none}
+.lv-caixa.longe:hover{border-color:var(--rule-solid);transform:none}
+
+/* ------------------------------------------------------------------- a miniatura */
+.lv-capa{flex:none;width:58px;height:103px;border-radius:var(--r-md);background:#000;
+  overflow:hidden;display:grid;place-items:center;position:relative}
+.lv-capa video,.lv-capa img{width:100%;height:100%;object-fit:cover;display:block}
+/* O RETRATO E' O PLANO B, e ele encolhe para caber: 46 numa caixa de 58 encostaria nas
+   duas bordas. Um so' aparece, porque tres retratos empilhados num quadro estreito viram
+   borrao em vez de informacao. */
+.lv-capa .pcard-retrato{flex:0 0 40px;width:40px;height:40px;margin:0}
+.lv-capa .pcard-retrato + .pcard-retrato{display:none}
+
+/* ----------------------------------------------------------------------- o miolo */
+.lv-meio{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+.lv-nome{font-size:16px;font-weight:750;color:var(--ink);letter-spacing:-.01em;
+  margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:100%}
+.lv-det{font-size:13.5px;color:var(--muted)}
+.lv-det b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.lv-det i{font-style:normal;color:var(--soft);margin:0 3px}
+
+/* --------------------------------------------------------------------- a pilula */
+.lv-estado{display:inline-block;margin-top:7px;padding:4px 10px;border-radius:999px;
+  font-size:12px;font-weight:700;border:1px solid transparent}
+.lv-estado.viva{color:var(--accent);background:var(--accent-tint)}
+/* AS DUAS PILULAS APAGADAS GANHAM FIO, e isso e' correcao de foto, nao de desenho.
+   No claro da maquete, `--paper-2` e' #F2F2F2 sobre caixa branca e a pilula se ve' de
+   longe. No escuro da casa ela e' #1C1A18 sobre uma caixa #171717: cinco pontos de
+   diferenca, e a pilula vira texto solto. O fio de um pixel devolve a forma de pilula sem
+   trocar a cor de fundo, que continua sendo a variavel do tema. */
+.lv-estado.fria{color:var(--muted);background:var(--paper-2);border-color:var(--rule-solid)}
+.lv-estado.longe{color:var(--soft);background:var(--paper-2);border-color:var(--rule-solid)}
+
+/* --------------------------------------------------------------------- as acoes */
+.lv-acoes{flex:none;display:flex;align-items:center;gap:8px}
+.lv-abrir{white-space:nowrap}
+/* O COMECAR DO ZERO NAO DISPUTA COM O ABRIR: um e' forte, o outro e' comum, e o de comecar
+   do zero vem antes na leitura porque e' o desvio, e nao o caminho. */
+.lv-zero{white-space:nowrap;font-size:13px;padding:0 14px}
+
+/* ------------------------------------------- a barra da medida, agora no passo 1 */
+/* A CAIXA MUDOU DE TELA, E NAO DE CARA: `.apl-obra`, `.rec-tiras`, `.rec-selos` e o
+   `.rec-fecho` continuam valendo, e sao os mesmos que a etapa do Recorte usava. O que
+   estas regras fazem e' so' o lugar delas dentro do passo 1. */
+.lv-obra{margin:0 0 18px}
+.lv-repescar{margin:0 0 18px}
+.lv-adiante{margin:0 0 18px}
+
+/* O `hidden` PRECISA GANHAR DA FOLHA, e este e' o defeito que o `conferir.py` acusou na
+   hora: o `.btn` da casa e' `display:inline-flex`, e atributo `hidden` vale `display:none`
+   com forca de folha do navegador, que perde de qualquer regra de autor. Sem estas duas
+   linhas, o botao de repescagem e o atalho da pasta ficariam VISIVEIS o tempo todo, com o
+   programa jurando ter escondido os dois. E' a trava da casa escrita ao contrario:
+   esconder pelo programa perde para a folha de estilo, entao a folha tem de concordar. */
+.lv-repescar .btn[hidden],
+.lv-adiante .btn[hidden]{display:none}
+
+/* ===================================================================== A MARCA
+   (03/09/2026, espec `docs/ESPEC/bancada-front/a-marca.md`)
+
+   O QUE ESTE BLOCO SUBSTITUI: a fase 1 do passo 3 era duas colunas de 230 mais o resto,
+   com a lista de contas em cartoezinhos de 13px a' esquerda e um par de quadros a'
+   direita, "A Arte" e "A Peca Montada", com um video real dentro da janela.
+
+   POR QUE A LISTA GANHOU A TELA INTEIRA: a maquete diz, na linha 262, que ele escolhe a
+   CONTA e que todas as molduras dela entram na bancada juntas. Uma conta com quatro
+   molduras nao cabe num selo de 230px, e a coluna do par nao tem mais o que mostrar,
+   porque quem mostra moldura sobre filmagem agora e' a aba 3.
+
+   AS MEDIDAS SAO AS DELA: lista de 1020 de teto com 16 de vao, cartao de 20 por 22 de
+   respiro, cabecalho de duas pontas com 20 de vao e 16 ate' a grade, e a grade das
+   molduras em quatro colunas iguais com 14 de vao.
+
+   AS CORES NAO SAO. A unica cor literal e' o branco da pilula sobre o preto a 72%, que e'
+   branco nos dois temas pela mesma razao do palco da Bancada. */
+
+.bm-marca{max-width:1020px}
+
+/* O TOPO E' UMA LINHA SO', e o botao de cadastrar mora nela. */
+.bm-topo{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;margin-bottom:14px}
+.bm-diz{min-width:0;flex:1 1 320px}
+.bm-diz b{color:var(--ink);font-weight:700}
+.bm-topo .acao{flex:0 0 auto}
+
+/* ------------------------------------------------------------------- 1 · a lista */
+.bm-contas{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+/* O AVISO DE VAZIO ATRAVESSA A GRADE, e esta linha veio do erro de 27/08/2026: o recado
+   era filho de um grid de duas colunas, caia numa so' com 84px, quebrava em quatro linhas
+   dentro de uma caixinha tracejada e virava cartao quebrado. */
+.bm-contas .ed-nada{grid-column:1/-1;text-align:center;font-size:12.5px}
+
+/* ------------------------------------------------------------------ 2 · o cartao */
+/* O CARTAO HERDA `.mp-cartao` E DESFAZ O QUE ERA DE SELO: o `overflow:hidden` cortava a
+   sombra e o `cursor:pointer` no corpo inteiro prometia que o cartao era clicavel. Ele
+   nao e': quem age e' o botao. */
+.bm-conta{padding:20px 22px;border-radius:var(--r-lg);cursor:default;
+  overflow:visible;box-shadow:var(--sombra)}
+.bm-conta:hover{border-color:var(--rule-solid);transform:none}
+.bm-conta.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+
+.bm-cab{display:flex;align-items:center;justify-content:space-between;gap:20px;
+  margin-bottom:16px;flex-wrap:wrap}
+.bm-quem{min-width:0;flex:1 1 240px}
+/* O NOME DA CONTA E' O UNICO `b` DO CARTAO, e isso nao e' estilo, e' contrato: tres provas
+   listam as contas por `#mp_lista .mp-cartao b`. Um segundo `b` aqui dentro quebra as tres
+   sem parecer erro de HTML. */
+.bm-conta .bm-quem b{display:block;padding:0;font-size:15.5px;font-weight:650;
+  line-height:1.25;color:var(--ink);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.bm-conta .mp-qtas{display:block;padding:2px 0 0;font-size:13.5px;color:var(--muted)}
+.bm-cab .mp-sem-solto{margin-left:0}
+.bm-usar{flex:0 0 auto;height:var(--h-filtro);border-radius:var(--r-filtro)}
+
+/* --------------------------------------------------------------- 3 · as molduras */
+/* QUATRO COLUNAS IGUAIS, com 14 de vao, que e' a medida da maquete. Conta com menos de
+   quatro molduras deixa a sobra a' direita em vez de esticar as que tem: a miniatura e'
+   uma peca em pe', e estica-la mentiria sobre o formato da moldura. */
+.bm-molduras{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+/* O FUNDO NAO E' PRETO, e a maquete pede preto. Esta e' a unica troca de cor deliberada:
+   arte de fundo escuro sobre preto vira retangulo vazio no tema escuro, que foi metade do
+   "ta' todo esquisito" de 27/08/2026. O tracejado diz "aqui e' vazado" em vez de "aqui
+   nao carregou". */
+.bm-mold{position:relative;min-width:0;aspect-ratio:9/16;overflow:hidden;
+  border:1px solid var(--rule-solid);border-radius:var(--r-md);
+  background:var(--paper-2);
+  background-image:repeating-linear-gradient(45deg,
+    color-mix(in srgb,var(--ink) 9%,transparent),
+    color-mix(in srgb,var(--ink) 9%,transparent) 4px,
+    transparent 4px,transparent 8px)}
+/* `contain` E NAO `cover`: a moldura e' o desenho inteiro, e cortar a beirada dela esconde
+   justamente o que separa uma moldura da outra. */
+.bm-mold img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  display:block}
+.bm-rot{position:absolute;left:8px;bottom:8px;z-index:2;
+  background:rgba(0,0,0,.72);color:#fff;font-size:11px;font-weight:700;
+  padding:4px 8px;border-radius:999px;backdrop-filter:blur(4px)}
+/* A MOLDURA QUE NAO DESCEU fica vazia e marcada, e nunca vira icone de imagem quebrada:
+   a falta se diz, e quem a explica e' o recado do cabecalho. */
+.bm-mold.bm-falhou{border-style:dashed;
+  border-color:color-mix(in srgb,var(--vermelho) 50%,transparent)}
+
+/* --------------------------------------------------- 4 · o aviso e os templates */
+/* O AVISO DA CONTA CAPENGA MORA NO CARTAO, e nao no recado da tela. Sem selecao nao ha'
+   "a conta da vez", entao dizer no alto de qual conta se fala seria adivinhacao. */
+.bm-aviso{margin:0 0 14px;padding:11px 13px;font-size:13px;line-height:1.5;
+  color:var(--ink);border-radius:var(--r-md);
+  border:1px solid color-mix(in srgb,var(--vermelho) 34%,transparent);
+  background:color-mix(in srgb,var(--vermelho) 8%,transparent)}
+.bm-templates{margin-top:14px}
+.bm-templates:empty{display:none}
+.bm-templates .mp-tpl:first-child{padding-top:12px}
+
+/* ---------------------------------------------------- 5 · o painel de aplicacao */
+/* O PAINEL TOMA A LARGURA DA LISTA, e nao a do par que morreu. */
+.bm-marca .mp-aplicando{max-width:1020px}
+
+/* ================================================================== AS FRASES
+   (03/09/2026, espec `bancada-front/as-frases`, aba 4 da maquete aprovada)
+
+   O QUE ESTE BLOCO ACRESCENTA: a lista de correcao, que nasce EMBAIXO da tela de
+   carregamento da IA e nao no lugar dela. O que ele cortou em 21/08/2026 foi a lista que
+   vinha ANTES de a IA escrever; esta e' a de depois, para corrigir o que ficou torto.
+
+   AS MEDIDAS SAO AS DO DESENHO (linhas 187 a 194 do `index.html` da proposta): vao de 10,
+   respiro de 12 por 14, miniatura de 40 por 71, campo de 40 de altura, legenda de 11,5.
+
+   AS CORES SAO TODAS VARIAVEIS, pelo mesmo motivo da Bancada: a maquete foi desenhada so'
+   no claro e esta tela tem tema escuro. O unico valor literal e' o preto do fundo da
+   miniatura, que e' o fundo do quadro e e' preto nos dois temas. */
+
+.fz-casa[hidden]{display:none}
+
+/* A LISTA ROLA POR DENTRO, e nao cresce para fora. Com 180 linhas de 96px ela empurraria o
+   rodape' desta fase para oito mil pixels abaixo da dobra, e BOTAO QUE SO' EXISTE DEPOIS DE
+   ROLAR E' BOTAO QUE NAO EXISTE, que e' a regra que derrubou a coluna da Bancada em
+   03/09/2026.
+
+   OS 540px SAO MEDIDOS, e nao escolhidos. A primeira versao desta regra era
+   `clamp(320px,52vh,560px)`, copiada da fila da Bancada, e a prova `frases-fabricar`
+   reprovou na hora: numa janela de 1000px o botao "Ir Para Fabricar" ia de 981 a 1025, ou
+   seja 25 pixels abaixo da dobra. Medido no navegador em 03/09/2026, com a fase inteira no
+   ar: 150px acima da sub-tela (a barra de abas da oficina mais a tira das etapas de 48), 80
+   do cabecalho, 145 do aviso de que nao ha' IA configurada, 65 do rodape', mais os respiros.
+   Sao 505px que nunca sao da lista, e os 540 sao esses 505 com 35 de folga, para o dia em
+   que o recado da IA tiver duas linhas em vez de uma.
+
+   O PISO DE 200px E' O LIMITE HONESTO DESTA CONTA: abaixo de uma janela de 740px a fase nao
+   cabe inteira, e ai' quem rola e' o palco. Encolher a lista para menos do que duas linhas e
+   meia nao resolveria isso, so' esconderia o assunto da tela. */
+.fz-lista{display:grid;gap:10px;max-width:1020px;
+  max-height:clamp(200px,calc(100vh - 540px),560px);
+  overflow-y:auto;overflow-x:hidden;padding-right:6px}
+
+/* O RESPIRO DA LINHA PRECISA GANHAR DO `.caixa` DA CASA, que crava 20px por todos os lados.
+   Os dois seletores tem a mesma forca, entao quem ganha e' o que vem depois: este bloco
+   mora no fim do arquivo de proposito. */
+.fz-linha{display:flex;gap:14px;align-items:center;padding:12px 14px;min-width:0}
+
+/* A MINIATURA E' A ARTE DA VARIACAO, no formato da peca: 40 por 71 e' 1080 por 1920
+   arredondado. Ela nao e' o quadro do reel como no desenho, e a razao e' medida: o quadro
+   exigiria abrir 180 videos, que e' exatamente o que ele vetou em 29/08/2026. */
+.fz-mini{position:relative;display:block;width:40px;height:71px;flex:none;
+  border-radius:8px;overflow:hidden;background:#000}
+.fz-mini img{width:100%;height:100%;object-fit:cover;display:block}
+.fz-mini .vazio{position:absolute;inset:0;background:var(--paper-2)}
+
+.fz-campo{flex:1;min-width:0;display:grid;gap:5px}
+
+/* O CAMPO PRECISA VENCER DUAS REGRAS DA CASA, e nenhuma das duas e' engano:
+     `input[type=number],input[type=text]` crava 44px de altura, 13px de respiro e letra
+     MONOESPACADA, que e' certo num campo de configuracao e errado numa frase que vai sair
+     na peca;
+     o `.campo` global tem `min-width:160px`, que numa lista de 180 linhas empurraria a
+     caixa inteira de dentro para fora.
+   Por isso o seletor e' `.fz-campo input[type=text]`, com dois nomes contra um. */
+.fz-campo input[type=text]{width:100%;height:40px;padding:0 12px;
+  font:14px/1 var(--fonte);background:var(--paper-2);color:var(--ink);
+  border:1px solid var(--rule-solid);border-radius:var(--r-filtro)}
+.fz-campo input[type=text]:focus{outline:2px solid var(--accent);outline-offset:-1px;
+  border-color:var(--accent);background:var(--branco)}
+
+/* A LEGENDA DIZ QUEM ESCREVEU E QUAL PECA E', e ela muda quando ele corrige: dizer que a
+   inteligencia escreveu uma frase que ELE reescreveu seria a tela contando o que nao
+   aconteceu. */
+.fz-quem{font-size:11.5px;color:var(--soft);line-height:1.35}
+.fz-quem b{color:var(--muted);font-weight:600}
+.fz-quem .apertou{color:var(--ambar);font-weight:600}
+
+.fz-linha .acao{flex:none}
+
+/* A LINHA DE AGORA e' so' uma marca de "voce estava aqui", para quando ele volta da
+   Bancada. Ela nao seleciona nada e nao muda o que o campo faz. */
+.fz-linha.agora{border-color:var(--accent)}
+
+.fz-rodape{color:var(--muted);font-size:13px;padding:8px 4px}
+.fz-rodape b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+
+/* =================================================================== FABRICAR
+   (03/09/2026, espec `bancada-front/fabricar`, aba 5 da maquete aprovada)
+
+   O QUE ESTE BLOCO SUBSTITUI: a fase de fabricacao era uma barra de topo com a conta em
+   prosa e tres botoes, um rodape' com o resumo, e a caixa da obra la' no fim, invisivel
+   ate' alguem clicar. A maquete aprovada e' outra leitura da mesma tela: quatro numeros
+   grandes, a leva inteira numa barra que ja' esta' de pe', os dois botoes, e a promessa
+   do Drive escrita por extenso.
+
+   O UNICO NUMERO CRAVADO E' 1020px, que e' a largura maxima da maquete. Ela existe para o
+   bloco nao esticar numa tela larga: com a etapa em modo focado o palco tem 1920, e quatro
+   quadros esticados em 1920 viram quatro faixas. */
+
+/* ------------------------------------------------------------ os quatro indicadores */
+.fb-resumo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;
+  max-width:1020px;margin-bottom:14px}
+/* O RESPIRO DA CAIXA E' MENOR QUE O DA CASA: `.caixa` crava 20px e a maquete pede 16 por
+   18. Sem esta linha o quadro fica alto demais. */
+.fb-kpi{padding:16px 18px}
+.fb-kpi .v{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+.fb-kpi .r{font-size:12.5px;color:var(--muted);margin-top:2px}
+/* O SEGUNDO QUADRO E' O DE DESTAQUE, e e' o desenho dele: as aprovadas na bancada sao o
+   numero que autoriza fabricar, e por isso sao o unico verde da fileira. */
+.fb-kpi.feita .v{color:var(--accent)}
+/* NUMERO QUE AINDA NAO SE SABE NAO E' NUMERO. O travessao entra na cor mais apagada, para
+   nao competir com os que tem valor de verdade. Trava da casa: nulo nao e' zero.
+
+   O NOME DO MODIFICADOR E' `sem-medida` E NAO `vazio`, e isso custou uma reprovacao do
+   portao. `.vazio` ja' existe nesta folha (linha 81) como o cartao de estado vazio da casa,
+   com `padding:26px 0`, `text-align:center`, fundo, borda e canto proprios. O quadro do
+   tempo herdou tudo isso calado: mediu 137 de altura contra os 89 do desenho, esticou os
+   outros tres pela grade, e o travessao saiu centralizado enquanto os numeros ao lado
+   saiam a' esquerda. Nenhuma prova pegaria isso, porque HTML certo nao e' tela funcionando;
+   quem pegou foi a comparacao com a maquete, em 03/09/2026. */
+.fb-kpi .v.sem-medida{color:var(--soft)}
+
+/* A LINHA DE DETALHE mora colada nos quadros, e nao solta no meio da tela: ela e' a
+   legenda deles, e nao um paragrafo. */
+.fb-detalhe{margin-bottom:18px;max-width:1020px;line-height:1.55}
+
+/* ----------------------------------------------------------------------- a barra */
+/* A BARRA GANHA O BERCO DA MAQUETE: fundo recuado, respiro de 4px e canto de 8. Com
+   `box-sizing:border-box` valendo para tudo, a altura total continua sendo os 26px do
+   `.rec-tiras` e cada marca fica com 18.
+
+   O VAO CONTINUA SENDO 0,5px, e nao o 1px do desenho. E' medida ganha, e nao desleixo: a
+   nota do `.rec-tiras` registra que com 180 pecas cada marca fica com pouco mais de 2
+   pixels, e um vao de 1,5 comia 41% da barra. Meio pixel deixa a marca com 86% do passo.
+   O desenho tem 1px porque ninguem mediu isso nele. */
+.fb-fabricar #apl_tiras{padding:4px;background:var(--paper-2);border-radius:8px;
+  max-width:1020px}
+/* E A MARCA QUE FALTA PRECISA APARECER CONTRA O BERCO. A marca em repouso e' `--paper-2`
+   (`.rec-tiras i`, linha 1597) e o berco que este bloco acabou de dar a ela e' `--paper-2`
+   tambem: no tema escuro a barra saiu como um retangulo cinza chapado, sem as 180 marcas
+   dentro, dizendo "nao ha' nada aqui" numa tela cujo assunto e' que ha' 180 pecas por
+   fazer. No desenho a marca e' `--rule` sobre um berco `--paper-2`, e e' esse contraste que
+   volta aqui. Visto na foto de 03/09/2026: o portao aprovou a caixa, e o olho reprovou o
+   conteudo dela. */
+.fb-fabricar #apl_tiras i:not([class]){background:var(--rule-solid)}
+
+/* A CAIXA DA OBRA EM REPOUSO E' SO' A BARRA.
+
+   POR QUE ELA FICA DE PE' ANTES DE FABRICAR: a maquete tem barra desde que a aba abre, e
+   ela responde "quantas sao" mesmo com zero prontas. Sem isto, a tela que ele compara com
+   o desenho tem um buraco no meio ate' alguem clicar em fabricar.
+
+   POR QUE O RESTO SOME: o topo diz "fabricando" com uma roda girando, a conta diz "0 de 0
+   pecas montadas" e os selos dizem "Correndo Ha' 0s". Tres frases afirmando trabalho que
+   nao comecou. Some tudo, e volta inteiro quando a obra comeca. */
+.fb-fabricar #apl_obra.repouso{background:none;border:0;box-shadow:none;padding:0;
+  margin-top:0;margin-bottom:22px}
+.fb-fabricar #apl_obra.repouso .apl-obra-topo,
+.fb-fabricar #apl_obra.repouso .rec-conta,
+.fb-fabricar #apl_obra.repouso .rec-selos,
+.fb-fabricar #apl_obra.repouso #apl_obra_nota{display:none}
+/* E A CAIXA ESCONDIDA CONTINUA ESCONDIDA. Trava 66g: toda regra que pinta `display` num
+   elemento que o programa esconde precisa da companheira com a mesma forca, senao a folha
+   ganha do programa em silencio. Foi assim que os dois botoes do fim da fabricacao ficaram
+   flutuando sobre a peca em 02/09/2026. */
+.fb-fabricar #apl_obra[hidden]{display:none}
+
+/* ---------------------------------------------------------------------- os botoes */
+/* A FILA DOS BOTOES E' A DA MAQUETE: 18px abaixo da barra, 10px entre eles. */
+.fb-acoes{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;
+  max-width:1020px}
+/* A CASA DO AVISO DE TERMINADO SOME DA CONTA DO FLEX, mas continua existindo no documento:
+   e' ela que a prova `provar_que_fabrica_sem_sair_da_fase` procura pelo id.
+   `display:contents` faz os dois botoes dela entrarem nesta fila como se fossem filhos
+   diretos, sem que o elemento suma do DOM. */
+.fb-fabricar #apl_feito_casa{display:contents}
+/* E O AVISO ESCONDIDO CONTINUA ESCONDIDO, pela mesma trava 66g de tres blocos acima. */
+.fb-fabricar #apl_feito[hidden]{display:none}
+
+/* ------------------------------------------------------------- a conta que fecha */
+/* A NOTA DA MAQUETE. A borda dela e' `#cfe2d6` no desenho, um verde claro cravado que no
+   tema escuro sairia como um risco branco em volta de um fundo quase preto. Aqui ela sai
+   do proprio destaque, pelo mesmo `color-mix` que a Bancada usa nas miniaturas prontas. O
+   texto e' `--ink` e nao o `#22422e` do desenho, pela mesma razao. */
+.fb-conta{max-width:1020px;margin:26px 0 0;padding:15px 18px;
+  background:var(--accent-tint);
+  border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);
+  border-radius:var(--r-lg);font-size:13.5px;line-height:1.6;color:var(--ink)}
+.fb-conta b{font-weight:750}
+
+/* O RODAPE' DA FASE NAO ENCOSTA NA NOTA. `.ed-pe` ja' traz 30px de respiro em cima; com a
+   nota logo acima dela, o desenho pede um pouco mais de ar. */
+.fb-fabricar .ed-pe{margin-top:26px}
+
+/* ---------------------------------------------------------- a tela estreita */
+/* QUATRO QUADROS DE 26px NUMA COLUNA DE 240 viram quatro numeros quebrados no meio. A
+   partir de 820px, que e' o mesmo corte que o `.ed-cab` e o `.rec-par` ja' usam, eles
+   viram dois por dois. */
+@media(max-width:820px){
+  .fb-resumo{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

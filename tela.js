@@ -4607,27 +4607,97 @@ async function desenhaLevasDaEdicao(indice) {
       ? `você parou n${NOME_DO_PASSO[antes.passo] ? "" : "o passo "}`
         + `${NOME_DO_PASSO[antes.passo] || antes.passo}, ${quando(antes.mexido)}`
       : "";
-    return `<div class="ed-leva-linha">
-      <button type="button" class="ed-leva${!aqui ? " longe" : ""}"
-        data-leva="${l.numero}"${aqui ? "" : " disabled"}>
-      <span class="ed-leva-caras">${caras}</span>
-      <span class="ed-leva-corpo">
-        <span class="ed-leva-n">Leva ${l.numero}</span>
-        <span class="ed-leva-quem">${contas.length
-          ? "@" + contas.join(", @") : "todos os perfis"}</span>
-        <span class="ed-leva-num"><b>${num(l.limpos)}</b> peças
-          <i>·</i> ${l.mb || 0} MB <i>·</i> ${quando(l.fim || l.inicio)}</span>
-        ${antes ? `<span class="ed-leva-antes">${escapa(conta)}</span>` : ""}
+    const foi = !!l.entregue;
+    /* A PILULA TEM TRES CARAS, e sao as da maquete mais a que ja' existia:
+         longe     a leva ainda nao chegou a' casa
+         fria      ela saiu inteira, e a caixa vai a 55%
+         viva      ha' trabalho por fazer, com ou sem rascunho */
+    const pilula = !aqui
+      ? { cor: "longe", txt: "Ainda Não Chegou À Casa Do Estúdio" }
+      : foi
+        ? { cor: "fria", txt: `${num(l.limpos)} De ${num(l.limpos)} Entregues` }
+        : { cor: "viva", txt: antes ? conta : "Nenhuma Peça Montada Ainda" };
+    /* A CAIXA DEIXOU DE SER UM `<button>` em 03/09/2026, e essa e' a mudanca que faz o
+       resto caber: a maquete poe um botao `Abrir` de verdade dentro da caixa, e botao
+       dentro de botao nao existe em HTML. O `data-leva` fica so' na caixa de fora, entao
+       o `closest("[data-leva]")` do ouvinte sobe ate' aqui de qualquer ponto clicado,
+       inclusive de dentro do `Abrir`, e o ouvinte nao muda uma linha.
+
+       `.ed-leva-linha` e `.ed-leva-antes` CONTINUAM NO HTML de proposito: as duas sao
+       lidas pelas provas do grupo `rascunho`, que guardam a promessa de o cartao dizer
+       onde o trabalho parou. Elas viraram ganchos, e nao sobra de desenho. */
+    return `<div class="ed-leva-linha lv-caixa${!aqui ? " longe" : ""}${foi ? " entregue" : ""}"
+      data-leva="${l.numero}">
+      <span class="lv-capa" data-capa="${l.numero}">${caras}</span>
+      <span class="lv-meio">
+        <span class="lv-nome">Leva ${l.numero}${contas.length
+          ? " · " + escapa(contas.join(", ")) : ""}</span>
+        <span class="lv-det"><b>${num(l.limpos)}</b> peças
+          <i>·</i> ${tamanho(l.mb)} <i>·</i> ${desceuEm(l.fim || l.inicio)}</span>
+        <span class="lv-estado ed-leva-antes ${pilula.cor}">${escapa(pilula.txt)}</span>
       </span>
-      <span class="ed-leva-pe">${!aqui ? "ainda não chegou à casa do Estúdio"
-        : antes ? "voltar a este trabalho" : "na casa do Estúdio"}</span>
-      </button>
-      ${aqui && antes ? `<button type="button" class="acao ed-leva-nova"
-        data-nova="${l.numero}"
-        title="Começa uma edição do zero, sem tocar no trabalho que já está salvo">
-        Começar Do Zero</button>` : ""}
+      <span class="lv-acoes">
+        ${aqui && antes ? `<button type="button" class="acao lv-zero"
+          data-nova="${l.numero}"
+          title="Começa uma edição do zero, sem tocar no trabalho que já está salvo">
+          Começar Do Zero</button>` : ""}
+        <button type="button" class="acao forte lv-abrir"${aqui ? "" : " disabled"}
+          >Abrir</button>
+      </span>
     </div>`;
   }).join("");
+  capasDasLevas();
+}
+
+/* O TAMANHO EM PALAVRA DE GENTE. O indice guarda megabyte cru, e a leva 31 saia como
+   "2700 MB". A maquete escreve "2,7 GB", que e' como ele fala. */
+function tamanho(mb) {
+  const n = Number(mb) || 0;
+  if (n >= 1024) return (n / 1024).toFixed(1).replace(".", ",") + " GB";
+  return n + " MB";
+}
+
+/* QUANDO ELA DESCEU. O `quando` de sempre devolve "ontem" e "há 3 dias", e continua
+   servindo para o que e' recente; a maquete escreve "desceu em 25 de agosto", que e' o
+   que faz sentido numa lista onde a leva mais nova pode ter duas semanas. */
+const MESES_POR_EXTENSO = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+function desceuEm(ts) {
+  if (!ts) return "sem data";
+  const d = new Date(ts < 1e12 ? ts * 1000 : ts);
+  if (isNaN(d.getTime())) return "sem data";
+  if (Date.now() - d.getTime() < 86400000) return "desceu " + quando(ts);
+  return `desceu em ${d.getDate()} de ${MESES_POR_EXTENSO[d.getMonth()]}`;
+}
+
+/* A CARA DA LEVA E' O PRIMEIRO REEL DELA, e o retrato do perfil virou o plano B.
+   A maquete desenha um quadro 9 por 16 com a filmagem dentro, e nao um retrato redondo:
+   numa lista de levas do mesmo perfil, tres bolinhas iguais nao distinguem nada, e o
+   primeiro quadro do reel distingue na hora.
+
+   FALHA CALADA DEIXA O RETRATO NO LUGAR. Sem posto de pe', a caixa nao fica preta: ela
+   fica com o que ja' estava desenhado, que e' o retrato. */
+async function capasDasLevas() {
+  const caixas = [...document.querySelectorAll(".lv-capa[data-capa]")];
+  for (const caixa of caixas) {
+    const n = Number(caixa.dataset.capa);
+    try {
+      const r = await noPosto("/pecas?leva=" + n);
+      // A ROTA DEVOLVE `{tem, nomes}`, e o `tem` e' falso quando a pasta ainda nao chegou
+      // a' casa. Sem esta guarda, `nomes` vem vazio e a caixa ficaria esperando um video
+      // que nunca carrega.
+      if (!r || !r.tem) continue;
+      const nome = [...(r.nomes || [])].sort((a, b) => a.localeCompare(b, "pt"))[0];
+      if (!nome) continue;
+      const v = document.createElement("video");
+      v.src = urlDoArquivo("levas/leva-" + n + "/" + nome) + "#t=1.5";
+      v.muted = true; v.playsInline = true; v.preload = "metadata";
+      // O QUADRO SO' SUBSTITUI O RETRATO DEPOIS DE CARREGAR, senao a caixa pisca preta
+      // no caminho e a lista inteira treme enquanto as levas respondem.
+      v.addEventListener("loadeddata", () => { caixa.innerHTML = ""; caixa.appendChild(v); },
+                         { once: true });
+    } catch (e) { /* fica o retrato */ }
+  }
 }
 
 $("ed_levas").addEventListener("click", async ev => {
@@ -4740,12 +4810,10 @@ function esquecerOsPassos() {
   TPL = null;
   TPL_SUB = 1;
   ED_BROLL_I = -1;
-  // O ESTADO DA FASE 1 TAMBEM MORRE AQUI (revisao de 27/08/2026): MP_PECA da leva
-  // anterior apontava peca que a nova nao tem, a conta caia no padrao de tela cheia e
-  // o recado afirmava a escolha de uma peca fantasma.
+  // O ESTADO DA FASE 1 TAMBEM MORRE AQUI (revisao de 27/08/2026): a conta da leva
+  // anterior nao vale para a nova. O `MP_PECA` e o `MP_VAR` sairam daqui em 03/09/2026,
+  // com o par de quadros que os usava: nao ha' mais peca da vez nesta tela.
   MP_CONTA = "";
-  MP_PECA = -1;
-  MP_VAR = null;
   ESCRITO.clear();
   AJUSTES.clear();
   // A FASE 5 TAMBEM ZERA. Sem isto, o enquadramento de uma leva atravessaria para a
@@ -4759,23 +4827,74 @@ function esquecerOsPassos() {
 }
 
 /* -------------------------------------------------------------- o trilho */
-function irParaPasso(n) {
-  EDIT_PASSO = n;
+
+/* AS SEIS ETAPAS RASAS, e o par que cada uma abre.
+   Esta tabela e' a UNICA tradutora entre o que ele ve' (1 a 6) e o que o disco guarda
+   (`passo` e `sub`, com o significado de sempre). Enquanto ela existir, rascunho gravado
+   antes de 03/09/2026 abre onde parou sem uma linha de migracao.
+
+   RENUMERAR O DISCO SERIA O CAMINHO CARO: `entrarNaOficina` so' sabe traduzir rascunho
+   sem `v`, e um `passo: 4` (a Entrega, com as descricoes ja' pagas em cota atras dele)
+   passaria a ser lido como "As Frases", calado. */
+const ETAPAS_DO_TRILHO = [
+  { n: 1, passo: 1, sub: null },
+  { n: 2, passo: 3, sub: 1 },   // A Marca    <- Modelo Do Template
+  { n: 3, passo: 3, sub: 6 },   // A Bancada  <- Revisao Peca A Peca
+  { n: 4, passo: 3, sub: 4 },   // As Frases  <- Escrita Das Frases
+  { n: 5, passo: 3, sub: 5 },   // Fabricar   <- Fabricar As Pecas
+  { n: 6, passo: 4, sub: null }, // A Entrega <- Legenda E Entrega
+];
+
+/* EM QUE ABA ELE ESTA', a partir do par gravado. O passo 2 (o Recorte) nao tem aba desde
+   03/09/2026, porque a maquete apagou o corte e o que sobrou dele e' a medida: enquanto a
+   tela dele estiver no palco, quem fica acesa e' A Leva, que e' a aba de onde se chega
+   la'. */
+function etapaDeAgora() {
+  if (EDIT_PASSO === 1 || EDIT_PASSO === 2) return 1;
+  if (EDIT_PASSO === 4) return 6;
+  const e = ETAPAS_DO_TRILHO.find(x => x.passo === 3 && x.sub === TPL_SUB);
+  return e ? e.n : 2;
+}
+
+/* A PINTURA DA TIRA, num lugar so'. Antes ela morava espalhada por tres funcoes
+   (`irParaPasso`, `desenhaSubTrilho`, `desenhaSubTrilho4`), e cada uma pintava um pedaco
+   com regra propria: era por isso que entrar no passo 4 deixava a lista do passo 3 acesa. */
+function pintarOTrilho() {
+  const n = etapaDeAgora();
   document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
-    const q = Number(p.dataset.passo);
+    const q = Number(p.dataset.etapa);
     p.classList.toggle("ativo", q <= n);
     // ONDE ELE ESTA' AGORA, que é diferente de por onde ele já passou. `ativo` marca
-    // todos os passos vencidos; `agora` marca um só, e é ele que abre a lista de
-    // subetapas. Sem esta linha o trilho mostrava as subetapas do 3 com ele no 4.
+    // todas as abas vencidas; `agora` marca uma só, e é ela que ganha o fio de destaque.
     p.classList.toggle("agora", q === n);
+    p.setAttribute("aria-selected", q === n ? "true" : "false");
+    // A ABA TRANCADA SE MOSTRA TRANCADA, em vez de nao reagir ao clique. O `podeIrAoSub`
+    // devolve `false` desde 26/08/2026 sem dizer nada a ninguem: com a sub-lista dava
+    // para adivinhar, com a tira de abas vira um botao do tamanho dos outros que nao faz
+    // nada quando clicado, que e' a queixa dele sobre o passo 4.
+    const sub = p.dataset.sub ? Number(p.dataset.sub) : null;
+    p.classList.toggle("travado",
+      (q > 1 && !EDIT_LEVA) || (q > 1 && !RECORTADO) || (sub ? !podeIrAoSub(sub) : false));
     // A BARRA CHEIA É PASSO RESOLVIDO; a do passo atual mostra o quanto dele já foi
-    // feito. No passo 1, resolvido quer dizer leva escolhida, e ela já está.
+    // feito. No passo 1, resolvido quer dizer leva escolhida, e ela já está. Ninguem ve'
+    // nenhuma das duas desde 25/08/2026, e quem le' e' a prova.
     const barra = p.querySelector(".ed-barra b");
     if (barra) barra.style.height = q < n ? "100%" : q === n ? (EDIT_LEVA ? "100%" : "0%") : "0%";
   });
+}
+
+function irParaPasso(n, sub) {
+  EDIT_PASSO = n;
+  /* A FASE VEM ANTES DA ENTRADA NO PASSO, e a ordem importa. `entrarNoTemplate` termina
+     em `irParaSub(TPL_SUB || 1)`: sem cravar a fase aqui, clicar em "As Frases" abriria
+     primeiro a fase anterior (acendendo o video da Bancada, por exemplo) e so' depois
+     trocaria de novo. Duas entradas para um clique. */
+  if (n === 3 && sub && podeIrAoSub(sub)) TPL_SUB = sub;
+  pintarOTrilho();
   document.querySelectorAll(".ed-etapa").forEach(s =>
     s.hidden = Number(s.dataset.passo) !== n);
-  if (n === 2) entrarNoRecorte();
+  // O PASSO 2 SAIU EM 03/09/2026. A medida virou preparo e roda sozinha ao abrir a leva,
+  // dentro do `mostrarPecas`; `entrarNoRecorte` morreu com a tela dele.
   if (n === 3) entrarNoTemplate();
   if (n === 4) entrarNaLegenda();
   porOModoEsteira();
@@ -4799,22 +4918,56 @@ function irParaPasso(n) {
    `entrarNaLegenda` chama `procurarMontagem` quando o `MONTADO` está vazio. Não havendo
    montagem nenhuma, ele entra assim mesmo e a tela DIZ que não achou, e o que fazer para
    resolver. Botão que não faz nada é pior do que botão nenhum, porque promete. */
+/* O RECADO DA ABA TRANCADA, guardado fora do elemento. A caixa `mp_recado` tem dono, e o
+   dono e' a tela da Marca: `pintarAsMolduras` termina escrevendo o recado padrao nela,
+   depois de esperar o endereco de cada miniatura. Escrever direto aqui faria a explicacao
+   aparecer e sumir sozinha em milissegundos, sem erro nenhum no console. Entao o trilho
+   guarda o texto nesta variavel e quem pinta a Marca o respeita antes de restaurar o
+   padrao dela. */
+let MP_RECADO_FORCADO = "";
+
 document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
-  p.addEventListener("click", async () => {
-    const n = Number(p.dataset.passo);
+  const abrirAAba = async () => {
+    const e = ETAPAS_DO_TRILHO[Number(p.dataset.etapa) - 1];
+    if (!e) return;
+    const n = e.passo;
     // VOLTAR SEMPRE PODE; AVANÇAR, SÓ COM O PASSO ANTERIOR RESOLVIDO. É o que faz disto
-    // um passo a passo e não um menu com quatro páginas soltas.
+    // um passo a passo e não um menu com seis páginas soltas.
     if (n > 1 && !EDIT_LEVA) return;
-    // SEM B-ROLL RECORTADO NÃO HÁ O QUE TEMPLATAR, e o clique barrado explica em vez
+    // SEM O B-ROLL MEDIDO NÃO HÁ O QUE TEMPLATAR, e o clique barrado explica em vez
     // de morrer calado: o silêncio aqui era convite a achar a tela quebrada.
-    if (n > 2 && !RECORTADO) {
-      irParaPasso(2);
-      $("rec_diz").textContent = "o template e a legenda trabalham em cima do recorte: "
-        + "faça o passo 2 primeiro.";
+    //
+    // O DESVIO AGORA FICA NO PASSO 1, e não manda mais para um passo 2 que não existe.
+    // A medida já está correndo quando ele chega aqui, então o recado é de espera, e não
+    // de tarefa: não há botão nenhum para ele apertar.
+    if (n > 1 && !RECORTADO) {
+      irParaPasso(1);
+      $("rec_diz").textContent = "a marca, as frases e a fabricação trabalham em cima da "
+        + "medida do B-roll: espere a leva terminar de ser medida, aqui em cima.";
       return;
     }
-    irParaPasso(n);
+    /* E A ABA TRANCADA PELA FALTA DE CONTA TAMBÉM EXPLICA. Sem conta escolhida, as abas
+       da Bancada, das Frases e do Fabricar estão fechadas, e até 03/09/2026 elas fechavam
+       sem dizer uma palavra. */
+    if (e.sub && !podeIrAoSub(e.sub)) {
+      MP_RECADO_FORCADO = "escolha a conta desta leva primeiro: as frases, a bancada e a "
+        + "fabricação trabalham em cima da variação que ela define.";
+      irParaPasso(3, 1);
+      salvarRascunho();
+      return;
+    }
+    irParaPasso(n, e.sub);
     salvarRascunho();
+  };
+  p.addEventListener("click", abrirAAba);
+  /* O TECLADO ALCANÇA A ABA, e isso não é enfeite: a tira substituiu uma coluna de
+     botões, e aba que só responde a clique some para quem navega por tabulação. O
+     elemento é `div` com papel de aba, e não `button`, porque `<h3>` e `<p>` não cabem
+     dentro de botão: o navegador fecha o botão sozinho antes deles. */
+  p.addEventListener("keydown", ev => {
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    ev.preventDefault();
+    abrirAAba();
   });
 });
 
@@ -4847,6 +5000,11 @@ async function mostrarPecas() {
       desenhaPecas();
       await tentarRetomar();
       salvarRascunho();
+      // A MEDIDA COMECA AQUI, depois de a tela saber o que ja' existe. Ela vem por
+      // ultimo de proposito: se viesse antes do `desenhaPecas`, a galeria esperaria o
+      // pedido ser deixado para aparecer, e o tempo morto que a torna gratuita e'
+      // justamente ele olhando essa galeria.
+      garantirAMedida();
     } catch (e) {
       EDIT_PECAS = [];
       gal.innerHTML = `<div class="ed-carregando">não consegui ler a leva na casa do `
@@ -4900,9 +5058,9 @@ async function mostrarPecas() {
         arquivos.push({ nome, h });
     arquivos.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
     EDIT_PECAS = arquivos;
-    // O ESTADO DO PASSO 2 VEM DO DISCO, e não da memória da tela. Se a pasta
-    // `recortes/leva-N` já existe com a ficha dentro, esta leva foi recortada, e isso
-    // vale mesmo que a página tenha sido fechada e reaberta no dia seguinte.
+    // O ESTADO DA MEDIDA VEM DO DISCO, e não da memória da tela. Se `medidas/leva-N` já
+    // existe com a ficha dentro, esta leva foi medida, e isso vale mesmo que a página
+    // tenha sido fechada e reaberta no dia seguinte.
     await procurarRecortes();
     // E SE ESTA LEVA JA' FOI MONTADA, o disco e' quem sabe. Sem isto o `MONTADO`
     // nascia nulo depois de um F5, e o passo 4 ficava trancado com as 107 pecas
@@ -4912,6 +5070,9 @@ async function mostrarPecas() {
     // AS PEÇAS CHEGARAM: se havia rascunho esperando por elas, agora ele pode abrir.
     await tentarRetomar();
     salvarRascunho();
+    // E A MEDIDA COMEÇA, pelo mesmo motivo do outro caminho: por último, para a galeria
+    // não esperar o pedido ser deixado.
+    garantirAMedida();
   } catch (e) {
     gal.innerHTML = "";
     $("ed_porta").hidden = false;
@@ -5324,258 +5485,23 @@ atualizar().then(aoVivo);
    o passo 2 mostraria como exemplo justamente uma peca que ele acabou de descartar, ou
    trocaria de exemplo sozinho sem ninguem ter pedido. O nome do arquivo nao se desloca. */
 let REC_NOME = "";                 // qual peça está sendo conferida
-let REC_PROXIMO = "";              // o reel que o posto já está medindo de antemão
 let REC_ACHADO = null;             // o B-roll medido nela
 let REC_OBRA = null;               // o pedido de recorte em curso
 
-async function entrarNoRecorte() {
-  // A PASTA DE DESTINO SAIU DA TELA em 25/08/2026, por decisão do dono: "não preciso
-  // mais saber disso, já que tudo agora está indo para a VPS". Quando a casa era o disco
-  // dele, o caminho respondia "onde vou achar isso depois?"; com uma casa só, a pergunta
-  // não existe mais e a linha era mobília.
-  await procurarRecortes();
-  desenhaRecortado();
-  resumoDoRecorte();
-  desenhaOFechoDoRecorte();
-  if (!EDIT_PECAS.length) {
-    $("rec_diz").textContent = "as peças da leva ainda não chegaram: volte ao passo 1 "
-      + "para as abrir, e então eu meço.";
-    return;
-  }
-  // A PECA DO EXEMPLO TEM DE CONTINUAR NA LEVA. Se ele tirou justamente essa no passo
-  // 1, o passo 2 sorteia outra em vez de medir uma que nao vai ser recortada.
-  if (!REC_NOME || !pecas1().some(x => x.nome === REC_NOME)) await verOutroReel();
-}
 
 /** Sorteia um reel da leva e mede o B-roll dele, para conferência. */
-async function verOutroReel() {
-  // SO' SORTEIA ENTRE AS QUE FICARAM NA LEVA. Ver a nota em `REC_NOME`.
-  const lista = pecas1();
-  if (!lista.length) return;
-  let i = Math.floor(Math.random() * lista.length);
-  // O SORTEIO PREFERE QUEM JA' FOI MEDIDO. O clique anterior deixou o posto medindo um
-  // reel de antemao; se ele ainda esta' na leva, e' ele que entra, e a espera da medida
-  // some. Se ele saiu da leva no passo 1, o sorteio comum decide.
-  if (REC_PROXIMO && REC_PROXIMO !== REC_NOME) {
-    const j = lista.findIndex(x => x.nome === REC_PROXIMO);
-    if (j >= 0) i = j;
-  }
-  REC_PROXIMO = "";
-  if (lista.length > 1) {
-    let voltas = 0;
-    while (lista[i].nome === REC_NOME && voltas++ < 30)
-      i = Math.floor(Math.random() * lista.length);
-  }
-  REC_NOME = lista[i].nome;
-  rotuloDoReel(REC_NOME);
-  const v = $("rec_video");
-  // O MEDINDO DEIXOU DE SER PALAVRA E VIROU VARREDURA, pedido de 25/08/2026. E desde
-  // 26/08 ha' DUAS esperas com nome: "Abrindo O Reel" na esquerda enquanto o video
-  // desce pela rede, e "Medindo O Reel" na direita ate' a medida chegar. As classes tem
-  // de desligar em TODOS os fins possiveis, senao a varredura roda para sempre.
-  $("rec_diz").textContent = "";
-  $("rec_diz").classList.remove("ruim");
-  $("rec_fonte").classList.add("medindo", "abrindo");
-  $("rec_saida").classList.add("medindo");
-  $("rec_marca").hidden = true;
-  // A PROMESSA NASCE AQUI FORA porque ela é colhida lá embaixo, depois do `try`. Dentro
-  // dele, `const` fica presa ao bloco e a colheita daria erro de nome, que o `node
-  // --check` não pega: ele confere gramática, não escopo.
-  let medida = Promise.resolve(null);
-  try {
-    const u = await urlDaMidia(lista[i], pastaDaLeva());
-    if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
-    // SEM ISTO O CANVAS FICA CONTAMINADO na vitrine do GitHub Pages (o vídeo vem do
-    // posto local, que é outra origem) e o medidor devolvia nulo para todo reel. O
-    // posto já ecoa o cabeçalho de origem para as telas conhecidas; em mesma origem o
-    // atributo é inofensivo.
-    v.crossOrigin = "anonymous";
-    v.dataset.url = u;
-    v.src = u;
-    // A MEDIDA SAI JUNTO COM O VIDEO, e nao depois dele. As duas esperas nao dependem
-    // uma da outra: o posto mede lendo o disco dele, e o navegador abre o arquivo pela
-    // rede. Enfileiradas, somavam; lado a lado, vale a mais demorada das duas.
-    //
-    // E A DO VIDEO E' A MAIOR, por um detalhe do arquivo: o indice do mp4 (o `moov`)
-    // fica no FIM, depois dos dados, entao o navegador pede o comeco, ve o tamanho e
-    // precisa de um SEGUNDO pedido no fim so' para saber onde cada quadro mora. Medido
-    // em 25/08/2026 neste caminho: de 1,6 a 4,2 s so' para abrir.
-    medida = medirOBroll(lista[i]);
-    // O "MEDINDO" TEM PRAZO. Vídeo que o navegador não decodifica (arquivo pela
-    // metade, codec que ele não lê) pode nunca disparar `loadedmetadata` nem o
-    // `error`: esta espera ficava pendurada e o passo 2 dizia "medindo…" para
-    // sempre, sem erro e sem saída. Quinze segundos é folga larga para ler o
-    // cabeçalho de um arquivo local; passou disso, a resposta honesta é que o
-    // vídeo não abre, e há outro reel para conferir no botão ao lado.
-    const abriu = await new Promise(ok => {
-      if (v.readyState >= 1) return ok(true);
-      const prazo = setTimeout(() => ok(false), 15000);
-      v.addEventListener("loadedmetadata",
-        () => { clearTimeout(prazo); ok(true); }, { once: true });
-      v.addEventListener("error",
-        () => { clearTimeout(prazo); ok(false); }, { once: true });
-    });
-    if (!abriu) {
-      $("rec_fonte").classList.remove("medindo", "abrindo");
-      $("rec_saida").classList.remove("medindo");
-      // O RECADO NAO CHUTA CULPADO. Ele acusava o arquivo de estar estragado, e em
-      // 25/08/2026 o Gabriel viu essa frase com o CABO DA INTERNET desconectado: o
-      // arquivo estava inteiro do outro lado. Daqui nao da' para separar arquivo ruim
-      // de ligacao caida, entao o recado diz as duas e manda conferir a mais provavel.
-      $("rec_diz").textContent = "não consegui abrir este vídeo aqui. Pode ser a ligação "
-        + "com a casa do Estúdio, ou o próprio arquivo. Confira a internet e clique em "
-        + "Ver Outro Reel.";
-      return;
-    }
-  } catch (e) {
-    $("rec_fonte").classList.remove("medindo", "abrindo");
-    $("rec_saida").classList.remove("medindo");
-    $("rec_diz").textContent = "não consegui abrir este arquivo.";
-    return;
-  }
-  $("rec_fonte").classList.remove("medindo", "abrindo");
-  v.play().catch(() => {});
-  REC_ACHADO = await medida;
-  $("rec_saida").classList.remove("medindo");
-  desenhaRecorteExemplo();
-
-  /* A DEMORA DO MEDINDO, vista por ele em 25/08/2026: "so' to' achando bem lento". A
-     medida do posto leva um a quatro segundos por video na primeira vez, e ZERO nas
-     seguintes, porque o posto guarda por arquivo. Entao o proximo sorteado ja' fica
-     escolhido AGORA, e o posto mede enquanto ele ainda olha este; o clique seguinte
-     acha a medida pronta. A resposta morre aqui: o ganho e' so' esquentar a guarda. */
-  const resto = lista.filter(x => x.nome !== REC_NOME);
-  if (resto.length) {
-    const px = resto[Math.floor(Math.random() * resto.length)];
-    REC_PROXIMO = px.nome;
-    esquentarAMedida(px);
-  }
-}
 
 /* O ESPELHO EXATO DO QUE O `oficina.py` GRAVA: o mesmo retângulo, na esquerda marcado
    sobre o reel e na direita já sozinho. Se os dois lados discordassem, a conferência
    desta tela não valeria nada. */
-function desenhaRecorteExemplo() {
-  const v = $("rec_video");
-  const lar = v.videoWidth || 1080, alt = v.videoHeight || 1920;
-  const b = REC_ACHADO || { x: 0, y: 0, w: 1, h: 1, modo: "tela cheia" };
-  /* AS FRACOES DA MEDIDA SAO DO QUADRO DO VIDEO, e o quadro da tela e' 9:16 com
-     `object-fit:contain`: video fora de 9:16 aparece com faixas, e uma porcentagem
-     aplicada ao ELEMENTO cai na faixa, nao no video. A marca e o recorte ficavam
-     deslocados e menores exatamente nos reels fora da medida. A caixa do conteudo
-     converte: primeiro onde o video mora dentro do quadro, depois a fracao dentro
-     do video. */
-  const qa = TELA.w / TELA.h, va = lar / alt;
-  const cw = va >= qa ? 1 : va / qa;
-  const ch = va >= qa ? qa / va : 1;
-  const ce = (1 - cw) / 2, ct = (1 - ch) / 2;
-  const m = $("rec_marca");
-  m.hidden = false;
-  m.style.left = ((ce + b.x * cw) * 100) + "%";
-  m.style.top = ((ct + b.y * ch) * 100) + "%";
-  m.style.width = (b.w * cw * 100) + "%";
-  m.style.height = (b.h * ch * 100) + "%";
-
-  /* O LADO DIREITO É A PEÇA DE REELS INTEIRA, e não o retângulo recortado. O Gabriel
-     corrigiu isso em 20/08/2026: "era pra pegar o formato do reel e só jogar um fundo
-     preto". O B-roll fica onde está, do tamanho que está, e o resto do quadro é preto.
-     A tela mostrava o retângulo sozinho, que era o comportamento de uma versão anterior,
-     e por isso ela discordava do arquivo que o programa grava. */
-  const saida = $("rec_saida"), c = $("rec_corte");
-  saida.style.width = "";
-  saida.style.height = "";
-  saida.style.aspectRatio = TELA.w + "/" + TELA.h;
-  /* O ESPELHO NAO BAIXA UMA SEGUNDA COPIA DO VIDEO. Ele era um segundo <video> com o
-     mesmo endereco: o navegador abria OUTRA descarga do mesmo arquivo, e numa conexao
-     de casa ela ficava para tras: a medida chegava, a marca aparecia na esquerda e a
-     direita seguia PRETA, calada. Visto ao vivo em 26/08/2026. Agora a direita e' uma
-     PINTURA do video da esquerda, quadro a quadro, com a forma medida por cima: uma
-     descarga so', os dois lados sempre no mesmo instante. A caixa do conteudo continua
-     valendo: o desenho ocupa o lugar exato do quadro do video. */
-  c.style.width = (cw * 100) + "%";
-  c.style.height = (ch * 100) + "%";
-  c.style.left = (ce * 100) + "%";
-  c.style.top = (ct * 100) + "%";
-  pintarOEspelho(v, c, b, lar, alt);
-
-  // O RODAPE DE MEDIDAS SAIU em 25/08/2026: "esse rodape' que voce colocou, reels tem
-  // tanto e a peca sai por tanto, nao quero isso". A medida nao mudava decisao nenhuma
-  // dele; quem precisa dela e' o programa, que a tem de outro jeito.
-  // NÃO CONSEGUI MEDIR NÃO É TELA CHEIA. O `acharBrollAqui` devolve nulo em várias
-  // falhas de leitura (vídeo que não decodifica, quadro que não chega no prazo), e
-  // afirmar "não tem card" a partir do nulo era inventar. Quem mede de verdade é a
-  // oficina, na hora de gravar; esta tela é só conferência. Trava 2 do CLAUDE.md.
-  /* A DESCRICAO DE SUCESSO SAIU, e a linha ficou. O pedido foi direto: "achei o card,
-     so' a filmagem, sem a marca de quem postou: nao entendi que porra de descricao e'
-     essa? Remove isso". Ela contava, em palavra, o que os dois videos ao lado ja'
-     mostram.
-
-     O QUE NAO PODE SUMIR E' O PROBLEMA. Quando nao da' para medir, o desenho da direita
-     fica igual ao da esquerda e nada na tela diz por que: e' tela muda, que e' o defeito
-     que este projeto passou dois dias cacando. Entao a linha aparece so' aqui. */
-  const diz = $("rec_diz");
-  diz.classList.toggle("ruim", !REC_ACHADO);
-  diz.textContent = REC_ACHADO ? "" :
-    "não consegui medir este vídeo daqui. Quem mede de verdade é a oficina, na hora de "
-    + "gravar; clique em Ver Outro Reel para conferir o método com outra peça.";
-}
 
 /** A forma do B-roll como caminho de desenho: desce pela borda esquerda e volta
     pela direita. Canto arredondado sai arredondado, como sai no arquivo gravado. */
-function formaDoRecorte(b, lar, alt) {
-  const forma = new Path2D();
-  const linhas = b.linhas;
-  if (!linhas || !linhas.length) {
-    forma.rect(b.x * lar, b.y * alt, b.w * lar, b.h * alt);
-    return forma;
-  }
-  // UM PONTO A CADA POUCAS LINHAS BASTA: o contorno tem uma linha por pixel da analise,
-  // e um caminho com trezentos pares e' peso a' toa para uma curva que o olho le igual.
-  const passo = Math.max(1, Math.round(linhas.length / 60));
-  const esq = [], dir = [];
-  for (let i = 0; i < linhas.length; i += passo) {
-    if (!linhas[i]) continue;
-    const y = (b.y + b.h * (i + 0.5) / linhas.length) * alt;
-    esq.push([linhas[i][0] * lar, y]);
-    dir.push([linhas[i][1] * lar, y]);
-  }
-  if (esq.length < 2) {
-    forma.rect(b.x * lar, b.y * alt, b.w * lar, b.h * alt);
-    return forma;
-  }
-  forma.moveTo(esq[0][0], esq[0][1]);
-  for (let i = 1; i < esq.length; i++) forma.lineTo(esq[i][0], esq[i][1]);
-  for (let i = dir.length - 1; i >= 0; i--) forma.lineTo(dir[i][0], dir[i][1]);
-  forma.closePath();
-  return forma;
-}
 
 /* O PINTOR DO ESPELHO. Um laco por quadro do video: limpa, recorta pela forma medida e
    desenha o quadro da esquerda. A GERACAO mata o laco antigo quando outro reel assume:
    sem ela, dois lacos pintariam o mesmo quadro com formas de reels diferentes. */
-let ESPELHO_GERACAO = 0;
-function pintarOEspelho(v, c, b, lar, alt) {
-  const minha = ++ESPELHO_GERACAO;
-  c.width = lar;
-  c.height = alt;
-  const g = c.getContext("2d");
-  const forma = formaDoRecorte(b, lar, alt);
-  const pinta = () => {
-    if (minha !== ESPELHO_GERACAO) return;
-    g.clearRect(0, 0, lar, alt);
-    g.save();
-    g.clip(forma);
-    try { g.drawImage(v, 0, 0, lar, alt); } catch (e) {}
-    g.restore();
-    // O LACO ACOMPANHA OS QUADROS DO VIDEO quando o navegador sabe avisar deles; nos
-    // que nao sabem, pinta a cada poucos quadros de tela, que para conferencia basta.
-    if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(() => pinta());
-    else setTimeout(() => requestAnimationFrame(pinta), 40);
-  };
-  pinta();
-}
 
-$("rec_sortear").onclick = () => verOutroReel();
 
 /* -------------------------------------------------- o que já foi recortado */
 
@@ -6086,7 +6012,13 @@ if ($("ed_puxador")) {
    é o `oficina.py`, que roda na casa do Estúdio de minuto em minuto. Por isso a primeira
    frase que aparece é sobre a espera: sem ela, o minuto entre o clique e o primeiro sinal
    de vida é indistinguível de tela travada. */
-$("rec_aplicar").onclick = async () => {
+/* PEDIR A MEDIDA VIROU FUNCAO COM NOME em 03/09/2026, e antes era so' o corpo do clique.
+
+   O MOTIVO E' QUE AGORA HA' DOIS CHAMADORES: o `garantirAMedida`, que dispara sozinho ao
+   abrir a leva, e o botao de repescagem, que so' aparece quando alguma peca falhou. O
+   corpo e' o MESMO nos dois, de proposito: copiar estas noventa linhas para o disparo
+   automatico seria garantir que as duas versoes divergissem na primeira correcao. */
+async function pedirAMedida() {
   // `pecas1()` E NAO `EDIT_PECAS`: tirando todas as pecas da leva, nao ha' o que pedir.
   if (!EDIT_LEVA || REC_OBRA || !pecas1().length) return;
   $("rec_aplicar").disabled = true;
@@ -6112,7 +6044,16 @@ $("rec_aplicar").onclick = async () => {
     if (!alvos.length) { $("rec_aplicar").disabled = false; return; }
     const id = "r" + Date.now();
     const pedido = {
-      id, tipo: "recorte", leva: EDIT_LEVA.numero,
+      // O TIPO TROCOU DE NOME JUNTO COM O TRABALHO, em 03/09/2026, e esta linha ficou
+      // para tras por um dia inteiro. O motor passou a atender `medir` e a tela continuou
+      // mandando `recorte`: o pedido caia no ramo da montagem, nao achava template e saia
+      // com erro. Na pratica, leva nova nao era medida pela tela.
+      //
+      // A PROVA CONCORDOU COM O NOME ERRADO, e por isso as 1.262 passaram: ela filtrava
+      // a fila por `tipo == "recorte"`, o mesmo nome velho. Prova e produto combinados na
+      // mesma palavra errada nao provam nada. A de `provar_que_nao_vira_peca` foi
+      // corrigida junto com esta linha.
+      id, tipo: "medir", leva: EDIT_LEVA.numero,
       pasta: "leva-" + EDIT_LEVA.numero, destino: "leva-" + EDIT_LEVA.numero,
       tela: { w: 1080, h: 1920 },
       // SEM RETÂNGULO ESCRITO AQUI: cada peça é medida na hora de gravar, porque cada
@@ -6162,7 +6103,47 @@ $("rec_aplicar").onclick = async () => {
     $("rec_obra_txt").textContent = "não deu para deixar o pedido";
     $("rec_obra_nota").textContent = e.message;
   }
-};
+}
+
+$("rec_aplicar").onclick = pedirAMedida;
+
+/* A MEDIDA DISPARA SOZINHA AO ABRIR A LEVA (03/09/2026).
+
+   POR QUE AQUI E NAO NA BANCADA: o passo 1 e' onde ele olha os 180 videos e tira os que
+   nao quer, um por um. Olhar 180 miniaturas leva mais que os 3 minutos e 22 segundos da
+   medida, entao medir enquanto ele olha e' medir de graca. Disparar na porta da Bancada
+   seria uma parede de tres minutos na entrada da tela que promete gesto de um segundo.
+
+   POR QUE NAO ANTES, quando a leva chega a' casa: o que se mede e' `pecas1()`, e a lista
+   de tiradas so' nasce quando ele clica no xis da galeria. Medir na chegada seria medir
+   peca que vai ser jogada fora, e medir leva que ele talvez nunca abra.
+
+   MEDIDA SOBRANDO NAO CUSTA CARO, e e' isso que torna o disparo cedo seguro: a oficina
+   funde a ficha nova por cima da velha peca a peca, entao tirar dez pecas depois custa
+   dez medidas jogadas fora, a cerca de um segundo cada, e nada mais. */
+let MEDIDA_PEDIDA = 0;             // o numero da leva cuja medida ja' foi disparada
+async function garantirAMedida() {
+  if (!EDIT_LEVA) return;
+  /* A BARRA SE DESENHA DO DISCO ANTES DE QUALQUER PEDIDO, e estas tres linhas moravam no
+     `entrarNoRecorte`, que era a porta do passo 2. Com o passo apagado, elas vieram para
+     ca': sem elas, a leva ja' medida abria com a barra em branco e o atalho da pasta
+     escondido, como se nada tivesse sido feito. E' a mesma licao de 26/08/2026, quando o
+     F5 depois do fim mostrava os botoes sem barra nenhuma. */
+  desenhaRecortado();
+  resumoDoRecorte();
+  desenhaOFechoDoRecorte();
+  if (REC_OBRA) return;
+  // UMA VEZ POR LEVA POR CARREGAMENTO. Sem esta trava, voltar ao passo 1 dispararia um
+  // segundo pedido enquanto o primeiro corre. E' a mesma mecanica do `JA_PEDIU_A_PASTA`.
+  if (MEDIDA_PEDIDA === EDIT_LEVA.numero) return;
+  const jaTem = new Set(EDIT_RECORTES.map(x => x.nome));
+  const faltam = pecas1().filter(p => !jaTem.has(p.nome));
+  // LEVA JA' MEDIDA NAO E' MEDIDA DE NOVO, e a conta e' a mesma que o `desenhaRecortado`
+  // ja' fazia desde 25/08/2026.
+  if (!faltam.length) return;
+  MEDIDA_PEDIDA = EDIT_LEVA.numero;
+  await pedirAMedida();
+}
 
 async function olharORecorte() {
   if (!REC_OBRA) return;
@@ -6288,7 +6269,6 @@ function pararORecorte(recado) {
   $("rec_obra_txt").textContent = recado;
 }
 
-$("rec_segue").onclick = () => irParaPasso(3);
 
 /* ------------------------------------------------- ajudantes do passo 2 */
 
@@ -6310,17 +6290,6 @@ function dizNoBotao(id, texto) {
    pode trocar esses titulos para tipo, o reel, ai' bota o arroba do Instagram". O nome do
    arquivo de leva e' `0001.50x_conta_CODIGO.mp4`, entao a conta e' o miolo. Quando o nome
    nao segue o molde, fica so' "Reel": inventar arroba errado e' pior que nao ter. */
-function rotuloDoReel(nome) {
-  const alvo = $("rec_rot_a");
-  if (!alvo) return;
-  // O SUBLINHADO VAI ENTRE COLCHETES de proposito. Colado no parenteses, o conferidor
-  // casa le' a expressao como CHAMADA de uma funcao chamada `x_` e reprova o arquivo
-  // inteiro. `x[_](` casa exatamente o mesmo e nao parece chamada de nada.
-  const m = /^[\d.]+x[_](.+)[_][^_]+\.mp4$/i.exec(String(nome || ""));
-  alvo.innerHTML = m
-    ? 'Reel <span class="arroba">@' + m[1].replace(/[<>&]/g, "") + "</span>"
-    : "Reel";
-}
 
 /* PULA PARA UM INSTANTE DO VÍDEO E ESPERA ELE CHEGAR LÁ. Sem esperar o `seeked`, o
    quadro lido no canvas é o anterior, e a análise mede a mesma imagem dez vezes. */
@@ -6362,31 +6331,9 @@ function irNoTempo(v, t) {
    do que ia ser gravado. O medidor local abaixo continua existindo para UM caso: a pasta
    liberada pelo navegador, plano B de quando o posto está fora, onde não há caminho para
    o posto medir. */
-async function medirOBroll(item) {
-  // PASTA DO NAVEGADOR NÃO TEM CAMINHO NA CASA: aí o jeito é medir aqui mesmo.
-  if (item && item.h) return acharBrollAqui($("rec_video"));
-  try {
-    const onde = pastaDaLeva() + "/" + item.nome;
-    const r = await fetch(POSTO + "/broll?onde=" + encodeURIComponent(onde),
-                          { cache: "no-store" });
-    const d = await r.json().catch(() => ({}));
-    // NÃO MEDIR NÃO É TELA CHEIA: nulo aqui faz o `desenhaRecorteExemplo` dizer que não
-    // conseguiu, em vez de afirmar que o reel não tem card. Trava 2 do CLAUDE.md.
-    return (r.ok && d.tem && d.d) ? d.d : null;
-  } catch (e) {
-    return null;
-  }
-}
 
 /** Pede ao posto a medida de um reel que AINDA nao esta' na tela, so' para ele
     guardar. Pela pasta do navegador nao ha' o que esquentar: a medida e' local. */
-function esquentarAMedida(item) {
-  if (!item || item.h) return;
-  try {
-    const onde = pastaDaLeva() + "/" + item.nome;
-    fetch(POSTO + "/broll?onde=" + encodeURIComponent(onde)).catch(() => {});
-  } catch (e) {}
-}
 
 /* A JANELA DO B-ROLL, aqui no navegador, pelo mesmo método do `oficina.py`.
 
@@ -6399,162 +6346,6 @@ function esquentarAMedida(item) {
 
    TRÊS TEMPOS: o que se mexe é a semente, a cor do card sai da margem de cima e de baixo,
    e a janela é o trecho contínuo de linhas e colunas que não são a cor do card. */
-async function acharBrollAqui(v) {
-  const N = 10, LARG = 160;
-  if (!v || !v.videoWidth || !isFinite(v.duration) || v.duration <= 0) return null;
-  const ALT = Math.max(8, Math.round(LARG * v.videoHeight / v.videoWidth));
-  const c = document.createElement("canvas");
-  c.width = LARG; c.height = ALT;
-  const g = c.getContext("2d", { willReadFrequently: true });
-  const antes = v.currentTime, tocava = !v.paused;
-  v.pause();
-  const quadros = [];
-  try {
-    // AS PONTAS FICAM DE FORA. A legenda de muitos reels ENTRA animada nos primeiros
-    // segundos, e nesse intervalo ela se mexe igual à filmagem: o detector a incluía no
-    // B-roll e ela ia parar dentro da peça. Do primeiro sexto até quase o fim ela já está
-    // parada. Visto na tela antes de ir para o ar.
-    const INI = 0.15, FIM = 0.88;
-    for (let i = 0; i < N; i++) {
-      // SALTO QUE NÃO CHEGOU DERRUBA A MEDIDA INTEIRA. Ver a nota no `irNoTempo`: seguir
-      // com o quadro anterior devolve um retângulo errado com cara de certo, e é melhor
-      // dizer que não deu do que mostrar medida inventada.
-      if (await irNoTempo(v, v.duration * (INI + (FIM - INI) * (i + 0.5) / N)))
-        return null;
-      g.drawImage(v, 0, 0, LARG, ALT);
-      quadros.push(g.getImageData(0, 0, LARG, ALT).data);
-    }
-  } catch (e) { return null; }
-  finally {
-    v.currentTime = antes;
-    if (tocava) v.play().catch(() => {});
-  }
-  if (quadros.length < 3) return null;
-  const inteiro = { x: 0, y: 0, w: 1, h: 1, modo: "tela cheia" };
-  const n = LARG * ALT;
-
-  // 1 ..... a semente: o que se mexe. Linha ou coluna só conta se boa parte dela mexeu;
-  // um ponto solto variando por ruído de compressão existe em toda parte.
-  const mexe = new Uint8Array(n);
-  for (let k = 0, p = 0; k < n; k++, p += 4) {
-    let mn = 255, mx = 0;
-    for (const q of quadros) {
-      const cz = (q[p] * 299 + q[p + 1] * 587 + q[p + 2] * 114) / 1000;
-      if (cz < mn) mn = cz;
-      if (cz > mx) mx = cz;
-    }
-    mexe[k] = (mx - mn) > 10 ? 1 : 0;
-  }
-  const linhaDe = m => { const r = new Float32Array(ALT);
-    for (let y = 0; y < ALT; y++) { let s = 0;
-      for (let x = 0; x < LARG; x++) s += m[y * LARG + x]; r[y] = s / LARG; } return r; };
-  const colunaDe = (m, a, b) => { const r = new Float32Array(LARG), h = b - a + 1;
-    for (let x = 0; x < LARG; x++) { let s = 0;
-      for (let y = a; y <= b; y++) s += m[y * LARG + x]; r[x] = s / h; } return r; };
-
-  const pm = linhaDe(mexe);
-  let y0 = -1, y1 = -1, x0 = -1, x1 = -1;
-  for (let y = 0; y < ALT; y++) if (pm[y] > 0.18) { if (y0 < 0) y0 = y; y1 = y; }
-  const pmx = colunaDe(mexe, 0, ALT - 1);
-  for (let x = 0; x < LARG; x++) if (pmx[x] > 0.18) { if (x0 < 0) x0 = x; x1 = x; }
-  if (y0 < 0 || x0 < 0) return null;
-
-  // 2 ..... a cor do card, tirada da margem de cima e da de baixo. São as duas que num
-  // card são SEMPRE fundo: o arroba mora no alto e o retângulo nunca encosta na borda
-  // superior. A esquerda e a direita não servem, porque há janela que vai de ponta a
-  // ponta na largura.
-  const m = Math.max(2, Math.round(ALT * 0.02));
-  const meio = (h, total) => { let acc = 0;
-    for (let i = 0; i < 256; i++) { acc += h[i]; if (acc * 2 >= total) return i; } return 0; };
-  const hist = [new Uint32Array(256), new Uint32Array(256), new Uint32Array(256)];
-  let quantos = 0;
-  const naBorda = f => { for (let y = 0; y < m; y++) for (const yy of [y, ALT - 1 - y])
-      for (let x = 0; x < LARG; x++) f((yy * LARG + x) * 4); };
-  for (const q of quadros) naBorda(p => {
-    hist[0][q[p]]++; hist[1][q[p + 1]]++; hist[2][q[p + 2]]++; quantos++;
-  });
-  const cor = [meio(hist[0], quantos), meio(hist[1], quantos), meio(hist[2], quantos)];
-  const hl = new Uint32Array(256);
-  let ql = 0;
-  for (const q of quadros) naBorda(p => {
-    hl[Math.max(Math.abs(q[p] - cor[0]), Math.abs(q[p + 1] - cor[1]),
-                Math.abs(q[p + 2] - cor[2]))]++; ql++;
-  });
-  const liso = meio(hl, ql);
-  if (liso > 26) return inteiro;                  // margem viva: não há card
-
-  // 3 ..... o que NÃO é o fundo do card. A tolerância acompanha o quanto a margem é
-  // lisa: card preto cravado aceita desvio pequeno como sinal.
-  const tol = Math.max(10, liso * 2 + 8);
-  const janela = new Uint8Array(n);
-  for (let k = 0, p = 0; k < n; k++, p += 4) {
-    let d = 0;
-    for (const q of quadros) {
-      const e = Math.max(Math.abs(q[p] - cor[0]), Math.abs(q[p + 1] - cor[1]),
-                         Math.abs(q[p + 2] - cor[2]));
-      if (e > d) d = e;
-    }
-    janela[k] = (d > tol || mexe[k]) ? 1 : 0;
-  }
-
-  // 4 ..... a janela é o TRECHO CONTÍNUO de linhas cheias em volta da semente, mais a
-  // RAMPA das pontas. Um limite só era frágil pelos dois lados: limite alto parava dentro
-  // da filmagem quando o topo dela era escuro, limite baixo vazava para a legenda.
-  const trecho = (perfil, centro, chao, beira) => {
-    const lim = Math.max(chao, perfil[centro] * 0.6);
-    let a = centro, b = centro;
-    while (a > 0 && perfil[a - 1] >= lim) a--;
-    while (b < perfil.length - 1 && perfil[b + 1] >= lim) b++;
-    while (a > 0 && perfil[a - 1] > beira) a--;
-    while (b < perfil.length - 1 && perfil[b + 1] > beira) b++;
-    return [a, b];
-  };
-  const cy = (y0 + y1) >> 1, cx = (x0 + x1) >> 1;
-  [y0, y1] = trecho(linhaDe(janela), cy, 0.30, 0.10);
-  // NA LARGURA O CHÃO É BAIXO DE PROPÓSITO: dentro da faixa de linhas da janela, a coluna
-  // de fundo do card dá zero cravado, então qualquer sinal já é janela. Com chão alto,
-  // filmagem escura (o interior de um carro) virava fundo e o recorte comia a lateral.
-  [x0, x1] = trecho(colunaDe(janela, y0, y1), cx, 0.15, 0.04);
-  const pd = new Float32Array(ALT), largura = x1 - x0 + 1;
-  for (let y = 0; y < ALT; y++) { let s = 0;
-    for (let x = x0; x <= x1; x++) s += janela[y * LARG + x]; pd[y] = s / largura; }
-  [y0, y1] = trecho(pd, cy, 0.30, 0.10);
-
-  if ((y1 - y0 + 1) * (x1 - x0 + 1) > 0.92 * ALT * LARG) return inteiro;
-
-  // A FORMA, e não só a caixa em volta dela. Linha por linha, dentro da caixa, o primeiro
-  // e o último ponto que não são fundo. É o mesmo cálculo do `oficina.py`, e serve para a
-  // tela mostrar o recorte com a borda que ele vai ter de verdade: canto arredondado sai
-  // arredondado aqui também, e não um retângulo que mente sobre o arquivo.
-  const linhas = [];
-  const larg = x1 - x0 + 1;
-  for (let y = y0; y <= y1; y++) {
-    let a = -1, b = -1;
-    for (let x = x0; x <= x1; x++) if (janela[y * LARG + x]) { if (a < 0) a = x; b = x; }
-    linhas.push(a < 0 || (b - a + 1) < Math.max(2, larg * 0.03) ? null : [a, b + 1]);
-  }
-  /* O MIOLO É RETO POR CONSTRUÇÃO, e as pontas só estreitam. Num card a janela é uma
-     faixa de largura fixa que curva nos quatro cantos. Sem isto, filmagem escura perto
-     da borda fazia a linha perder o limite e o contorno entrava na imagem: a máscara
-     saía com dentes na lateral. É o mesmo cálculo do `oficina.py`. */
-  const cheios = [];
-  for (let i = 0; i < linhas.length; i++) if (linhas[i]) cheios.push(i);
-  if (cheios.length) {
-    const corte = Math.max(1, Math.floor(cheios.length / 5));
-    const corpo = cheios.slice(corte, cheios.length - corte);
-    const miolo = corpo.length ? corpo : cheios;
-    let fe = Infinity, fd = -Infinity;
-    for (const i of miolo) { fe = Math.min(fe, linhas[i][0]); fd = Math.max(fd, linhas[i][1]); }
-    for (const i of miolo) { linhas[i][0] = fe; linhas[i][1] = fd; }
-    for (const i of cheios) {
-      linhas[i][0] = Math.max(linhas[i][0], fe);
-      linhas[i][1] = Math.min(linhas[i][1], fd);
-    }
-  }
-  for (const i of cheios) { linhas[i] = [linhas[i][0] / LARG, linhas[i][1] / LARG]; }
-  return { x: x0 / LARG, y: y0 / ALT, w: (x1 - x0 + 1) / LARG,
-           h: (y1 - y0 + 1) / ALT, modo: "card", linhas };
-}
 
 /* ==================================================================== O PASSO 3
 
@@ -6885,10 +6676,6 @@ function fonteCss(n) {
    O B-ROLL DE VERDADE ENQUANTO ELE ESCOLHE, e não um retângulo cinza fazendo as vezes:
    a fase 1 sorteia uma peça da leva para servir de conferência dentro da variação. */
 
-function sortearBroll() {
-  const n = EDIT_RECORTES.length;
-  return n ? Math.floor(Math.random() * n) : -1;
-}
 
 /* ------------------------------------------------- 3.3 · a IA escreve
 
@@ -6939,6 +6726,12 @@ async function entrarNaIA() {
   $("ia_sem_chave").hidden = !campos.length || temChave;
   $("ia_corpo").hidden = !campos.length || !temChave;
   contaEscrito();
+  /* A LISTA NAO DEPENDE DA CHAVE, e por isso ela e' desenhada ANTES da desistencia de
+     baixo. Sem chave esta funcao retorna e o resto nunca roda; se a lista morasse depois,
+     ela ficaria escondida justamente de quem vai escrever tudo na mao. O que ela depende
+     e' de haver caixa aberta e peca na leva, que e' o que o proprio `desenhaAsFrases`
+     confere. */
+  await desenhaAsFrases();
   if (!campos.length || !temChave) return;
   const n = pecas3().length;
   $("ia_quem").textContent = "Escrevendo com " + nomeDoServico(vivas[0].servico);
@@ -6966,7 +6759,169 @@ function contaEscrito() {
   // O BOTAO DE APAGAR SO' EXISTE QUANDO HA' O QUE APAGAR.
   const apagar = $("ia_apagar");
   if (apagar) apagar.hidden = !cheias;
+  /* A CONTA DO FIM DA LISTA ANDA JUNTO, e SO' A CONTA. Refazer a lista aqui apagaria o
+     cursor dele a cada 700 ms, porque quem chama esta funcao e' o relogio do
+     `escreverAMao`: ele digita, o relogio dispara, e a linha em que o dedo esta' seria
+     redesenhada por baixo dele. */
+  const rod = $("fz_rodape");
+  if (rod && $("fz_casa") && !$("fz_casa").hidden) rod.innerHTML = fzConta();
 }
+
+/* ================================================== A LISTA DAS FRASES (03/09/2026)
+
+   ELA E' A ABA 4 DA MAQUETE, e nasce DEPOIS da IA, nao no lugar dela. O que ele cortou em
+   21/08/2026 foi a lista que vinha ANTES, pedindo o texto de cada peca na mao; esta e' a de
+   depois, para corrigir o que ficou torto. A propria frase dele previa: "no final eu vou
+   conseguir pegar e avaliar cada um desses".
+
+   O BACK-END E' O DA BANCADA, inteiro: quem grava e' o `escreverAMao`, o mesmo que o bloco
+   "A Frase" da coluna de ferramentas usa. Duas telas escrevendo a mesma frase por dois
+   caminhos diferentes divergiriam na primeira mudanca. */
+let FZ_ONDE = -1;                  // a ultima linha que ele tocou, para voltar nela
+
+/** O rotulo embaixo do campo: quem escreveu esta frase, e se ela precisou apertar. */
+function fzQuem(p, k) {
+  const n = "peça " + String(k + 1).padStart(2, "0");
+  if (SEM_FRASE && SEM_FRASE.has(p.nome))
+    return `Este reel não tinha frase no card para a inteligência ler · ${n}`;
+  const apertou = Object.values(AJUSTES.get(p.nome) || {})
+    .some(a => a && a.tamanho != null);
+  const quem = A_MAO.has(p.nome)
+    ? "Corrigida por você"
+    : "Escrita pela inteligência a partir da manchete do card";
+  return `${quem} · ${n}`
+    + (apertou ? ` · <span class="apertou">precisou encolher para caber</span>` : "");
+}
+
+/** A conta do fim da lista. No desenho ela e' "e mais 175 pecas"; aqui e' o numero real. */
+function fzConta() {
+  const pecas = pecas3(), campos = abertas();
+  if (!pecas.length || !campos.length) return "";
+  const semFrase = quantasSemFrase();
+  const faltam = faltamEscrever().length;
+  const escritas = Math.max(0, pecas.length - faltam - semFrase);
+  return `<b>${num(pecas.length)}</b> ${pecas.length === 1 ? "frase" : "frases"} nesta leva`
+    + (escritas ? ` · <b>${num(escritas)}</b> escritas` : "")
+    + (semFrase ? ` · <b>${num(semFrase)}</b> sem frase no card para ler` : "")
+    + (faltam ? ` · <b>${num(faltam)}</b> por escrever` : "");
+}
+
+/* DESENHA A LISTA INTEIRA, e so' chama isto quem TROCA de estado: entrar na fase, a IA
+   terminar, ou ele apagar tudo. NUNCA se chama isto enquanto ele digita: refazer o
+   `innerHTML` com o dedo dentro de um campo joga o cursor para fora a cada tecla. */
+async function desenhaAsFrases() {
+  const casa = $("fz_casa");
+  if (!casa) return;
+  const pecas = pecas3(), campos = abertas();
+  casa.hidden = !pecas.length || !campos.length;
+  if (casa.hidden) return;
+
+  /* AS ARTES DESCEM UMA VEZ, E ANTES DE PINTAR. O `enderecoDo` so' olha o cache na ENTRADA:
+     cento e oitenta chamadas ao mesmo tempo para um arquivo que ainda nao desceu criariam
+     cento e oitenta enderecos de blob para a mesma imagem, e o cache guardaria o ultimo.
+     Aqui ele e' chamado uma vez por variacao da conta, que sao quatro na leva 31, e a lista
+     le' o cache ja' quente, exatamente como a fila da Bancada faz.
+
+     A GUARDA DO `contaModelo` NAO E' ENFEITE: sem conta escolhida, `variacoesDaConta`
+     devolve vazio e esta linha nao pode explodir, porque a prova do botao de apagar a IA
+     roda nesse estado. */
+  const vars = (TPL && TPL.contaModelo) ? variacoesDaConta(TPL.contaModelo) : [];
+  await Promise.all(vars.map(v => enderecoDo(v.arquivo).catch(() => null)));
+
+  const lista = $("fz_lista");
+  lista.innerHTML = pecas.map((p, k) => {
+    const v = variacaoDaPeca(p.nome);
+    const arte = v && ED_IMGS.get(v.arquivo);
+    const g = ESCRITO.get(p.nome) || {};
+    return `<div class="caixa fz-linha${k === FZ_ONDE ? " agora" : ""}" data-k="${k}">`
+      + `<span class="fz-mini">`
+      + (arte ? `<img alt="" src="${escapar(arte)}">` : `<i class="vazio"></i>`)
+      + `</span>`
+      + `<div class="fz-campo">`
+      + campos.map(c =>
+          `<input type="text" class="fz-texto" data-k="${k}" data-campo="${escapar(c.id)}"`
+          + ` aria-label="Frase da peça ${k + 1}" spellcheck="false"`
+          + ` value="${escapar(g[c.id] || c.texto || "")}">`).join("")
+      + `<div class="fz-quem">${fzQuem(p, k)}</div>`
+      + `</div>`
+      + `<button class="acao fz-ver" type="button" data-ver="${k}">Ver Na Peça</button>`
+      + `</div>`;
+  }).join("");
+  $("fz_rodape").innerHTML = fzConta();
+  const agora = lista.querySelector(".agora");
+  if (agora && agora.scrollIntoView) agora.scrollIntoView({ block: "center" });
+}
+
+/* SO' O VALOR, E SEM REFAZER NADA. E' o que roda enquanto a IA escreve: as frases chegam de
+   tres em tres segundos e a lista tem de mostrar o que ja' chegou, sem tirar o dedo dele do
+   campo em que esta' escrevendo. */
+function atualizarAsFrases() {
+  const lista = $("fz_lista");
+  if (!lista || !$("fz_casa") || $("fz_casa").hidden) return;
+  const pecas = pecas3();
+  for (const el of lista.querySelectorAll(".fz-texto")) {
+    if (el === document.activeElement) continue;
+    const p = pecas[Number(el.dataset.k)];
+    if (!p) continue;
+    const t = (ESCRITO.get(p.nome) || {})[el.dataset.campo] || "";
+    if (el.value !== t) el.value = t;
+  }
+  $("fz_rodape").innerHTML = fzConta();
+}
+
+/* OS TRES GESTOS DA LISTA, por delegacao e nao por fechamento por linha: com 180 linhas e
+   um campo em cada, pendurar tres funcoes por linha custaria 540 fechamentos vivos para
+   fazer o que tres ouvintes fazem. */
+$("fz_lista").addEventListener("input", ev => {
+  const el = ev.target.closest(".fz-texto");
+  if (!el) return;
+  const p = pecas3()[Number(el.dataset.k)];
+  const campo = abertas().find(c => c.id === el.dataset.campo);
+  if (!p || !campo) return;
+  escreverAMao(p, campo, el.value);
+});
+
+/* O `change` FECHA O QUE O `input` DEIXA ABERTO, e nao e' redundancia.
+
+   O `escreverAMao` adia o acerto de cabimento em 700 ms com UM relogio so'. Na Bancada ha'
+   uma peca de cada vez e um relogio basta. Numa lista de 180, digitar na linha 3 e pular
+   para a linha 4 antes dos 700 ms CANCELA o acerto da linha 3, e a frase dela ficaria
+   gravada com a letra do texto velho. O `change` dispara ao sair do campo, e so' quando o
+   valor mudou: e' a garantia de que nenhuma linha fica pela metade. */
+$("fz_lista").addEventListener("change", ev => {
+  const el = ev.target.closest(".fz-texto");
+  if (!el) return;
+  const k = Number(el.dataset.k);
+  const p = pecas3()[k];
+  const campo = abertas().find(c => c.id === el.dataset.campo);
+  if (!p || !campo) return;
+  caberDeNovo(p, campo);
+  contaEscrito();
+  anotarMexida();
+  const linha = el.closest(".fz-linha");
+  if (linha) linha.querySelector(".fz-quem").innerHTML = fzQuem(p, k);
+});
+
+/* VER NA PECA LEVA PARA A BANCADA, naquela peca.
+
+   A MAQUETE PROMETE A FRASE APARECENDO NA PECA enquanto ele digita, e nesta tela nao ha'
+   peca nenhuma desenhada: e' a Bancada que tem o palco, e la' a digitacao ja' muda a peca
+   ao vivo. Entao o botao leva o olho ate' onde a promessa se cumpre, em vez de esta tela
+   fingir que a cumpre.
+
+   O `AJ_I` E' POSTO ANTES do `irParaSub(6)`, e nao pelo `irParaAPeca`: aquele desiste calado
+   quando o alvo ja' e' a peca aberta, e quem desenha ao entrar na fase e' o `entrarNoAjuste`,
+   que le' o `AJ_I`. */
+$("fz_lista").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-ver]");
+  if (!b) return;
+  const k = Number(b.dataset.ver);
+  if (!Number.isFinite(k) || !pecas3()[k]) return;
+  FZ_ONDE = k;
+  AJ_I = k;
+  AJ_SEL = null;
+  irParaSub(6);
+});
 
 /* APAGAR O QUE A IA ESCREVEU, e comecar aquela fase do zero.
 
@@ -7015,6 +6970,9 @@ $("ia_apagar").onclick = () => {
   }
   contaEscrito();
   desenhaGaleria();
+  // AQUI A LISTA PODE SER REFEITA INTEIRA: ele acabou de clicar num botao, nao esta'
+  // digitando, e todos os campos ficaram vazios de uma vez.
+  desenhaAsFrases();
   salvarRascunho();
   parado("ia_recado", `${n} ${n === 1 ? "frase apagada" : "frases apagadas"}. `
     + "Clique em escrever para a IA fazer de novo.");
@@ -7211,6 +7169,12 @@ async function olharAEscrita() {
   // no fim quem grava é o `salvarRascunho` que já está lá embaixo, depois do acerto
   // de cabimento: gravar duas vezes na mesma volta seria escrita repetida.
   if (chegouFrase && !d.fim) salvarRascunho();
+  /* AS FRASES CHEGAM DE TRES EM TRES SEGUNDOS, e a lista tem de mostrar o que ja' chegou.
+     Sem esta linha ela ficaria com os campos vazios enquanto o `ESCRITO` ja' tem as frases
+     pagas dentro, que e' a tela negando o que aconteceu. E' o `atualizarAsFrases` e nao o
+     `desenhaAsFrases` de proposito: aquele so' troca VALOR, e nao tira o dedo dele do
+     campo em que estiver escrevendo. */
+  if (chegouFrase) atualizarAsFrases();
 
   const parar = () => {
     clearInterval(IA_OBRA.relogio);
@@ -9288,6 +9252,29 @@ async function desenhaGaleria() {
     + (encolhidas ? `, <b>${encolhidas}</b> com o texto ajustado para caber` : "")
     + (aMao ? `, <b>${aMao}</b> ajustadas por você` : "")
     + (prontas ? `, <b>${prontas}</b> que você já deu por prontas` : "") + ".";
+
+  /* OS QUATRO QUADROS DA MAQUETE SAEM DA MESMA VARREDURA que a linha de cima. Fazer uma
+     segunda funcao para recontar seria duas verdades sobre a mesma leva, e elas
+     divergiriam caladas. A linha de prosa continua existindo, e nao virou sobra: ela diz o
+     que os quadros nao dizem (quantas a maquina encolheu e quantas ele mexeu na mao) e tres
+     provas leem o texto dela. */
+  const porQuadro = (id, valor) => {
+    const e = $(id);
+    if (!e) return;
+    e.textContent = valor == null ? "—" : (typeof valor === "number" ? num(valor) : valor);
+    e.classList.toggle("sem-medida", valor == null);
+  };
+  porQuadro("fb_n_leva", pecas.length);
+  porQuadro("fb_n_prontas", prontas);
+  /* SEM FAIXA DE ESCRITA NAO HA' "SEM FRASE", E ISSO NAO E' ZERO. A conta de peca sem frase
+     so' existe quando as variacoes da conta tem faixa; sem faixa, escrever zero afirmaria
+     que esta' tudo escrito numa leva onde nao ha' o que escrever. */
+  porQuadro("fb_n_semfrase", campos.length ? pecas.length - escritas : null);
+  /* O TEMPO E' MEDIDO OU E' TRAVESSAO. O desenho escreve "~34 min" e esse numero nao existe
+     aqui: a tela nao sabe sequer se a leva vai para a esteira (quem decide e' o
+     `despacho_vale`, na casa), e a diferenca medida entre ir e nao ir e' de 1,88s para
+     60,1s por comando. Previsao que erra por trinta e duas vezes nao e' previsao. */
+  porQuadro("fb_t_esteira", FAB_SEGUNDOS == null ? null : emTempo(FAB_SEGUNDOS));
 
   resumoDeAplicar();
 }
@@ -11503,11 +11490,10 @@ function irParaSub(n) {
 }
 
 function desenhaSubTrilho() {
-  document.querySelectorAll("#ed_sub3 li").forEach(li => {
-    const q = Number(li.dataset.sub);
-    li.classList.toggle("agora", q === TPL_SUB);
-    li.classList.toggle("feito", q < TPL_SUB);
-  });
+  /* A LISTA DE SUBETAPAS SAIU EM 03/09/2026, e com ela a varredura de `#ed_sub3 li`.
+     Quem acende a aba de agora e' `pintarOTrilho`, que le' o par (EDIT_PASSO, TPL_SUB)
+     e nao a lista. */
+  pintarOTrilho();
   /* O RESUMO CONTA O QUE EXISTE HOJE: pecas escritas, e nao caixas de texto. Ele
      ficou preso em "a montar" para sempre quando as caixas sairam, porque contava
      justamente o que tinha sido excisado. */
@@ -11532,9 +11518,8 @@ function desenhaSubTrilho() {
   }
 }
 
-document.querySelectorAll("#ed_sub3 li").forEach(li => {
-  li.onclick = () => irParaSub(Number(li.dataset.sub));
-});
+/* O REGISTRO DE CLIQUE DA SUB-LISTA SAIU JUNTO COM ELA, em 03/09/2026. Quem leva de uma
+   fase a outra agora e' a aba da tira, no registro que fica logo depois de `irParaPasso`. */
 $("ed_vai_ajuste").onclick = () => irParaSub(5);
 // O VOLTAR DA ESCRITA LEVA AO MODELO. Ele levava a's Imagens Do Template, que nao
 // existem mais, e desde a excisao era um botao que nao fazia nada.
@@ -11566,6 +11551,12 @@ function moverAObraPara(sub) {
   // pé, ao lado do resumo, que é onde foi desenhado para ficar.
   const casaDoFeito = sub === 6 ? casa : $("apl_feito_casa");
   if (feito && feito.parentElement !== casaDoFeito) casaDoFeito.appendChild(feito);
+  /* EM REPOUSO A BARRA SO' MORA NA FABRICACAO. Com obra correndo ou montagem cumprida ela
+     continua acompanhando ele para onde ele for, que e' o pedido de 23/08/2026; parada, ela
+     e' o desenho da aba 5 e nao tem o que fazer na Bancada. Esta linha e' a ULTIMA palavra
+     sobre a visibilidade: o `irParaSub` chama o `desenhaGaleria` antes desta funcao, e as
+     duas nao brigam por isso. */
+  if (obra && !OBRA && !MONTADO) obra.hidden = sub !== 5;
 }
 
 /* FABRICAR DAQUI LEVA O OLHO ATÉ A OBRA.
@@ -11775,21 +11766,20 @@ async function tentarRetomar() {
    a medida pede, e e' assim que ele VE o mecanismo escolhendo. */
 
 let MP_CONTA = "";             // a conta na tela
-let MP_PECA = -1;              // qual recorte veste o quadro da direita
-let MP_VAR = null;             // a variacao que a medida escolheu para o recorte da vez
 let MP_GERACAO = 0;            // quem pinta por ultimo manda; pintura velha desiste
-let MP_VIDEO = null;           // o elemento do video, guardado uma vez
 let MP_RETENTA = 0;            // tentativas de baixar de novo a arte que nao desceu
+
+/* O RECADO PADRAO E' A REGRA DA TELA, escrita na maquete de 03/09/2026, linha 262. Ele so'
+   sai de cena quando alguma coisa falta, e volta sozinho quando ela se cura. */
+const MP_RECADO_PADRAO = "Você escolhe a conta, e não a moldura. Todas as molduras "
+  + "dela entram na bancada juntas, e a troca é um clique lá dentro, com o vídeo na "
+  + "frente.";
 const MP_FURO_MINIMO = 0.02;
 
 /* O VIDEO DO PALCO NAO SE PROCURA PELO ID toda vez: limpar o quadro tira a caixa da
    janela da pagina COM o video dentro, e ate' a proxima pintura o getElementById
    devolve nada; a pintura seguinte estourava encaixando um nulo. O elemento nasce uma
    vez no HTML, entao guardar a referencia resolve de vez. */
-function videoDoModelo() {
-  if (!MP_VIDEO) MP_VIDEO = $("mp_video");
-  return MP_VIDEO;
-}   // furo menor que isto e' respiro do desenho, nao janela
 
 function artesDoAcervo() {
   return (ACERVO.itens || []).filter(x => x && x.tipo === "arte" && x.arquivo);
@@ -12196,6 +12186,9 @@ async function medirAArte(blob) {
 }
 
 function desenhaAsContas() {
+  /* A GERACAO CONTINUA EXISTINDO, e agora por causa das miniaturas: cada uma desce por
+     `await`, e uma repintura no meio deixaria a foto da lista velha entrando na nova. */
+  const ger = ++MP_GERACAO;
   const contas = contasComModelo();
   const l = $("mp_lista");
   // LEITURA QUE FALHOU NAO E' ACERVO VAZIO, trava 2: dizer "nenhuma conta" com os
@@ -12222,153 +12215,108 @@ function desenhaAsContas() {
     const vs = variacoesDaConta(c);
     const meus = (ACERVO.itens || [])
       .filter(x => x && x.tipo === "template" && x.conta === c);
-    return `<div class="mp-cartao mp-cartinha${c === MP_CONTA ? " sel" : ""}"
+    const fechada = !!(TPL && TPL.contaModelo === c);
+    return `<div class="mp-cartao bm-conta${fechada ? " sel" : ""}"
       data-conta="${escapa(c)}" title="${escapa(c)}">
-      <div class="mp-cab"><b>${escapa(c)}</b>
-        ${vs.length ? "" : '<span class="mp-sem-solto">Sem Furo</span>'}</div>
-      <span class="mp-qtas">${vs.length === 1 ? "1 Variação"
-        : vs.length ? vs.length + " Variações" : "nenhuma arte com furo"}</span>
-      ${meus.map(m => `<div class="mp-tpl">
+      <div class="bm-cab">
+        <div class="bm-quem"><b>${escapa(c)}</b>
+          <span class="mp-qtas">${escapa(oQueAContaTem(vs, meus))}</span></div>
+        ${vs.length ? "" : '<span class="mp-sem-solto">Sem Furo</span>'}
+        <button class="acao bm-usar${fechada ? "" : " forte"}" type="button"
+          data-usar="${escapa(c)}"${vs.length ? "" : " disabled"}>${
+          fechada ? "Modelo Definido" : "Usar Nesta Leva"}</button>
+      </div>
+      ${vs.length
+        ? `<div class="bm-molduras">${vs.map((v, i) =>
+            `<div class="bm-mold"><img alt="" data-arte-img="${escapa(v.arquivo)}">`
+            + `<span class="bm-rot">Moldura ${i + 1}</span></div>`).join("")}</div>`
+        : `<p class="bm-aviso">As artes de ${escapa(c)} estão sem o furo transparente, `
+          + "e sem ele a filmagem não tem onde entrar: abra o cadastro e troque cada PNG "
+          + "por um com a janela vazada.</p>"}
+      <div class="bm-templates">${meus.map(m => `<div class="mp-tpl">
         <span>${escapa(m.nome || "sem nome")}</span>
         <button class="acao mini" type="button"
-          data-editar="${escapa(m.id)}">Abrir</button></div>`).join("")}
+          data-editar="${escapa(m.id)}">Abrir</button></div>`).join("")}</div>
       </div>`;
   }).join("");
+  pintarAsMolduras(ger);
+}
+
+/* A SEGUNDA LINHA DO CARTAO, e os tres fatos dela saem do acervo, nenhum e' suposto: a
+   contagem de artes com furo, a letra que ele subiu e a marca d'agua. E' a mesma frase da
+   maquete, linha 270. */
+function oQueAContaTem(vs, meus) {
+  const partes = [vs.length === 1 ? "1 moldura cadastrada"
+    : vs.length ? vs.length + " molduras cadastradas"
+    : "nenhuma arte com furo"];
+  if (meus.some(t => fonteDoAcervo(t.fonte))) partes.push("fonte própria");
+  if (meus.some(t => t.marca)) partes.push("marca d'água");
+  return partes.join(" · ");
+}
+
+/* AS MINIATURAS DESCEM DEPOIS DO CARTAO, e nao junto: o cartao aparece na hora com o nome,
+   a conta e o botao, e a foto entra quando chega. Espera de rede nao pode segurar o texto,
+   que e' o que ele le' para decidir.
+
+   A MOLDURA QUE NAO DESCEU NAO VIRA ICONE QUEBRADO (trava 2, herdado do `pintarOModelo`,
+   caso real de 27/08/2026): o quadro fica vazio e marcado, o motivo vai para o recado do
+   cabecalho, e a tela tenta de novo sozinha ate' tres vezes. Sessao vencida tem nome
+   proprio, porque o caminho de volta e' outro. */
+async function pintarAsMolduras(ger) {
+  const imgs = [...$("mp_lista").querySelectorAll("[data-arte-img]")];
+  if (!imgs.length) return;
+  const faltou = [];
+  await Promise.all(imgs.map(async im => {
+    const arq = im.dataset.arteImg;
+    let u = null;
+    try { u = await enderecoDo(arq); } catch (e) { u = null; }
+    if (ger !== MP_GERACAO) return;
+    if (!u) { faltou.push(im); return; }
+    /* O ENDERECO PODE ESTAR MORTO SEM SER NULO (cache velho, foto devolvida por engano):
+       a imagem que nao abre sai do cache e a lista se repinta pelo mesmo caminho. */
+    im.onerror = () => {
+      if (ger !== MP_GERACAO) return;
+      ED_IMGS.delete(arq);
+      try { URL.revokeObjectURL(u); } catch (e2) { /* endereço já devolvido */ }
+      if (MP_RETENTA >= 3) return;
+      MP_RETENTA += 1;
+      desenhaAsContas();
+    };
+    im.src = u;
+  }));
+  if (ger !== MP_GERACAO) return;
+  for (const im of faltou) {
+    im.parentElement.classList.add("bm-falhou");
+    im.remove();
+  }
+  if (!faltou.length) {
+    MP_RETENTA = 0;
+    /* O RECADO DO TRILHO GANHA DO PADRAO, e esta e' a correcao de um defeito calado: a aba
+       trancada escreve aqui o motivo de estar trancada, e esta funcao roda logo depois,
+       por causa do `await` das miniaturas. Sem esta guarda, a explicacao aparecia e sumia
+       sozinha em milissegundos, sem erro nenhum no console. */
+    $("mp_recado").textContent = MP_RECADO_FORCADO || MP_RECADO_PADRAO;
+    MP_RECADO_FORCADO = "";
+    return;
+  }
+  if (CASA_INFO && CASA_INFO.sessao === "vencida") {
+    $("mp_recado").textContent = "A sessão venceu, e sem ela o posto não entrega "
+      + "as artes: recarregue a página e entre de novo.";
+    return;
+  }
+  if (MP_RETENTA < 3) {
+    MP_RETENTA += 1;
+    POSTO_DE_PE = null;              // o batimento se refaz na próxima tentativa
+    $("mp_recado").textContent = "A arte da moldura não desceu do posto; "
+      + "vou tentar de novo em instantes.";
+    setTimeout(() => { if (ger === MP_GERACAO) desenhaAsContas(); }, 2500);
+    return;
+  }
+  $("mp_recado").textContent = "A arte da moldura não desceu do posto, mesmo "
+    + "tentando de novo: confira se ele está no ar e recarregue a página.";
 }
 
 /** Pinta o par: a variacao que a medida escolheu, crua e vestida com o recorte da vez. */
-async function pintarOModelo(deNovo) {
-  if (!deNovo) MP_RETENTA = 0;         // gesto novo zera a conta das retentativas
-  /* DUAS PINTURAS SE ATROPELAM: a limpeza e' sincrona e o desenho vem depois de um
-     await (a arte desce da rede na primeira vez). Dois cliques rapidos em Ver Outra
-     Peça deixavam os quadros com as duas artes empilhadas, e a de baixo com o recado
-     da outra (revisao de 27/08/2026). A geracao resolve: quem envelheceu desiste. */
-  const ger = ++MP_GERACAO;
-  const vars = variacoesDaConta(MP_CONTA);
-  const qArte = $("mp_arte"), qPeca = $("mp_peca"), v = videoDoModelo();
-  $("mp_usar").disabled = !vars.length;
-  // SEM CONTA NENHUMA e' um caso; CONTA CAPENGA e' outro, e confundi-los foi o engano
-  // de 27/08/2026: o Teste dele, com as quatro artes opacas, caia aqui como se nao
-  // existisse, e ele leu "nenhuma conta" com o template intacto no acervo.
-  if (!MP_CONTA) {
-    MP_VAR = null;
-    qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
-    qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
-    $("mp_recado").textContent = ACERVO.falhou
-      ? "não consegui ler o acervo; os templates continuam no disco."
-      : "Cadastre um template com variações para vestir esta leva.";
-    return;
-  }
-  // A CONTA CAPENGA MOSTRA A PROPRIA ARTE E O MOTIVO. So' o recado, sem a arte na
-  // frente, deixaria ele sem saber DE QUAL arquivo a tela esta' falando.
-  if (!vars.length) {
-    MP_VAR = null;
-    const cara = artesDaConta(MP_CONTA)[0];
-    const urlCrua = cara ? await enderecoDo(cara.arquivo) : null;
-    if (ger !== MP_GERACAO) return;
-    qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
-    qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
-    if (urlCrua) {
-      const cru = document.createElement("img");
-      cru.className = "mp-arte"; cru.alt = ""; cru.src = urlCrua;
-      qArte.appendChild(cru);
-    }
-    $("mp_recado").textContent = "As artes de " + MP_CONTA + " estão sem o furo "
-      + "transparente, e sem ele a filmagem não tem onde entrar: exporte cada PNG "
-      + "com a janela vazada e troque as artes no cadastro.";
-    return;
-  }
-  const peca = (MP_PECA >= 0 && EDIT_RECORTES[MP_PECA]) || null;
-  MP_VAR = melhorVariacao(peca && BROLL_DE && BROLL_DE.get(peca.nome), vars) || vars[0];
-  const url = await enderecoDo(MP_VAR.arquivo);
-  if (ger !== MP_GERACAO) return;      // outra pintura assumiu enquanto a arte descia
-  /* A ARTE QUE NAO DESCEU NAO VIRA IMAGEM QUEBRADA, caso real de 27/08/2026 na casa
-     da rua: o posto engasgou por um instante, o endereco veio nulo, e a tela pintou os
-     dois quadros com o icone de imagem quebrada dizendo por cima qual variacao vestia
-     melhor (trava 2: a tela nao afirma o que nao mediu). A falta se diz, e a propria
-     tela tenta baixar de novo, ate' tres vezes, antes de parar com o motivo na tela. */
-  if (!url) {
-    qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
-    qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
-    if (CASA_INFO && CASA_INFO.sessao === "vencida") {
-      $("mp_recado").textContent = "A sessão venceu, e sem ela o posto não entrega "
-        + "as artes: recarregue a página e entre de novo.";
-      return;
-    }
-    if (MP_RETENTA < 3) {
-      MP_RETENTA += 1;
-      POSTO_DE_PE = null;              // o batimento se refaz na proxima tentativa
-      $("mp_recado").textContent = "A arte da variação não desceu do posto; "
-        + "vou tentar de novo em instantes.";
-      setTimeout(() => { if (ger === MP_GERACAO) pintarOModelo(true); }, 2500);
-    } else {
-      $("mp_recado").textContent = "A arte da variação não desceu do posto, mesmo "
-        + "tentando de novo: confira se ele está no ar e recarregue a página.";
-    }
-    return;
-  }
-  MP_RETENTA = 0;
-  /* O PALCO SO' SE MEXE DEPOIS DA ESPERA, tudo de uma vez. Limpar antes do await
-     deixava o video FORA da pagina no vao da descarga: a pintura seguinte procurava
-     `mp_video` e achava nada, estourando no encaixe. Limpeza e desenho juntos, sem
-     espera no meio, nao abrem esse vao. */
-  qArte.querySelectorAll(".mp-arte,.mp-vazia").forEach(x => x.remove());
-  qPeca.querySelectorAll(".mp-arte,.mp-jan").forEach(x => x.remove());
-  const jan = MP_VAR.janela;
-
-  // O QUADRO DA ESQUERDA: a variacao como ela e'. O furo aparece como encaixe vazio, e
-  // nao como buraco preto, senao arte de fundo escuro parece imagem quebrada.
-  const vazio = document.createElement("div");
-  vazio.className = "mp-vazia";
-  vazio.style.left = (jan.x * 100) + "%";
-  vazio.style.top = (jan.y * 100) + "%";
-  vazio.style.width = (jan.w * 100) + "%";
-  vazio.style.height = (jan.h * 100) + "%";
-  qArte.appendChild(vazio);
-  const i1 = document.createElement("img");
-  i1.className = "mp-arte"; i1.alt = ""; i1.src = url;
-  /* O ENDERECO PODE ESTAR MORTO SEM SER NULO (foto devolvida por engano, cache velho):
-     se a imagem nao abrir, o endereco sai do cache e a pintura se refaz pelo mesmo
-     caminho da falta, com recado e com o mesmo teto de tentativas. */
-  i1.onerror = () => {
-    if (ger !== MP_GERACAO) return;
-    ED_IMGS.delete(MP_VAR.arquivo);
-    try { URL.revokeObjectURL(url); } catch (e) { /* endereco ja' devolvido */ }
-    if (MP_RETENTA >= 3) {
-      $("mp_recado").textContent = "A arte da variação não abre como imagem: "
-        + "troque a arte no cadastro ou recarregue a página.";
-      return;
-    }
-    MP_RETENTA += 1;
-    pintarOModelo(true);
-  };
-  qArte.appendChild(i1);
-
-  // O QUADRO DA DIREITA: a mesma variacao com a filmagem encaixada na janela.
-  const caixa = document.createElement("div");
-  caixa.className = "mp-jan";
-  caixa.style.left = (jan.x * 100) + "%";
-  caixa.style.top = (jan.y * 100) + "%";
-  caixa.style.width = (jan.w * 100) + "%";
-  caixa.style.height = (jan.h * 100) + "%";
-  caixa.appendChild(v);
-  // A FILMAGEM QUE AINDA NAO ABRIU SE DIZ: os recortes moram na casa da rua e podem
-  // levar segundos descendo; quadro preto mudo parecia tela travada ("ta' tudo
-  // cinza... que delay e' esse"). O aviso some no primeiro quadro do video.
-  const espera = document.createElement("span");
-  espera.className = "mp-descendo";
-  espera.textContent = "Descendo A Filmagem…";
-  caixa.appendChild(espera);
-  qPeca.appendChild(caixa);
-  const i2 = document.createElement("img");
-  i2.className = "mp-arte"; i2.alt = ""; i2.src = url;
-  qPeca.appendChild(i2);
-  await vestirORecorte(ger);
-  const qual = vars.indexOf(MP_VAR) + 1;
-  $("mp_recado").textContent = vars.length === 1
-    ? "A única variação de " + MP_CONTA + " veste esta peça."
-    : "A variação " + qual + " de " + vars.length + " é a que melhor veste esta peça.";
-}
 
 /** Poe no quadro da direita o recorte da vez, encaixado na janela da variacao.
 
@@ -12379,39 +12327,10 @@ async function pintarOModelo(deNovo) {
    carregando nada, fica em descendo filmagem faz mais de 1 minuto"). O guarda certo e'
    o da GERACAO, o mesmo do resto da pintura: quem envelheceu desiste, quem esta' na
    vez veste. */
-async function vestirORecorte(ger) {
-  const v = videoDoModelo();
-  if (!MP_VAR || !EDIT_RECORTES.length || MP_PECA < 0 || !EDIT_RECORTES[MP_PECA]) {
-    v.removeAttribute("src");
-    return;
-  }
-  const peca = EDIT_RECORTES[MP_PECA];
-  const jan = MP_VAR.janela;
-  const e = encaixeNaJanela(BROLL_DE && BROLL_DE.get(peca.nome), jan);
-  // O VIDEO E' POSICIONADO DENTRO DA CAIXA DA JANELA, entao a medida vira porcentagem
-  // dela, e nao do quadro: e' a mesma conta, so' que na regua da caixa.
-  v.style.width = (e.k / jan.w * 100) + "%";
-  v.style.height = (e.k / jan.h * 100) + "%";
-  v.style.left = ((e.x - jan.x) / jan.w * 100) + "%";
-  v.style.top = ((e.y - jan.y) / jan.h * 100) + "%";
-  try {
-    const u = await urlDaMidia(peca, pastaDasPecas3());
-    // QUEM ENVELHECEU NAO VESTE, e devolve o endereco que acabou de pegar
-    if (ger !== undefined && ger !== MP_GERACAO) { devolverEndereco(u); return; }
-    if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
-    v.dataset.url = u;
-    const aviso = () => document.querySelector("#mp_peca .mp-descendo");
-    v.onplaying = () => { const a = aviso(); if (a) a.hidden = true; };
-    v.onerror = () => {
-      const a = aviso();
-      if (a) a.textContent = "A Filmagem Não Desceu";
-    };
-    v.src = u;
-    v.play().catch(() => {});
-  } catch (e2) {}
-}
 
 async function entrarNoModelo() {
+  // OS RECORTES CONTINUAM SENDO PROCURADOS AQUI, mesmo sem par: `aplicarOModelo` percorre
+  // `EDIT_RECORTES` peca a peca, e a fase das frases le' a mesma lista.
   if (!EDIT_RECORTES.length) await procurarRecortes();
   if (!ACERVO.itens.length) await lerAcervo();
   const contas = contasComModelo();
@@ -12419,38 +12338,25 @@ async function entrarNoModelo() {
     MP_CONTA = (TPL && TPL.contaModelo && contas.includes(TPL.contaModelo))
       ? TPL.contaModelo : (contas[0] || "");
   }
-  // O INDICE ENVELHECIDO TAMBEM SE CONSERTA AQUI: cinto alem do zerar da troca de
-  // leva, porque um F5 no meio pode trazer MP_PECA maior que a leva reaberta.
-  if ((MP_PECA < 0 || MP_PECA >= EDIT_RECORTES.length) && EDIT_RECORTES.length) {
-    MP_PECA = sortearBroll();
-  }
-  if (!EDIT_RECORTES.length) MP_PECA = -1;
+  MP_RETENTA = 0;                    // gesto novo zera a conta das retentativas
   desenhaAsContas();
-  await pintarOModelo();
-  marcaOModelo();
 }
 
-/** Sair da fase FECHA o video. Sem isto ele fica vivo atras da tela, gastando rede. */
+/** Sair da fase mata a repintura agendada: sem isto ela dispara com a fase escondida. */
 function pararOModelo() {
-  // QUEM SAIU NAO REPINTA: a retentativa agendada por pintarOModelo morre aqui, senao
-  // ela dispararia com a fase escondida e ressuscitaria o video atras da tela.
   MP_GERACAO++;
-  const v = videoDoModelo();
-  if (!v) return;
-  v.pause();
-  if (v.dataset.url) { URL.revokeObjectURL(v.dataset.url); delete v.dataset.url; }
-  v.removeAttribute("src");
-  v.load();
 }
 
 /** O selo do fecho: olhar uma conta e' um gesto, fechar a leva nela e' outro. */
 function marcaOModelo() {
-  const fechado = !!(MP_CONTA && TPL && TPL.contaModelo === MP_CONTA);
-  $("mp_arte").classList.toggle("mp-escolhida", fechado);
-  $("mp_peca").classList.toggle("mp-escolhida", fechado);
-  const t = $("mp_usar").querySelector(".txt");
-  if (t) t.textContent = fechado ? "Modelo Definido" : "Usar Nesta Leva";
-  $("mp_usar").classList.toggle("brasa", !fechado);
+  for (const c of $("mp_lista").querySelectorAll(".bm-conta")) {
+    const fechada = !!(TPL && TPL.contaModelo === c.dataset.conta);
+    c.classList.toggle("sel", fechada);
+    const b = c.querySelector(".bm-usar");
+    if (!b) continue;
+    b.textContent = fechada ? "Modelo Definido" : "Usar Nesta Leva";
+    b.classList.toggle("forte", !fechada);
+  }
 }
 
 /* A APLICACAO SE VE, pedido de 27/08/2026: "que eu consiga acompanhar como e' que
@@ -12459,15 +12365,17 @@ function marcaOModelo() {
    que o pedido de montagem manda, peca a peca: e' o encaixe de verdade, nao teatro. */
 async function aplicarOModelo() {
   const painel = $("mp_aplicando");
-  const par = $("mp_par");
-  const acoes = par ? par.parentElement.querySelector(".rec-acoes") : null;
+  // A LISTA E O TOPO TOMAM O LUGAR DO PAR, que morreu em 03/09/2026. O painel continua
+  // aparecendo onde ele estava olhando, e nao embaixo de uma lista de contas comprida.
+  const lista = $("mp_lista");
+  const topo = document.querySelector(".bm-topo");
   const vars = variacoesDaConta(MP_CONTA);
   pararOModelo();
   // O `hidden` PERDE para regra de display com classe (a mesma armadilha que o
-  // conferidor pegou no proprio painel): o par e as acoes se apagam por estilo em
-  // linha, senao o painel abria escondido EMBAIXO do par, fora da dobra.
-  if (par) par.style.display = "none";
-  if (acoes) acoes.style.display = "none";
+  // conferidor pegou no proprio painel): a lista e o topo se apagam por estilo em
+  // linha, senao o painel abria escondido EMBAIXO deles, fora da dobra.
+  if (lista) lista.style.display = "none";
+  if (topo) topo.style.display = "none";
   painel.classList.remove("feita");
   painel.hidden = false;
   $("mp_apl_titulo").textContent = "Aplicando O Template";
@@ -12487,13 +12395,15 @@ async function aplicarOModelo() {
     + "Agora vem a escrita das frases.";
   await new Promise(r => setTimeout(r, 1400));
   painel.hidden = true;
-  if (par) par.style.display = "";
-  if (acoes) acoes.style.display = "";
+  if (lista) lista.style.display = "";
+  if (topo) topo.style.display = "";
 }
 
 async function usarOModelo() {
   if (!MP_CONTA || !variacoesDaConta(MP_CONTA).length || !TPL) return;
-  $("mp_usar").disabled = true;
+  // TRAVA CONTRA O DUPLO CLIQUE: sao N botoes agora, um por conta, e todos param
+  // enquanto aplica. Antes era um botao so', e desligar aquele bastava.
+  for (const b of $("mp_lista").querySelectorAll(".bm-usar")) b.disabled = true;
   TPL.contaModelo = MP_CONTA;
   // OS CAMPOS DA ESCOLHA UNICA MORREM AQUI: a moldura passou a ser por peca, e um
   // rascunho com arte global faria a bancada e o pedido brigarem sobre quem manda.
@@ -12503,7 +12413,9 @@ async function usarOModelo() {
   marcaOModelo();
   await salvarRascunho();
   await aplicarOModelo();
-  $("mp_usar").disabled = false;
+  // A LISTA SE REFAZ EM VEZ DE DESTRAVAR NO BRACO: o botao da conta capenga tem de voltar
+  // travado, e quem sabe disso e' a pintura, e nao esta funcao.
+  desenhaAsContas();
   irParaSub(4);
 }
 
@@ -12514,20 +12426,15 @@ $("mp_lista").addEventListener("click", async ev => {
     await abrirCadastro(editar.dataset.editar);
     return;
   }
-  const li = ev.target.closest("[data-conta]");
-  if (!li) return;
-  MP_CONTA = li.dataset.conta;
-  desenhaAsContas();
-  await pintarOModelo();
-  marcaOModelo();
+  /* UM GESTO SO' FECHA A LEVA, e nao dois. Antes eram dois porque havia o que olhar no
+     meio: escolher a conta pintava o par, e o botao confirmava o que ele tinha visto. Sem
+     o par nao ha' nada entre um e outro, e um passo que nao mostra nada e' atrito. */
+  const usar = ev.target.closest("[data-usar]");
+  if (!usar || usar.disabled) return;
+  MP_RETENTA = 0;
+  MP_CONTA = usar.dataset.usar;
+  await usarOModelo();
 });
-$("mp_outra").onclick = async () => {
-  if (EDIT_RECORTES.length < 2) return;
-  MP_PECA = (MP_PECA + 1) % EDIT_RECORTES.length;
-  // A PECA NOVA PODE PEDIR OUTRA VARIACAO, entao o par inteiro se repinta.
-  await pintarOModelo();
-};
-$("mp_usar").onclick = () => usarOModelo();
 $("mp_novo").onclick = () => abrirCadastro();
 
 /* ============================================ O CADASTRO DO TEMPLATE
@@ -13027,7 +12934,10 @@ async function cdPintaAMarcaNoPalco() {
    legivel em qualquer lugar. Sem recorte a tela DIZ que nao tem, em vez de fingir um. */
 async function cdPintaOBrollDaMarca() {
   const v = $("cd_marca_video");
-  const peca = (MP_PECA >= 0 && EDIT_RECORTES[MP_PECA]) || EDIT_RECORTES[0] || null;
+  // A PRIMEIRA PECA DA LEVA, e nao mais a "peca da vez": o `MP_PECA` morreu com o par
+  // de quadros em 03/09/2026, e este fundo so' precisa de UMA filmagem de verdade da
+  // leva para a marca ser julgada sobre ela.
+  const peca = EDIT_RECORTES[0] || null;
   $("cd_sem_broll").hidden = !!peca;
   if (!peca) { v.removeAttribute("src"); return; }
   try {
@@ -13342,9 +13252,10 @@ async function cdCadastrar() {
   // sozinha, com a conta nova ja' escolhida na lista.
   setTimeout(async () => {
     fecharCadastro();
+    // UMA CHAMADA SO' desde 03/09/2026: `desenhaAsContas` ja' pinta o selo do fecho e ja'
+    // dispara as miniaturas, entao o `pintarOModelo` e o `marcaOModelo` que vinham atras
+    // dela viraram repeticao.
     desenhaAsContas();
-    await pintarOModelo();
-    marcaOModelo();
   }, 900);
 }
 
@@ -13368,6 +13279,10 @@ async function entrarNoTemplate() {
 
 let OBRA = null;
 let MONTADO = null;                // { pecas, pasta, link } da montagem cumprida
+/* O TEMPO QUE A OFICINA MEDIU, e nao o que a tela chutou. Ele sobrevive ao fim da obra
+   porque `pararDeOlhar` mata o `OBRA` e com ele o `d.segundos` iria embora: o quarto quadro
+   da fabricacao ficaria em branco justamente quando ele acabou de ganhar valor. */
+let FAB_SEGUNDOS = null;
 
 function alvosDaMontagem() { return pecas3().map((_, i) => i); }
 
@@ -13376,6 +13291,39 @@ function resumoDeAplicar() {
   $("apl_montar").disabled = !n || !TPL || !!OBRA;
   // O BOTAO DA FASE 5 E' UM ATALHO PARA O MESMO: se um nao pode, o outro tambem nao.
   if ($("aj_montar")) $("aj_montar").disabled = $("apl_montar").disabled;
+
+  /* A BARRA JA' EXISTE ANTES DE FABRICAR, e e' a mesma `#apl_tiras` da obra. A maquete tem
+     barra desde que a aba abre, e ela responde "quantas sao" mesmo com zero prontas: sem
+     isto a tela que ele compara com o desenho tem um buraco no meio ate' alguem clicar.
+
+     AQUI SO' SE ACENDE, NUNCA SE APAGA, e a diferenca custou um defeito no mesmo dia em
+     que a linha nasceu. Quem apaga e' o `moverAObraPara`, que ja' se declara "a ULTIMA
+     palavra sobre a visibilidade": em repouso a caixa so' faz sentido na fabricacao, e na
+     Bancada seria uma folha flutuante vazia por cima da peca, que foi o defeito que a foto
+     de 02/09/2026 pegou.
+
+     POR QUE APAGAR AQUI ERA ERRADO: esta funcao tambem roda no CAMINHO DO FRACASSO. Fabricar
+     pela Bancada deixa `TPL_SUB` valendo 6, e a montagem que estoura chama `pararDeOlhar(false)`,
+     que zera a obra e cai aqui; com `hidden = TPL_SUB !== 5` a caixa sumia, e so' DEPOIS o
+     programa escrevia "nao deu: <motivo>" dentro dela. O recado existia, com display nenhum e
+     altura zero, e ele ficava repetindo o clique sem nada na tela para dizer por que. Vale
+     igual para a perda de contato de tres minutos, que passa pelo mesmo caminho.
+
+     `fim: true` PORQUE SEM ELE a barra ganha a classe `andando` e as 180 marcas piscariam
+     sem ninguem trabalhando. */
+  const obra = $("apl_obra");
+  const parada = !OBRA && !MONTADO;
+  if (obra) {
+    obra.classList.toggle("repouso", parada);
+    if (parada) {
+      if (TPL_SUB === 5) obra.hidden = false;
+      pintarObra("apl", { total: n, feitos: 0, fim: true }, "peças montadas");
+    }
+  }
+  /* O BOTAO DIZ QUANTAS VAO, que e' o desenho aprovado ("Fabricar As 180"). Sem numero ele
+     e' uma promessa vaga na tela onde a leva inteira se decide. */
+  $("apl_montar").textContent = n ? `Fabricar As ${num(n)}` : "Fabricar As Peças";
+
   if (MONTADO) return desenhaFeito();
   $("apl_resumo").innerHTML = TPL
     ? `<b>${n}</b> ${n === 1 ? "peça" : "peças"}, em ${TELA.w} por ${TELA.h}.`
@@ -13580,6 +13528,11 @@ async function olharAObra() {
     return;
   }
   const feitos = d.feitos || 0, total = d.total || OBRA.total;
+  /* O TEMPO MEDIDO E' ANOTADO QUANDO CHEGA. `d.segundos` e' o unico numero de tempo que
+     este programa recebe, e ele e' medido pela oficina ou pela vaga da esteira
+     (`round(time.time() - t0)`), nunca estimado. E' a diferenca entre o quarto quadro da
+     fabricacao mostrar medida e mostrar adivinhacao. */
+  if (d.segundos != null) FAB_SEGUNDOS = Number(d.segundos) || 0;
   pintarObra("apl", { total, feitos, falhas: d.falhas, atual: d.atual,
                       segundos: d.segundos, fim: d.fim }, "peças montadas");
   if (!d.fim) {
@@ -13652,6 +13605,16 @@ function desenhaFeito() {
   $("apl_pasta").dataset.abrir = MONTADO.onde;
   $("apl_resumo").innerHTML = `<b>${num(MONTADO.pecas)}</b> `
     + (MONTADO.pecas === 1 ? "peça montada" : "peças montadas") + ".";
+  /* A BARRA CHEIA SOBREVIVE AO F5. Quem a enche e' o `pararDeOlhar(true)`, e ele so' roda
+     no fim da obra DESTA sessao: quem recarregasse a pagina com a leva ja' montada
+     encontrava a barra escondida e a tela sem nenhum sinal do trabalho feito. */
+  const obra = $("apl_obra");
+  if (obra) {
+    obra.hidden = TPL_SUB !== 5;
+    obra.classList.remove("repouso");
+    pintarObra("apl", { total: pecas3().length || MONTADO.pecas, feitos: MONTADO.pecas,
+                        fim: true }, "peças montadas");
+  }
 }
 
 $("apl_segue").onclick = () => irParaPasso(4);
@@ -13937,11 +13900,10 @@ function irParaSubLeg(n) {
 }
 
 function desenhaSubTrilho4() {
-  document.querySelectorAll("#ed_sub4 li").forEach(li => {
-    const q = Number(li.dataset.sub);
-    li.classList.toggle("agora", q === LEG_SUB);
-    li.classList.toggle("feito", q < LEG_SUB);
-  });
+  /* A SUB-LISTA DA ENTREGA SAIU EM 03/09/2026, junto com a do passo 3. As duas telas
+     dela continuam de pe' e se alcancam pelos proprios botoes (`dsc_vai_entrega` e
+     `ent_volta`), que ja' existiam antes desta reforma. */
+  pintarOTrilho();
   const prontas = quantasDescritas();
   const total = pecasDaEntrega().length;
   // "ENTREGUE" NO TRILHO SÓ COM A CONFERÊNCIA DO DRIVE; só empacotar diz "empacotada",
@@ -13956,9 +13918,8 @@ function desenhaSubTrilho4() {
   }
 }
 
-document.querySelectorAll("#ed_sub4 li").forEach(li => {
-  li.onclick = () => irParaSubLeg(Number(li.dataset.sub));
-});
+/* O REGISTRO DE CLIQUE DA SUB-LISTA DA ENTREGA SAIU JUNTO COM ELA. As duas telas se
+   alcancam por `dsc_vai_entrega` e `ent_volta`, e a aba 6 da tira abre a primeira. */
 
 const quantasDescritas = () =>
   pecasDaEntrega().filter(a => (DESCRICOES.get(a) || "").trim()).length;

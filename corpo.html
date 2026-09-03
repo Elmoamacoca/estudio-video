@@ -813,8 +813,12 @@
           <path d="m15 18-6-6 6-6"/></svg>Voltar</button>
 
       <h1>Qual Leva Você Vai Trabalhar?</h1>
-      <p class="nota">Cada leva é um pacote de reels já baixados e tratados, guardado no
-        seu computador.</p>
+      <!-- A FRASE E' A DA MAQUETE, e ela fecha o escopo desta tela por escrito: "nada e'
+           escolhido aqui alem de qual leva abrir". O que se escolhia aqui antes, e nao se
+           escolhe mais, e' template nenhum: a conta se escolhe na aba A Marca, e a moldura
+           dentro da Bancada, com o video na frente. -->
+      <p class="nota">Cada leva é um pacote de reels já baixados e tratados, guardado na
+        casa do Estúdio. Nada é escolhido aqui além de qual leva abrir.</p>
 
       <div class="ed-levas" id="ed_levas"></div>
       <div class="ed-vazio" id="ed_sem_leva" hidden>Nenhuma leva guardada ainda. Monte
@@ -834,10 +838,41 @@
       <button class="btn" id="ed_sair" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Sair Da Edição</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
     </div>
 
-    <aside class="ed-trilho" id="ed_trilho">
-      <!-- O PUXADOR. Fechada, a trilha guarda so' a coluna dos numeros, e o passo em que
-           ele esta' continua visivel: e' a unica coisa que ela precisa dizer quando esta'
-           fora do caminho. O estado fica guardado no navegador. -->
+    <!-- ================================================================== O TRILHO
+         SEIS ETAPAS RASAS, e' a maquete aprovada em 03/09/2026
+         (`docs/propostas/edicao-a-bancada/index.html`, linhas 220 a 226 e 42 a 55),
+         mais a sexta que ele cravou no mesmo dia: a maquete desenha cinco e fica calada
+         sobre a Legenda E Entrega, que existe e nao se apaga por silencio de desenho.
+
+         POR QUE O NUMERO DA ABA E O NUMERO DO PASSO SAO DOIS ATRIBUTOS DIFERENTES.
+         O que o olho ve' e' `data-etapa`, de 1 a 6. O que o DISCO guarda continua sendo
+         `data-passo` e `data-sub`, com o significado que eles tem desde 26/08/2026.
+         Amarrar a aba nova ao par velho e' o que faz um rascunho ja' gravado (a leva 31,
+         com 180 pecas) abrir onde parou sem migracao nenhuma. Renumerar o que esta' no
+         disco seria trocar o significado de um campo com trabalho dentro: `passo: 4` quer
+         dizer "Legenda E Entrega" e passaria a ser lido como "As Frases", calado, com as
+         descricoes ja' pagas em cota atras dele.
+
+         A SUB-LISTA MORREU, e com ela a coluna de 250 pixels. As quatro fases do passo 3
+         viraram quatro abas irmas das outras, que e' o desenho aprovado: etapas rasas,
+         sem sub-passo nenhum.
+
+         O RECORTE PERDEU A ABA porque perdeu o trabalho. A maquete escreve "Nao existe
+         recorte" na abertura e vai da Leva direto para a Marca. O que sobrou dele e' a
+         MEDIDA, que leva 3 minutos e 22 segundos para 180 pecas contra as horas que o
+         corte levava, e cabe embaixo do pano. A tela dele continua no palco, alcancada
+         pelo botao, e a linha de estado dela mora no bolso do fim desta tira.
+
+         POR QUE ISTO NAO E' UM `<button>`, e a espec pedia que fosse. Aba precisa de
+         alcance de teclado, e a saida obvia seria botao. Mas o conteudo de `<button>` e'
+         so' frase, e `<h3>` e `<p>` nao sao: o navegador fecha o botao sozinho antes
+         deles e a tira se desmonta. E o `<h3>` nao pode sair, porque e' por ele que a
+         prova le' o nome de cada aba. Entao fica `<div>` com papel de aba e `tabindex`,
+         e o teclado entra pelo registro de tecla no `tela.js`. -->
+    <nav class="ed-trilho raso" id="ed_trilho" role="tablist" aria-label="As etapas da edição">
+      <!-- O PUXADOR NAO TEM MAIS O QUE RECOLHER numa tira de 57 pixels, mas o elemento
+           fica: o estado dele mora no navegador (`CHAVE_DA_TRILHA`), o programa ainda
+           registra o clique, e quem o tira de cena e' a folha de estilo. -->
       <button class="ed-puxador" id="ed_puxador" type="button"
               title="Recolher a trilha" aria-label="Recolher a trilha">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -848,78 +883,84 @@
              stroke-linecap="round" stroke-linejoin="round">
           <path d="m15 18-6-6 6-6"/></svg><span>Trocar De Leva</span></button>
 
-      <!-- A ESTRUTURA DE CADA PASSO É A DO EXEMPLO: número, depois uma coluna estreita
-           com a linha que preenche, e ao lado o texto. A altura da barra vem de uma
-           medida escrita no próprio elemento, para a transição do CSS animá-la. -->
-      <div class="ed-ponto ativo" data-passo="1">
-        <div class="ed-ponto-n">01</div>
+      <!-- A ESTRUTURA DE CADA ABA E' A DA MAQUETE: a bolinha de 23 com o numero, e o nome
+           ao lado. A barra e a linha de estado continuam no documento porque o programa
+           escreve nas duas, tres vezes sem guarda de nulo, e porque as provas as leem.
+           Quem as tira de cena e' a folha, nunca o programa (trava da casa). -->
+      <div class="ed-ponto ativo agora" data-etapa="1" data-passo="1"
+           role="tab" tabindex="0" aria-selected="true">
+        <div class="ed-ponto-n">1</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
           <div class="ed-ponto-txt">
-            <h3>Seleção Da Leva</h3>
+            <h3>A Leva</h3>
             <p id="ed_r1">nenhuma escolhida</p>
           </div>
         </div>
       </div>
 
-      <!-- O RECORTE VEM ANTES DO TEMPLATE, e a ordem é a correção de um erro de desenho.
-           Enquanto o template era o passo 2, o recorte do B-roll acontecia espremido
-           dentro dele e obrigado a caber na proporção da moldura: cada reel põe a
-           filmagem num tamanho diferente, então forçar todos na mesma proporção cortava
-           pedaço de uns e sobrava nos outros. O Gabriel cravou a inversão em 20/08/2026:
-           "a etapa dois vai ser a etapa de recorte", "o que vai ditar como o template vai
-           ser trabalhado agora é o B-roll". -->
-      <div class="ed-ponto" data-passo="2">
-        <div class="ed-ponto-n">02</div>
+      <div class="ed-ponto" data-etapa="2" data-passo="3" data-sub="1"
+           role="tab" tabindex="0" aria-selected="false">
+        <div class="ed-ponto-n">2</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
           <div class="ed-ponto-txt">
-            <h3>Recorte Do B-roll</h3>
-            <p id="ed_r2">o B-roll de cada vídeo</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- O PASSO 3 TEM PASSOS DENTRO DELE, e foi assim que o Gabriel descreveu: "tem
-           várias etapas dentro da etapa de template". Eles só aparecem quando ele está
-           no 3. Fora dele, o trilho volta a ser uma linha por passo, senão a espinha
-           vira um índice de livro. -->
-      <div class="ed-ponto" data-passo="3">
-        <div class="ed-ponto-n">03</div>
-        <div class="ed-ponto-corpo">
-          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
-          <div class="ed-ponto-txt">
-            <h3>Montagem Da Peça</h3>
+            <h3>A Marca</h3>
             <p id="ed_r3">nenhum escolhido</p>
-            <ol class="ed-sub" id="ed_sub3">
-              <li data-sub="1"><i></i>Modelo Do Template</li>
-              <li data-sub="4"><i></i>Escrita Das Frases</li>
-              <li data-sub="6"><i></i>Revisão Peça A Peça</li>
-              <li data-sub="5"><i></i>Fabricar As Peças</li>
-            </ol>
           </div>
         </div>
       </div>
 
-      <!-- O PASSO 4 GANHOU MIOLO EM 23/08/2026. Ele nomeou o passo em 20/08 e deixou
-           vazio; três dias depois disse o que ele faz, e são duas coisas em ordem: "a
-           primeira subetapa é a criação desses textos... a segunda subetapa é subir todos
-           esses arquivos dentro do Drive". Por isso ele tem sub-trilho igual ao passo 3. -->
-      <div class="ed-ponto" data-passo="4">
-        <div class="ed-ponto-n">04</div>
+      <div class="ed-ponto" data-etapa="3" data-passo="3" data-sub="6"
+           role="tab" tabindex="0" aria-selected="false">
+        <div class="ed-ponto-n">3</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt"><h3>A Bancada</h3></div>
+        </div>
+      </div>
+
+      <div class="ed-ponto" data-etapa="4" data-passo="3" data-sub="4"
+           role="tab" tabindex="0" aria-selected="false">
+        <div class="ed-ponto-n">4</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt"><h3>As Frases</h3></div>
+        </div>
+      </div>
+
+      <div class="ed-ponto" data-etapa="5" data-passo="3" data-sub="5"
+           role="tab" tabindex="0" aria-selected="false">
+        <div class="ed-ponto-n">5</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt"><h3>Fabricar</h3></div>
+        </div>
+      </div>
+
+      <!-- A SEXTA ABA E' ORDEM DELE, de 03/09/2026, e nao da maquete. Perguntado se a
+           Legenda E Entrega virava aba, entrava dentro do Fabricar ou sumia da barra, ele
+           escolheu a aba: nada se perde e o caminho continua terminando na entrega. -->
+      <div class="ed-ponto" data-etapa="6" data-passo="4"
+           role="tab" tabindex="0" aria-selected="false">
+        <div class="ed-ponto-n">6</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
           <div class="ed-ponto-txt">
-            <h3>Legenda E Entrega</h3>
+            <h3>A Entrega</h3>
             <p id="ed_r4">depois da montagem</p>
-            <ol class="ed-sub" id="ed_sub4">
-              <li data-sub="1"><i></i>Descrição Dos Posts</li>
-              <li data-sub="2"><i></i>Envio Para O Drive</li>
-            </ol>
           </div>
         </div>
       </div>
-    </aside>
+
+      <!-- O BOLSO DO PASSO QUE PERDEU A ABA. O Recorte continua existindo no produto, com
+           tela propria, alcancado pelo botao do fim da Leva. O que ele perdeu foi a aba.
+           A linha de estado dele mora aqui porque o programa escreve nela de dois lugares,
+           e porque a prova de `provar_que_sai_da_leva` le' o texto dela para conferir a
+           conta das pecas tiradas. Sao quatro palavras invisiveis, e sao a diferenca entre
+           a aba de pe' e a aba quebrada. -->
+      <span class="ed-guardados" hidden><p id="ed_r2">o B-roll de cada vídeo</p></span>
+    </nav>
 
     <div class="ed-palco">
 
@@ -939,6 +980,73 @@
         <div class="ed-fora-linha" id="ed_fora_linha" hidden>
           <span id="ed_fora_diz"></span>
           <button class="acao mini" type="button" id="ed_fora_voltar">Trazer Todas De Volta</button>
+        </div>
+
+        <!-- ================================================== A MEDIDA, QUE ERA O PASSO 2
+
+             ELA E' PREPARO, E NAO PASSO (03/09/2026, espec `bancada-front/a-leva`).
+             Ela morava numa etapa propria, com dois reels de conferencia, um botao de
+             sortear e um botao "Recortar". Nao ha' mais recorte: a maquete aprovada
+             escreve "Nao existe recorte" na abertura e vai da Leva direto para a Marca.
+             O que sobrou do passo e' a MEDIDA, que le' doze quadros por peca e deixa uma
+             ficha de kilobytes: 180 pecas em 3 minutos e 22 segundos, contra as horas que
+             o corte levava. Isso cabe embaixo do pano.
+
+             A MEDICAO DISPARA SOZINHA ao abrir a leva, dentro do `mostrarPecas`, e a
+             razao e' de tempo morto: o passo 1 e' onde ele olha os 180 videos e tira os
+             que nao quer, um por um. Olhar 180 miniaturas leva mais que 3 min 22 s, entao
+             medir enquanto ele olha e' medir de graca. Disparar na porta da Bancada seria
+             o oposto do que a maquete promete, que e' cada gesto caber em um segundo.
+
+             A BARRA VEIO INTEIRA PARA CA', com os quinze identificadores intactos: quem
+             le' esses nomes no `tela.js` nao fica sabendo que a caixa trocou de tela. -->
+        <p class="rec-diz" id="rec_diz"></p>
+
+        <div class="caixa apl-obra lv-obra" id="rec_obra" hidden>
+          <!-- O MIOLO VIVO fica num embrulho proprio para poder SUMIR de uma vez na
+               animacao do fecho, dando lugar ao selo de verificado logo abaixo. -->
+          <div class="rec-vivo" id="rec_vivo">
+            <div class="apl-obra-topo">
+              <b id="rec_obra_txt">medindo</b>
+              <span class="dir" id="rec_obra_tempo"></span>
+            </div>
+            <div class="rec-conta">
+              <b id="rec_feitas">0</b><span id="rec_de">de 0 peças medidas</span>
+              <span class="agora" id="rec_atual"></span>
+            </div>
+            <div class="rec-tiras" id="rec_tiras"></div>
+            <div class="rec-selos">
+              <span><i class="card"></i>Com Card <b id="rec_s_card">0</b></span>
+              <span><i class="cheio"></i>Sem Card, Vídeo Inteiro <b id="rec_s_cheio">0</b></span>
+              <span><i class="falhou"></i>Não Abriram <b id="rec_s_falhou">0</b></span>
+              <span>Correndo Há <b id="rec_s_tempo">0s</b></span>
+              <span>Falta <b id="rec_s_falta">calculando</b></span>
+            </div>
+            <p class="nota" id="rec_obra_nota"></p>
+          </div>
+          <!-- O SELO DO FECHO: "quero uma animacao, que toda essa barra suma e fique
+               apenas um simbolo de verificado informando que esta 100% pronta". -->
+          <div class="rec-fecho" id="rec_fecho" hidden>
+            <svg class="ok" viewBox="0 0 52 52" aria-hidden="true">
+              <circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 14-15"/></svg>
+            <b id="rec_fecho_txt"></b>
+          </div>
+        </div>
+
+        <!-- O BOTAO SO' APARECE QUANDO ALGUMA PECA FALHOU. A medicao se dispara sozinha,
+             e este botao e' a repescagem: `desenhaRecortado` ja' escreve nele por
+             `dizNoBotao` e ja' o esconde por `.hidden`, sem mudar uma linha. -->
+        <div class="lv-repescar">
+          <button class="btn grande brasa" id="rec_aplicar" type="button" hidden><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Medir As Que Faltaram</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        </div>
+
+        <!-- O ATALHO PARA A PASTA DA LEVA. Ele apontava para a pasta dos recortes, que
+             nao existe mais em disco desde 03/09/2026: os videos moram em `levas/`, e a
+             ficha da medida e' um json de kilobytes que ninguem quer abrir no Explorador.
+             O botao "Ir Para O Passo 3" saiu junto com o passo: quem leva daqui para a
+             Marca e' a aba da tira. -->
+        <div class="apl-feito lv-adiante" id="rec_feito" hidden>
+          <a class="btn" id="rec_pasta" href="#"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Abrir A Pasta Da Leva</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
         </div>
 
         <!-- A PORTA DA PASTA. Ela só aparece quando é preciso: pedir permissão antes de
@@ -1015,83 +1123,16 @@
            UM CLIQUE, TODAS AS PEÇAS. Não há aqui um vídeo de cada vez para ajustar na
            mão: o retângulo é medido em cada peça na hora de gravar. O vídeo desta tela é
            só para conferir que o método está certo antes de soltar nas cento e sete. -->
-      <div class="ed-etapa" data-passo="2" hidden>
-        <div class="ed-cab">
-          <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v14a2 2 0 0 0 2 2h12"/><path d="M3 7h14a2 2 0 0 1 2 2v12"/></svg></span>Recorte Do B-roll</h2>
-          <p class="nota">O sistema mede o retângulo da filmagem em cada vídeo e grava só
-            ele. Confira num exemplo e depois solte na leva inteira.</p>
-        </div>
+      <!-- O PASSO 2, O RECORTE DO B-ROLL, SAIU EM 03/09/2026, e nao foi escondido:
+           saiu do documento. A maquete aprovada nao tem esse passo, e o motor nao recorta
+           mais nada desde ontem. O que sobrou dele, a barra da medida e o atalho da pasta,
+           mudou-se para o passo 1 com todos os identificadores intactos, e a medicao passou
+           a rodar sozinha ao abrir a leva.
 
-        <!-- O DESENHO QUE ELE APROVOU em 25/08/2026: os dois reels grandes e no meio da
-             tela, o rotulo em cima de cada um, e embaixo os dois botoes, sem mais nada.
-             Sairam o rodape' de medidas ("o reel tem 720 por 1280"), a descricao do card
-             e a coluna lateral de 250 pixels. -->
-        <div class="rec-par">
-          <div class="rec-lado">
-            <div class="rec-rotulo" id="rec_rot_a">Reel</div>
-            <div class="rec-quadro" id="rec_fonte">
-              <video id="rec_video" preload="metadata" muted playsinline loop></video>
-              <div class="rec-marca" id="rec_marca" hidden></div>
-            </div>
-          </div>
-
-          <div class="rec-lado">
-            <div class="rec-rotulo">Recorte</div>
-            <div class="rec-quadro rec-corte" id="rec_saida">
-              <canvas id="rec_corte"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- SO' APARECE QUANDO HA' O QUE DIZER: problema ou "medindo". A descricao de
-             sucesso saiu por pedido dele, mas tela muda nao volta a existir aqui. -->
-        <p class="rec-diz" id="rec_diz"></p>
-
-        <div class="rec-acoes">
-          <button class="btn grande" id="rec_sortear" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ver Outro Reel</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-          <button class="btn grande brasa" id="rec_aplicar" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Recortar</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-        </div>
-
-        <!-- A BARRA NOVA: uma marca por peca. Ver a nota do `.rec-tiras` no estilo. -->
-        <div class="caixa apl-obra" id="rec_obra" hidden>
-          <!-- O MIOLO VIVO fica num embrulho proprio para poder SUMIR de uma vez na
-               animacao do fecho, dando lugar ao selo de verificado logo abaixo. -->
-          <div class="rec-vivo" id="rec_vivo">
-            <div class="apl-obra-topo">
-              <b id="rec_obra_txt">recortando</b>
-              <span class="dir" id="rec_obra_tempo"></span>
-            </div>
-            <div class="rec-conta">
-              <b id="rec_feitas">0</b><span id="rec_de">de 0 peças recortadas</span>
-              <span class="agora" id="rec_atual"></span>
-            </div>
-            <div class="rec-tiras" id="rec_tiras"></div>
-            <div class="rec-selos">
-              <span><i class="card"></i>Recortadas <b id="rec_s_card">0</b></span>
-              <span><i class="cheio"></i>Sem Card, Vídeo Inteiro <b id="rec_s_cheio">0</b></span>
-              <span><i class="falhou"></i>Não Abriram <b id="rec_s_falhou">0</b></span>
-              <span>Correndo Há <b id="rec_s_tempo">0s</b></span>
-              <span>Falta <b id="rec_s_falta">calculando</b></span>
-            </div>
-            <p class="nota" id="rec_obra_nota"></p>
-          </div>
-          <!-- O SELO DO FECHO: "quero uma animacao, que toda essa barra suma e fique
-               apenas um simbolo de verificado informando que esta 100% pronta". -->
-          <div class="rec-fecho" id="rec_fecho" hidden>
-            <svg class="ok" viewBox="0 0 52 52" aria-hidden="true">
-              <circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 14-15"/></svg>
-            <b id="rec_fecho_txt"></b>
-          </div>
-        </div>
-
-        <!-- OS BOTOES DO FIM MORAM ABAIXO DA CAIXA DO ANDAMENTO, e nao junto dos
-             reels: "esses dois botoes devem ficar abaixo dessa tela onde faz o
-             carregamento" (26/08/2026). -->
-        <div class="apl-feito rec-adiante" id="rec_feito" hidden>
-          <a class="btn" id="rec_pasta" href="#"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Abrir A Pasta Dos Recortes</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
-          <button class="btn brasa" id="rec_segue" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ir Para O Passo 3</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-        </div>
-      </div>
+           O QUE MORREU JUNTO, com nome: os dois reels de conferencia (`rec_fonte`,
+           `rec_video`, `rec_marca`, `rec_saida`, `rec_corte`), o rotulo `rec_rot_a`, o
+           botao `rec_sortear` e o botao `rec_segue`. Tela escondida no porao volta a
+           nascer sozinha; tela apagada, nao. -->
 
       <!-- ---------------------------------------- PASSO 3 · O TEMPLATE, EM QUATRO FASES
 
@@ -1125,85 +1166,101 @@
              a PROVA do mecanismo: para o recorte da vez, a tela mostra a variacao que
              a medida escolheu, e trocar de peca troca de variacao quando a medida
              pede. O canto arredondado segue vindo do desenho de cada arte. -->
+        <!-- ........................................ 3.1 · A MARCA (03/09/2026)
+
+             O QUE SAIU, E POR ORDEM DELE. Ate' hoje esta fase era o PAR: dois quadros
+             grandes lado a lado, a arte crua a' esquerda e uma peca ja' vestida a'
+             direita, com um video de verdade encaixado na janela da variacao que a medida
+             escolheu. Foi um bom desenho por uma semana, e fez o trabalho dele: mostrar
+             que a maquina escolhe a moldura por medida, e nao por nome.
+
+             POR QUE ELE MORRE MESMO ASSIM. O par mostrava UMA moldura de cada vez, e uma
+             peca de cada vez, sorteada. A maquete de 03/09/2026 diz o que isso custava, na
+             linha 262: "Voce escolhe a CONTA, e nao a moldura. Todas as molduras dela
+             entram na bancada juntas, e a troca e' um clique la' dentro, com o video na
+             frente. Escolher moldura sem ver o video e' adivinhar."
+
+             ENTAO A PROVA DO MECANISMO MUDOU DE ABA, e nao sumiu: quem mostra moldura
+             sobre filmagem agora e' a Bancada, no bloco "A Moldura", com a sugestao da
+             medida marcada e a troca a um clique, com o video tocando. Aqui ficou o que e'
+             da CONTA: quantas molduras ela tem, com que letra, com marca d'agua ou sem, e
+             todas elas a' vista de uma vez.
+
+             AS CORES NAO VEM DA MAQUETE. Ela e' clara e esta tela e' escura. O que se
+             copia daqui e' ESTRUTURA e MEDIDA. -->
         <div class="ed-sub-tela" data-sub="1">
           <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6H2"/><path d="M22 18H2"/><path d="M6 2v20"/><path d="M18 2v20"/></svg></span>Modelo Do Template</h2>
-            <p class="nota" id="mp_recado">As variações da conta vestem a leva, peça a peça.</p>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6H2"/><path d="M22 18H2"/><path d="M6 2v20"/><path d="M18 2v20"/></svg></span>A Marca</h2>
+            <!-- O RECADO DEIXA DE NARRAR A PECA DA VEZ e passa a ensinar a regra. Ele
+                 dizia "a variacao 3 de 4 e' a que melhor veste esta peca", frase que so'
+                 fazia sentido com o par na frente. O programa ainda escreve aqui, mas so'
+                 quando alguma coisa falta: arte que nao desceu, sessao vencida. -->
+            <p class="nota" id="mp_recado">Você escolhe a conta, e não a moldura. Todas
+              as molduras dela entram na bancada juntas, e a troca é um clique lá dentro,
+              com o vídeo na frente.</p>
           </div>
 
-          <div class="ed-tres mp-tres">
-            <aside class="ed-lado">
-              <section class="ed-bloco">
-                <!-- A LISTA E' DE CONTAS DESDE 27/08/2026. "Nao e' pra eu selecionar
-                     mais o template... vai ser uma separacao a nivel de conta. Essa
-                     conta vai ter os templates dela, vai ter as variacoes dela." O
-                     cartao mostra a primeira variacao da conta, para ela ser
-                     reconhecivel de olho, e diz quantas variacoes servem. -->
-                <h4>As Contas</h4>
-                <div class="mp-grade" id="mp_lista"></div>
-              </section>
+          <div class="bm-marca">
+            <!-- O CADASTRO NAO ESTA' NA MAQUETE, e mesmo assim fica: e' a unica porta para
+                 o cadastro de template, e sem ela a leva de uma conta nova nao comeca. Ele
+                 sobe para o topo porque, com a lista crescendo por conta, um botao no pe'
+                 fica abaixo da dobra, e botao que so' existe depois de rolar e' botao que
+                 nao existe. E' a mesma regra do botao de aprovar da Bancada. -->
+            <div class="bm-topo">
+              <p class="nota mini bm-diz"><b>Escolher moldura sem ver o vídeo é
+                adivinhar.</b> A troca é um clique na bancada, com a peça na frente.</p>
+              <button class="acao mini" type="button" id="mp_novo">Cadastrar Template</button>
+            </div>
 
-              <!-- "SUBIR ARTE" SAIU, E O NOME NAO FOI A UNICA COISA QUE MUDOU.
-                   "Eu nao quero que tenha esse nome, Subir arte. Bota outro nome. Mas na
-                   hora que eu for subir o template, a gente precisa fazer um cadastramento
-                   completo do template" (26/08/2026). Arte solta entrava sem conta, sem
-                   etiqueta, sem fonte e sem saber para que formato de B-roll ela servia:
-                   era um arquivo, e nao um template. -->
-              <section class="ed-bloco">
-                <button class="acao mini larga" type="button" id="mp_novo">Cadastrar Template</button>
-              </section>
-            </aside>
+            <!-- UMA COLUNA, E NAO DUAS. A grade de duas era da epoca em que o cartao era um
+                 selo de 13px numa coluna de 230; agora o cartao e' a largura toda, com as
+                 molduras dentro. -->
+            <div class="bm-contas" id="mp_lista"></div>
 
-            <div class="ed-meio">
-              <div class="rec-par" id="mp_par">
-                <div class="rec-lado">
-                  <div class="rec-rotulo">A Arte</div>
-                  <div class="rec-quadro mp-quadro" id="mp_arte"></div>
-                </div>
-                <div class="rec-lado">
-                  <div class="rec-rotulo">A Peça Montada</div>
-                  <div class="rec-quadro mp-quadro" id="mp_peca">
-                    <video id="mp_video" preload="metadata" muted playsinline loop></video>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rec-acoes">
-                <button class="btn grande" id="mp_outra" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Ver Outra Peça</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-                <button class="btn grande brasa" id="mp_usar" type="button"><span class="circ"></span><svg class="seta seta-esq" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg><span class="txt">Usar Nesta Leva</span><svg class="seta seta-dir" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-              </div>
-
-              <!-- A APLICACAO SE VE (27/08/2026): o painel toma o lugar do par
-                   enquanto cada peca veste a sua variacao, e fecha no selo. -->
-              <div class="mp-aplicando" id="mp_aplicando" hidden>
-                <div class="mp-apl-selo" aria-hidden="true"></div>
-                <h3 id="mp_apl_titulo">Aplicando O Template</h3>
-                <p class="nota" id="mp_apl_diz"></p>
-                <div class="mp-apl-trilho"><b id="mp_apl_barra"></b></div>
-                <p class="nota mini" id="mp_apl_conta"></p>
-              </div>
+            <!-- A APLICACAO SE VE (27/08/2026): o painel toma o lugar da LISTA enquanto
+                 cada peca veste a sua moldura, e fecha no selo. Antes ele tomava o lugar
+                 do par, que nao existe mais. -->
+            <div class="mp-aplicando" id="mp_aplicando" hidden>
+              <div class="mp-apl-selo" aria-hidden="true"></div>
+              <h3 id="mp_apl_titulo">Aplicando O Template</h3>
+              <p class="nota" id="mp_apl_diz"></p>
+              <div class="mp-apl-trilho"><b id="mp_apl_barra"></b></div>
+              <p class="nota mini" id="mp_apl_conta"></p>
             </div>
           </div>
         </div>
 
-        <!-- ................................................ 3.3 · A IA ESCREVE -->
+        <!-- ................................................ 3.3 · AS FRASES
+
+             DOIS MOMENTOS NA MESMA TELA, e essa e' a leitura da maquete de 03/09/2026.
+
+             O QUE ELE CORTOU EM 21/08/2026 foi a lista que vinha ANTES de a IA escrever,
+             pedindo o texto de cada peca na mao: "nao e' pra esse momento eu falar qual o
+             texto dessa peca, esta' louco? Remove. Eu cheguei na etapa da IA escrever, e'
+             pra literalmente eu ter apenas a tela de carregamento da IA escrevendo".
+
+             O QUE A MAQUETE PEDE e' a lista de DEPOIS, para corrigir o que a IA escreveu:
+             "aqui voce so' corrige o que ficou torto". A propria frase dele previa isso:
+             "no final eu vou conseguir pegar e avaliar cada um desses. Mas nao e' pra eu
+             colocar um por um". Sao dois momentos da mesma tela, e nenhum contradiz o
+             outro.
+
+             ENTAO A ORDEM E' ESTA: primeiro a maquina (quem escreve, o botao, a barra),
+             depois o resultado (a lista). A lista so' nasce quando ha' caixa aberta e peca
+             na leva, e ela NAO depende de haver chave de IA: sem chave ele escreve na mao. -->
         <div class="ed-sub-tela" data-sub="4" hidden>
           <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span>Escrita Das Frases</h2>
-            <!-- ESTA FASE NAO PERGUNTA NADA, e isso e' conserto. Ela pedia o texto de
-                 cada peca, uma por uma, e o Gabriel viu o absurdo: "eu cheguei na etapa
-                 da IA escrever, e' pra literalmente eu ter apenas a tela de carregamento
-                 da IA escrevendo, algo parecido com o recorte". Entao e' isso: um botao,
-                 uma barra, e no fim as pecas prontas para ele olhar. -->
-            <p class="nota">Ela abre a frase do card original de cada reel, entende o que
-              está escrito e escreve uma equivalente na faixa de escrita da arte que cada
-              peça veste. Uma passada só, em todas as peças.</p>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span>As Frases</h2>
+            <p class="nota">A inteligência lê a manchete do card de cada reel e escreve uma
+              equivalente na faixa de escrita da arte que a peça veste. Uma passada só, em
+              todas as peças. Depois a lista abre aqui embaixo e você corrige o que ficou
+              torto.</p>
           </div>
 
           <div class="leg-vazio" id="ia_sem_campo" hidden>
             <b>As artes desta conta não têm faixa de escrita.</b>
-            <p class="nota">A faixa é onde a frase vai ficar na peça. Volte ao
-              <b>modelo do template</b>, abra o cadastro e arraste a faixa
+            <p class="nota">A faixa é onde a frase vai ficar na peça. Volte a
+              <b>A Marca</b>, abra o cadastro e arraste a faixa
               <i>a escrita fica aqui</i> em cada variação.</p>
           </div>
 
@@ -1211,7 +1268,8 @@
             <b>Nenhuma IA configurada.</b>
             <p class="nota">A chave, o serviço e o prompt moram na aba de
               <a href="#config" data-aba="config">Configurações</a>. Configure lá uma vez
-              e esta fase passa a funcionar sozinha.</p>
+              e esta fase passa a funcionar sozinha. Sem ela a lista abaixo continua
+              valendo: as frases podem ser escritas na mão.</p>
           </div>
 
           <div id="ia_corpo" hidden>
@@ -1264,12 +1322,39 @@
             </div>
           </div>
 
+          <!-- ------------------------------------------------------- A LISTA DAS FRASES
+
+               A LISTA ROLA POR DENTRO, e nao cresce para fora. Com 180 linhas de 96px ela
+               empurraria o rodape' desta fase para oito mil pixels abaixo da dobra, e botao
+               que so' existe depois de rolar e' botao que nao existe (a mesma regra que
+               derrubou a coluna da Bancada em 03/09/2026).
+
+               A MINIATURA E' A ARTE DA VARIACAO, e nao o quadro do reel como no desenho.
+               E' a mesma decisao que a fila da Bancada ja' tomou no `desenhaAFila`: o
+               quadro do reel exigiria abrir 180 videos, que e' exatamente o que ele vetou
+               em 29/08/2026. A arte sai do cache `ED_IMGS`, com no maximo uma imagem por
+               variacao da conta, quatro na leva 31. -->
+          <div class="fz-casa" id="fz_casa" hidden>
+            <div class="fz-lista" id="fz_lista"></div>
+            <!-- A LINHA DO FIM E' A CONTA DE VERDADE. No desenho ela diz "e mais 175
+                 pecas" porque a maquete so' desenhou cinco de 180. Aqui as 180 estao na
+                 lista, entao repetir aquela frase seria a tela afirmando o que nao
+                 aconteceu. Ela vira a conta: quantas ha', quantas escritas, quantas sem
+                 frase no card e quantas por escrever. -->
+            <div class="fz-rodape" id="fz_rodape"></div>
+          </div>
+
+          <!-- O RODAPE' CONTINUA, e os dois rotulos mudaram junto com a tira de etapas.
+               O `ed_volta_imagens` vai ao `irParaSub(1)`, que hoje e' A Marca, e o
+               `ed_vai_ajuste` ao `irParaSub(5)`, que e' Fabricar. "Ver As Pecas Prontas"
+               descrevia a galeria de previas, que ele mandou remover em 29/08/2026: o
+               rotulo tinha ficado prometendo uma tela que nao existe mais. -->
           <div class="ed-pe">
             <button class="acao" id="ed_volta_imagens" type="button">
-              Voltar Ao Modelo</button>
+              Voltar À Marca</button>
             <div class="ed-pe-conta" id="ed_conta_ia"></div>
             <button class="acao forte" id="ed_vai_ajuste" type="button">
-              Ver As Peças Prontas</button>
+              Ir Para Fabricar</button>
           </div>
         </div>
 
@@ -1284,51 +1369,67 @@
              inteira de conversão, e cada ajuste depois obrigaria a fabricar tudo de novo.
              Desenhadas na tela elas aparecem na hora, ele mexe à vontade, e a fabricação
              acontece uma vez só, no fim, já aprovada. -->
-        <div class="ed-sub-tela" data-sub="5" hidden>
+        <div class="ed-sub-tela fb-fabricar" data-sub="5" hidden>
           <div class="ed-cab">
             <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="13" rx="2.2"/><path d="M8 20.5h8"/><path d="m10.5 9.5 4.5 2.5-4.5 2.5z"/></svg></span>Fabricar As Peças</h2>
-            <p class="nota">A última parada. Daqui o programa monta cada peça no arquivo
-              final, com a arte, a frase e a filmagem no lugar. Para olhar ou mexer numa
-              peça antes, volte para <b>revisão peça a peça</b>: lá abre uma de cada vez,
-              com a tela inteira para ela.</p>
+            <!-- O TITULO NAO E' "Fabricar E Entregar" COMO NO DESENHO, e a razao e' a
+                 decisao dele de 03/09/2026: a entrega virou a SEXTA aba da tira, e nao
+                 um pedaco desta. Esta tela fabrica; quem entrega e' a aba 6. -->
+            <p class="nota">Só aqui o vídeo é tocado. Cada peça vira um arquivo, com a
+              arte, a filmagem no lugar que você deixou e a frase por cima. Uma marca por
+              peça na barra: quantas são, quantas já saíram e quais deram problema.</p>
           </div>
 
-          <div class="gal-topo">
-            <div class="gal-conta" id="gal_conta"></div>
-            <div class="gal-acoes">
-              <!-- AJUSTAR, E NAO ENCOLHER. Ele foi direto em 23/08/2026: "não era pra
-                   encolher, é pra ajustar". Ver `acertarTexto` no tela.js. -->
-              <button class="acao mini" id="ajs_acertar" type="button">
-                Ajustar O Texto Que Não Coube</button>
-              <!-- A PORTA DA QUINTA SUBETAPA. Pedido dele em 23/08/2026: "não precisa e
-                   não deve aparecer todos de uma vez, o meu PC não tem memória RAM". -->
-              <button class="acao mini" id="ajs_um_a_um" type="button">
-                Voltar À Revisão</button>
-              <button class="acao forte" id="apl_montar" type="button">
-                Fabricar As Peças</button>
+          <!-- ------------------------------------------------ os quatro indicadores
+
+               O QUE ELES SUBSTITUEM: a frase corrida de `gal_conta`, que dizia os mesmos
+               numeros em prosa. A linha continua existindo logo abaixo, porque tres
+               provas leem o texto dela e porque ela diz o que os quatro quadros nao
+               dizem: quantas a maquina encolheu e quantas ele mexeu com a mao.
+
+               O QUARTO NUMERO NAO E' PREVISAO. O desenho escreve "~34 min", e esse numero
+               nao existe: a tela nao sabe sequer se a leva vai para a esteira (a decisao
+               e' do `despacho_vale`, na casa) e a diferenca medida entre ir e nao ir e' de
+               1,88s para 60,1s por comando, trinta e duas vezes. Entao o quadro nasce com
+               o travessao e so' recebe numero quando a oficina responde com tempo MEDIDO.
+               Travessao aqui quer dizer "ainda nao sei", e nao zero (a mesma trava que a
+               prova do `pos_n` guarda). -->
+          <div class="fb-resumo">
+            <div class="caixa fb-kpi">
+              <div class="v sem-medida" id="fb_n_leva">—</div>
+              <div class="r">Peças Na Leva</div>
+            </div>
+            <div class="caixa fb-kpi feita">
+              <div class="v sem-medida" id="fb_n_prontas">—</div>
+              <div class="r">Aprovadas Na Bancada</div>
+            </div>
+            <div class="caixa fb-kpi">
+              <div class="v sem-medida" id="fb_n_semfrase">—</div>
+              <div class="r">Sem Frase</div>
+            </div>
+            <div class="caixa fb-kpi">
+              <div class="v sem-medida" id="fb_t_esteira">—</div>
+              <div class="r">Tempo Na Esteira</div>
             </div>
           </div>
 
-          <div class="ed-pe">
-            <button class="acao" id="ed_volta_ia" type="button">Voltar À Escrita</button>
-            <div class="apl-resumo" id="apl_resumo"></div>
-            <!-- ESTA CASA E A DE BAIXO EXISTEM PARA A OBRA PODER SE MUDAR.
+          <div class="gal-conta fb-detalhe" id="gal_conta"></div>
 
-                 A barra de progresso e o aviso de terminado moravam só aqui, na primeira
-                 olhada. Quem mandava fabricar de dentro do "peça a peça" era jogado para
-                 esta tela para ver o que estava acontecendo, e ele leu isso como defeito,
-                 com razão: "ah, ele volta pra etapa anterior, é? Não entendi, tá meio
-                 bugado. Era pra ele avançar". Agora a obra é que se muda para a fase onde
-                 ele está, e estas casas são de onde ela sai e para onde ela volta. -->
-            <div id="apl_feito_casa">
-              <div class="apl-feito" id="apl_feito" hidden>
-                <a class="acao" id="apl_pasta" href="#">Abrir A Pasta Das Peças</a>
-                <button class="acao forte" id="apl_segue" type="button">
-                  Ir Para O Passo 4</button>
-              </div>
-            </div>
-          </div>
+          <!-- ------------------------------------------------------------- a barra
 
+               ELA E' A MESMA `#apl_tiras` DE SEMPRE, e nao uma segunda barra. Duas
+               barras seriam dois conjuntos de identificadores para o mesmo estado, e a
+               montagem escreveria numa enquanto ele olharia a outra: e' a mesma razao
+               pela qual a obra se MUDA de fase em vez de se duplicar (`moverAObraPara`).
+
+               A CAIXA SUBIU PARA CA', que e' onde a maquete a poe: entre os indicadores
+               e os botoes. Antes ela era a ultima coisa da tela, e a maquete a poe no
+               meio porque ela e' o assunto, e nao o rodape'.
+
+               EM REPOUSO ELA MOSTRA SO' OS TRACINHOS, com a folha escondendo o topo, a
+               conta e os selos e tirando a moldura do cartao. Uma leva de 180 pecas com
+               zero fabricadas e' 180 marcas apagadas, que e' a verdade e e' exatamente o
+               que a maquete desenha para as que faltam. -->
           <div id="apl_obra_casa">
             <div class="caixa apl-obra" id="apl_obra" hidden>
               <div class="rec-vivo" id="apl_vivo">
@@ -1355,6 +1456,54 @@
                 <b id="apl_fecho_txt"></b>
               </div>
             </div>
+          </div>
+
+          <!-- ------------------------------------------------------------ os botoes
+
+               A MAQUETE DESENHA DOIS, e o produto tem quatro que fazem trabalho. Os dois
+               do desenho ficam na frente, na ordem dele: fabricar cheio, abrir a pasta
+               sobrio. O "Ajustar O Texto Que Nao Coube" fica ao lado porque ele so' faz
+               sentido ANTES de fabricar, e some junto com o fabricar quando a montagem
+               existe. Os dois de andar entre fases descem para o rodape', que e' onde
+               todas as outras fases da oficina os poem.
+
+               `#apl_feito_casa` CONTINUA SENDO UM ELEMENTO, e nao some virando irmao: a
+               prova `provar_que_fabrica_sem_sair_da_fase` confere que o aviso volta para
+               uma casa com este id exato. A folha o faz `display:contents` para os dois
+               botoes dele entrarem nesta mesma fila. -->
+          <div class="fb-acoes">
+            <button class="acao forte" id="apl_montar" type="button">
+              Fabricar As Peças</button>
+            <div id="apl_feito_casa">
+              <div class="apl-feito" id="apl_feito" hidden>
+                <a class="acao" id="apl_pasta" href="#">Abrir A Pasta Das Peças</a>
+                <button class="acao forte" id="apl_segue" type="button">
+                  Ir Para A Entrega</button>
+              </div>
+            </div>
+            <!-- AJUSTAR, E NAO ENCOLHER. Ele foi direto em 23/08/2026: "não era pra
+                 encolher, é pra ajustar". Ver `acertarTexto` no tela.js. -->
+            <button class="acao mini" id="ajs_acertar" type="button">
+              Ajustar O Texto Que Não Coube</button>
+          </div>
+
+          <!-- A CONTA QUE FECHA. E' a nota da maquete, e ela nao e' enfeite: ela promete
+               um mecanismo que ja' existe no produto, no `entregar` da oficina.py (a
+               conferencia do lado do Drive). A nota fica AQUI, na fabricacao, porque e'
+               aqui que ele decide mandar; quem cumpre a promessa e' a aba da Entrega, e o
+               botao "Ir Para A Entrega" e' a ponte entre as duas. -->
+          <p class="fb-conta">
+            <b>A Conta Que Fecha:</b> a peça só é dada por entregue depois de o Drive
+            responder quantos vídeos recebeu e o número bater. Enquanto não bater, nada é
+            apagado daqui e a tela diz por quê.
+          </p>
+
+          <div class="ed-pe">
+            <button class="acao" id="ed_volta_ia" type="button">Voltar Às Frases</button>
+            <div class="apl-resumo" id="apl_resumo"></div>
+            <!-- A PORTA DA REVISAO. Pedido dele em 23/08/2026: "não precisa e não deve
+                 aparecer todos de uma vez, o meu PC não tem memória RAM". -->
+            <button class="acao" id="ajs_um_a_um" type="button">Voltar À Bancada</button>
           </div>
         </div>
 
