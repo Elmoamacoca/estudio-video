@@ -313,7 +313,8 @@
     <div class="campo-bloco">
       <label class="campo-rot">O que conta como fora da curva</label>
       <p class="nota mini">Desempenho é múltiplo da mediana da própria conta. Em 1,5x,
-        entra o post que fez uma vez e meia o que aquele perfil costuma fazer.</p>
+        entra o post que fez uma vez e meia o que aquele perfil costuma fazer.
+        <b>Em zero, entra tudo o que foi minerado.</b></p>
       <label class="escolha larga">
         <input type="checkbox" id="por_formato" checked>
         <span>Calcular a mediana <b>separada por formato</b>
@@ -322,20 +323,26 @@
       </label>
     </div>
 
+    <!-- O PISO E' ZERO, E NAO UM. Com `min="1"` o navegador ja' marcava o campo como
+         invalido ao digitar zero, e o `reguaEscolhida` do `tela.js` trocava o valor por
+         1,5 sem dizer uma palavra: em 03/09/2026 o Gabriel pos zero para trazer todo o
+         carrossel minerado, o acervo recebeu 1,5, e o cartao do pacote passou a oferecer
+         4 de 9 carrosseis num perfil e ZERO no outro. Piso um tambem nao fazia sentido
+         sozinho: "uma vez a mediana" ja' e' metade do acervo, e nao fora da curva. -->
     <div class="campo-bloco" id="cortes_juntos" hidden>
       <label class="campo-rot" for="corte_unico">Régua única, em vezes a mediana</label>
-      <input type="number" id="corte_unico" value="1.5" step="0.1" min="1" max="100">
+      <input type="number" id="corte_unico" value="1.5" step="0.1" min="0" max="100">
     </div>
 
     <div class="campo-bloco" id="cortes_separados">
       <label class="campo-rot">A régua de cada formato</label>
       <div class="cortes">
         <label data-de="reels">Reels<input type="number" id="c_reels" value="1.5"
-               step="0.1" min="1" max="100"></label>
+               step="0.1" min="0" max="100"></label>
         <label data-de="post">Post<input type="number" id="c_post" value="1.5"
-               step="0.1" min="1" max="100"></label>
+               step="0.1" min="0" max="100"></label>
         <label data-de="carrossel">Carrossel<input type="number" id="c_carrossel"
-               value="1.5" step="0.1" min="1" max="100"></label>
+               value="1.5" step="0.1" min="0" max="100"></label>
       </div>
     </div>
 

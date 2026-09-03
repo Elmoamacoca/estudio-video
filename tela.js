@@ -2322,9 +2322,21 @@ $("fontes").addEventListener("input", () => { $("fontes").dataset.tocado = "1"; 
 
 function reguaEscolhida() {
   const formatos = ["reels", "post", "carrossel"].filter(f => $("f_" + f).checked);
+  /* ZERO E' UM NUMERO, E NAO UM CAMPO VAZIO.
+
+     O QUE ACONTECEU EM 03/09/2026. Ele pos a regua em zero para trazer todo o carrossel
+     que a varredura tinha achado, e o `n > 0` a trocou por 1,5 aqui, calado. O acervo
+     recebeu 1,5, o cartao do pacote passou a oferecer 4 dos 9 carrosseis do @omatheusdaia
+     e NENHUM dos 2 do @liamjohnston.ai (perfil recem-posto tem poucos posts lidos, e com
+     mediana de dois nada fica 1,5 vez acima dela). Do lado dele: "n esta funcionando".
+
+     TROCAR O QUE ELE DIGITOU, EM SILENCIO, E' A TRAVA 2 NA ENTRADA. A tela nao pode
+     afirmar um numero que ele nao escolheu, do mesmo jeito que nao pode mostrar um numero
+     que nao mediu. O que o campo recusa e' o que nao e' numero e o que e' negativo; zero
+     passa, e quer dizer que tudo entra. */
   const numero = campo => {
     const n = parseFloat(String($(campo).value).replace(",", "."));
-    return Number.isFinite(n) && n > 0 ? n : 1.5;
+    return Number.isFinite(n) && n >= 0 ? n : 1.5;
   };
   return {
     formatos,

@@ -87,11 +87,28 @@ def regua() -> dict:
     return d
 
 
+def _numero_ou(valor, padrao: float) -> float:
+    """O valor, quando ele e' um numero de verdade. ZERO E' UM NUMERO DE VERDADE.
+
+    ESCRITO EM 03/09/2026, e a razao esta' medida. Aqui havia `r.get("corte") or
+    PADRAO["corte"]`, e em Python o zero e' falso: uma regua gravada em zero, que quer
+    dizer "entra tudo", virava 1,5 na leitura. Era o SEGUNDO lugar a matar o mesmo zero (o
+    primeiro e' o `reguaEscolhida` do `tela.js`, e o terceiro era o `min="1"` do campo), e
+    e' por isso que o defeito era invisivel: consertar um so' nao mudava nada na tela.
+    """
+    try:
+        n = float(valor)
+    except (TypeError, ValueError):
+        return padrao
+    return n if n >= 0 else padrao
+
+
 def corte_de(formato: str, r: dict) -> float:
     """O corte daquele formato. Sem separação por formato, um corte serve para todos."""
+    unico = _numero_ou(r.get("corte"), PADRAO["corte"])
     if not r.get("por_formato"):
-        return float(r.get("corte") or PADRAO["corte"])
-    return float(r["cortes"].get(formato, r.get("corte") or PADRAO["corte"]))
+        return unico
+    return _numero_ou((r.get("cortes") or {}).get(formato, unico), unico)
 
 
 def sinal(post: dict) -> tuple[int, str]:
