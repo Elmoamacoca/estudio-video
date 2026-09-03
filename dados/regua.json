@@ -3,11 +3,11 @@
   "carrossel"
  ],
  "por_formato": false,
- "corte": 1.5,
+ "corte": 0,
  "cortes": {
-  "reels": 1.5,
-  "post": 1.5,
-  "carrossel": 1.5
+  "reels": 0,
+  "post": 0,
+  "carrossel": 0
  },
- "atualizado": "2026-09-03T01:44:23.629Z"
+ "atualizado": "2026-09-03T02:18:39.037Z"
 }
