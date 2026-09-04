@@ -10,16 +10,16 @@
    "vezes": 4
   },
   {
-   "quando": 1788554402,
+   "quando": 1788554437,
    "tipo": "falha_abertura",
    "gravidade": "falha",
-   "texto": "Abertura Pelo Arroba Não Passou: Recusa 401 Do Instagram. 3ª Tentativa De Abertura.",
+   "texto": "Abertura Pelo Arroba Não Passou: Recusa 401 Do Instagram. 4ª Tentativa De Abertura.",
    "detalhe": {
-    "tentativa": 3,
-    "vaga": 6,
+    "tentativa": 4,
+    "vaga": 8,
     "resposta": "[raycfu] abertura via 1 recusou (401)\n[raycfu] abertura nao passou nesta rodada"
    }
   }
  ],
- "tentativas_id": 3
+ "tentativas_id": 4
 }
