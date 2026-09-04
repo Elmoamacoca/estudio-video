@@ -2,6 +2,13 @@
  "fiscal": "ok",
  "quando": 1788554660,
  "rodada": 396,
- "eventos": [],
- "atualizado": null
+ "eventos": [
+  {
+   "quando": 1788559223,
+   "origem": "resgate",
+   "gravidade": "falha",
+   "texto": "O Resgate Quebrou No Meio Da Passagem (HTTP 504 Do GitHub)"
+  }
+ ],
+ "atualizado": 1788559223
 }
