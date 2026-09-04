@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "thaleslaray",
+   "nome": null,
+   "primeiro": 1788554148,
+   "ultimo": 1788554148,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "aguardando",
+   "lidos": 0,
+   "publicacoes": 0,
+   "completo": false
+  },
+  {
    "conta": "castilho.ia",
    "nome": null,
    "primeiro": 1788554137,
@@ -79,19 +92,6 @@
    "completo": false
   },
   {
-   "conta": "thaleslaray",
-   "nome": null,
-   "primeiro": 1788554069,
-   "ultimo": 1788554069,
-   "eventos": 1,
-   "falhas": 0,
-   "avisos": 1,
-   "ultimo_tipo": "aguardando",
-   "lidos": 0,
-   "publicacoes": 0,
-   "completo": false
-  },
-  {
    "conta": "omatheusdaia",
    "nome": "Matheus Castro | AI Coding",
    "rotulo": "carrosséis",
@@ -134,5 +134,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788554139
+ "atualizado": 1788554150
 }
