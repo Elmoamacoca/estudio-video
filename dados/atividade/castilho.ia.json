@@ -3,11 +3,11 @@
  "nome": null,
  "eventos": [
   {
-   "quando": 1788554062,
+   "quando": 1788554137,
    "tipo": "aguardando",
    "gravidade": "aviso",
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela",
-   "vezes": 2
+   "vezes": 3
   }
  ]
 }
