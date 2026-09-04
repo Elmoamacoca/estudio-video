@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "ratosdeia",
+   "nome": null,
+   "primeiro": 1788554116,
+   "ultimo": 1788554116,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "aguardando",
+   "lidos": 0,
+   "publicacoes": 0,
+   "completo": false
+  },
+  {
    "conta": "raycfu",
    "nome": null,
    "primeiro": 1788554105,
@@ -79,19 +92,6 @@
    "completo": false
   },
   {
-   "conta": "ratosdeia",
-   "nome": null,
-   "primeiro": 1788554056,
-   "ultimo": 1788554056,
-   "eventos": 1,
-   "falhas": 0,
-   "avisos": 1,
-   "ultimo_tipo": "aguardando",
-   "lidos": 0,
-   "publicacoes": 0,
-   "completo": false
-  },
-  {
    "conta": "omatheusdaia",
    "nome": "Matheus Castro | AI Coding",
    "rotulo": "carrosséis",
@@ -134,5 +134,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788554108
+ "atualizado": 1788554133
 }
