@@ -10,16 +10,16 @@
    "vezes": 4
   },
   {
-   "quando": 1788554331,
+   "quando": 1788554367,
    "tipo": "falha_abertura",
    "gravidade": "falha",
-   "texto": "Abertura Pelo Arroba Não Passou: Recusa 401 Do Instagram. 1ª Tentativa De Abertura.",
+   "texto": "Abertura Pelo Arroba Não Passou: Recusa 401 Do Instagram. 2ª Tentativa De Abertura.",
    "detalhe": {
-    "tentativa": 1,
-    "vaga": 1,
+    "tentativa": 2,
+    "vaga": 3,
     "resposta": "[divyannshisharma] abertura via 1 recusou (401)\n[divyannshisharma] abertura nao passou nesta rodada"
    }
   }
  ],
- "tentativas_id": 1
+ "tentativas_id": 2
 }
