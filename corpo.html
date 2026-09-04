@@ -605,25 +605,48 @@
       <p class="nota">O carrossel não passa pela esteira: a casa baixa direto e monta um
         PDF por carrossel, com as lâminas na ordem e a descrição ao lado.</p>
 
-      <!-- ==================================== A BARRA DO LOTE (03/09/2026)
+      <!-- ==================================== A TABELA DE CARROSSEIS (03/09/2026)
 
-           Ordem dele: "eu nao consigo selecionar mais de uma pessoa pra baixar... eu
-           quiser voltar pra montar o pacote de todos de uma vez e baixar todos de uma
-           vez e o arquivo RAR separar cada um". Espec `carrossel-em-lote`.
+           A PROPOSTA 2 APROVADA POR ELE: "esse modelo, aprovado, pode implementar". Espec
+           `coleta-carrossel-tabela`, maquete `docs/propostas/coleta-carrossel-t2/`.
 
-           A LINHA INTEIRA SO' EXISTE COM DOIS PERFIS OU MAIS, porque com um perfil so'
-           marcar e' o mesmo que apertar o botao do cartao dele. E O GRUPO DA DIREITA
-           (a conta e o botao) so' existe com alguem marcado: botao de montar nada e'
-           botao que so' pode dar erro. -->
+           AS DUAS REGRAS QUE ELE DEU: "tem que ser formato de tabela e tem que ter
+           paginacao. E' a unica coisa." O resto e' o desenho aprovado, e desenho aprovado
+           e' o contrato (trava 66), nao a lista de itens citados ao aprovar. -->
+      <div class="carr-cab">
+        <!-- O FILTRO POR ESTADO. A conta de cada um sai da lista de verdade; numero de
+             filtro estimado seria a tela afirmando o que nao mediu (trava 2). -->
+        <div class="carr-seg" id="carr_seg">
+          <button type="button" data-carr-filtro="todos" aria-current="true">Todos</button>
+          <button type="button" data-carr-filtro="com">Com Pacote</button>
+          <button type="button" data-carr-filtro="sem">Sem Pacote</button>
+        </div>
+        <input class="carr-busca" id="carr_busca" type="search"
+               placeholder="Procurar" aria-label="Procurar um perfil">
+      </div>
+
+      <div class="carr-rolo">
+        <table class="carr-tab">
+          <thead><tr>
+            <th class="carr-ck-col"><input type="checkbox" class="carr-ck" id="carr_todos"
+                aria-label="Marcar todos os perfis"></th>
+            <th data-carr-ord="nome">Perfil<span class="ord">&#8597;</span></th>
+            <th data-carr-ord="n" class="carr-num-col ordenada">Carrosséis<span
+                class="ord">&#8595;</span></th>
+            <th data-carr-ord="pacote" class="carr-peso-col">Pacote<span
+                class="ord">&#8597;</span></th>
+            <th class="carr-acao-col">Ação</th>
+          </tr></thead>
+          <tbody id="carr_perfis"></tbody>
+        </table>
+      </div>
+
+      <!-- A BARRA VERDE SO' NASCE COM ALGUEM MARCADO. Sempre visivel e sem marcacao ela e'
+           um retangulo vazio de mil pixels, que foi o que ele fotografou em 03/09/2026. -->
       <div class="carr-lote" id="carr_lote" hidden>
-        <label class="carr-check" title="Marcar todos os perfis desta fileira">
-          <input type="checkbox" id="carr_todos"><span>Marcar Todos</span></label>
-        <!-- A CONTA FICA FORA DO GRUPO DO BOTAO. Dentro dele, ela sumia junto com o botao
-             e a barra virava um retangulo vazio de mil pixels com uma caixinha no canto,
-             que foi o que ele fotografou em 03/09/2026. Fora, ela diz o estado da
-             marcacao o tempo todo e o botao continua so' aparecendo com alguem marcado. -->
-        <span class="carr-lote-diz" id="carr_lote_diz"></span>
-        <div class="carr-lote-acao" id="carr_lote_acao" hidden>
+        <b class="carr-lote-diz" id="carr_lote_diz"></b>
+        <button class="carr-desmarcar" id="carr_desmarcar" type="button">Desmarcar</button>
+        <div class="carr-lote-acao">
           <!-- O BOTAO ANIMADO DA CASA (trava 30), e quem troca o texto dele escreve
                DENTRO do `.txt` pelo `dizNoBotao`, nunca no botao inteiro (trava 31). -->
           <button class="btn brasa" id="carr_montar_lote" type="button"
@@ -635,23 +658,20 @@
         </div>
       </div>
 
-      <div class="carr-perfis" id="carr_perfis"></div>
+      <!-- ==================================== O PE': QUANTAS, E QUAL PAGINA
 
-      <!-- ==================================== O PAGINADOR
-
-           Ordem dele na mesma mensagem: "eu tambem nao tenho a opcao de paginar". Ele
-           SO' EXISTE COM MAIS DE UMA PAGINA: paginador de uma pagina so' e' enfeite que
-           promete navegacao que nao existe. -->
-      <div class="carr-pag" id="carr_pag" hidden>
-        <button type="button" class="carr-pag-btn" data-carr-pag="-1"
-                aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+           Ordem dele: "tem que ter paginacao". Aqui ela e' a da proposta aprovada: quantas
+           linhas se ve', quantas ha' no total, o seletor de linhas por pagina e os numeros
+           das paginas. Diferente do desenho antigo, o pe' NAO some com uma pagina so':
+           "Mostrando 1 a 8 de 8" continua sendo informacao. Quem some sao os numeros. -->
+      <div class="carr-pag" id="carr_pag">
         <span class="carr-pag-diz" id="carr_pag_diz"></span>
-        <button type="button" class="carr-pag-btn" data-carr-pag="1"
-                aria-label="Próxima página"><svg viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        <select class="carr-quantas" id="carr_quantas" aria-label="Linhas por página">
+          <option value="8">8 por página</option>
+          <option value="16">16 por página</option>
+          <option value="32">32 por página</option>
+        </select>
+        <div class="carr-pag-nums" id="carr_pag_nums"></div>
       </div>
 
       <div class="carr-trilha" id="carr_trilha" hidden></div>

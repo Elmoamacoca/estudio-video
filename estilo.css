@@ -1007,8 +1007,25 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
            transform:translate(-50%,-50%);background:var(--ink);border-radius:50%;
            opacity:0;transition:all .8s cubic-bezier(.19,1,.22,1)}
 /* O PREENCHIMENTO CRESCE COM O BOTAO, e nao ate' um tamanho fixo: forma centrada so'
-   cobre um botao largo se tiver folga alem da largura dele. */
-.btn:hover .circ{width:calc(100% + 80px);height:calc(100% + 180px);opacity:1}
+   cobre um botao largo se tiver folga alem da largura dele.
+
+   E O TAMANHO FINAL E' O MENOR QUE COBRE, e nao o maior que cabe. Ele mediu com o mouse e
+   disse tres vezes que o botao estava "chapado": estava. Medido quadro a quadro num botao
+   de 74 por 33, com `calc(100% + 80px)` por `calc(100% + 180px)`, ou seja, 152 por 211:
+
+     aos  40 ms   circulo 45 por 58,  nao cobre
+     aos  80 ms   circulo 103 por 141, COBRE o botao inteiro
+     aos 800 ms   circulo 152 por 211
+
+   Ou seja, a animacao de crescer terminava, para o olho, em 80 dos 800 ms, e o que sobrava
+   era o botao virando verde de uma vez. A altura final era SEIS VEZES a do botao, e com a
+   curva expo o excesso e' consumido no primeiro decimo.
+
+   A CONTA DO MENOR QUE COBRE: uma elipse centrada de meios-eixos A e B contem o retangulo
+   de lados l e a quando (l/2A)^2 + (a/2B)^2 <= 1. Com A = 0,75l e B = 0,75a isso da'
+   0,444 + 0,444 = 0,889, que cabe com folga. Por isso 150%: o preenchimento so' fecha o
+   botao no fim do caminho, que e' quando a animacao devia acabar. */
+.btn:hover .circ{width:150%;height:150%;opacity:1}
 .btn.brasa{border-color:color-mix(in srgb, var(--accent) 45%, transparent);
            color:var(--accent)}
 .btn.brasa .seta{stroke:var(--accent)}
@@ -3116,161 +3133,185 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .carr-tit svg{width:19px;height:19px;stroke:var(--accent);flex:none}
 .carr-tit h3{margin:0}
 
-/* O CARTAO DO PERFIL. Ele era uma linha rasa: arroba, numero apagado ao lado e um botao
-   verde chapado, tudo na mesma altura e sem nada mandando em nada. Agora tem retrato,
-   nome sobre arroba, o numero como FIGURA e o botao animado da casa (trava 30).
+/* A TABELA DE CARROSSEIS (03/09/2026, espec `coleta-carrossel-tabela`)
 
-   O RETRATO E' O MESMO DA TABELA DE MINERADOS, e nao uma copia: `.pcard-retrato` e
-   `.pcard-avatar` vem do sistema, e aqui so' se diz o TAMANHO. Foi copia a mao dessas
-   classes que ja' fez esta tela desenhar o miolo ampliado de uma foto. */
-.carr-perfis{display:flex;flex-direction:column;gap:10px;margin:18px 0 0}
-.carr-perfis:empty{display:none}
-.carr-perfil{display:flex;align-items:center;gap:14px;padding:14px 16px;
-  border:1px solid var(--rule-solid);border-radius:var(--r-lg);
-  background:var(--paper-2);
-  transition:border-color .25s ease, background .25s ease, transform .25s ease}
-.carr-perfil:hover{border-color:color-mix(in srgb, var(--accent) 40%, var(--rule-solid));
-  transform:translateY(-1px)}
-.carr-perfil[data-escolhido="sim"]{border-color:var(--accent);background:var(--accent-tint)}
-/* MARCADO E EM CURSO SAO ESTADOS DIFERENTES, e por isso desenham diferente: o marcado
-   ganha um traco a' esquerda, o em curso pinta o cartao inteiro. Fossem os dois iguais,
-   ele nao teria como saber qual perfil a barra esta' contando. */
-.carr-perfil[data-marcado="sim"]{border-color:color-mix(in srgb,var(--accent) 55%,
-  var(--rule-solid));box-shadow:inset 3px 0 0 var(--accent)}
-.carr-perfil .pcard-retrato{flex:0 0 42px;width:42px;height:42px}
-.carr-perfil .pcard-avatar{border-width:2px;font-size:16px}
+   A PROPOSTA 2 APROVADA POR ELE, com estas palavras: "esse modelo, aprovado, pode
+   implementar". A maquete e' `docs/propostas/coleta-carrossel-t2/`, e as medidas daqui sao
+   as DELA, conferidas pelo `maquete.py`.
+
+   AS DUAS REGRAS QUE ELE DEU POR ESCRITO: "tem que ser formato de tabela e tem que ter
+   paginacao. E' a unica coisa." O resto e' o desenho aprovado, que e' o contrato (trava
+   66), e nao a lista de itens citados ao aprovar.
+
+   O QUE ISTO SUBSTITUI: a fileira de cartoes empilhados, cada um uma caixa flexivel com
+   retrato grande, numero em figura e ate' dois botoes. Ela precisava de `subgrid` so' para
+   as colunas ficarem retas entre uma linha e outra, que e' um problema que tabela nao tem,
+   porque coluna de tabela e' coluna de verdade.
+
+   TODA REGRA DE `display` AQUI TEM A LINHA IRMA DO ESCONDIDO (trava 66g). */
+
+/* O CABECALHO: o filtro por estado e o campo de procurar. */
+.carr-cab{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 0}
+.carr-seg{display:inline-flex;background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:999px;padding:3px}
+.carr-seg button{font:inherit;font-size:12px;font-weight:600;padding:6px 15px;
+  cursor:pointer;border:0;background:transparent;color:var(--muted);border-radius:999px;
+  white-space:nowrap;transition:color .16s ease}
+.carr-seg button:hover{color:var(--ink)}
+.carr-seg button[aria-current="true"]{background:var(--branco);color:var(--ink);
+  box-shadow:var(--sombra)}
+.carr-busca{margin-left:auto;flex:0 1 230px;min-width:0;height:34px;padding:0 13px;
+  border-radius:var(--r-filtro);border:1px solid var(--rule-solid);
+  background:var(--paper-2);color:var(--ink);font:inherit;font-size:12.5px}
+.carr-busca::placeholder{color:var(--soft)}
+.carr-busca:focus{outline:none;border-color:var(--accent)}
+
+/* A MOLDURA DA TABELA. O `overflow:hidden` e' o que faz o cabecalho respeitar o canto
+   arredondado; sem ele o fundo do cabecalho sai quadrado por cima da borda. */
+.carr-rolo{margin-top:14px;border:1px solid var(--rule-solid);
+  border-radius:var(--r-md);overflow:hidden}
+.carr-tab{width:100%;border-collapse:collapse}
+.carr-tab thead th{font-size:11px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--soft);text-align:left;padding:11px 14px;
+  background:var(--paper-2);border-bottom:1px solid var(--rule-solid);
+  white-space:nowrap;user-select:none}
+.carr-tab thead th[data-carr-ord]{cursor:pointer;transition:color .16s ease}
+.carr-tab thead th[data-carr-ord]:hover{color:var(--ink)}
+.carr-tab thead th .ord{opacity:.4;margin-left:5px;font-size:10px}
+.carr-tab thead th.ordenada{color:var(--ink)}
+.carr-tab thead th.ordenada .ord{opacity:1;color:var(--accent)}
+.carr-tab td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:middle}
+/* A LINHA PAR TEM FUNDO PROPRIO, e a que esta' sob o ponteiro acende. As duas coisas
+   existem para o olho nao pular de linha numa tabela de oito. */
+.carr-tab tbody tr:nth-child(even){
+  background:color-mix(in srgb,var(--paper-2) 55%,transparent)}
+.carr-tab tbody tr:hover{background:var(--paper-2)}
+.carr-tab tbody tr:last-child td{border-bottom:0}
+.carr-tab tbody tr[data-marcado="sim"]{background:var(--accent-tint)}
+/* A LINHA DO PERFIL DE QUE A BARRA FALA FICA ACESA, para o olho achar de qual e' no meio
+   de um lote. Ela e' OUTRA COISA que a linha marcada: marcada e' escolha dele, acesa e' o
+   que a casa esta' fazendo agora. Fossem o mesmo desenho, ele nao teria como saber qual
+   perfil a barra esta' contando. */
+.carr-tab tbody tr[data-escolhido="sim"]{background:var(--accent-tint);
+  box-shadow:inset 3px 0 0 var(--accent)}
+
+.carr-ck-col{width:34px}
+.carr-num-col{text-align:right}
+.carr-peso-col{text-align:right}
+.carr-acao-col{text-align:right}
 
 /* A CAIXINHA DE MARCAR E' A MESMA MECANICA DA `.escolha` dos filtros, e nao um desenho
-   novo: o mesmo quadrado de 16px, o mesmo risco branco, a mesma cor de marca. Copiar o
-   desenho a mao e' como esta tela ja' desenhou o miolo ampliado de uma foto. */
-.carr-check{display:flex;align-items:center;gap:8px;cursor:pointer;flex:none;
-  font-size:12.5px;color:var(--muted);user-select:none}
-.carr-check input{appearance:none;-webkit-appearance:none;flex:none;width:16px;height:16px;
-  border:1.5px solid var(--rule-solid);border-radius:5px;
-  background:var(--paper);cursor:pointer;position:relative}
-.carr-check input:checked{border-color:var(--accent);background:var(--accent)}
-.carr-check input:checked::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;
+   novo: o mesmo quadrado de 16px, o mesmo risco branco, a mesma cor de marca. */
+.carr-ck{appearance:none;-webkit-appearance:none;flex:none;width:16px;height:16px;
+  border:1.5px solid var(--rule-solid);border-radius:5px;background:var(--paper);
+  cursor:pointer;position:relative;vertical-align:middle;
+  transition:border-color .15s ease,background .15s ease}
+.carr-ck:checked{border-color:var(--accent);background:var(--accent)}
+.carr-ck:checked::after{content:"";position:absolute;left:4.5px;top:1px;width:4px;
   height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
 /* O TRACO DO MEIO-MARCADO. Marcado cheio com dois de catorze diria que esta' tudo
    marcado; vazio esconderia que ha' marcacao viva noutra pagina. */
-.carr-check input:indeterminate{border-color:var(--accent);background:var(--accent)}
-.carr-check input:indeterminate::after{content:"";position:absolute;left:3px;top:6px;
+.carr-ck:indeterminate{border-color:var(--accent);background:var(--accent)}
+.carr-ck:indeterminate::after{content:"";position:absolute;left:3px;top:6px;
   width:8px;height:2px;background:#fff;border-radius:1px}
-.carr-check-um{gap:0}
 
-/* AS ACOES DO CARTAO. Com pacote pronto sao duas: o destaque e' o de baixar, e o de
-   montar de novo fica ao lado dele, menor.
-   A LARGURA MINIMA E' O QUE MANTEM A COLUNA RETA. Medido pelo revisor de tela: sem ela, a
-   linha que tem pacote pronto empurra o numero de x=1306 para x=1133, cento e setenta e
-   tres pixels, e a coluna quebra no MEIO da fileira. */
-.carr-acoes{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:none}
+/* NOME EM CIMA, ARROBA EMBAIXO: sao duas coisas, e a que ele reconhece e' o nome.
+   `min-width:0` para o nome comprido cortar em vez de empurrar a coluna. */
+.carr-quem{display:flex;align-items:center;gap:10px;min-width:0}
+.carr-quem-txt{min-width:0}
+.carr-nome{font-weight:650;font-size:13px;line-height:1.25;display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.carr-arroba{color:var(--muted);font-size:11.5px;line-height:1.2;display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.carr-tab .pcard-retrato{flex:0 0 34px;width:34px;height:34px}
+.carr-tab .pcard-avatar{border-width:1px;font-size:13px}
 
-/* E AS CINCO COLUNAS SAO AS MESMAS EM TODA A FILEIRA, com `subgrid`.
-   Medido pelo revisor de tela: com cada cartao sendo uma caixa flexivel propria, a linha
-   que tem pacote pronto empurrava o numero de x=1306 para x=1133, cento e setenta e tres
-   pixels, e a coluna quebrava no MEIO da fileira. Largura minima nas acoes nao resolve:
-   a caixa delas mede 356px com "48 no pacote" e cresceria com "160 no pacote", entao
-   qualquer numero cravado envelhece na primeira leva maior.
-   O `@supports` existe porque `subgrid` e' recente; sem ele, a fileira volta a ser a
-   coluna de caixas flexiveis de antes, que desalinha mas nao quebra. */
-@supports (grid-template-columns: subgrid) {
-  .carr-perfis{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto auto}
-  .carr-perfil{display:grid;grid-column:1 / -1;grid-template-columns:subgrid;
-    align-items:center}
-  .carr-numero{margin-left:0}
-}
-/* E O MONTAR DE NOVO E' BOTAO, e nao texto solto. Texto de 88x18 a 12px/400 colado numa
-   pilula de 151x37 a 12,5px/700 sao duas familias de controle na mesma linha, que e' a
-   queixa "todo bugado" da trava 71f com dois em vez de tres. */
-/* A ALTURA E' A DO BOTAO AO LADO, 37px, e nao a que o texto der. Ela saia com 34 contra
-   os 37 do `.btn`, e tres pixels de desnivel entre duas pilulas encostadas e' o que faz a
-   dupla parecer torta sem que se saiba dizer por que. Medido na sonda de 03/09/2026. */
-.carr-refazer{background:transparent;cursor:pointer;font:inherit;
-  font-size:12px;font-weight:600;color:var(--muted);padding:0 16px;height:37px;
-  display:inline-flex;align-items:center;
-  border:1px solid var(--rule-solid);border-radius:100px;white-space:nowrap;
-  transition:border-color .16s ease,color .16s ease}
-.carr-refazer:hover{color:var(--ink);border-color:var(--accent)}
-.carr-refazer:disabled{opacity:.45;cursor:default}
+.carr-numero{text-align:right;font-variant-numeric:tabular-nums;font-size:14px;
+  font-weight:650;width:98px;white-space:nowrap}
+/* O PESO SO' APARECE QUANDO O POSTO CONSEGUIU LER O ARQUIVO. Perfil sem pacote leva um
+   ponto apagado, e nunca um zero: "nao montado" e "zero" sao coisas diferentes (trava 2). */
+.carr-peso{text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;
+  color:var(--muted);width:112px;white-space:nowrap}
+.carr-sem{color:var(--soft)}
+.carr-acao{width:142px;text-align:right;white-space:nowrap}
+
+/* O BOTAO DA LINHA E' MENOR QUE O `.btn` PADRAO, porque ele divide a linha com o retrato,
+   o nome e dois numeros. O `--desl` encolhe junto: num botao de folga pequena, um passo
+   grande joga a palavra por cima da seta da direita.
+
+   E A SETA DA DIREITA SAI NO HOVER, o que exige a linha irma abaixo. Sem ela o botao
+   ficava com AS DUAS SETAS ao mesmo tempo: `.carr-perfil .btn .seta-dir` valia 0,3,0 de
+   especificidade, igual ao `.btn:hover .seta-dir`, e vinha depois na folha, entao ganhava o
+   empate e prendia a seta no lugar. Medido quadro a quadro em 03/09/2026: a seta da direita
+   ficava a 11px do canto do comeco ao fim da animacao. E' metade do "botao bugado" dele. */
+.carr-tab .btn{flex:none;font-size:12px;padding:7px 18px;--desl:6px}
+.carr-tab .btn .seta{width:12px;height:12px}
+.carr-tab .btn .seta-dir{right:10px}
+.carr-tab .btn:hover .seta-esq{left:10px}
+.carr-tab .btn:hover .seta-dir{right:-25%}
 
 /* O SUMIDOURO DO DOWNLOAD nao ocupa nada, e nao e' `hidden`: quadro escondido pelo
    atributo pode nao carregar em navegador nenhum, e e' o carregamento dele que faz o
    arquivo baixar. Fora de fluxo e de tamanho zero e' o unico jeito que serve. */
 #carr_sumidouro{position:absolute;width:0;height:0;border:0;visibility:hidden}
 
-/* A BARRA DO LOTE, acima da fileira. Ela so' existe com dois perfis ou mais, e o grupo da
-   direita so' existe com alguem marcado: botao de montar nada e' botao que so' pode dar
-   erro. As duas linhas irmas de `[hidden]` sao a trava 66g, que ja' voltou por quatro
-   caminhos diferentes nesta tela: o esconder do navegador vale ZERO de especificidade e
-   perde para qualquer `display` de autor. */
-/* A BORDA E' INTEIRA, E NAO TRACEJADA, desde o print dele de 03/09/2026. Tracejado com o
-   lado direito escondido (que e' o estado normal, sem ninguem marcado) desenha um
-   retangulo vazio de 1208 por 41 com uma caixinha no canto: a linguagem do tracejado e'
-   "arraste algo para ca'", e nao ha' nada para arrastar. Medido na sonda de dois perfis. */
-.carr-lote{display:flex;align-items:center;gap:14px;margin:18px 0 0;padding:10px 14px;
-  border:1px solid var(--rule-solid);border-radius:var(--r-md);
-  background:color-mix(in srgb, var(--rule-solid) 22%, transparent)}
+/* A BARRA VERDE DO LOTE. Ela SO' NASCE com alguem marcado, e por isso nunca fica vazia:
+   sempre visivel e sem marcacao ela era um retangulo de 1208 por 41 com uma caixinha no
+   canto e mil pixels de nada, que foi o que ele fotografou em 03/09/2026. */
+.carr-lote{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px;
+  padding:12px 16px;border-radius:var(--r-md);background:var(--accent-tint);
+  border:1px solid color-mix(in srgb,var(--accent) 32%,transparent)}
 .carr-lote[hidden]{display:none}
-.carr-lote-acao{display:flex;align-items:center;gap:12px}
+.carr-lote-diz{font-size:13px;font-weight:700;color:var(--accent);
+  font-variant-numeric:tabular-nums}
+.carr-desmarcar{font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);
+  background:transparent;border:0;cursor:pointer;padding:0;
+  text-decoration:underline;text-underline-offset:3px}
+.carr-desmarcar:hover{color:var(--ink)}
+.carr-lote-acao{display:flex;align-items:center;gap:10px;margin-left:auto}
 .carr-lote-acao[hidden]{display:none}
-/* A CONTA MORA FORA DO GRUPO DO BOTAO, e e' ela que enche o lado direito quando nao ha'
-   ninguem marcado: o botao continua so' existindo com marcacao viva (montar nada e' botao
-   que so' pode dar erro), mas a barra deixa de ser um vao de mil pixels. */
-.carr-lote-diz{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;
-  margin-left:auto}
-.carr-lote-diz[data-marcado="sim"]{color:var(--ink)}
 .carr-lote .btn{flex:none;font-size:12.5px;padding:8px 20px;--desl:7px}
 .carr-lote .btn .seta{width:12px;height:12px}
 .carr-lote .btn .seta-dir{right:11px}
 .carr-lote .btn:hover .seta-esq{left:11px}
+.carr-lote .btn:hover .seta-dir{right:-25%}
 
-/* O PAGINADOR. Ele fica embaixo da fileira, centrado, e some com uma pagina so'. */
-.carr-pag{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}
+/* O PE': quantas se ve', quantas ha', o seletor de linhas e os numeros das paginas.
+   ELE NAO SOME COM UMA PAGINA SO', diferente do paginador antigo: "Mostrando 1 a 8 de 8"
+   continua sendo informacao, e o seletor de linhas continua servindo. Quem some sao os
+   NUMEROS das paginas, e quem faz isso e' o programa, porque so' ele sabe quantas sao. */
+.carr-pag{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:16px}
 .carr-pag[hidden]{display:none}
-.carr-pag-diz{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;
-  min-width:110px;text-align:center}
-.carr-pag-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;
-  padding:0;cursor:pointer;border:1px solid var(--rule-solid);border-radius:var(--r-sm);
-  background:var(--paper-2);color:var(--ink);
+.carr-pag-diz{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.carr-quantas{font:inherit;font-size:12.5px;color:var(--muted);background:var(--paper-2);
+  border:1px solid var(--rule-solid);border-radius:var(--r-md);padding:6px 10px;
+  cursor:pointer}
+.carr-quantas:focus{outline:none;border-color:var(--accent)}
+.carr-pag-nums{margin-left:auto;display:flex;align-items:center;gap:8px}
+.carr-pag-nums[hidden]{display:none}
+.carr-pag-btn{display:flex;align-items:center;justify-content:center;width:31px;height:31px;
+  padding:0;cursor:pointer;border:1px solid var(--rule-solid);border-radius:var(--r-md);
+  background:var(--branco);color:var(--muted);
   transition:border-color .16s ease,color .16s ease}
 .carr-pag-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.carr-pag-btn:disabled{opacity:.35;cursor:default}
+.carr-pag-btn:disabled{opacity:.34;cursor:default}
 /* O DESENHO DA SETA TEM TAMANHO PROPRIO, porque o `.carr-pag-btn` nao dimensiona svg. E'
    a licao da trava 73h: sem esta regra o icone sai no tamanho natural dele e vaza para
    fora do botao, e a comparacao com a maquete passa verde do mesmo jeito. */
-.carr-pag-btn svg{width:16px;height:16px;flex:none}
+.carr-pag-btn svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.carr-pag-n{min-width:31px;height:31px;padding:0 9px;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;border:1px solid transparent;
+  border-radius:var(--r-md);background:transparent;color:var(--muted);font:inherit;
+  font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;
+  transition:color .16s ease}
+.carr-pag-n:hover{color:var(--ink)}
+.carr-pag-n[aria-current="true"]{background:var(--accent-tint);color:var(--accent);
+  border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
 
-/* NOME EM CIMA, ARROBA EMBAIXO: sao duas coisas, e a que ele reconhece e' o nome.
-   `min-width:0` para o nome comprido cortar em vez de empurrar o resto do cartao. */
-.carr-quem{display:flex;flex-direction:column;gap:2px;min-width:0}
-.carr-nome{font-weight:600;font-size:14.5px;line-height:1.25;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.carr-arroba{color:var(--muted);font-size:12.5px;line-height:1.2}
-
-/* O NUMERO E' FIGURA, e o rotulo dele fica embaixo, menor. E' a mesma ordem das caixas
-   de Situacao: valor primeiro, palavra depois. Alinhado a' direita e encostado no botao,
-   com `margin-left:auto` empurrando os dois para la'. */
-/* E ELE RESPIRA LONGE DO BOTAO. Com o vao de 14px da fileira, o "48" encostava na borda
-   da pilula e os dois viravam um bloco so': o numero e' informacao, o botao e' gesto, e
-   eles nao se leem juntos. */
-.carr-numero{margin-left:auto;margin-right:8px;display:flex;flex-direction:column;
-  align-items:flex-end;gap:1px;line-height:1;text-align:right}
-.carr-numero b{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;
-  letter-spacing:-.01em}
-.carr-numero i{font-style:normal;font-size:11.5px;color:var(--muted);
-  letter-spacing:.02em}
-
-/* O BOTAO DO CARTAO E' MENOR QUE O `.btn` PADRAO, porque ele divide a linha com o
-   retrato e o numero. O `--desl` encolhe junto: num botao de folga pequena, um passo
-   grande joga a palavra por cima da seta da direita (a razao esta' escrita no `.btn`). */
-/* E A FOLGA DA DIREITA CABE O DESLIZE. Medido na foto de 03/09/2026: com `padding` de
-   20px e `--desl` de 7, o "Baixar · 3 carrosséis · 5,2 MB" passava do canto no hover e o
-   "MB" ficava cortado pela borda arredondada. O rotulo do botao cresceu quando o download
-   mudou para dentro do cartao, e a folga tinha sido calibrada com "Montar O Pacote". */
-.carr-perfil .btn{flex:none;font-size:12.5px;padding:8px 24px;--desl:5px}
-.carr-perfil .btn .seta{width:12px;height:12px}
-.carr-perfil .btn .seta-dir{right:11px}
-.carr-perfil .btn:hover .seta-esq{left:11px}
+/* A FILEIRA VAZIA DIZ POR QUE ESTA' VAZIA. Com filtro ou procura ligados, "nao ha' perfil"
+   seria mentira: ha', so' nao passa no que ele pediu (trava 2). */
+.carr-nada{padding:26px 14px;text-align:center;color:var(--muted);font-size:13px}
 
 /* UMA MARCA POR CARROSSEL, e nao uma tarja que enche (trava 37): a tarja diz a fracao, a
    marca diz quantas sao, quantas ja' foram e QUAIS deram problema.

@@ -797,11 +797,22 @@ let CARR_LISTA = [];
 let CARR_PACOTES = {};
 let CARR_LOTE = null;
 
-/* SEIS POR PÁGINA. Medido no cartão de hoje: cada linha mede 71px de altura mais 10 de
-   vão, então seis dão 476px de fileira, que cabe na tela sem empurrar o passo seguinte
-   para fora. Com doze a lista já rola sozinha, e paginar deixaria de resolver o que ele
-   pediu. */
-const CARR_POR_PAGINA = 6;
+/* OITO POR PÁGINA, e não seis. A tabela aprovada por ele em 03/09/2026 tem linha de 55px
+   sem vão entre elas, contra os 71 mais 10 dos cartões antigos: oito linhas dão 440px de
+   tabela, menos que os 476 que seis cartões ocupavam. É a mesma altura de antes com duas
+   linhas a mais dentro.
+
+   E ELE É `let` PORQUE ELE ESCOLHE: o pé tem o seletor de 8, 16 e 32 da maquete. */
+let CARR_POR_PAGINA = 8;
+
+/* O FILTRO, A PROCURA E A ORDEM da tabela aprovada. Os três moram fora do desenho, como a
+   marcação: a tabela é reescrita a cada volta de vinte e cinco segundos, e guardados no
+   elemento os três se perderiam sozinhos no meio do uso. */
+let CARR_FILTRO = "todos";
+let CARR_BUSCA = "";
+/* A ORDEM DE PARTIDA É A DA MAQUETE: mais carrosséis primeiro, que é a pergunta que ele
+   faz ao abrir a aba. `sentido` é -1 para maior primeiro. */
+let CARR_ORDEM = { campo: "n", sentido: -1 };
 
 /** Quantos carrosséis dá para baixar de cada perfil, e se a régua já sabe disso. */
 function carrosseisDosPerfis(perfis) {
@@ -866,28 +877,9 @@ function desenhaCarrossel(perfis) {
   if (!CARR_VIGIA.relogio) acharPacoteNoDisco();
 }
 
-/** Quantas páginas a fileira tem hoje. Nunca menos de uma. */
-function paginasDoCarrossel() {
-  return Math.max(1, Math.ceil(CARR_LISTA.length / CARR_POR_PAGINA));
-}
-
 /** O peso de um arquivo, como ele lê: uma casa decimal e vírgula. */
 function pesoEmMB(bytes) {
   return ((bytes || 0) / 1048576).toFixed(1).replace(".", ",") + " MB";
-}
-
-/** O rótulo do botão de baixar um perfil: quantos carrosséis e quanto pesa, do disco. */
-function rotuloDoPacote(feito) {
-  /* O NÚMERO SÓ ENTRA QUANDO O POSTO CONSEGUIU CONTAR AS PASTAS DENTRO DO ZIP. Nulo quer
-     dizer "não consegui ler o arquivo", e escrever "0 carrosséis" para isso seria a trava
-     2 no rótulo de um botão que ele vai apertar.
-
-     E ELE DIZ "NO PACOTE", porque na MESMA linha existe outro número de carrosséis: o
-     grande, que é o da régua. Com 41 na coluna e 38 no botão, sem palavra que separe os
-     dois, ele lê que três sumiram. Achado pelo revisor de tela. */
-  const n = feito && feito.pastas;
-  return "Baixar · " + (n ? `${num(n)} no pacote · ` : "")
-    + pesoEmMB(feito && feito.bytes);
 }
 
 /* A MARCAÇÃO DO BOTÃO ANIMADO, escrita uma vez só. São três botões iguais nesta tela (o
@@ -906,81 +898,168 @@ function botaoAnimado(classe, atributos, texto) {
 function desenhaOsCartoes() {
   const alvo = $("carr_perfis");
   if (!alvo) return;
-  /* A PÁGINA VOLTA QUANDO A FILEIRA ENCOLHE. Estando ele na página 3 e a fileira caindo
-     para seis perfis, sem esta linha a tela desenharia uma página vazia com o paginador
-     dizendo "3 de 1", que é a tela afirmando o que não existe (trava 2). */
-  const paginas = paginasDoCarrossel();
+  const vistos = listaDaVista();
+  /* A PÁGINA VOLTA QUANDO A LISTA ENCOLHE. Estando ele na página 3 e a lista caindo para
+     oito perfis (por filtro, por procura ou porque um lote saiu), sem esta linha a tela
+     desenharia uma página vazia com o pé dizendo "3 de 1", que é a tela afirmando o que
+     não existe (trava 2). */
+  const paginas = Math.max(1, Math.ceil(vistos.length / CARR_POR_PAGINA));
   CARR_PAGINA = Math.min(Math.max(1, CARR_PAGINA), paginas);
   const inicio = (CARR_PAGINA - 1) * CARR_POR_PAGINA;
-  const nesta = CARR_LISTA.slice(inicio, inicio + CARR_POR_PAGINA);
+  const nesta = vistos.slice(inicio, inicio + CARR_POR_PAGINA);
 
-  /* O CARTAO DO PERFIL, e nao uma linha de tabela.
+  /* A LINHA DA TABELA (03/09/2026, espec `coleta-carrossel-tabela`).
 
-     Ele era o arroba, um numero apagado ao lado e um botao verde chapado, tudo na mesma
-     altura: nada mandava em nada. Agora tem o retrato do perfil (a ficha ja' traz `foto`
-     e `nome`, e o endereco da imagem e' o mesmo que a tabela de Minerados usa), o nome em
-     cima do arroba, o numero como FIGURA, e o botao animado da casa.
+     A PROPOSTA 2 APROVADA POR ELE: "esse modelo, aprovado, pode implementar". Antes disto
+     cada perfil era um cartão empilhado, com retrato grande, o número em figura e até dois
+     botões; as colunas só ficavam retas entre uma linha e outra com `subgrid`, que é um
+     problema que tabela não tem, porque coluna de tabela é coluna de verdade.
 
-     E O BOTAO DE BAIXAR MORA AQUI DENTRO desde 03/09/2026, por ordem dele com print e
-     circulo vermelho em volta do botao antigo, que ficava no pe' do cartao: "era pro botao
-     estar no card daquele que eu botei pra baixar. Ai bota um botao desse em destaque".
+     A COLUNA PACOTE RESPONDE "JÁ MONTEI?" sem ele ter de ler o rótulo do botão. Perfil sem
+     pacote leva um ponto apagado, e nunca um zero: "não montado" e "zero" são coisas
+     diferentes (trava 2), e o peso só aparece quando o posto conseguiu ler o arquivo.
 
-     COM PACOTE PRONTO, O DESTAQUE E' O DE BAIXAR, e o de montar vira um texto discreto ao
-     lado. Ele continua existindo porque o endereco de midia do Instagram vence em horas: a
-     unica saida para um pacote velho e' montar de novo, e esconder esse caminho deixaria o
-     perfil preso no ZIP de ontem. */
+     E MONTAR DE NOVO DEIXOU DE SER UM BOTÃO POR LINHA, porque o desenho aprovado tem uma
+     ação por linha. O caminho não morreu: marcar um perfil que já tem pacote e apertar
+     Montar Os Pacotes remonta o dele, que é o mesmo pedido de sempre. Isso importa porque
+     o endereço de mídia do Instagram vence em horas, e sem remontagem o perfil ficaria
+     preso no ZIP de ontem (trava 77d). */
   const html = nesta.map(p => {
     const feito = CARR_PACOTES[p.conta];
-    const acoes = feito
-      ? `<button class="carr-refazer" type="button" data-carr="${escapar(p.conta)}"
-          >Montar De Novo</button>`
-        + botaoAnimado("brasa", `data-carr-baixar="${escapar(p.conta)}"`,
-                       rotuloDoPacote(feito))
-      : botaoAnimado("brasa", `data-carr="${escapar(p.conta)}"`, "Montar O Pacote");
+    const acao = feito
+      ? botaoAnimado("brasa", `data-carr-baixar="${escapar(p.conta)}"`, "Baixar")
+      : botaoAnimado("brasa", `data-carr="${escapar(p.conta)}"`, "Montar");
+    const peso = feito
+      ? escapar(pesoEmMB(feito.bytes))
+      : '<span class="carr-sem">·</span>';
     return `
-    <div class="carr-perfil" data-conta="${escapar(p.conta)}">
-      <label class="carr-check carr-check-um" title="Marcar @${escapar(p.conta)}"
-        ><input type="checkbox" data-carr-marca="${escapar(p.conta)}"></label>
-      ${retrato(p)}
-      <span class="carr-quem">
-        <b class="carr-nome">${escapar(p.nome || "@" + p.conta)}</b>
-        ${p.nome ? `<span class="carr-arroba">@${escapar(p.conta)}</span>` : ""}
-      </span>
-      <span class="carr-numero">
-        <b>${num(p.carrosseis_baixaveis)}</b>
-        <i>${p.carrosseis_baixaveis === 1 ? "carrossel" : "carrosséis"}</i>
-      </span>
-      <div class="carr-acoes">${acoes}</div>
-    </div>`;
+      <tr data-conta="${escapar(p.conta)}">
+        <td class="carr-ck-col"><input class="carr-ck" type="checkbox"
+          data-carr-marca="${escapar(p.conta)}"
+          aria-label="Marcar @${escapar(p.conta)}"></td>
+        <td><div class="carr-quem">${retrato(p)}<span class="carr-quem-txt"
+          ><b class="carr-nome">${escapar(p.nome || "@" + p.conta)}</b>${
+          p.nome ? `<span class="carr-arroba">@${escapar(p.conta)}</span>` : ""
+        }</span></div></td>
+        <td class="carr-numero">${num(p.carrosseis_baixaveis)}</td>
+        <td class="carr-peso">${peso}</td>
+        <td class="carr-acao">${acao}</td>
+      </tr>`;
   }).join("");
-  // Desenho igual não se redesenha, a mesma regra da fileira acima: reescrever apagaria o
-  // botão sob o cursor a cada volta de vinte e cinco segundos.
-  if (alvo.dataset.desenho !== html) {
-    alvo.innerHTML = html;
-    alvo.dataset.desenho = html;
+  /* LISTA VAZIA DIZ POR QUE ESTÁ VAZIA. Com filtro ou procura ligados, "não há perfil"
+     seria mentira: há, só não passa no que ele pediu. É a trava 2 na lista. */
+  const vazio = CARR_FILTRO !== "todos" || CARR_BUSCA
+    ? `<tr><td colspan="5" class="carr-nada">Nenhum perfil passa no que está marcado
+       acima. Tire o filtro ou a procura para ver os ${num(CARR_LISTA.length)}.</td></tr>`
+    : "";
+  const desenho = html || vazio;
+  // Desenho igual não se redesenha: reescrever apagaria o botão sob o cursor a cada volta
+  // de vinte e cinco segundos, e a linha sob o dedo sumiria no instante do clique.
+  if (alvo.dataset.desenho !== desenho) {
+    alvo.innerHTML = desenho;
+    alvo.dataset.desenho = desenho;
   }
   /* A MARCAÇÃO SE PINTA DEPOIS, e nunca dentro do desenho. Fosse o `checked` parte do
-     texto, cada clique numa caixinha reescreveria a fileira inteira: o cartão sob o dele
+     texto, cada clique numa caixinha reescreveria a tabela inteira: a linha sob o dedo
      some e nasce de novo no mesmo instante do clique, e o segundo clique cai no vazio. */
   aplicarAMarcacao();
-
-  const pag = $("carr_pag");
-  if (pag) {
-    // PAGINADOR DE UMA PÁGINA SÓ É ENFEITE que promete navegação inexistente.
-    pag.hidden = paginas < 2;
-    const diz = $("carr_pag_diz");
-    if (diz) diz.textContent = `Página ${CARR_PAGINA} de ${paginas}`;
-    pag.querySelectorAll("[data-carr-pag]").forEach(b => {
-      const passo = Number(b.dataset.carrPag);
-      b.disabled = CARR_PAGINA + passo < 1 || CARR_PAGINA + passo > paginas;
-    });
-  }
+  desenhaOPeDaTabela(vistos.length, paginas, inicio, nesta.length);
+  desenhaOFiltro();
   desenhaABarraDoLote();
 }
 
-/** Põe as caixinhas e o realce de cada cartão de acordo com o conjunto de marcados. */
+/** Os perfis que a vista mostra agora: o filtro, a procura e a ordem, nesta ordem. */
+function listaDaVista() {
+  let fora = CARR_LISTA;
+  /* O FILTRO OLHA O DISCO, e não a memória da aba: `CARR_PACOTES` vem do posto, então
+     "Com Pacote" quer dizer que o arquivo existe mesmo, e não que esta aba mandou montar. */
+  if (CARR_FILTRO === "com") fora = fora.filter(p => CARR_PACOTES[p.conta]);
+  else if (CARR_FILTRO === "sem") fora = fora.filter(p => !CARR_PACOTES[p.conta]);
+  const busca = (CARR_BUSCA || "").trim().toLowerCase();
+  if (busca) {
+    fora = fora.filter(p => (p.conta || "").toLowerCase().includes(busca)
+      || (p.nome || "").toLowerCase().includes(busca));
+  }
+  const s = CARR_ORDEM.sentido;
+  const copia = [...fora];
+  copia.sort((a, b) => {
+    if (CARR_ORDEM.campo === "nome") {
+      return s * (a.nome || a.conta).localeCompare(b.nome || b.conta, "pt-BR");
+    }
+    if (CARR_ORDEM.campo === "pacote") {
+      // SEM PACOTE VALE MENOS QUE QUALQUER PACOTE, e não zero byte: são coisas diferentes,
+      // e um pacote de zero byte é defeito, não ausência.
+      const pa = CARR_PACOTES[a.conta] ? (CARR_PACOTES[a.conta].bytes || 0) : -1;
+      const pb = CARR_PACOTES[b.conta] ? (CARR_PACOTES[b.conta].bytes || 0) : -1;
+      return s * (pa - pb);
+    }
+    return s * ((a.carrosseis_baixaveis || 0) - (b.carrosseis_baixaveis || 0));
+  });
+  return copia;
+}
+
+/** O pé: quantas se vê, quantas há, o seletor de linhas e os números das páginas. */
+function desenhaOPeDaTabela(total, paginas, inicio, nesta) {
+  const diz = $("carr_pag_diz");
+  /* OS TRÊS NÚMEROS SÃO MEDIDOS DA LISTA, e nunca calculados por fora: com filtro ligado o
+     total é o da vista, e escrever o total do acervo aqui faria a frase discordar da
+     tabela logo acima. */
+  if (diz) {
+    diz.textContent = total
+      ? `Mostrando ${num(inicio + 1)} a ${num(inicio + nesta)} de ${num(total)}`
+      : "Nenhum perfil nesta vista";
+  }
+  const nums = $("carr_pag_nums");
+  if (!nums) return;
+  /* OS NÚMEROS SOMEM COM UMA PÁGINA SÓ, mas o pé fica: "Mostrando 1 a 8 de 8" continua
+     sendo informação e o seletor de linhas continua servindo. Paginador de uma página é
+     que seria enfeite, porque promete navegação que não existe. */
+  nums.hidden = paginas < 2;
+  const seta = (d, rot) => `<button type="button" class="carr-pag-btn"
+    data-carr-pag="${d}" aria-label="${rot}"${
+      (d < 0 && CARR_PAGINA <= 1) || (d > 0 && CARR_PAGINA >= paginas) ? " disabled" : ""
+    }><svg viewBox="0 0 24 24"><path d="${
+      d < 0 ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"}"/></svg></button>`;
+  let ns = "";
+  for (let p = 1; p <= paginas; p++) {
+    ns += `<button type="button" class="carr-pag-n" data-carr-ir="${p}"${
+      p === CARR_PAGINA ? ' aria-current="true"' : ""}>${p}</button>`;
+  }
+  const html = seta(-1, "Página anterior") + ns + seta(1, "Próxima página");
+  if (nums.dataset.desenho !== html) {
+    nums.innerHTML = html;
+    nums.dataset.desenho = html;
+  }
+}
+
+/** As contas do filtro por estado, e qual deles está valendo. */
+function desenhaOFiltro() {
+  const seg = $("carr_seg");
+  if (!seg) return;
+  /* AS TRÊS CONTAS SAEM DA LISTA DE VERDADE. Número de filtro estimado seria a tela
+     afirmando o que não mediu, e ele o compara com a tabela na linha seguinte. */
+  const com = CARR_LISTA.filter(p => CARR_PACOTES[p.conta]).length;
+  const quantos = { todos: CARR_LISTA.length, com, sem: CARR_LISTA.length - com };
+  const nome = { todos: "Todos", com: "Com Pacote", sem: "Sem Pacote" };
+  seg.querySelectorAll("[data-carr-filtro]").forEach(b => {
+    const q = b.dataset.carrFiltro;
+    b.textContent = `${nome[q]} · ${num(quantos[q])}`;
+    if (q === CARR_FILTRO) b.setAttribute("aria-current", "true");
+    else b.removeAttribute("aria-current");
+  });
+  const cabecas = document.querySelectorAll("#cx_carrossel [data-carr-ord]");
+  cabecas.forEach(th => {
+    const minha = th.dataset.carrOrd === CARR_ORDEM.campo;
+    th.classList.toggle("ordenada", minha);
+    const marca = th.querySelector(".ord");
+    // A SETA DIZ PARA ONDE A COLUNA ESTÁ ORDENADA, e a de duas pontas diz "por aqui não".
+    if (marca) marca.textContent = minha ? (CARR_ORDEM.sentido > 0 ? "↑" : "↓") : "↕";
+  });
+}
+
+/** Põe as caixinhas e o realce de cada linha de acordo com o conjunto de marcados. */
 function aplicarAMarcacao() {
-  document.querySelectorAll("#carr_perfis .carr-perfil").forEach(L => {
+  document.querySelectorAll("#carr_perfis tr[data-conta]").forEach(L => {
     const marcado = CARR_MARCADOS.has(L.dataset.conta);
     L.dataset.marcado = marcado ? "sim" : "nao";
     const caixa = L.querySelector("[data-carr-marca]");
@@ -997,33 +1076,28 @@ function aplicarAMarcacao() {
   }
 }
 
-/** A linha de cima: marcar todos, quantos estão marcados, e montar os pacotes. */
+/** A barra verde: quantos estão marcados, desmarcar, e montar os pacotes. */
 function desenhaABarraDoLote() {
   const barra = $("carr_lote");
   if (!barra) return;
-  // COM UM PERFIL SÓ NÃO HÁ LOTE: marcar seria o mesmo que apertar o botão do cartão dele.
-  barra.hidden = CARR_LISTA.length < 2;
-  const acao = $("carr_lote_acao");
-  if (!acao) return;
-  acao.hidden = CARR_MARCADOS.size === 0;
   const quantos = CARR_MARCADOS.size;
+  /* A BARRA SÓ NASCE COM ALGUÉM MARCADO. Sempre visível e sem marcação ela era um
+     retângulo de 1208 por 41 com uma caixinha no canto e mil pixels de nada até a borda,
+     que foi o print dele de 03/09/2026. Botão de montar nada é botão que só pode dar erro,
+     e a barra inteira desce junto com ele. */
+  barra.hidden = quantos === 0;
+  if (!quantos) return;
   /* A CONTA DE CARROSSÉIS SAI DA FICHA DE CADA PERFIL, e não de uma estimativa: é o mesmo
-     número que a coluna do cartão mostra, somado. */
+     número que a coluna da tabela mostra, somado. E ela olha a lista INTEIRA, e não a
+     vista: perfil marcado noutra página continua no pedido, e some da conta seria mentira. */
   const pecas = CARR_LISTA.filter(p => CARR_MARCADOS.has(p.conta))
     .reduce((s, p) => s + (p.carrosseis_baixaveis || 0), 0);
-  /* A LINHA DA DIREITA É ESCRITA SEMPRE, e o `return` antecipado que existia aqui é o que
-     esvaziava a barra: com ninguém marcado ela ficava com a caixinha à esquerda e mil
-     pixels de nada até a borda, que foi o print dele de 03/09/2026. Sem marcação a frase
-     diz o que fazer, e é ela que ocupa o lugar do botão que ainda não deve existir. */
   const diz = $("carr_lote_diz");
   if (diz) {
-    diz.dataset.marcado = quantos ? "sim" : "nao";
-    diz.textContent = quantos
-      ? `${num(quantos)} ${quantos === 1 ? "perfil marcado" : "perfis marcados"} · `
-        + `${num(pecas)} ${pecas === 1 ? "carrossel" : "carrosséis"}`
-      : "Marque os perfis que quer baixar de uma vez";
+    diz.textContent =
+      `${num(quantos)} ${quantos === 1 ? "perfil marcado" : "perfis marcados"} · `
+      + `${num(pecas)} ${pecas === 1 ? "carrossel" : "carrosséis"}`;
   }
-  if (acao.hidden) return;
   dizNoBotao("carr_montar_lote",
              quantos === 1 ? "Montar O Pacote" : "Montar Os Pacotes");
 }
@@ -1265,7 +1339,7 @@ function desenhaOPacote(a, conta, total) {
      vem DEPOIS do redesenho: escrita antes, o `innerHTML` novo a apagava, e o realce só
      aparecia na terceira volta. Medido pelo revisor de tela: nada aceso em 300 ms e em
      1000 ms, e a linha certa só em 2500 ms. */
-  document.querySelectorAll("#carr_perfis .carr-perfil").forEach(L => {
+  document.querySelectorAll("#carr_perfis tr[data-conta]").forEach(L => {
     L.dataset.escolhido = L.dataset.conta === dele ? "sim" : "nao";
   });
 
@@ -1410,8 +1484,53 @@ document.addEventListener("click", ev => {
     return desenhaOsCartoes();
   }
 
+  const numero = ev.target.closest("[data-carr-ir]");
+  if (numero) {
+    CARR_PAGINA = Number(numero.dataset.carrIr);
+    return desenhaOsCartoes();
+  }
+
+  /* TROCAR DE FILTRO VOLTA PARA A PÁGINA 1. Sem isto, estando ele na página 3 e o filtro
+     deixando uma página só, a tabela abriria vazia com o pé dizendo "Mostrando 17 a 24 de
+     4", que é a tela afirmando o que não existe (trava 2). */
+  const filtro = ev.target.closest("[data-carr-filtro]");
+  if (filtro) {
+    CARR_FILTRO = filtro.dataset.carrFiltro;
+    CARR_PAGINA = 1;
+    return desenhaOsCartoes();
+  }
+
+  /* A COLUNA CLICADA VIRA A ORDEM, e clicar de novo na mesma inverte o sentido. Trocar de
+     coluna começa pelo sentido natural dela: nome de A a Z, número do maior para o menor,
+     que é como cada uma é lida. */
+  const ordem = ev.target.closest("[data-carr-ord]");
+  if (ordem) {
+    const campo = ordem.dataset.carrOrd;
+    CARR_ORDEM = campo === CARR_ORDEM.campo
+      ? { campo, sentido: -CARR_ORDEM.sentido }
+      : { campo, sentido: campo === "nome" ? 1 : -1 };
+    return desenhaOsCartoes();
+  }
+
+  const limpa = ev.target.closest("#carr_desmarcar");
+  if (limpa) {
+    CARR_MARCADOS.clear();
+    aplicarAMarcacao();
+    return desenhaABarraDoLote();
+  }
+
   const juntos = ev.target.closest("#carr_montar_lote");
   if (juntos) return pedirOPacote([...CARR_MARCADOS]);
+});
+
+/* A PROCURA É `input`, e não `change`: `change` só dispara quando o campo perde o foco, e
+   a lista ficaria parada enquanto ele digita, que é justamente quando ele está olhando. */
+document.addEventListener("input", ev => {
+  const busca = ev.target.closest("#carr_busca");
+  if (!busca) return;
+  CARR_BUSCA = busca.value;
+  CARR_PAGINA = 1;
+  desenhaOsCartoes();
 });
 
 /* A MARCAÇÃO É `change`, E NÃO `click`. Caixinha marcada pelo teclado (barra de espaço)
@@ -1424,6 +1543,17 @@ document.addEventListener("change", ev => {
     aplicarAMarcacao();
     return desenhaABarraDoLote();
   }
+  /* QUANTAS LINHAS POR VEZ, do seletor da maquete. A página volta para a primeira: com
+     dezesseis por página, a página 3 de oito em oito passa a não existir, e o pé diria
+     "Mostrando 33 a 48 de 14". */
+  const quantas = ev.target.closest("#carr_quantas");
+  if (quantas) {
+    const n = Number(quantas.value);
+    if (n > 0) CARR_POR_PAGINA = n;
+    CARR_PAGINA = 1;
+    return desenhaOsCartoes();
+  }
+
   if (!ev.target.closest("#carr_todos")) return;
   /* MARCAR TODOS É A FILEIRA INTEIRA, e não a página. Marcar seis de catorze e chamar isso
      de "todos" seria a tela dizendo o que ela não fez, e o pedido sairia com oito perfis a
