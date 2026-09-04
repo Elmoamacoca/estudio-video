@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "castilho.ia",
+   "nome": null,
+   "primeiro": 1788554008,
+   "ultimo": 1788554008,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "aguardando",
+   "lidos": 0,
+   "publicacoes": 0,
+   "completo": false
+  },
+  {
    "conta": "ratosdeia",
    "nome": null,
    "primeiro": 1788554001,
@@ -56,5 +69,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788554005
+ "atualizado": 1788554012
 }
