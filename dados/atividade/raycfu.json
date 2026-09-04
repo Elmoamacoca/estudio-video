@@ -8,6 +8,18 @@
    "gravidade": "aviso",
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela",
    "vezes": 4
+  },
+  {
+   "quando": 1788554332,
+   "tipo": "falha_abertura",
+   "gravidade": "falha",
+   "texto": "Abertura Pelo Arroba Não Passou: Recusa 401 Do Instagram. 1ª Tentativa De Abertura.",
+   "detalhe": {
+    "tentativa": 1,
+    "vaga": 2,
+    "resposta": "[raycfu] abertura via 1 recusou (401)\n[raycfu] abertura nao passou nesta rodada"
+   }
   }
- ]
+ ],
+ "tentativas_id": 1
 }
