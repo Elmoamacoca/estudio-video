@@ -1,5 +1,14 @@
 {
  "dia": "2026-09-04",
  "tentativas": 0,
- "perfis": {}
+ "perfis": {
+  "divyannshisharma": {
+   "prova": 0,
+   "paradas": 0
+  },
+  "raycfu": {
+   "prova": 0,
+   "paradas": 0
+  }
+ }
 }
