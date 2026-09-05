@@ -291,12 +291,17 @@ def pendentes(contas: list[str]) -> list[str]:
     fila = []
     for c in contas:
         e = estado_de(c)
-        # CONTA DE CASA NAO E' DA ESTEIRA. Perfil com muro de login so' abre logado, do
-        # PC do dono (casa.py). A esteira e' anonima: se paginasse esta conta, levaria
-        # 200 vazio e gravaria "completo" com marcador nulo POR CIMA da varredura parcial
-        # que o casa.py deixou, perdendo todo o resto do perfil. A marca `so_logado` na
-        # ficha diz "esta e' territorio do resgate em casa", e a esteira nao encosta.
-        if e.get("so_logado"):
+        # CONTA DE CASA NAO E' DA ESTEIRA, ENQUANTO HOUVER CONTA VIVA. Perfil com muro de
+        # login so' abre logado, do computador do dono (casa.py). A esteira e' anonima: se
+        # paginasse esta conta, levaria 200 vazio e gravaria "completo" com marcador nulo
+        # POR CIMA da varredura parcial que o casa.py deixou, perdendo todo o resto do
+        # perfil. A marca `so_logado` diz "esta e' territorio da leitura logada".
+        #
+        # O "ENQUANTO HOUVER" NASCEU EM 04/09/2026 (espec cd-6-virada, criterio 12). Antes
+        # esta linha excluia o perfil PARA SEMPRE, e ele nunca voltava a fila nem quando a
+        # leitura logada deixava de existir. Quem responde essa pergunta e' a marca que a
+        # casa escreve, e nao o cofre: a vaga nao enxerga o cofre e nunca vai enxergar.
+        if e.get("so_logado") and not _sem_conta_viva():
             continue
         if e.get("completo"):
             if not quer_reler(c, e, pedidas, quando) and not falta_formato(e, r):
@@ -683,8 +688,55 @@ def recolher_notas() -> int:
     return 0
 
 
+def _sem_conta_viva() -> bool:
+    """Nao ha' conta descartavel viva? A vaga responde isso pela MARCA, e nao pelo cofre.
+
+    Ela existe para o criterio 12 da espec da virada: perfil marcado como territorio da
+    leitura logada volta a' fila quando a leitura logada deixa de existir. Antes ele era
+    excluido para sempre, e um dia sem conta o deixava parado sem ninguem notar.
+    """
+    marca, ilegivel = marca_das_contas()
+    return bool(ilegivel or (isinstance(marca, dict) and marca.get("parada")))
+
+
+def marca_das_contas() -> tuple:
+    """A marca de que nao ha' conta descartavel viva. Devolve (marca, ilegivel).
+
+    ELA E' LIDA AQUI PORQUE A VAGA NAO ENXERGA O COFRE, e nunca vai enxergar: o cofre mora
+    no computador dele e a vaga roda numa das vinte maquinas do GitHub. Quem sabe se ha'
+    conta viva e' a ponta, que conta a' casa; a casa escreve esta marca no acervo; a vaga
+    le' antes de varrer. Um escritor por arquivo, que e' a razao de `atividade.py:19-20`.
+
+    TRES ESTADOS (trava 3): ausente e' operacao normal, presente e' parada, e ILEGIVEL nao
+    e' ausente. O terceiro tambem para, com motivo proprio.
+    """
+    p = Path("dados/contas-fora.json")
+    if not p.exists():
+        return None, False
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None, True
+    return (d if isinstance(d, dict) else None), not isinstance(d, dict)
+
+
 def main() -> int:
     vaga = int(os.environ.get("VAGA", "1"))
+
+    # A ESTEIRA PARA QUANDO NAO HA' CONTA VIVA, por ordem dele em 04/09/2026: "pra ate' eu
+    # repor". Continuar rodando de meia em meia hora com todas as contas caidas gasta
+    # rodada a' toa, e a leitura anonima ja' foi medida em 401 de qualquer endereco.
+    #
+    # A LEITURA E' A PRIMEIRA COISA DA VAGA, e sai em segundos: o horario continua
+    # disparando, e e' o disparo que le' a marca. Apagar o agendamento exigiria uma segunda
+    # acao dele, fora da tela, so' para voltar ao normal.
+    marca, ilegivel = marca_das_contas()
+    if (isinstance(marca, dict) and marca.get("parada")) or ilegivel:
+        print("a esteira nao varre nesta rodada: "
+              + ("a marca das contas existe e nao deu para ler" if ilegivel
+                 else str(marca.get("por_que") or "nenhuma conta descartavel viva")))
+        return 0
+
     contas = contas_pedidas()
     if not contas:
         print("nenhuma conta de origem cadastrada")

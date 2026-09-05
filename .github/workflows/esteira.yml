@@ -307,7 +307,19 @@ jobs:
         # Perfil pendente cuja prova de vida nao muda ha 2 rodadas re-emenda mesmo
         # sem post novo, com "tentativa N" escrita na ficha dele e um teto de
         # reapresentacoes por dia para nao virar laco.
+        #
+        # E A EMENDA MORRE JUNTO COM A MARCA DAS CONTAS, desde 04/09/2026. Sem esta
+        # linha, a esteira parada por falta de conta continuaria EMENDANDO a propria
+        # rodada de seis em seis minutos, porque a emenda so' olha se ha' perfil pela
+        # metade e se houve post novo. Parar de varrer e continuar emendando seria
+        # gastar rodada mais rapido do que o horario gastaria.
         run: |
+          # O CAMPO `parada` E' QUEM DIZ, e nao a existencia do arquivo: a casa limpa a
+          # marca escrevendo `parada: false`, porque nao ha' rota de apagar no acervo.
+          if grep -q '"parada": true' dados/contas-fora.json 2>/dev/null; then
+            echo "nao emendo: nao ha conta descartavel viva"
+            exit 0
+          fi
           python - "${{ needs.conferir.result }}" <<'PY' > veredito.txt
           import json, pathlib, subprocess, sys, time
           def ler(caminho, padrao):

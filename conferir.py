@@ -177,6 +177,16 @@ def main() -> int:
         import re
         ids = set(re.findall(r'id="([^"]+)"', pagina))
         js = tela.read_text(encoding="utf-8")
+        # E O QUE A PROPRIA TELA CRIA TAMBEM CONTA. A pergunta desta trava e' "o `$("x")`
+        # vai devolver nulo?", e nao "o id nasceu no molde?". Campo que o `tela.js` escreve
+        # com `innerHTML` existe no navegador na hora em que ele e' procurado, e acusa-lo
+        # aqui e' vermelho a' toa: conferencia que grita sem defeito e' conferencia que
+        # alguem desliga (trava 69a).
+        #
+        # Ela apareceu em 05/09/2026, com a janela de cadastrar conta: os tres campos e o
+        # campo do codigo nascem dentro do corpo trocado a cada passo, que e' o desenho que
+        # ele aprovou. Postos no molde, eles existiriam nos quatro passos ao mesmo tempo.
+        ids |= set(re.findall(r'id=\\?["\']([A-Za-z0-9_-]+)', js))
         faltam = sorted({p for p in re.findall(r'\$\("([A-Za-z0-9_]+)"\)', js)
                          if p not in ids})
         if faltam:

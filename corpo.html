@@ -980,9 +980,32 @@
       <!-- A SEXTA ABA E' ORDEM DELE, de 03/09/2026, e nao da maquete. Perguntado se a
            Legenda E Entrega virava aba, entrava dentro do Fabricar ou sumia da barra, ele
            escolheu a aba: nada se perde e o caminho continua terminando na entrega. -->
-      <div class="ed-ponto" data-etapa="6" data-passo="4"
+      <!-- E ELA VIROU DUAS EM 05/09/2026, tambem por ordem dele: "uma aba de descricao do
+           post, entre o fabricar e a entrega". As duas telas JA' EXISTIAM dentro do passo
+           4, uma escondendo a outra (`data-sub="1"` e `data-sub="2"`), e se alcancavam por
+           dois botoes de rodape'. Separar nao inventa etapa nenhuma: da' a cada metade a
+           tela inteira e poe as duas na tira, onde o resto do caminho ja' esta'.
+
+           O PAR DO DISCO NAO MUDA, e e' o que faz a leva 31 reabrir onde parou. `passo: 4`
+           continua querendo dizer "Legenda E Entrega" e os dois `data-sub` continuam com o
+           significado que tem desde 26/08/2026. O que muda e' a PELE: `data-etapa`, que e'
+           o que o olho ve'. Renumerar o que esta' gravado seria trocar o significado de um
+           campo com 180 descricoes ja' pagas em cota atras dele. -->
+      <div class="ed-ponto" data-etapa="6" data-passo="4" data-sub="1"
            role="tab" tabindex="0" aria-selected="false">
         <div class="ed-ponto-n">6</div>
+        <div class="ed-ponto-corpo">
+          <div class="ed-barra"><i></i><b style="height:0%"></b></div>
+          <div class="ed-ponto-txt">
+            <h3>Descrição Do Post</h3>
+            <p id="ed_r6">nenhuma escrita</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ed-ponto" data-etapa="7" data-passo="4" data-sub="2"
+           role="tab" tabindex="0" aria-selected="false">
+        <div class="ed-ponto-n">7</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
           <div class="ed-ponto-txt">
@@ -1398,6 +1421,22 @@
 
                O IDENTIFICADOR CONTINUA `ed_vai_ajuste`, de proposito: trocar o nome
                quebraria as chamadas dele sem melhorar nada na tela. -->
+          <!-- A CONFERÊNCIA DA ESCRITA, entre esta aba e A Bancada. Ordem dele em
+               05/09/2026: "entre as etapas de as frases e a bancada tem que ter um sistema
+               que vai validar a questão da descrição, pra ver se as letras não estão
+               quebradas, pra ver se as letras foram bem implementadas". É a mesma
+               conferência da outra ponta, e a mesma conta: sinal por sinal, com o nome da
+               peça que quebrou. -->
+          <div class="caixa cf-caixa" id="fr_conf" hidden>
+            <div class="cf-topo">
+              <h3>A Conferência Da Escrita</h3>
+              <span class="pino" id="fr_conf_pino">conferindo</span>
+            </div>
+            <p class="nota" id="fr_conf_txt"></p>
+            <div class="cf-contas" id="fr_conf_contas"></div>
+            <div class="cf-quebradas" id="fr_conf_quebradas"></div>
+          </div>
+
           <div class="ed-pe">
             <button class="acao" id="ed_volta_imagens" type="button">
               Voltar À Marca</button>
@@ -1776,6 +1815,15 @@
               <section class="aj-bloco">
                 <h4>A Fonte</h4>
                 <div id="aj_fonte_alvo"></div>
+                <!-- O RECADO SOBE PARA CIMA DA LISTA (05/09/2026), e ele estava no PÉ.
+                     Ele explica exatamente o que falta ("escolha uma caixa de texto"), e
+                     morava depois da lista escondida, depois do aviso de busca vazia e
+                     depois de um botão desligado: o olho batia nos três filtros, na busca
+                     e num vazio, e a explicação estava abaixo de tudo o que ela explica.
+                     Recado que só se lê depois de desistir não é recado. Aqui ele nasce
+                     colado nos botões das caixas de texto, que é o que ele manda fazer. -->
+                <p class="nota mini" id="aj_fonte_sem" hidden>Escolha uma caixa de texto
+                  na peça para trocar a fonte dela.</p>
                 <div class="aj-tira cheia" id="aj_fonte_filtro">
                   <button data-q="todas" class="on" type="button">Todas</button>
                   <button data-q="minhas" type="button">Personalizadas</button>
@@ -1787,8 +1835,6 @@
                 <p class="nota mini" id="aj_fonte_nada" hidden></p>
                 <button class="acao mini larga" id="aj_fonte_todas" type="button">
                   Usar Esta Fonte Em Todas As Peças</button>
-                <p class="nota mini" id="aj_fonte_sem" hidden>Escolha uma caixa de texto
-                  na peça para trocar a fonte dela.</p>
               </section>
 
               <!-- A MOLDURA DESTA PEÇA, e a escolha da máquina virou sugestão.
@@ -1992,13 +2038,19 @@
         <!-- .............................................. 4.1 · AS DESCRIÇÕES -->
         <div class="ed-sub-tela" data-sub="1">
           <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 10h16"/><path d="M4 15h10"/><path d="M4 20h7"/></svg></span>Descrição Dos Posts</h2>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 10h16"/><path d="M4 15h10"/><path d="M4 20h7"/></svg></span>Descrição Do Post</h2>
+            <!-- O TÍTULO É O DA ABA, e não outro. Ele dizia "Descrição Dos Posts" enquanto
+                 a tira diz "Descrição Do Post": dois nomes para a mesma tela é ele
+                 perguntando se está no lugar certo. Pego na foto de 05/09/2026. -->
             <!-- A MESMA DINÂMICA DA FASE 3, e foi ele quem pediu assim: "pode fazer a
                  mesma dinâmica que já foi feita anteriormente". Um botão, uma barra, e
                  no fim os textos prontos para ele olhar. Nada de perguntar peça a peça. -->
+            <!-- E O FECHO SAIU DA FRASE junto com a caixa dele: quem põe o que vem antes e
+                 depois do texto é o PADRÃO escolhido, e não um fecho fixo. -->
             <p class="nota">Ela abre a legenda original de cada post e escreve uma nova
               sobre o mesmo assunto, com as palavras dela. Uma passada só, em todas as
-              peças. No fim, o mesmo fecho entra em todas.</p>
+              peças. O padrão que você escolher aqui é o molde em que ela escreve: o que
+              vem antes, o que vem depois, e o arroba no fim.</p>
           </div>
 
           <!-- SEM MONTAGEM NAO HA' ETAPA 4, e a tela precisa dizer isso em vez de
@@ -2032,44 +2084,119 @@
           </div>
 
           <div id="dsc_corpo" hidden>
-            <!-- O FECHO É DELE PARA ESCREVER, e é o mesmo em todas as peças. Ele pediu
-                 "um padrão pra toda a descrição, por exemplo com CTA, pedindo pra
-                 seguir". Fica aqui, editável, porque o CTA muda com a campanha e trocar
-                 texto no código para mudar uma frase é o oposto de uma ferramenta. -->
-            <div class="caixa dsc-fecho">
-              <label class="ed-rot" for="dsc_rodape">O Fecho, Igual Em Todas</label>
-              <textarea id="dsc_rodape" class="campo" rows="2"
-                placeholder="Siga para acompanhar."></textarea>
-              <p class="nota mini">Ele entra depois do texto da IA, separado por uma linha
-                em branco. Deixe vazio para não pôr fecho nenhum.</p>
-              <div class="dsc-limite">
-                <label class="ed-rot" for="dsc_max">Tamanho Máximo</label>
-                <input id="dsc_max" class="campo" type="number" min="120" max="2200"
-                  step="10" value="500">
-                <span class="nota mini">caracteres, sem contar o fecho</span>
+            <!-- O ACERVO À ESQUERDA E A PRÉVIA À DIREITA, que é a maquete que ele aprovou
+                 em 05/09/2026 (`docs/propostas/descricao-t2/`, "A Lista E A Prévia"):
+                 "eu curti mais a proposta 2, que a proposta 2 aqui você colocou a opção
+                 de eu conseguir pegar, cadastrar um padrão e etc".
+
+                 O FECHO FIXO SAIU, E NÃO SE PERDEU. Ele era uma caixa de texto que entrava
+                 depois da IA em todas as peças, mais um teto de caracteres ao lado. Os dois
+                 viraram parte do PADRÃO: o fecho é o que vem depois do `{texto}` no molde,
+                 e o teto é o limite gravado com ele. É o que ele pediu com todas as letras:
+                 "eu vou cadastrar alguns padrões, e aí eu escolho o padrão de descrição, e
+                 ele vai replicar e fazer as alterações em cima desse padrão". Uma caixa
+                 solta de fecho ao lado de um acervo de padrões seriam dois lugares
+                 mandando na mesma frase.
+
+                 OS PADRÕES MORAM NA CASA, no mesmo acervo dos templates, e não na leva:
+                 cadastra uma vez, serve para qualquer leva. A leva só guarda qual escolheu.
+                 É a lógica de A Marca, que foi a comparação dele. -->
+            <div class="dp">
+              <div class="caixa dp-lista" id="dp_lista"></div>
+
+              <div class="caixa dp-dir">
+                <div class="dp-cab">
+                  <div>
+                    <h3 id="dp_nome">Direto</h3>
+                    <p class="nota" id="dp_diz"></p>
+                  </div>
+                  <button class="acao" id="dp_editar" type="button">
+                    Editar Este Padrão</button>
+                </div>
+
+                <div class="dp-par">
+                  <!-- O REEL DE VERDADE, e não um retângulo preto: é a peça montada desta
+                       leva, servida pelo posto. "Não pode ser uma coisa mockada." -->
+                  <div class="dp-vid">
+                    <video id="dp_vid" preload="metadata" muted playsinline></video>
+                  </div>
+                  <div class="dp-txt">
+                    <div>
+                      <div class="dp-rot">O molde</div>
+                      <div class="dp-molde" id="dp_molde"></div>
+                      <textarea class="dp-area" id="dp_area" spellcheck="false"
+                        hidden></textarea>
+                      <!-- O GLOSSÁRIO SÓ APARECE COM O MOLDE ABERTO: fora da edição ele
+                           não tem o que responder, e seis linhas de ajuda ao lado de um
+                           texto que não se digita é ruído em cima da prévia. -->
+                      <div id="dp_vars" hidden></div>
+                    </div>
+                    <div>
+                      <div class="dp-rot" id="dp_rot">Como sai na peça 1</div>
+                      <div class="dp-saiu" id="dp_saiu"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div class="ia-pronta">
               <div class="ia-pronta-txt">
-                <b id="dsc_quem">nenhuma IA configurada</b>
+                <!-- TODA PALAVRA DE TELA COMECA COM MAIUSCULA, que e' a lei da casa. Pego na
+                     foto de 05/09/2026, ao lado de "Apagar As Descricoes". -->
+                <b id="dsc_quem">Nenhuma IA Configurada</b>
                 <span class="nota mini" id="dsc_quanto"></span>
               </div>
-              <button class="acao forte" id="dsc_escrever" type="button">
-                Escrever As Descrições</button>
               <button class="acao mini perigo" id="dsc_apagar" type="button" hidden>
                 Apagar As Descrições</button>
             </div>
             <p class="nota mini" id="dsc_recado"></p>
 
+            <!-- O CARREGAMENTO É O DO FABRICAR, uma marca por peça, e não a tarja de cinco
+                 pixels que estava aqui. Ordem dele em 05/09/2026: "o loading tem que ser do
+                 mesmo padrão que eu tenho na aba de fabricar; lá eu consigo ver tudo
+                 bonitinho, todos os itens". São as mesmas classes e o mesmo pintor
+                 (`pintarObra`): copiar o desenho seria dois lugares para divergirem. -->
             <div class="caixa apl-obra" id="dsc_obra" hidden>
-              <div class="apl-obra-topo">
-                <span class="cfg-girando"></span>
-                <b id="dsc_obra_txt">escrevendo</b>
-                <span class="dir" id="dsc_obra_tempo"></span>
+              <div class="rec-vivo" id="dsc_vivo">
+                <div class="apl-obra-topo">
+                  <span class="cfg-girando"></span>
+                  <b id="dsc_obra_txt">escrevendo</b>
+                  <span class="dir" id="dsc_obra_tempo"></span>
+                </div>
+                <div class="rec-conta">
+                  <b id="dsc_feitas">0</b><span id="dsc_de">de 0 descrições escritas</span>
+                  <span class="agora" id="dsc_atual"></span>
+                </div>
+                <div class="rec-tiras" id="dsc_tiras"></div>
+                <div class="rec-selos">
+                  <span><i class="card"></i>Escritas <b id="dsc_s_feitas">0</b></span>
+                  <span><i class="cheio"></i>Sem Origem <b id="dsc_s_sem">0</b></span>
+                  <span><i class="falhou"></i>Falharam <b id="dsc_s_falhou">0</b></span>
+                  <span>Correndo Há <b id="dsc_s_tempo">0s</b></span>
+                </div>
+                <p class="nota" id="dsc_obra_nota"></p>
               </div>
-              <div class="apl-barra"><i id="dsc_barra"></i></div>
-              <p class="nota" id="dsc_obra_nota"></p>
+              <div class="rec-fecho" id="dsc_fecho" hidden>
+                <svg class="ok" viewBox="0 0 52 52" aria-hidden="true">
+                  <circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 14-15"/></svg>
+                <b id="dsc_fecho_txt"></b>
+              </div>
+            </div>
+
+            <!-- A CONFERÊNCIA DA ESCRITA, entre esta aba e A Entrega. Ordem dele em
+                 05/09/2026: "imagina que eu gero uma descrição, a descrição entregue lá no
+                 Drive, quando eu vou abrir a descrição, o emoji não tá pegando, tá tipo
+                 bugado". Ela conta sinal por sinal e diz qual peça, e é ela que destrava o
+                 caminho para A Entrega. -->
+            <div class="caixa cf-caixa" id="dsc_conf" hidden>
+              <div class="cf-topo">
+                <h3>A Conferência Da Escrita</h3>
+                <span class="pino" id="dsc_conf_pino">conferindo</span>
+              </div>
+              <p class="nota" id="dsc_conf_txt"></p>
+              <div class="cf-contas" id="dsc_conf_contas"></div>
+              <div class="cf-quebradas" id="dsc_conf_quebradas"></div>
             </div>
 
             <!-- O QUE ELA ESCREVEU, PARA ELE LER E MEXER. Descrição é o que vai junto do
@@ -2079,9 +2206,11 @@
           </div>
 
           <div class="ed-pe">
-            <button class="acao" id="dsc_volta" type="button">Voltar Às Peças</button>
+            <button class="acao" id="dsc_volta" type="button">Voltar A Fabricar</button>
             <div class="ed-pe-conta" id="dsc_conta"></div>
-            <button class="acao forte" id="dsc_vai_entrega" type="button">
+            <button class="acao forte" id="dsc_escrever" type="button">
+              Escrever As Descrições</button>
+            <button class="acao" id="dsc_vai_entrega" type="button">
               Ir Para A Entrega</button>
           </div>
         </div>
@@ -2089,67 +2218,121 @@
         <!-- .............................................. 4.2 · A ENTREGA -->
         <div class="ed-sub-tela" data-sub="2" hidden>
           <div class="ed-cab">
-            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></span>Envio Para O Drive</h2>
-            <p class="nota">Cada vídeo vai para uma pasta só dele, com a descrição ao
-              lado, e o conjunto sobe para o Drive com o nome da leva.</p>
+            <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></span>A Entrega</h2>
+            <!-- O TÍTULO É O DA ABA E O DA MAQUETE, e não "Envio Para O Drive": dois nomes
+                 para a mesma tela é ele perguntando se está no lugar certo. -->
+            <p class="nota">Cada vídeo vai para <b>uma pasta só dele</b>, com a descrição
+              ao lado. A leva só é dada por entregue depois de o Drive responder quantos
+              vídeos recebeu e o número bater.</p>
           </div>
 
-          <div class="caixa pos-caixa">
-            <h3>A Montagem</h3>
-            <!-- O MOLDE NÃO NASCE COM ZERO. Zero é uma medida, e antes de alguém contar as
-                 peças não há medida nenhuma: o travessão diz "ainda não sei". Um "0" aqui
-                 é lido como resposta, e foi o que a prova `montagem` pegou. -->
-            <div class="pos-n"><b id="pos_n">—</b><span>peças montadas</span></div>
-            <p class="ed-caminho" id="pos_pasta"></p>
-            <div class="linha">
-              <a class="acao" id="pos_abrir" href="#">Abrir A Pasta</a>
+          <!-- O PAINEL DE TRÊS COLUNAS, na ordem que ele aprovou em 05/09/2026
+               (`docs/propostas/entrega-t1/`, "O Painel"): A Montagem, O Drive, As
+               Descrições. As três respondem, antes de qualquer botão, se dá para entregar.
+
+               A CAIXA "O ENVIO" SAIU, e o que ela guardava não se perdeu: o nome no Drive
+               é agora a linha do destino na coluna do Drive, o que vai subir é a conta da
+               coluna das descrições, e os dois botões desceram para o rodapé, que é onde o
+               desenho os põe. Uma quarta caixa repetindo números que já estão nas três
+               acima era exatamente o "chapado" que ele reprovou noutras telas. -->
+          <div class="pn">
+            <div class="caixa pn-c" id="pos_caixa">
+              <div class="cab"><h3>A Montagem</h3>
+                <span class="pino" id="pos_pino">conferindo</span></div>
+              <!-- O MOLDE NÃO NASCE COM ZERO. Zero é uma medida, e antes de alguém contar as
+                   peças não há medida nenhuma: o travessão diz "ainda não sei". Um "0" aqui
+                   é lido como resposta, e foi o que a prova `montagem` pegou. -->
+              <div class="v" id="pos_n">—</div>
+              <p class="nota">peças montadas na casa do Estúdio. Os vídeos da leva continuam
+                onde estavam, intactos.</p>
+              <p class="ed-caminho" id="pos_pasta"></p>
+              <div class="linha">
+                <a class="acao" id="pos_abrir" href="#">Abrir A Pasta</a>
+              </div>
             </div>
-            <p class="nota">Os vídeos da leva continuam onde estavam, intactos.</p>
+
+            <!-- O DRIVE, E O ÚNICO PONTO DO SISTEMA QUE DEPENDE DELE. Entrar na conta do
+                 Google é coisa que só o dono da conta pode fazer; o resto é daqui. -->
+            <div class="caixa pn-c ent-drive" id="ent_drive">
+              <div class="cab"><h3 id="ent_drive_tit">O Drive</h3>
+                <span class="pino" id="ent_drive_pino">conferindo</span></div>
+              <div class="v" id="ent_nome">leva</div>
+              <p class="nota" id="ent_drive_txt">Vendo se a conta já está autorizada.</p>
+              <div class="linha">
+                <button class="acao forte" id="ent_autorizar" type="button" hidden>
+                  Autorizar O Drive</button>
+                <a class="acao" id="ent_drive_abrir" href="#" target="_blank" rel="noopener"
+                  hidden>Ver A Pasta No Drive</a>
+              </div>
+            </div>
+
+            <div class="caixa pn-c" id="ent_desc_caixa">
+              <div class="cab"><h3>As Descrições</h3>
+                <span class="pino" id="ent_desc_pino">nenhuma</span></div>
+              <div class="v" id="ent_quantas">0</div>
+              <!-- O DOCUMENTO É ORDEM DE 05/09/2026: "o arquivo que vai ser gerado vai ser
+                   um arquivo Docs. Então entrega o vídeo lá a nível de pasta e também
+                   entrega o arquivo Docs ali." -->
+              <p class="nota">uma por peça, escritas na aba anterior. Cada uma vira um
+                <b>documento ao lado do vídeo</b>, na mesma pasta. Peça sem descrição sobe
+                só com o vídeo.</p>
+              <p class="nota mini" id="ent_aviso"></p>
+            </div>
           </div>
 
-          <!-- O DRIVE, E O ÚNICO PONTO DO SISTEMA QUE DEPENDE DELE. Entrar na conta do
-               Google é coisa que só o dono da conta pode fazer; o resto é daqui. -->
-          <div class="caixa ent-drive" id="ent_drive">
-            <div class="ent-drive-topo">
-              <h3 id="ent_drive_tit">O Drive</h3>
-              <span class="pino" id="ent_drive_pino">conferindo</span>
-            </div>
-            <p class="nota" id="ent_drive_txt">Vendo se a conta já está autorizada.</p>
-            <div class="linha">
-              <button class="acao forte" id="ent_autorizar" type="button" hidden>
-                Autorizar O Drive</button>
-              <a class="acao" id="ent_drive_abrir" href="#" target="_blank" rel="noopener"
-                hidden>Ver A Pasta No Drive</a>
-            </div>
-          </div>
-
-          <div class="caixa ent-caixa">
-            <h3>O Envio</h3>
-            <div class="ent-linha">
-              <span class="ed-rot">O Nome No Drive</span>
-              <b id="ent_nome">leva</b>
-            </div>
-            <div class="ent-linha">
-              <span class="ed-rot">O Que Vai Subir</span>
-              <b id="ent_quantas">0 peças</b>
-            </div>
-            <p class="nota mini" id="ent_aviso"></p>
-            <div class="linha">
-              <button class="acao forte" id="ent_subir" type="button">
-                Empacotar E Subir</button>
-              <button class="acao mini" id="ent_so_pacote" type="button">
-                Só Empacotar Na Casa</button>
-            </div>
-          </div>
-
+          <!-- O CARREGAMENTO É O DO FABRICAR, uma marca por peça, no lugar da tarja de
+               cinco pixels. Mesmas classes e mesmo pintor (`pintarObra`). -->
           <div class="caixa apl-obra" id="ent_obra" hidden>
-            <div class="apl-obra-topo">
-              <span class="cfg-girando"></span>
-              <b id="ent_obra_txt">empacotando</b>
-              <span class="dir" id="ent_obra_tempo"></span>
+            <div class="rec-vivo" id="ent_vivo">
+              <div class="apl-obra-topo">
+                <span class="cfg-girando"></span>
+                <b id="ent_obra_txt">empacotando</b>
+                <span class="dir" id="ent_obra_tempo"></span>
+              </div>
+              <div class="rec-conta">
+                <b id="ent_feitas">0</b><span id="ent_de">de 0 peças entregues</span>
+                <span class="agora" id="ent_atual"></span>
+              </div>
+              <div class="rec-tiras" id="ent_tiras"></div>
+              <div class="rec-selos">
+                <span><i class="card"></i>Vídeos <b id="ent_s_feitas">0</b></span>
+                <span><i class="card"></i>Documentos <b id="ent_s_docs">0</b></span>
+                <span><i class="falhou"></i>Falharam <b id="ent_s_falhou">0</b></span>
+                <span>Correndo Há <b id="ent_s_tempo">0s</b></span>
+              </div>
+              <p class="nota" id="ent_obra_nota"></p>
             </div>
-            <div class="apl-barra"><i id="ent_barra"></i></div>
-            <p class="nota" id="ent_obra_nota"></p>
+            <div class="rec-fecho" id="ent_fecho" hidden>
+              <svg class="ok" viewBox="0 0 52 52" aria-hidden="true">
+                <circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 14-15"/></svg>
+              <b id="ent_fecho_txt"></b>
+            </div>
+          </div>
+
+          <!-- A LISTA DAS PEÇAS, E ELA SE PEGA E SE ARRASTA. Ordem dele em 05/09/2026:
+               "tem que ser um bagulho que eu possa segurar e arrastar. Eu não quero a barra
+               de rolagem; é só um negócio que eu consigo descer e subir com o scroll do
+               mouse aqui dentro."
+
+               E A DESCRIÇÃO É UM BOTÃO, e não uma coluna de texto, também por ordem dele:
+               "vai ter descrições que podem ser muito grandes, e aí, se colocar a descrição
+               aqui na tabela, vai ficar uma merda". O botão abre a descrição inteira num
+               pop-up, que é exatamente o texto que vai para o documento. -->
+          <div class="caixa ent-lista">
+            <div class="ent-rola" id="ent_rola">
+              <table>
+                <thead><tr><th style="width:60px"></th><th style="width:210px">A peça</th>
+                  <th>A descrição que vai junto</th>
+                  <th style="width:130px;text-align:right">Estado</th></tr></thead>
+                <tbody id="ent_corpo"></tbody>
+              </table>
+            </div>
+            <p class="ent-dica">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14"/><path d="m7 10 5-5 5 5"/><path d="m7 14 5 5 5-5"/></svg>
+              Segure e arraste a lista, ou use a roda do mouse dentro dela.
+            </p>
           </div>
 
           <!-- O QUE ACONTECEU, EM LINHAS, E NAO NUM PARAGRAFO SO'.
@@ -2183,6 +2366,10 @@
             <button class="acao" id="ent_volta" type="button">
               Voltar Às Descrições</button>
             <div class="ed-pe-conta" id="ent_conta"></div>
+            <button class="acao" id="ent_so_pacote" type="button">
+              Só Empacotar Na Casa</button>
+            <button class="acao forte" id="ent_subir" type="button">
+              Empacotar E Subir</button>
           </div>
         </div>
       </div>
@@ -2219,6 +2406,11 @@
           <a class="cfg-item" href="#motor" data-cfg="motor"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span class="cfg-rot">O motor do recorte</span></span></a>
           <a class="cfg-item" href="#fontes" data-cfg="fontes"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="cfg-rot">As fontes da peça</span></span></a>
           <a class="cfg-item" href="#pastas" data-cfg="pastas"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span class="cfg-rot">As pastas</span></span></a>
+          <!-- CONTAS E' A QUINTA PAGINA DESTE MENU, e nao uma aba nova no cabecalho. Ordem
+               dele em 04/09/2026: "e' tudo dentro da aba de configuracoes. La' dentro da
+               aba de configuracoes voce cria uma sub-aba." O `montar.py` nao muda, e o
+               cabecalho continua com as mesmas quatro abas (criterio 1 da espec). -->
+          <a class="cfg-item" href="#contas" data-cfg="contas"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="cfg-rot">Contas</span></span></a>
         </div>
       </div>
       <div class="cfg-menu-pe">
@@ -2472,6 +2664,56 @@
         </div>
       </div>
 
+      <!-- ............................................................. CONTAS
+           A SUB-ABA DAS CONTAS DESCARTAVEIS, na proposta 1 que ele escolheu em
+           05/09/2026: tres blocos numerados numa coluna, o cadastro numa janela.
+
+           OS TRES BLOCOS RESPONDEM AS TRES PERGUNTAS DELE, na ordem em que ele as fez:
+           "quando ta' conectado com o meu computador, quando nao esta'", "se aquelas
+           contas estao vinculadas ao meu IP residencial", e o que esta' acontecendo
+           agora. Ele pediu isso na tela justamente para nao ficar escondido no
+           back-end. -->
+      <div class="cfg-pagina" data-pg="contas">
+        <div class="cfg-pagina-cab">
+          <h2>Contas</h2>
+          <p>O seu computador, as contas descartáveis, e o que está acontecendo agora.</p>
+        </div>
+
+        <div class="caixa cta-bl">
+          <div class="cta-cab"><span class="cta-n">1</span><h3>O Seu Computador</h3>
+            <span class="cta-sub">a leitura logada roda lá, e não na casa</span></div>
+          <div class="pnt-linha" id="pnt_linha"></div>
+          <p class="nota" id="pnt_diz"></p>
+          <div class="pnt-instalar" id="pnt_instalar" hidden></div>
+        </div>
+
+        <div class="caixa cta-bl">
+          <div class="cta-cab"><span class="cta-n">2</span><h3>As Contas Descartáveis</h3>
+            <span class="cta-sub" id="cta_quantas"></span>
+            <button class="acao" id="cta_novo" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Cadastrar Uma Conta</button></div>
+          <p class="cta-mudou" id="cta_mudou" hidden></p>
+          <div class="cta-rolo" id="cta_rolo"></div>
+          <!-- O RECADO DO QUE ACABOU DE ACONTECER (o teste de uma conta, a conta
+               tirada). Ele fica VAZIO ate' haver o que dizer, e o `.pop-diz:empty`
+               ja' o esconde: linha de recado sempre presente cobra margem sem ter
+               texto, que e' a lei do `.rec-diz` da trava 35. -->
+          <div class="pop-diz" id="cta_recado"></div>
+          <div class="cta-pe" id="cta_pe" hidden>
+            <span class="cta-diz" id="cta_diz"></span>
+            <div class="cta-pag" id="cta_pag"></div>
+          </div>
+        </div>
+
+        <div class="caixa cta-bl">
+          <div class="cta-cab"><span class="cta-n">3</span><h3>O Que Está Acontecendo</h3>
+            <span class="cta-sub" id="cta_reg_sub">ao vivo, direto da sua máquina</span></div>
+          <div class="cta-log" id="cta_log"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -2518,6 +2760,113 @@
   <div class="pop-pe">
     <button class="acao" id="ch_provar" type="button">Provar</button>
     <button class="acao forte" id="ch_ok" type="button">Acrescentar</button>
+  </div>
+</div>
+
+
+<!-- ================================================ A JANELA DE CADASTRAR CONTA
+
+     ORDEM DELE, em 05/09/2026, olhando a proposta no ar: "gostei desse, porem nao gostei
+     do metodo de cadastrar conta, tem que abrir um pop-up, melhor, veja como e' feito no
+     postador, repositorio no github".
+
+     ELA E' O `.pop` DA CASA, E NAO UMA JANELA NOVA. A maquete desenhou a dela do zero,
+     copiando o molde do `publicador-dark`; trazer aquele desenho inteiro para ca' criaria
+     a SEGUNDA janela deste aplicativo, com a segunda animacao, o segundo Esc e o segundo
+     jeito de devolver o foco. O `.pop` ja' tem tudo isso e ja' carrega, no comentario da
+     janela da chave, a razao de morar FORA da secao da aba: `.aba` tem animacao com
+     transform, e elemento assim vira ancora de quem e' `position:fixed`.
+
+     O QUE VEIO DO POSTADOR foram as decisoes, e nao os pixels: cabeca, corpo e pe' fixos
+     com o miolo trocado a cada passo; a janela abrindo ANTES da resposta; o erro nascendo
+     junto do campo; e o passo 3 com DUAS caras, porque o desafio do Instagram pode ou nao
+     aparecer, e essa bifurcacao e' a coisa mais importante desta tela. -->
+<div class="pop-fundo" id="cta_fundo" hidden></div>
+<div class="pop cta-pop" id="cta_pop" hidden role="dialog" aria-modal="true"
+     aria-labelledby="cta_titulo">
+  <div class="pop-cab">
+    <span class="cta-av" id="cta_av"></span>
+    <span class="cta-quem"><b id="cta_titulo">Cadastrar Uma Conta</b>
+      <span id="cta_passo">passo 1 de 3</span></span>
+    <button class="gal-x" id="cta_x" type="button" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="pop-corpo" id="cta_corpo"></div>
+  <div class="pop-pe" id="cta_pe_pop"></div>
+</div>
+
+
+<!-- ================================================ O CADASTRO DE PADRÃO DE DESCRIÇÃO
+
+     ELE ABRIU O POP-UP DA MAQUETE EM 05/09/2026 E ACHOU UM FORMULÁRIO QUE SÓ SABIA
+     DESISTIR: "cadê o botão de salvar? cadê as variáveis? um glossário de variáveis?"
+
+     ENTÃO ELE TEM AS QUATRO PARTES que um cadastro precisa ter: o nome (senão o padrão não
+     tem como aparecer na lista da esquerda), o molde, o glossário das variáveis clicável, e
+     a prévia do que sai aplicado a uma peça de verdade. E ele SALVA, no acervo da casa.
+
+     É O `.pop` DA CASA, e não uma janela nova, pela mesma razão da janela de cadastrar
+     conta: o aplicativo já tem uma animação de entrada, um Esc e um jeito de devolver o
+     foco, e o segundo de cada um seria o segundo lugar para divergirem. -->
+<div class="pop-fundo" id="dp_fundo" hidden></div>
+<div class="pop dp-pop" id="dp_pop" hidden role="dialog" aria-modal="true"
+     aria-labelledby="dp_pop_tit">
+  <div class="pop-cab">
+    <b id="dp_pop_tit">Cadastrar Um Padrão</b>
+    <button class="gal-x" id="dp_pop_x" type="button" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="pop-corpo">
+    <p class="nota mini">O padrão fica guardado na casa e serve para qualquer leva, como o
+      template da aba A Marca. A leva só escolhe qual usar.</p>
+    <label class="cfg-campo">
+      <span>O nome do padrão</span>
+      <input id="dp_np_nome" type="text" autocomplete="off"
+             placeholder="Convite, Bastidor, Prova Social…">
+    </label>
+    <label class="cfg-campo">
+      <span>O molde</span>
+      <textarea id="dp_np_molde" class="dp-area" rows="6" spellcheck="false"
+        placeholder="Escreva o texto do post. Onde entrar uma variável, a peça preenche."
+      ></textarea>
+    </label>
+    <div id="dp_np_vars"></div>
+    <label class="cfg-campo">
+      <span>Tamanho máximo do texto da IA</span>
+      <input id="dp_np_limite" type="number" min="120" max="2200" step="10" value="500">
+    </label>
+    <div class="dp-rot">Como sai na peça 1</div>
+    <p class="dp-saiu" id="dp_np_saiu">Escreva o molde acima para ver a prévia.</p>
+    <div class="pop-diz erro" id="dp_np_erro" hidden>Dê um nome ao padrão e escreva o molde
+      antes de salvar.</div>
+  </div>
+  <div class="pop-pe">
+    <span class="nota mini">Ele entra no acervo da esquerda e já fica em uso nesta leva.</span>
+    <button class="acao" id="dp_np_cancelar" type="button">Cancelar</button>
+    <button class="acao forte" id="dp_np_salvar" type="button">Salvar O Padrão</button>
+  </div>
+</div>
+
+
+<!-- ================================================ A DESCRIÇÃO DE UMA PEÇA
+
+     A COLUNA DA DESCRIÇÃO NA LISTA DA ENTREGA É UM BOTÃO, e não texto, por ordem dele em
+     05/09/2026: "vai ter descrições que podem ser muito grandes, e aí, se colocar a
+     descrição aqui na tabela, vai ficar uma merda". O botão abre esta janela, e o que ela
+     mostra é exatamente o texto que vai para o documento no Drive. -->
+<div class="pop-fundo" id="ent_fundo" hidden></div>
+<div class="pop ent-pop" id="ent_pop" hidden role="dialog" aria-modal="true"
+     aria-labelledby="ent_pop_tit">
+  <div class="pop-cab">
+    <b id="ent_pop_tit">A Descrição</b>
+    <button class="gal-x" id="ent_pop_x" type="button" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="pop-corpo">
+    <p class="ent-pop-txt" id="ent_pop_txt"></p>
+    <div class="ent-pop-conta" id="ent_pop_conta"></div>
+  </div>
+  <div class="pop-pe">
+    <span class="nota mini">Este é o texto que vai para o documento, na mesma pasta do
+      vídeo.</span>
+    <button class="acao" id="ent_pop_fechar" type="button">Fechar</button>
   </div>
 </div>
 

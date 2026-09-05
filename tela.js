@@ -4539,8 +4539,12 @@ async function salvarRascunhoDeVerdade() {
     descricoes: Object.fromEntries(DESCRICOES),
     rodape: RODAPE == null ? RODAPE_PADRAO : RODAPE,
     // O TETO DA DESCRIÇÃO TAMBÉM É ESCOLHA DELE: sem esta linha, um F5 devolvia 500
-    // com ele trabalhando em outro número. Auditoria de 25/08/2026.
-    limite: Number(($("dsc_max") || {}).value) || 500,
+    // com ele trabalhando em outro número. Auditoria de 25/08/2026. Desde 05/09/2026 ele
+    // mora no PADRÃO, e a linha continua guardando o do padrão escolhido: rascunho velho,
+    // gravado antes dos padrões, reabre com o número dele e não com um 500 inventado.
+    limite: (padraoDaLeva() || {}).limite || 500,
+    // QUAL PADRÃO ESTA LEVA ESCOLHEU. Só o identificador; ver a nota do `PADRAO_ESCOLHIDO`.
+    padrao: PADRAO_ESCOLHIDO,
     subLeg: LEG_SUB,
     // O ENQUADRAMENTO E QUEM MEXEU. Mesma razao dos de cima: mora so' nesta aba ate'
     // o pedido de montagem sair, e um F5 no meio jogaria fora o trabalho de mao.
@@ -5078,7 +5082,12 @@ const ETAPAS_DO_TRILHO = [
   { n: 3, passo: 3, sub: 4 },   // As Frases  <- Escrita Das Frases
   { n: 4, passo: 3, sub: 6 },   // A Bancada  <- Revisao Peca A Peca
   { n: 5, passo: 3, sub: 5 },   // Fabricar   <- Fabricar As Pecas
-  { n: 6, passo: 4, sub: null }, // A Entrega <- Legenda E Entrega
+  // A SEXTA VIROU DUAS EM 05/09/2026, por ordem dele. O `sub` daqui e' o do PASSO 4, que e'
+  // outra contagem: 1 e' a descricao e 2 e' o envio, desde 26/08/2026. Quem le' este campo
+  // precisa olhar o `passo` junto, e e' por isso que o `pintarOTrilho` deixou de perguntar
+  // `podeIrAoSub` cru: sub 1 do passo 4 nao e' sub 1 do passo 3.
+  { n: 6, passo: 4, sub: 1 },   // Descricao Do Post <- Legenda E Entrega, 4.1
+  { n: 7, passo: 4, sub: 2 },   // A Entrega         <- Legenda E Entrega, 4.2
 ];
 
 /* EM QUE ABA ELE ESTA', a partir do par gravado. O passo 2 (o Recorte) nao tem aba desde
@@ -5087,7 +5096,8 @@ const ETAPAS_DO_TRILHO = [
    la'. */
 function etapaDeAgora() {
   if (EDIT_PASSO === 1 || EDIT_PASSO === 2) return 1;
-  if (EDIT_PASSO === 4) return 6;
+  // O PASSO 4 TEM DUAS ABAS DESDE 05/09/2026, e a acesa e' a metade em que ele esta'.
+  if (EDIT_PASSO === 4) return LEG_SUB === 2 ? 7 : 6;
   const e = ETAPAS_DO_TRILHO.find(x => x.passo === 3 && x.sub === TPL_SUB);
   return e ? e.n : 2;
 }
@@ -5108,7 +5118,13 @@ function pintarOTrilho() {
     // devolve `false` desde 26/08/2026 sem dizer nada a ninguem: com a sub-lista dava
     // para adivinhar, com a tira de abas vira um botao do tamanho dos outros que nao faz
     // nada quando clicado, que e' a queixa dele sobre o passo 4.
-    const sub = p.dataset.sub ? Number(p.dataset.sub) : null;
+    /* O `data-sub` SO' VALE JUNTO COM O `data-passo` (05/09/2026), e ate' aqui era lido
+       sozinho. As duas contagens sao diferentes: no passo 3 o sub 1 e' A Marca e o 4 sao
+       As Frases; no passo 4 o sub 1 e' a descricao e o 2 e' o envio. Enquanto a aba do
+       passo 4 nao tinha sub nenhuma isso passava; com a aba nova, ler o campo cru mandaria
+       `podeIrAoSub(1)` perguntar pela Marca para decidir se a Descricao abre. */
+    const passo = Number(p.dataset.passo);
+    const sub = (passo === 3 && p.dataset.sub) ? Number(p.dataset.sub) : null;
     /* A ENTREGA TAMBEM TRANCA, e ate' 04/09/2026 ela era a UNICA que nunca trancava.
        Medido: com a leva aberta, a medida cumprida e nenhuma conta escolhida, a tira
        devolvia 1 e 2 livres, 3, 4 e 5 trancadas com opacidade 0,42, e a 6 LIVRE. O clique
@@ -5118,8 +5134,9 @@ function pintarOTrilho() {
        passo 4 e nao tem sub nenhuma, entao a terceira parcela virava `false` e so' a falta
        de leva ou de medida a fechava. So' que A Entrega vem DEPOIS de Fabricar no caminho,
        e por isso ela tem de estar pelo menos tao fechada quanto ele: quem nao pode
-       fabricar nao tem o que entregar. */
-    const trancaDaEntrega = !p.dataset.sub && q > 2 && !podeIrAoSub(5);
+       fabricar nao tem o que entregar. A REGRA VALE PARA AS DUAS ABAS DO PASSO 4, e nao
+       so' para a ultima: descricao sem peca fabricada nao tem sobre o que escrever. */
+    const trancaDaEntrega = passo === 4 && q > 2 && !podeIrAoSub(5);
     const trancada = (q > 1 && !EDIT_LEVA) || (q > 1 && !RECORTADO)
       || (sub ? !podeIrAoSub(sub) : trancaDaEntrega);
     p.classList.toggle("travado", trancada);
@@ -5141,6 +5158,12 @@ function irParaPasso(n, sub) {
      primeiro a fase anterior (acendendo o video da Bancada, por exemplo) e so' depois
      trocaria de novo. Duas entradas para um clique. */
   if (n === 3 && sub && podeIrAoSub(sub)) TPL_SUB = sub;
+  /* E A METADE DO PASSO 4 SE CRAVA AQUI, pelo mesmo motivo e na mesma ordem (05/09/2026).
+     `entrarNaLegenda` termina em `irParaSubLeg(LEG_SUB || 1)`: sem cravar antes, clicar em
+     A Entrega abriria a Descricao primeiro, porque `LEG_SUB` ainda seria a de ontem. E a
+     linha vem antes do `pintarOTrilho` porque e' o `LEG_SUB` que diz qual das duas abas
+     acende. */
+  if (n === 4 && (sub === 1 || sub === 2)) LEG_SUB = sub;
   pintarOTrilho();
   document.querySelectorAll(".ed-etapa").forEach(s =>
     s.hidden = Number(s.dataset.passo) !== n);
@@ -5232,7 +5255,9 @@ document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
     /* E A ABA TRANCADA PELA FALTA DE CONTA TAMBÉM EXPLICA. Sem conta escolhida, as abas
        da Bancada, das Frases e do Fabricar estão fechadas, e até 03/09/2026 elas fechavam
        sem dizer uma palavra. */
-    if (e.sub && !podeIrAoSub(e.sub)) {
+    // O SUB SO' SE PERGUNTA PARA O PASSO 3 (05/09/2026): a contagem do passo 4 e' outra,
+    // e perguntar `podeIrAoSub(1)` para a aba da Descricao responderia pela Marca.
+    if (n === 3 && e.sub && !podeIrAoSub(e.sub)) {
       MP_RECADO_FORCADO = "escolha a conta desta leva primeiro: as frases, a bancada e a "
         + "fabricação trabalham em cima da variação que ela define.";
       irParaPasso(3, 1);
@@ -8830,6 +8855,10 @@ function irParaCfg(pg) {
     a.classList.toggle("cfg-ativo", a.dataset.cfg === pg));
   if (pg === "fontes") desenhaAsFontes();
   if (pg === "pastas") desenhaAsPastas();
+  // A SUB-ABA CONTAS (espec cd-3-aba). Esta e' a UNICA linha minha nesta funcao:
+  // o bloco inteiro dela nasce no FIM do arquivo, porque o meio esta' com outra
+  // sessao e trezentas linhas ali seriam conflito que ninguem resolve lendo.
+  if (pg === "contas") desenhaSubAbaContas();
   if (pg === "motor") desenhaOMotor();
 }
 document.querySelectorAll("#aba-config .cfg-item").forEach(a => {
@@ -8971,6 +9000,23 @@ let PRONTAS = new Set();
 
 let AJ_I = 0;                     // qual peca esta' aberta na fase 5
 let AJ_SEL = null;                // qual item do molde esta' escolhido
+/* EM QUAL CAIXA DE TEXTO O CARTAO DA FONTE MEXE (05/09/2026), e por que ele NAO e' o
+   `AJ_SEL`.
+
+   O PEDIDO DELE ERA SO' SOBRE A FONTE: "cliquei na fonte la' na marca, voltei pra bancada e
+   agora a fonte apareceu", e "nao vi nenhum botao pra trocar a fonte pra todos". A primeira
+   versao do conserto resolveu isso escolhendo a primeira caixa NO `AJ_SEL`, e as provas
+   mostraram o preco: `AJ_SEL` nao manda so' na fonte. Ele manda na moldura de alcas
+   desenhada em cima da peca, no bloco "Tamanho E Posicao" (que passou a nascer aberto), e
+   na filmagem, que deixou de poder ser escolhida porque a caixa de texto tomava o lugar
+   dela a cada repintura. Quatro provas cairam de uma vez.
+
+   ENTAO SAO DUAS PERGUNTAS DIFERENTES, e agora tem duas respostas: "o que esta' escolhido
+   na peca" continua sendo `AJ_SEL`, e nasce vazio como sempre; "em qual caixa a fonte
+   mexe" e' este, e nasce na primeira caixa de texto da peca. Escolher uma caixa na peca
+   traz a fonte junto; escolher a filmagem nao mexe na fonte, porque filmagem nao tem
+   letra. A tela aprovada continua igual, e o que ele pediu passou a funcionar. */
+let AJ_FONTE_ALVO = null;
 let AJ_VIVO = null;               // o UNICO video aberto nesta fase
 /* AS TRES FUNCOES ABAIXO FICARAM ORFAS EM 03/09/2026, e ficam de pe' com o aviso.
 
@@ -10442,11 +10488,35 @@ function desenhaAjustePainel() {
   // texto e' a faixa da variacao, e ela nasce por peca. Lendo `TPL.elementos` esta
   // lista ficava vazia para sempre e a troca de fonte na revisao morria junto.
   const textos = elementosDaPeca(p.nome).filter(e => e.tipo === "texto");
+  /* A CAIXA NASCE ESCOLHIDA (05/09/2026), e ate' aqui nao nascia.
+
+     O QUE ELE VIU: "cliquei na fonte la' na marca, voltei pra bancada e agora a fonte
+     apareceu". Nao era a aba A Marca destravando nada. `AJ_SEL` nasce nulo, e a lista de
+     fontes e' escondida por `$("aj_fonte").hidden = !alvo` logo abaixo: entrar na Bancada
+     mostrava os TRES filtros e a busca por cima de uma lista que nao estava la'. Medido:
+     a caixa da lista em zero por zero com trinta e uma fontes dentro dela. Passar por A
+     Marca clicava numa caixa de texto por acidente e escolhia o alvo de lambuja.
+
+     ELE VIU TAMBEM O QUE FALTAVA: "nao vi nenhum botao pra trocar a fonte pra todos". O
+     botao ja' existia; nascia DESLIGADO pela mesma razao, e por isso ele nunca o achou.
+
+     AS DUAS LINHAS TAMBEM CURAM A TROCA DE PECA: o alvo guarda um id, e o id da peca
+     anterior nao existe na proxima. Sem elas, andar na fila apagaria a lista de novo a cada
+     peca cuja caixa tenha outro id. Peca sem caixa de texto continua sem alvo, e o recado
+     continua sendo dito: aqui nao se inventa alvo, so' se escolhe o primeiro que ha'.
+
+     E O ALVO DA FONTE NAO E' O `AJ_SEL`: ver a nota na declaracao do `AJ_FONTE_ALVO`.
+     Escolher uma caixa NA PECA traz a fonte junto, que e' o gesto natural; escolher a
+     filmagem nao mexe na fonte, porque filmagem nao tem letra. */
+  if (AJ_SEL && textos.some(e => e.id === AJ_SEL)) AJ_FONTE_ALVO = AJ_SEL;
+  if (!textos.some(e => e.id === AJ_FONTE_ALVO)) {
+    AJ_FONTE_ALVO = textos.length ? textos[0].id : null;
+  }
   $("aj_fonte_alvo").innerHTML = textos.map(e =>
-    `<button type="button" class="aj-alvo${e.id === AJ_SEL ? " sel" : ""}" `
+    `<button type="button" class="aj-alvo${e.id === AJ_FONTE_ALVO ? " sel" : ""}" `
     + `data-el="${e.id}">`
     + escapa((textoDaPeca(e, p.nome) || "caixa de texto").slice(0, 20)) + "</button>").join("");
-  const alvo = textos.find(e => e.id === AJ_SEL);
+  const alvo = textos.find(e => e.id === AJ_FONTE_ALVO);
   $("aj_fonte_sem").hidden = !!alvo;
   $("aj_fonte").hidden = !alvo;
   $("aj_fonte_todas").disabled = !alvo;
@@ -10791,7 +10861,10 @@ $("aj_alinha").onclick = ev => {
   if (!b) return;
   const p = pecas3()[AJ_I];
   if (!p) return;
-  const alvo = elementosDaPeca(p.nome).find(e => e.id === AJ_SEL && e.tipo === "texto");
+  // O ALINHAMENTO MORA NA LINHA DA FRASE e vale para a MESMA caixa que a fonte: os dois
+  // sao decisoes sobre a letra, e ler alvos diferentes faria um deles agir noutra caixa.
+  const alvo = elementosDaPeca(p.nome).find(
+    e => e.id === AJ_FONTE_ALVO && e.tipo === "texto");
   if (!alvo || medidaDaPeca(alvo, p.nome).alinha === b.dataset.a) return;
   guardarOGesto();
   mexerItem(p.nome, alvo, "alinha", b.dataset.a);
@@ -11045,7 +11118,9 @@ $("aj_fonte").onclick = ev => {
   }
   const b = ev.target.closest("[data-f]");
   if (!b || !p) return;
-  const alvo = elementoDaPeca(p.nome, AJ_SEL);
+  // A FONTE MEXE NA CAIXA DA FONTE, e nao no que esta' escolhido na peca: com a filmagem
+  // escolhida, `AJ_SEL` e' `_broll` e nao ha' letra nenhuma para trocar.
+  const alvo = elementoDaPeca(p.nome, AJ_FONTE_ALVO);
   if (!alvo) return;
   guardarOGesto();
   mexerItem(p.nome, alvo, "fonte", b.dataset.f);
@@ -11369,9 +11444,13 @@ function largarOArrasto() {
 $("aj_tela").addEventListener("pointerup", largarOArrasto);
 $("aj_tela").addEventListener("pointercancel", largarOArrasto);
 
+/* CLICAR NA PILULA DA CAIXA ESCOLHE AS DUAS COISAS, e isso e' de proposito: aqui ele
+   apontou para uma caixa de texto com o dedo, entao ela vira a caixa da fonte E a caixa
+   escolhida na peca. E' o unico lugar em que as duas andam juntas por escolha dele. */
 $("aj_fonte_alvo").addEventListener("click", ev => {
   const b = ev.target.closest("[data-el]");
   if (!b) return;
+  AJ_FONTE_ALVO = b.dataset.el;
   AJ_SEL = b.dataset.el;
   marcarEscolhido();
   desenhaAjustePainel();
@@ -11379,7 +11458,7 @@ $("aj_fonte_alvo").addEventListener("click", ev => {
 
 $("aj_fonte_todas").onclick = () => {
   const p = pecas3()[AJ_I];
-  const el = p ? elementoDaPeca(p.nome, AJ_SEL) : null;
+  const el = p ? elementoDaPeca(p.nome, AJ_FONTE_ALVO) : null;
   if (!p || !el) return;
   const fonte = medidaDaPeca(el, p.nome).fonte;
   let n = 0;
@@ -11706,6 +11785,9 @@ function desenhaSubTrilho() {
   if (b && EDIT_PASSO === 3) {
     b.style.height = ((POSICAO_DA_SUB[TPL_SUB] || 0) / 3 * 100) + "%";
   }
+  // A CONFERÊNCIA CORRE JUNTO COM O RESUMO, que é a função chamada toda vez que a escrita
+  // anda: assim o portão responde na mesma pintura em que a contagem muda.
+  conferirAEscritaDasFrases();
 }
 
 /* O REGISTRO DE CLIQUE DA SUB-LISTA SAIU JUNTO COM ELA, em 03/09/2026. Quem leva de uma
@@ -11713,6 +11795,105 @@ function desenhaSubTrilho() {
 // O AVANCAR DAS FRASES LEVA A' BANCADA, e nao ao Fabricar. Trocado em 04/09/2026 junto
 // com o numero das abas 3 e 4: medido, ele pulava a Bancada inteira e caia na sub 5.
 $("ed_vai_ajuste").onclick = () => irParaSub(6);
+
+/* O QUE E' ESCRITA QUEBRADA, e a lista nao e' de gosto: e' o rastro que uma codificacao
+   errada deixa. Ela mora AQUI, e nao la' embaixo com a Descricao, porque as DUAS pontas
+   a usam e esta e' a primeira: constante `const` so' existe depois que a linha dela roda,
+   e a conferencia das frases roda na pintura da tira, que acontece antes.
+
+   E E' UMA SO' PARA AS DUAS PONTAS. Duas conferencias parecidas divergem no primeiro
+   sinal novo, e a divergencia aparece como uma delas deixando passar. */
+const SINAIS_DIFICEIS = [
+  ["emoji", /\p{Extended_Pictographic}/gu],
+  ["seta", /[←-⇿➔-➿]/g],
+  ["acento", /[À-ɏ]/g],
+  ["aspa curva", /[‘’“”]/g],
+  ["sinal", /[–—•·…€©®™]/g],
+];
+const MOJIBAKE = /Ã[-¿]|â€[¦]|Â[ -¿]/;
+
+/** Devolve {sinais:{nome:quantos}, quebradas:[{quem,motivo}], total, sobreviveram}. */
+function conferirAEscrita(textos) {
+  const sinais = {}, quebradas = [];
+  for (const [nome] of SINAIS_DIFICEIS) sinais[nome] = 0;
+  let total = 0;
+  for (const [quem, bruto] of textos) {
+    const t = String(bruto == null ? "" : bruto);
+    if (!t.trim()) continue;
+    total++;
+    for (const [nome, re] of SINAIS_DIFICEIS) {
+      re.lastIndex = 0;
+      const achados = t.match(re);
+      if (achados) sinais[nome] += achados.length;
+    }
+    let motivo = "";
+    if (t.includes("�")) motivo = "tem o losango de interrogação, que é o sinal de "
+      + "letra que o navegador não soube ler";
+    else if (MOJIBAKE.test(t)) motivo = "a acentuação chegou trocada (o Ã no lugar do "
+      + "ç e da ã), que é texto lido com a codificação errada";
+    // O PAR PERDIDO: um pedaço de emoji sem o outro. `\uD800-\uDBFF` é a primeira metade
+    // e `\uDC00-\uDFFF` a segunda; sozinhas, nenhuma das duas se desenha.
+    else if (/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/
+             .test(t)) motivo = "tem metade de um emoji, sem o par que o completa";
+    if (motivo) quebradas.push({ quem: quem, motivo: motivo });
+  }
+  return { sinais: sinais, quebradas: quebradas, total: total,
+           sobreviveram: total - quebradas.length };
+}
+
+/* ============================================== A CONFERENCIA DA ESCRITA DAS FRASES
+   (05/09/2026)
+
+   ORDEM DELE: "entre as etapas de as frases e a bancada tem que ter um sistema que vai
+   validar a questao da descricao, pra ver se as letras nao estao quebradas, pra ver se as
+   letras foram bem implementadas".
+
+   POR QUE AQUI E' O LUGAR: a frase entra na PECA, e peca fabricada com o losango no lugar
+   do "ç" e' peca refeita, com o tempo de montagem pago de novo. Depois da Bancada ele ja'
+   assinou; depois do Fabricar o video ja' esta' gravado. Este e' o ultimo ponto em que
+   consertar custa uma tecla.
+
+   ELA USA A MESMA `conferirAEscrita` DA OUTRA PONTA, e nao uma copia: duas conferencias
+   parecidas divergiriam no primeiro sinal novo, e uma delas deixaria passar. */
+function conferirAEscritaDasFrases() {
+  const caixa = $("fr_conf");
+  if (!caixa) return { quebradas: [] };
+  const campos = abertas();
+  const pares = [];
+  if (campos.length) {
+    for (const p of pecas3()) {
+      const g = ESCRITO.get(p.nome) || {};
+      const junto = campos.map(c => g[c.id] || "").join("\n").trim();
+      if (junto) pares.push(["peça " + (pecas3().indexOf(p) + 1), junto]);
+    }
+  }
+  const r = conferirAEscrita(pares);
+  caixa.hidden = !pares.length;
+  const pino = $("fr_conf_pino");
+  pino.className = "pino" + (r.quebradas.length ? "" : " ok");
+  pino.textContent = r.quebradas.length
+    ? (r.quebradas.length === 1 ? "1 quebrada" : r.quebradas.length + " quebradas")
+    : "conferido";
+  $("fr_conf_txt").textContent = r.quebradas.length
+    ? "Estas frases entrariam quebradas na peça. Mande escrever de novo, ou corrija cada "
+      + "uma na Bancada, no cartão A Frase Desta Peça."
+    : num(r.sobreviveram) + " de " + num(r.total) + " frases passaram inteiras: nenhum "
+      + "sinal chegou quebrado.";
+  $("fr_conf_contas").innerHTML = SINAIS_DIFICEIS.map(([nome]) =>
+    `<span>${escapar(nome)}: <b>${num(r.sinais[nome])}</b></span>`).join("")
+    + `<span>inteiras: <b>${num(r.sobreviveram)}</b> de ${num(r.total)}</span>`;
+  $("fr_conf_quebradas").innerHTML = r.quebradas.slice(0, 12).map(q =>
+    `<div class="cf-q"><b>${escapar(q.quem)}</b><span>${escapar(q.motivo)}</span></div>`)
+    .join("");
+  /* O PORTAO: frase quebrada tranca o caminho para A Bancada. A ABA DA TIRA CONTINUA
+     CLICAVEL de proposito, porque e' na Bancada que ele conserta a frase: trancar as duas
+     coisas o deixaria com o defeito na tela e sem porta para arrumar. O que este botao
+     impede e' seguir SEM OLHAR. */
+  $("ed_vai_ajuste").disabled = r.quebradas.length > 0;
+  $("ed_vai_ajuste").title = r.quebradas.length
+    ? "Corrija as frases quebradas na Bancada antes de seguir." : "";
+  return r;
+}
 // O VOLTAR DA ESCRITA LEVA AO MODELO. Ele levava a's Imagens Do Template, que nao
 // existem mais, e desde a excisao era um botao que nao fazia nada.
 $("ed_volta_imagens").onclick = () => irParaSub(1);
@@ -11837,7 +12018,10 @@ async function tentarRetomar() {
   DESCRICOES.clear();
   for (const [k, v] of Object.entries(r.descricoes || {})) DESCRICOES.set(k, v);
   RODAPE = r.rodape != null ? r.rodape : RODAPE_PADRAO;
-  if ($("dsc_max")) $("dsc_max").value = r.limite || 500;
+  // O PADRÃO ESCOLHIDO VOLTA COM A LEVA. Rascunho gravado antes de 05/09/2026 não tem o
+  // campo, e a resposta certa é vazio: a tela cai no primeiro padrão da lista, que é o
+  // mesmo comportamento de quem nunca escolheu.
+  PADRAO_ESCOLHIDO = r.padrao || "";
   LEG_SUB = Math.min(2, Math.max(1, r.subLeg || 1));
   // RASCUNHO VELHO NAO TEM ESTE CAMPO, e a lista vazia e' a resposta certa: nenhuma
   // peca foi dada por pronta porque a fase de dar por pronta nao existia ainda.
@@ -13858,6 +14042,11 @@ let DESCRICOES = new Map();        // arquivo -> a descrição pronta do post
 let ORIGEM_DA_PECA = new Map();    // arquivo -> { legenda, endereco } do post original
 let ORIGEM_FALHOU = "";            // o motivo, quando a leitura do _lote.json falhou
 let RODAPE = null;                 // o fecho que vai em todas; null = ainda não lido
+/* QUAL PADRÃO DE DESCRIÇÃO ESTA LEVA ESCOLHEU (05/09/2026). Só o identificador: o molde
+   mora no acervo da casa, e guardar uma cópia dele aqui faria cada leva ter a sua, com a
+   correção de hoje valendo só para a leva de hoje. É a mesma divisão da aba A Marca: o
+   template é do acervo, a escolha é da leva. */
+let PADRAO_ESCOLHIDO = "";
 let DSC_OBRA = null;               // o pedido de escrita das descrições, em curso
 let ENT_OBRA = null;               // o pedido de entrega, em curso
 let ENTREGUE = null;               // o que a entrega devolveu, quando terminou
@@ -14107,14 +14296,27 @@ function desenhaSubTrilho4() {
   const total = pecasDaEntrega().length;
   // "ENTREGUE" NO TRILHO SÓ COM A CONFERÊNCIA DO DRIVE; só empacotar diz "empacotada",
   // que é o que foi medido. Auditoria de 25/08/2026.
+  /* AS DUAS LINHAS DE ESTADO SAO DUAS DESDE 05/09/2026, e cada aba diz o que e' dela.
+     Ate' aqui uma frase so' contava as descricoes E o envio ("120 de 180 descritas" numa
+     aba chamada A Entrega), porque as duas telas dividiam uma aba. Com a tira separada,
+     a Descricao conta descricao e A Entrega conta entrega. */
+  const r6 = $("ed_r6");
+  if (r6) r6.textContent = total ? `${prontas} de ${total} escritas`
+                                 : "depois da montagem";
   $("ed_r4").textContent = ENTREGUE
     ? (ENTREGUE.verificado ? "entregue" : "empacotada, sem subir")
     : total ? `${prontas} de ${total} descritas` : "depois da montagem";
-  const b = document.querySelector('#ed_trilho .ed-ponto[data-passo="4"] .ed-barra b');
-  if (b && EDIT_PASSO === 4) {
-    b.style.height = (ENTREGUE && ENTREGUE.verificado)
-      ? "100%" : ((LEG_SUB - 1) * 50) + "%";
-  }
+  /* A BARRINHA DE CADA ABA MEDE A ABA, e nao o passo inteiro. O seletor antigo pegava
+     `[data-passo="4"]` e devolvia o PRIMEIRO, que agora e' a Descricao: sem esta troca, o
+     progresso da entrega ia pintar a barra da aba errada, calado. */
+  const barraDe = (etapa, quanto) => {
+    const b = document.querySelector(
+      `#ed_trilho .ed-ponto[data-etapa="${etapa}"] .ed-barra b`);
+    if (b && EDIT_PASSO === 4) b.style.height = quanto;
+  };
+  barraDe(6, total && prontas >= total ? "100%" : total ? "50%" : "0%");
+  barraDe(7, (ENTREGUE && ENTREGUE.verificado) ? "100%"
+             : (ENTREGUE ? "50%" : "0%"));
 }
 
 /* O REGISTRO DE CLIQUE DA SUB-LISTA DA ENTREGA SAIU JUNTO COM ELA. As duas telas se
@@ -14152,10 +14354,16 @@ async function entrarNasDescricoes() {
       + ". Recarregue a página e tente de novo.</p>";
   }
   $("dsc_sem_chave").hidden = !(comOrigem && !temChave);
-  $("dsc_corpo").hidden = !(comOrigem && temChave);
-  if ($("dsc_rodape").value !== (RODAPE == null ? RODAPE_PADRAO : RODAPE)) {
-    $("dsc_rodape").value = RODAPE == null ? RODAPE_PADRAO : RODAPE;
-  }
+  /* O ACERVO DE PADRÕES APARECE SEM CHAVE (05/09/2026), e o corpo dependia dela.
+     Escolher e cadastrar padrão é trabalho que não gasta cota nenhuma, e é justamente o que
+     ele faria ANTES de configurar a IA: esconder tudo por falta de chave era mandar
+     configurar primeiro para só então descobrir o que a tela faz. O que a chave tranca é
+     ESCREVER, e quem tranca isso é o botão. */
+  $("dsc_corpo").hidden = !comOrigem;
+  // O ACERVO DE PADRÕES E A PRÉVIA, que é a tela aprovada. Ela se pinta inteira aqui
+  // porque o acervo pode ter mudado noutra aba desde a última vez.
+  pintarOAcervoDePadroes();
+  pintarAPrevia(0);
   // O MESMO NOME QUE A FASE 3 MOSTRA, pela mesma função. Dois jeitos de escrever o nome
   // do mesmo serviço na mesma tela é duas verdades sobre quem está trabalhando.
   if (temChave) {
@@ -14176,15 +14384,27 @@ function contaDescricoes() {
   $("dsc_conta").innerHTML = total
     ? `<b>${num(prontas)}</b> de ${num(total)} descritas`
     : "nenhuma peça montada ainda";
-  $("dsc_escrever").disabled = !!DSC_OBRA || prontas === total || !total;
-  $("dsc_escrever").textContent = !total ? "Nada para escrever"
-    : prontas === total ? "Todas escritas"
-    : prontas ? (total - prontas === 1 ? "Escrever a que falta"
-                 : `Escrever as ${num(total - prontas)} que faltam`)
-    : "Escrever as descrições";
+  // SEM CHAVE VIVA NÃO HÁ QUEM ESCREVA, e o botão tem de dizer isso desligado em vez de
+  // deixar ele clicar e o pedido voltar vazio. Antes de 05/09/2026 quem impedia era o corpo
+  // inteiro escondido; agora o corpo aparece e a trava mora no botão, que é onde ela cabe.
+  const temQuemEscreva = (IA.chaves || []).some(c => c.chave && !estaEsgotada(c));
+  $("dsc_escrever").disabled = !!DSC_OBRA || prontas === total || !total
+    || !temQuemEscreva;
+  // TODA PALAVRA DE TELA COMEÇA COM MAIÚSCULA, que é a lei da casa e vale para o rótulo de
+  // botão também: ao lado de "Ir Para A Entrega", um "Escrever as descrições" em caixa
+  // baixa parece texto solto e não controle.
+  $("dsc_escrever").textContent = !total ? "Nada Para Escrever"
+    : prontas === total ? "Todas Escritas"
+    : prontas ? (total - prontas === 1 ? "Escrever A Que Falta"
+                 : `Escrever As ${num(total - prontas)} Que Faltam`)
+    : `Escrever As ${num(total)} Descrições`;
   $("dsc_apagar").hidden = !prontas;
-  $("dsc_vai_entrega").disabled = !total;
+  /* QUEM DESTRAVA O CAMINHO PARA A ENTREGA É A CONFERÊNCIA, e não a contagem (05/09/2026).
+     Esta linha dizia só `!total`, e por isso 180 descrições com emoji quebrado passavam
+     direto. A conferência escreve o `disabled` DEPOIS desta função, e por isso ela é
+     chamada aqui no fim: escrever nas duas ordens invertidas deixaria a última a falar. */
   desenhaSubTrilho4();
+  conferirAEscritaDasDescricoes();
 }
 
 /* O QUE ELA ESCREVEU, ABERTO PARA ELE LER E MEXER.
@@ -14253,10 +14473,286 @@ $("dsc_lista").addEventListener("input", ev => {
   anotarMexida();
 });
 
-$("dsc_rodape").addEventListener("input", () => {
-  RODAPE = $("dsc_rodape").value;
-  anotarMexida();
+/* ======================================================= OS PADRÕES DE DESCRIÇÃO
+   (05/09/2026)
+
+   O QUE ELE PEDIU, com todas as letras: "eu vou cadastrar alguns padrões. Então olha, você
+   pode seguir esse padrão aqui de descrição, ou esse outro. E aí eu escolho o padrão de
+   descrição, e ele vai replicar e fazer as alterações em cima desse padrão de descrição."
+   E deu a comparação: "uma lógica parecida com a lógica de marca".
+
+   ENTÃO ELES MORAM ONDE OS TEMPLATES MORAM: no acervo da casa, e não no rascunho da leva.
+   Cadastra uma vez, serve para qualquer leva; a leva só guarda QUAL escolheu. Guardar o
+   molde dentro do rascunho faria cada leva ter a sua cópia, e mudar o padrão obrigaria a
+   mudar leva por leva, que é o oposto de cadastrar.
+
+   OS TRÊS DE FÁBRICA NÃO SE GRAVAM. Eles existem para a tela nunca abrir vazia (que é o que
+   ele veria na primeira leva depois desta mudança), e o acervo só passa a ter padrão dele
+   quando ele salvar um. Gravar os três na primeira abertura encheria a casa de coisa que
+   ninguém pediu, e ele teria de apagar três antes de cadastrar o primeiro. */
+const PADROES_DE_FABRICA = [
+  { id: "pd-direto", nome: "Direto",
+    diz: "O texto adaptado, o arroba e três marcações.",
+    molde: "{texto}\n\n@{conta}\n\n#mentalidade #negocios #empreender", limite: 500 },
+  { id: "pd-convite", nome: "Com Convite",
+    diz: "O texto, o convite para seguir e o arroba.",
+    molde: "{texto}\n\n" + RODAPE_PADRAO + "\n\n@{conta}", limite: 500 },
+  { id: "pd-frase", nome: "A Frase Em Cima",
+    diz: "Abre com a frase que foi para a peça, depois o texto adaptado.",
+    molde: "{frase}\n\n{texto}\n\n@{conta}", limite: 420 },
+];
+
+/* AS VARIÁVEIS, E O QUE CADA UMA VALE. Ele cobriu isto no pop-up: "cadê as variáveis? um
+   glossário de variáveis?" A lista é uma só, e o cadastro e a edição no lugar leem dela:
+   duas listas divergiriam na primeira variável nova. */
+const VARIAVEIS_DA_DESCRICAO = [
+  ["{texto}", "O texto que a inteligência escreveu adaptando a legenda original do post."],
+  ["{frase}", "A frase que foi escrita na peça, a mesma que aparece no vídeo."],
+  ["{frase_min}", "A mesma frase começando em minúscula, para entrar no meio de outra."],
+  ["{conta}", "O arroba da conta desta leva."],
+  ["{n}", "O número da peça dentro da leva."],
+  ["{leva}", "O número da leva."],
+];
+
+/* OS DA CASA E OS DELE, NESTA ORDEM, e nunca só os dele.
+   A primeira versão trocava um pelo outro: cadastrar o primeiro padrão fazia os três de
+   fábrica sumirem da lista, e ele perderia sem aviso três moldes que estava usando. É a
+   mesma regra das fontes da casa, que continuam na lista depois que ele sobe a dele. */
+function padroesDeDescricao() {
+  const meus = (ACERVO.itens || []).filter(
+    x => x && x.tipo === "padrao-descricao" && x.molde);
+  return PADROES_DE_FABRICA.concat(meus);
+}
+
+/** O padrão escolhido NESTA leva. Sem escolha, o primeiro da lista. */
+function padraoDaLeva() {
+  const lista = padroesDeDescricao();
+  return lista.find(p => p.id === PADRAO_ESCOLHIDO) || lista[0];
+}
+
+/* O MOLDE APLICADO A UMA PEÇA. A mesma conta roda em dois lugares e isso é de propósito:
+   AQUI, para a prévia mostrar o que vai sair antes de gastar cota, e no `oficina.py`, que é
+   quem escreve de verdade. A prova `descricao` compara as duas saídas com o mesmo molde,
+   porque duas contas parecidas divergem na primeira variável nova. */
+function aplicarMolde(molde, d) {
+  const frase = String(d.frase || "");
+  const min = frase ? frase.charAt(0).toLowerCase() + frase.slice(1) : "";
+  return String(molde || "")
+    .replace(/\{texto\}/g, String(d.texto || ""))
+    .replace(/\{frase_min\}/g, min)
+    .replace(/\{frase\}/g, frase)
+    .replace(/\{conta\}/g, String(d.conta || ""))
+    .replace(/\{n\}/g, String(d.n || ""))
+    .replace(/\{leva\}/g, String(d.leva || ""));
+}
+
+/** A conta da peça: número, frase, conta e leva, do jeito que o molde as pede. */
+function dadosDaPeca(arquivo, texto) {
+  const ordem = pecasDaEntrega();
+  const i = ordem.indexOf(arquivo);
+  const escrito = (typeof ESCRITO !== "undefined" && ESCRITO.get(arquivo)) || {};
+  const frase = escrito[ID_DA_FRASE] || Object.values(escrito)[0] || "";
+  const contas = (EDIT_LEVA && EDIT_LEVA.contas) || [];
+  return { texto: texto == null ? "" : texto, frase: frase,
+           conta: contas[0] || "", n: String(i < 0 ? 1 : i + 1),
+           leva: EDIT_LEVA ? String(EDIT_LEVA.numero) : "" };
+}
+
+/* O GLOSSÁRIO, e ele é CLICÁVEL. Uma lista de nomes que ele teria de copiar à mão seria
+   meia ajuda: clicar insere a variável no lugar do cursor, que é onde ele estava
+   escrevendo. Inserir no fim do texto obrigaria a recortar e colar toda vez. */
+function glossarioDeVariaveis(alvo) {
+  return '<div class="dp-vars"><span class="rot">As variáveis</span>'
+    + VARIAVEIS_DA_DESCRICAO.map(([v, diz]) =>
+      `<button type="button" class="dp-var" data-var="${escapar(v)}" `
+      + `data-alvo="${escapar(alvo)}"><code>${escapar(v)}</code>`
+      + `<span>${escapar(diz)}</span></button>`).join("")
+    + "</div>";
+}
+
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-var][data-alvo]");
+  if (!b) return;
+  const campo = $(b.dataset.alvo);
+  if (!campo) return;
+  const i = campo.selectionStart == null ? campo.value.length : campo.selectionStart;
+  const f = campo.selectionEnd == null ? i : campo.selectionEnd;
+  campo.value = campo.value.slice(0, i) + b.dataset.var + campo.value.slice(f);
+  campo.selectionStart = campo.selectionEnd = i + b.dataset.var.length;
+  campo.focus();
+  campo.dispatchEvent(new Event("input", { bubbles: true }));
 });
+
+/* O ACERVO SE REDESENHA INTEIRO, e não remenda classe por classe. É o que faz o padrão
+   RECÉM-CADASTRADO aparecer na lista: sem isto, salvar guardaria o molde e a esquerda
+   continuaria com os de sempre, que é salvar sem salvar. */
+function pintarOAcervoDePadroes() {
+  const casa = $("dp_lista");
+  if (!casa) return;
+  const lista = padroesDeDescricao(), agora = padraoDaLeva();
+  casa.innerHTML = lista.map(p =>
+    `<div class="dp-i${p.id === agora.id ? " viva" : ""}" data-padrao="${escapar(p.id)}">`
+    + `<div class="n">${escapar(p.nome)}`
+    + (p.id === agora.id ? '<span class="pino ok">em uso</span>' : "")
+    + `</div><div class="d">${escapar(p.diz || "")}</div></div>`).join("")
+    + '<button type="button" class="dp-novo" id="dp_novo">+ Cadastrar Um Padrão</button>';
+}
+
+/* A PRÉVIA É SEMPRE DE UMA PEÇA DE VERDADE, e o vídeo ao lado é o arquivo montado desta
+   leva, servido pelo posto. Fora da escrita ela mostra a primeira peça; enquanto a máquina
+   corre, a da vez. Retângulo preto com "peça 01" dentro era o próprio mockado. */
+function pintarAPrevia(i) {
+  const ordem = pecasDaEntrega();
+  const arquivo = ordem[Math.max(0, Math.min(ordem.length - 1, i || 0))] || "";
+  const p = padraoDaLeva();
+  $("dp_nome").textContent = p.nome;
+  $("dp_diz").textContent = p.diz || "";
+  const vid = $("dp_vid");
+  const fonte = (MONTADO && arquivo) ? urlDoArquivo(MONTADO.onde + "/" + arquivo) : "";
+  // TROCAR O `src` PELO MESMO ENDEREÇO RECARREGA O VÍDEO à toa, e com 180 peças na fila
+  // isso é um pedido de rede por repintura. A guarda é a mesma da barra da obra.
+  if (vid && vid.getAttribute("src") !== fonte) {
+    if (fonte) vid.setAttribute("src", fonte); else vid.removeAttribute("src");
+  }
+  /* O QUE JÁ SAIU NÃO SE APLICA DE NOVO (05/09/2026), e a primeira versão aplicava.
+     `DESCRICOES` guarda o texto PRONTO, com o molde já dentro: quem aplica é o programa,
+     uma vez, na hora de escrever. Aplicar de novo aqui punha o arroba e as marcações
+     DUAS vezes na prévia, e foi assim que apareceu na foto: o texto, o arroba, as
+     marcações, e outra vez o arroba e as marcações. Peça já escrita mostra o que saiu;
+     peça por escrever mostra o molde com um exemplo no lugar do texto da IA, porque
+     deixar `{texto}` cru faria a variável parecer texto literal do post. */
+  const pronta = DESCRICOES.get(arquivo) || "";
+  const d = dadosDaPeca(arquivo, "");
+  $("dp_rot").textContent = (pronta ? "Como saiu na peça " : "Como sai na peça ") + d.n;
+  $("dp_saiu").textContent = pronta || aplicarMolde(p.molde, Object.assign({}, d,
+    { texto: "(aqui entra o texto que a inteligência vai escrever a partir da legenda "
+             + "original)" }));
+  if (!$("dp_area").hidden) return;      // editando: o molde está no campo, não no papel
+  $("dp_molde").innerHTML = escapar(p.molde).replace(
+    /\{(texto|frase_min|frase|conta|leva|n)\}/g, "<b>{$1}</b>");
+}
+
+function escolherPadrao(id) {
+  PADRAO_ESCOLHIDO = id;
+  $("dp_editar").textContent = "Editar Este Padrão";
+  $("dp_molde").hidden = false;
+  $("dp_area").hidden = true;
+  $("dp_vars").hidden = true;
+  pintarOAcervoDePadroes();
+  pintarAPrevia(0);
+  contaDescricoes();
+  salvarRascunho();
+}
+
+$("dp_lista").addEventListener("click", ev => {
+  const escolha = ev.target.closest("[data-padrao]");
+  if (escolha) { escolherPadrao(escolha.dataset.padrao); return; }
+  if (ev.target.closest("#dp_novo")) abrirOCadastroDePadrao();
+});
+
+/* EDITAR É NO LUGAR, e o "como sai" muda enquanto ele digita: é a única forma de ele
+   responder "ficou bom?" antes de gastar 180 pedidos de cota. */
+$("dp_vars").innerHTML = glossarioDeVariaveis("dp_area");
+$("dp_editar").onclick = () => {
+  const editando = $("dp_area").hidden;
+  $("dp_editar").textContent = editando ? "Pronto" : "Editar Este Padrão";
+  $("dp_molde").hidden = editando;
+  $("dp_area").hidden = !editando;
+  $("dp_vars").hidden = !editando;
+  if (editando) { $("dp_area").value = padraoDaLeva().molde; $("dp_area").focus(); }
+  else pintarAPrevia(0);
+};
+
+/* MEXER NO MOLDE DE UM PADRÃO DE FÁBRICA CADASTRA UMA CÓPIA DELE, e não altera o de
+   fábrica: os três de fábrica são constantes do programa e não existem no disco, então
+   escrever neles seria perder a mudança na próxima abertura da página, calado. */
+$("dp_area").addEventListener("input", () => {
+  const p = padraoDaLeva();
+  const molde = $("dp_area").value;
+  const meu = (ACERVO.itens || []).find(x => x && x.id === p.id
+    && x.tipo === "padrao-descricao");
+  if (meu) meu.molde = molde;
+  else {
+    // O NOME GANHA UMA MARCA, senão a lista mostraria dois cartões "Direto" lado a lado e
+    // ele não teria como saber qual é o da casa e qual é o que acabou de mexer.
+    const copia = { id: "pd" + Date.now(), tipo: "padrao-descricao",
+                    nome: p.nome + " (Seu)", diz: "Você mexeu no molde da casa.",
+                    molde: molde, limite: p.limite || 500 };
+    ACERVO.itens.push(copia);
+    PADRAO_ESCOLHIDO = copia.id;
+    pintarOAcervoDePadroes();
+  }
+  pintarAPreviaDoMolde(molde);
+});
+
+/** A prévia enquanto ele digita, sem passar pelo acervo: o campo é a fonte agora. */
+function pintarAPreviaDoMolde(molde) {
+  const arquivo = pecasDaEntrega()[0] || "";
+  // AQUI O EXEMPLO ENTRA SEMPRE, mesmo com a peça já escrita: ele está mexendo no molde,
+  // e o que ele quer ver é como o molde NOVO vai sair, não o que o molde velho já pôs no
+  // disco. Mostrar o texto pronto durante a edição faria o campo parecer travado.
+  const d = dadosDaPeca(arquivo, "(aqui entra o texto que a inteligência vai escrever a "
+                                 + "partir da legenda original)");
+  $("dp_saiu").textContent = aplicarMolde(molde, d);
+  $("dp_rot").textContent = "Como vai sair na peça " + d.n;
+}
+
+let GRAVANDO_PADRAO = false;
+async function guardarOsPadroes() {
+  if (GRAVANDO_PADRAO) return;
+  GRAVANDO_PADRAO = true;
+  try { await gravarAcervo(); }
+  catch (e) { parado("dsc_recado", e.message); }
+  finally { GRAVANDO_PADRAO = false; }
+}
+
+/* ---------------------------------------------------- o cadastro de padrão */
+function abrirOCadastroDePadrao() {
+  $("dp_np_nome").value = "";
+  $("dp_np_molde").value = padraoDaLeva().molde;
+  $("dp_np_limite").value = padraoDaLeva().limite || 500;
+  $("dp_np_erro").hidden = true;
+  $("dp_np_vars").innerHTML = glossarioDeVariaveis("dp_np_molde");
+  previaDoCadastro();
+  $("dp_fundo").hidden = false;
+  $("dp_pop").hidden = false;
+  $("dp_np_nome").focus();
+}
+function fecharOCadastroDePadrao() {
+  $("dp_pop").hidden = true;
+  $("dp_fundo").hidden = true;
+}
+function previaDoCadastro() {
+  const m = $("dp_np_molde").value;
+  const arquivo = pecasDaEntrega()[0] || "";
+  const d = dadosDaPeca(arquivo, DESCRICOES.get(arquivo) || "");
+  d.texto = d.texto || "(aqui entra o texto que a inteligência vai escrever a partir da "
+    + "legenda original)";
+  $("dp_np_saiu").textContent = m.trim()
+    ? aplicarMolde(m, d) : "Escreva o molde acima para ver a prévia.";
+}
+$("dp_np_molde").addEventListener("input", previaDoCadastro);
+$("dp_pop_x").onclick = fecharOCadastroDePadrao;
+$("dp_np_cancelar").onclick = fecharOCadastroDePadrao;
+$("dp_fundo").onclick = fecharOCadastroDePadrao;
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && !$("dp_pop").hidden) fecharOCadastroDePadrao();
+  if (ev.key === "Escape" && !$("ent_pop").hidden) fecharADescricao();
+});
+/* SALVAR SEM NOME OU SEM MOLDE RECLAMA E NÃO FECHA. Fechar calado perderia o que ele
+   digitou; salvar sem nome poria na lista um cartão sem título, que ele não teria como
+   distinguir do vizinho. */
+$("dp_np_salvar").onclick = async () => {
+  const nome = $("dp_np_nome").value.trim(), molde = $("dp_np_molde").value.trim();
+  if (!nome || !molde) { $("dp_np_erro").hidden = false; return; }
+  const novo = { id: "pd" + Date.now(), tipo: "padrao-descricao", nome: nome,
+                 diz: "Cadastrado por você.", molde: molde,
+                 limite: Math.max(120, Math.min(2200, Number($("dp_np_limite").value) || 500)) };
+  ACERVO.itens.push(novo);
+  fecharOCadastroDePadrao();
+  escolherPadrao(novo.id);
+  await guardarOsPadroes();
+};
 
 $("dsc_apagar").onclick = () => {
   if (!confirm("Apagar as descrições escritas? O que você mexeu à mão vai junto.")) return;
@@ -14281,21 +14777,37 @@ async function pedirDescricoes() {
       // A PASTA DA LEVA, e não a da edição: é lá que mora o `_lote.json` com as legendas
       // originais. O programa lê de lá; ver `originais_da_leva` no `oficina.py`.
       pasta: `leva-${EDIT_LEVA.numero}`,
-      pecas: alvos.map(a => ({ arquivo: a })),
-      // O TETO REAL DA LEGENDA DO INSTAGRAM É 2200 COM O FECHO DENTRO: o programa cola
-      // o fecho depois do texto da IA, então o limite pedido desconta o fecho, senão a
-      // soma estoura e o Instagram corta o fim. Auditoria de 25/08/2026.
+      /* A FRASE E O NÚMERO DE CADA PEÇA VÃO NO PEDIDO (05/09/2026), porque o molde pode
+         pedir os dois e só a tela sabe: a frase mora no `ESCRITO` desta leva, e o número
+         é a posição dela na ordem da montagem. O programa poderia deduzir o número, mas
+         não a frase, e mandar meio dado obrigaria a duas fontes de verdade. */
+      pecas: alvos.map(a => {
+        const d = dadosDaPeca(a, "");
+        return { arquivo: a, frase: d.frase, n: d.n };
+      }),
+      // O TETO REAL DA LEGENDA DO INSTAGRAM É 2200 COM O MOLDE DENTRO: o programa aplica
+      // o molde em cima do texto da IA, então o limite pedido desconta o que o molde põe
+      // em volta, senão a soma estoura e o Instagram corta o fim. Auditoria de 25/08/2026,
+      // e desde 05/09 quem põe em volta é o molde, e não mais um fecho fixo.
       limite: (() => {
-        const fecho = (RODAPE == null ? RODAPE_PADRAO : RODAPE).trim();
-        const teto = 2200 - (fecho ? fecho.length + 2 : 0);
-        return Math.max(120, Math.min(teto, Number($("dsc_max").value) || 500));
+        const p = padraoDaLeva();
+        const volta = aplicarMolde(p.molde, dadosDaPeca(alvos[0], "")).length;
+        return Math.max(120, Math.min(2200 - volta, p.limite || 500));
       })(),
-      rodape: (RODAPE == null ? RODAPE_PADRAO : RODAPE).trim(),
+      /* O MOLDE DO PADRÃO ESCOLHIDO. É ele quem substitui o fecho fixo: tudo o que vinha
+         depois do texto da IA passou a ser o que vem depois do `{texto}` no molde, e agora
+         também pode vir coisa ANTES dele, que o fecho não permitia. O `rodape` continua
+         sendo mandado vazio de propósito: pedido sem a chave ganharia o padrão antigo do
+         programa, e o fecho entraria DUAS vezes, uma pelo molde e outra por ele. */
+      molde: padraoDaLeva().molde,
+      rodape: "",
     });
     DSC_OBRA = { id, desde: Date.now(), total: alvos.length, relogio: null, mudo: 0 };
     $("dsc_escrever").disabled = true;
     $("dsc_obra").hidden = false;
-    $("dsc_barra").style.width = "0%";
+    reabrirObra("dsc");
+    pintarObra("dsc", { total: alvos.length, feitos: 0, fim: false },
+               "descrições escritas");
     document.querySelector("#dsc_obra .cfg-girando").style.display = "";
     $("dsc_obra_txt").textContent = "Pedido Deixado";
     $("dsc_obra_nota").textContent = "A escrita começa em até um minuto, que é o passo do "
@@ -14318,9 +14830,18 @@ function andouADescricao(d) {
     return;
   }
   const total = d.total || DSC_OBRA.total, feitos = d.feitos || 0;
-  $("dsc_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
+  // UMA MARCA POR PEÇA, e não uma tarja que enche: é o mesmo pintor do Fabricar, que foi
+  // o pedido dele ("o loading tem que ser do mesmo padrão que eu tenho na aba de fabricar,
+  // eu consigo ver tudo bonitinho, todos os itens").
+  pintarObra("dsc", { total: total, feitos: feitos, sem: d.sem_original || 0,
+                      falhas: d.falhas || 0, atual: d.atual || "",
+                      segundos: d.segundos || 0, fim: false }, "descrições escritas");
   $("dsc_obra_txt").textContent = `Escrevendo ${Math.min(feitos + 1, total)} de ${total}`;
   $("dsc_obra_nota").textContent = d.atual ? `Agora: ${d.atual}` : "";
+  // A PRÉVIA ACOMPANHA A MÁQUINA: enquanto ela corre, o "como sai" mostra a peça da vez,
+  // com o texto que acabou de chegar. Parar na peça 1 durante 180 peças seria uma tela
+  // parada ao lado de uma barra andando.
+  if (feitos) pintarAPrevia(feitos - 1);
   // CADA LEGENDA PAGA ENTRA NO RASCUNHO ASSIM QUE APARECE, como a escrita já faz: o
   // andamento passou a carregar os textos (25/08/2026), e sem esta absorção um F5 no
   // meio jogava fora o que a cota do dia já tinha pago.
@@ -14340,7 +14861,15 @@ async function terminouADescricao(d) {
     if (texto) DESCRICOES.set(arq, texto);
   }
   const feitos = d.feitos || 0;
-  $("dsc_barra").style.width = "100%";
+  pintarObra("dsc", { total: d.total || feitos, feitos: feitos,
+                      sem: d.sem_original || 0, falhas: d.falhas || 0,
+                      segundos: d.segundos || 0, fim: true }, "descrições escritas");
+  // O SELO SÓ FECHA COM TUDO PRONTO: faltando peça ou com falha, a barra fica, porque
+  // número vermelho escondido atrás de um selo verde seria mentira. Mesma regra do recorte.
+  if (feitos && !d.falhas && !d.sem_original && feitos >= (d.total || feitos)) {
+    fecharObra("dsc", num(feitos) + " Descrições Escritas Com O Padrão "
+                      + padraoDaLeva().nome);
+  }
   $("dsc_obra_txt").textContent = `${feitos} ${feitos === 1 ? "descrição escrita" : "descrições escritas"}`
     + (d.falhas ? `, ${d.falhas} falharam` : "")
     // A CONTA TEM DE FECHAR: sem esta parcela, 92 de 107 pareceriam 15 sumidas.
@@ -14353,6 +14882,7 @@ async function terminouADescricao(d) {
   // gravação jogaria fora texto que não dá para refazer de graça.
   desenhaDescricoes();
   contaDescricoes();
+  pintarAPrevia(0);
   await salvarRascunho();
   if (typeof lerUsoDaIA === "function") await lerUsoDaIA();
 }
@@ -14360,31 +14890,242 @@ async function terminouADescricao(d) {
 $("dsc_volta").onclick = () => irParaPasso(3);
 $("dsc_vai_entrega").onclick = () => irParaSubLeg(2);
 
+/* ================================================== A CONFERÊNCIA DA ESCRITA
+   (05/09/2026)
+
+   ORDEM DELE, de viva voz: "imagina que eu pego, gero uma descrição, a descrição entregue
+   lá no Drive, quando eu vou abrir a descrição, ah, o emoji não tá pegando, tá tipo bugado.
+   Então tem que tomar muito cuidado nessa parte de geração de escrita, pra que não chegue
+   lá no Drive de forma quebrada e também não acabe entrando na peça de forma quebrada."
+
+   O QUE ELA PROCURA, e por que é isto e não "caracteres estranhos". Texto que passou por
+   uma codificação errada deixa marca, e a marca tem nome:
+
+     1. O SUBSTITUTO (U+FFFD, o losango com a interrogação). Ele não existe em texto são:
+        é o que o navegador põe no lugar de um byte que não soube ler. Um só já é defeito.
+     2. A MOJIBAKE, que é texto em UTF-8 lido como se fosse Latin-1: "Ã§" no lugar de "ç",
+        "Ã£" no lugar de "ã", "â€™" no lugar da aspa curva. Ela é a que mais aparece
+        quando o texto atravessa um programa que não declarou a codificação.
+     3. O PAR PERDIDO (surrogate solto). Emoji é feito de dois pedaços; cortar um texto no
+        meio de um emoji deixa metade dele, e essa metade não se desenha em lugar nenhum.
+
+   E ELA CONTA, EM VEZ DE CARIMBAR. Um selo verde sozinho não diz o que foi conferido, e a
+   pergunta dele era justamente sobre o emoji e a seta: cada sinal difícil sai com o número
+   dele, e as peças quebradas saem com o nome e o motivo. */
+
+/** A caixa da conferência desenhada, e o caminho para A Entrega trancado ou solto. */
+function conferirAEscritaDasDescricoes() {
+  const caixa = $("dsc_conf");
+  if (!caixa) return { quebradas: [] };
+  const ordem = pecasDaEntrega();
+  const pares = ordem.filter(a => (DESCRICOES.get(a) || "").trim())
+    .map(a => ["peça " + (ordem.indexOf(a) + 1), DESCRICOES.get(a)]);
+  const r = conferirAEscrita(pares);
+  caixa.hidden = !pares.length;
+  const pino = $("dsc_conf_pino");
+  pino.className = "pino" + (r.quebradas.length ? "" : " ok");
+  pino.textContent = r.quebradas.length
+    ? (r.quebradas.length === 1 ? "1 quebrada" : r.quebradas.length + " quebradas")
+    : "conferido";
+  $("dsc_conf_txt").textContent = r.quebradas.length
+    ? "Estas descrições chegariam quebradas ao documento no Drive. Corrija o texto delas "
+      + "na lista abaixo, ou mande escrever de novo, antes de ir para A Entrega."
+    : num(r.sobreviveram) + " de " + num(r.total) + " descrições passaram inteiras: "
+      + "nenhum sinal chegou quebrado.";
+  $("dsc_conf_contas").innerHTML = SINAIS_DIFICEIS.map(([nome]) =>
+    `<span>${escapar(nome)}: <b>${num(r.sinais[nome])}</b></span>`).join("")
+    + `<span>inteiras: <b>${num(r.sobreviveram)}</b> de ${num(r.total)}</span>`;
+  $("dsc_conf_quebradas").innerHTML = r.quebradas.slice(0, 12).map(q =>
+    `<div class="cf-q"><b>${escapar(q.quem)}</b><span>${escapar(q.motivo)}</span></div>`)
+    .join("");
+  /* O PORTÃO: enquanto houver descrição quebrada, o caminho para A Entrega fica fechado.
+     Deixar passar seria descobrir o defeito depois de 180 documentos no Drive, e desfazer
+     isso é apagar arquivo do Drive dele. A ABA DA TIRA CONTINUA CLICÁVEL de propósito: ele
+     tem de poder olhar a entrega; o que não pode é MANDAR sem conferir, e quem tranca isso
+     é o botão de subir, na própria Entrega. */
+  $("dsc_vai_entrega").disabled = !ordem.length || r.quebradas.length > 0;
+  $("dsc_vai_entrega").title = r.quebradas.length
+    ? "Corrija as descrições quebradas antes de entregar." : "";
+  return r;
+}
+
 /* ---------------------------------------------------- 4.2 · a entrega */
 
 async function entrarNaEntrega() {
   if (!MONTADO) await procurarMontagem();
   mostrarAMontagem();
   const total = pecasDaEntrega().length, prontas = quantasDescritas();
-  $("ent_nome").textContent = nomeDaEntrega();
-  $("ent_quantas").textContent = `${num(total)} ${total === 1 ? "peça" : "peças"}`
-    + (prontas < total ? `, ${num(total - prontas)} sem descrição` : ", todas descritas");
+  // QUEM ESCREVE O NÚMERO GRANDE DA COLUNA DO DRIVE É O `desenhaODrive`, porque quem sabe
+  // o destino é a resposta da casa. Escrever aqui também seria duas verdades na mesma
+  // caixa, e a segunda apagaria a primeira a cada leitura.
+  // AS TRÊS COLUNAS RESPONDEM ANTES DE QUALQUER BOTÃO se dá para entregar. O selo verde
+  // da coluna é a resposta curta; o número embaixo é a longa.
+  $("pos_caixa").classList.toggle("pronta", !!total);
+  $("pos_pino").className = "pino" + (total ? " ok" : "");
+  $("pos_pino").textContent = total ? "cumprida" : "sem montagem";
+  $("ent_desc_caixa").classList.toggle("pronta", !!prontas && prontas === total);
+  $("ent_desc_pino").className = "pino" + (prontas === total && total ? " ok" : "");
+  $("ent_desc_pino").textContent = !total ? "nenhuma"
+    : prontas === total ? num(prontas) + " escritas"
+    : num(total - prontas) + " sem descrição";
+  $("ent_quantas").textContent = num(prontas);
   // AVISAR ANTES, E NÃO DEPOIS. Subir cento e sete vídeos e só então descobrir que
   // quinze foram sem legenda é descobrir tarde: desfazer isso é apagar no Drive.
   $("ent_aviso").textContent = prontas < total
     ? "As peças sem descrição sobem assim mesmo, só com o vídeo. Volte às descrições se "
       + "quiser escrevê-las antes."
     : "";
-  $("ent_subir").disabled = !!ENT_OBRA || !total;
-  $("ent_so_pacote").disabled = !!ENT_OBRA || !total;
+  desenhaAListaDaEntrega();
+  /* O PORTÃO DA ESCRITA TAMBÉM FECHA AQUI, e não só na aba anterior. Trancar apenas o
+     botão "Ir Para A Entrega" deixaria uma porta aberta: a tira das abas leva direto para
+     cá, e daqui o "Empacotar E Subir" mandaria as descrições quebradas para o Drive. O
+     portão fica onde a coisa acontece de verdade. */
+  const conf = conferirAEscrita(pecasDaEntrega()
+    .filter(a => (DESCRICOES.get(a) || "").trim())
+    .map(a => ["peça " + (pecasDaEntrega().indexOf(a) + 1), DESCRICOES.get(a)]));
+  const travado = conf.quebradas.length > 0;
+  $("ent_subir").disabled = !!ENT_OBRA || !total || travado;
+  $("ent_so_pacote").disabled = !!ENT_OBRA || !total || travado;
+  if (travado) {
+    $("ent_aviso").textContent = conf.quebradas.length + (conf.quebradas.length === 1
+      ? " descrição chegaria quebrada ao Drive (" + conf.quebradas[0].quem
+        + "). Volte às descrições e corrija antes de subir."
+      : " descrições chegariam quebradas ao Drive. Volte às descrições e corrija antes "
+        + "de subir.");
+  }
   // "ENTREGUE" SÓ COM A CONFERÊNCIA DO DRIVE: sem `verificado`, o que houve foi
-  // empacotamento, e a palavra tem de medir isso. Auditoria de 25/08/2026.
-  $("ent_conta").innerHTML = ENTREGUE
-    ? `<b>${num(ENTREGUE.feitos || 0)}</b> ${ENTREGUE.verificado ? "entregues" : "empacotadas"}`
-    : `<b>${num(prontas)}</b> de ${num(total)} descritas`;
+  // empacotamento, e a palavra tem de medir isso. Auditoria de 25/08/2026. A conta do
+  // rodapé agora mora num lugar só (`contaDaEntrega`), porque a lista das peças escreve
+  // nela a cada peça entregue e duas escritas divergiriam na primeira mudança.
+  contaDaEntrega();
   verODrive();
   desenhaSubTrilho4();
 }
+
+/* ================================================ A LISTA DAS PEÇAS DA ENTREGA
+   (05/09/2026, maquete `docs/propostas/entrega-t1/`, aprovada com quatro ajustes.)
+
+   ELA COMEÇA COM TODAS NA FILA, e quem as move é o botão: "o estado tem que estar
+   refletindo efetivamente, não pode ser um bagulho mockado". Cada linha ganha "no Drive"
+   no instante em que o programa diz que aquela peça subiu, uma a uma.
+
+   O ESTADO MORA AQUI e não numa classe da linha: repintar a lista inteira perderia a
+   contagem, e ler o estado do DOM faria a tela ser a memória do trabalho. */
+const NO_DRIVE = new Set();
+
+function desenhaAListaDaEntrega() {
+  const casa = $("ent_corpo");
+  if (!casa) return;
+  const ordem = pecasDaEntrega();
+  casa.innerHTML = ordem.map((a, i) => {
+    const t = (DESCRICOES.get(a) || "").trim();
+    return `<tr data-i="${i}">`
+      + `<td><span class="mini">${MONTADO
+          ? `<video preload="metadata" muted playsinline src="${escapar(
+              urlDoArquivo(MONTADO.onde + "/" + a))}"></video>` : ""}</span></td>`
+      + `<td><div class="nome">Peça ${i + 1}</div>`
+      + `<div class="cam">Leva ${escapar(String(EDIT_LEVA ? EDIT_LEVA.numero : ""))}`
+      + ` · ${escapar(a)}</div></td>`
+      + `<td><button class="ent-ver" type="button" data-ver="${i}"${t ? "" : " disabled"}>`
+      + '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">'
+      + '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/>'
+      + '<circle cx="12" cy="12" r="3"/></svg>'
+      + (t ? "Ver A Descrição" : "Sem descrição") + "</button></td>"
+      + `<td style="text-align:right">${peloEstado(i)}</td></tr>`;
+  }).join("");
+  contaDaEntrega();
+}
+
+const peloEstado = i => NO_DRIVE.has(i)
+  ? '<span class="pino ok">no Drive</span>' : '<span class="pino">na fila</span>';
+
+/* SÓ A LINHA QUE MUDOU SE REDESENHA. Refazer as 180 a cada peça entregue jogaria fora a
+   posição da rolagem no meio do arrasto: ele estaria olhando a peça 60 e a lista pularia
+   para o topo dezesseis vezes por segundo. */
+function repintarALinha(i) {
+  const tr = $("ent_corpo").querySelector(`tr[data-i="${i}"]`);
+  if (tr) tr.querySelector("td:last-child").innerHTML = peloEstado(i);
+}
+
+function contaDaEntrega() {
+  const total = pecasDaEntrega().length, no = NO_DRIVE.size;
+  $("ent_conta").innerHTML = ENTREGUE
+    ? `<b>${num(ENTREGUE.feitos || 0)}</b> `
+      + (ENTREGUE.verificado ? "entregues" : "empacotadas")
+    : `<b>${num(no)}</b> de ${num(total)} no Drive · <b>${num(total - no)}</b> na fila`;
+}
+
+/* A LISTA SE PEGA E SE ARRASTA (05/09/2026), e é ordem dele: "tem que ser um bagulho que
+   eu possa segurar e arrastar. Eu não quero a barra de rolagem."
+
+   O ARRASTO NÃO PODE VIRAR CLIQUE. Sem os três pixels de folga, soltar o dedo em cima de
+   uma linha depois de arrastar cem pixels abriria o pop-up daquela peça: ele estaria
+   navegando e a tela abriria uma janela. A folga é o que separa arrastar de tocar, e é a
+   mesma que o navegador usa para decidir isso no celular. */
+function arrastavel(el) {
+  if (!el) return;
+  let baixo = false, y0 = 0, topo0 = 0, moveu = false;
+  el.addEventListener("pointerdown", ev => {
+    if (ev.button !== 0 || ev.target.closest("button,a,input,textarea")) return;
+    baixo = true; moveu = false; y0 = ev.clientY; topo0 = el.scrollTop;
+    el.classList.add("pegando");
+    try { el.setPointerCapture(ev.pointerId); } catch (e) { /* sem captura, segue */ }
+  });
+  el.addEventListener("pointermove", ev => {
+    if (!baixo) return;
+    const d = ev.clientY - y0;
+    if (Math.abs(d) > 3) moveu = true;
+    el.scrollTop = topo0 - d;
+  });
+  const largar = ev => {
+    if (!baixo) return;
+    baixo = false;
+    el.classList.remove("pegando");
+    try { el.releasePointerCapture(ev.pointerId); } catch (e) { /* idem */ }
+  };
+  el.addEventListener("pointerup", largar);
+  el.addEventListener("pointercancel", largar);
+  el.addEventListener("pointerleave", largar);
+  // NA FASE DE CAPTURA, para chegar antes do ouvinte da lista: depois dele o pop-up já
+  // teria aberto, e fechar em seguida seria um pisca.
+  el.addEventListener("click", ev => {
+    if (moveu) { ev.preventDefault(); ev.stopPropagation(); moveu = false; }
+  }, true);
+}
+arrastavel($("ent_rola"));
+
+$("ent_corpo").addEventListener("click", ev => {
+  const bt = ev.target.closest("[data-ver]");
+  if (!bt || bt.disabled) return;
+  const i = Number(bt.dataset.ver);
+  const arquivo = pecasDaEntrega()[i];
+  const texto = DESCRICOES.get(arquivo) || "";
+  $("ent_pop_tit").textContent = "Peça " + (i + 1);
+  $("ent_pop_txt").textContent = texto;
+  $("ent_pop_conta").innerHTML =
+    `<span>Letras: <b>${num(texto.length)}</b></span>`
+    + `<span>Vídeo: <b>${escapar(arquivo)}</b></span>`
+    + `<span>Documento: <b>${escapar(nomeDoDocumento())}</b></span>`;
+  $("ent_fundo").hidden = false;
+  $("ent_pop").hidden = false;
+  $("ent_pop_fechar").focus();
+});
+function fecharADescricao() {
+  $("ent_pop").hidden = true;
+  $("ent_fundo").hidden = true;
+}
+$("ent_pop_x").onclick = fecharADescricao;
+$("ent_pop_fechar").onclick = fecharADescricao;
+$("ent_fundo").onclick = fecharADescricao;
+
+/* O NOME DO DOCUMENTO QUE VAI AO LADO DO VÍDEO. A mesma conta mora no `oficina.py`, em
+   `nome_do_documento`, e é ele quem manda: este aqui só mostra antes, para ele saber o que
+   vai encontrar na pasta. A prova `documento` compara os dois. */
+function nomeDoDocumento() { return NOME_DO_DOCUMENTO; }
+/* O NOME É O MESMO QUE O `oficina.py` GRAVA, e está aqui numa constante para a prova
+   `documento` poder comparar as duas pontas: tela e programa dizendo nomes diferentes é a
+   família de defeito em que ele abre a pasta e não acha o que a tela prometeu. */
+const NOME_DO_DOCUMENTO = "descricao.txt";
 
 /* O NOME NO DRIVE. Ele deu o exemplo: "leva 29 de thenews.business". O mesmo cálculo
    mora no `oficina.py`, em `nome_da_entrega`, e é ele quem manda: este aqui só mostra
@@ -14433,6 +15174,13 @@ async function verODrive() {
 function desenhaODrive() {
   const d = DRIVE || {};
   const pino = $("ent_drive_pino"), txt = $("ent_drive_txt");
+  /* O NÚMERO GRANDE DA COLUNA É CURTO, e o nome comprido desceu para a frase (05/09/2026).
+     Ele nasceu com o nome inteiro da entrega dentro ("leva 9931 de leisdamentemilionaria"),
+     em letra de 26 pixels: duas linhas na coluna, e a fileira das três ficou torta. Na
+     maquete o que está ali é o DESTINO, uma palavra. O nome inteiro não se perdeu: ele é a
+     primeira coisa da frase logo abaixo, que é onde texto comprido cabe. */
+  const destino = String(d.pasta || "").split("/").filter(Boolean).pop() || "Drive";
+  $("ent_nome").textContent = d.autorizado ? destino : "—";
   $("ent_drive_abrir").hidden = !d.autorizado;
   if (d.link) $("ent_drive_abrir").href = d.link;
   $("ent_autorizar").hidden = !!d.autorizado || !d.instalado;
@@ -14454,7 +15202,8 @@ function desenhaODrive() {
   if (d.autorizado) {
     pino.className = "pino ok";
     pino.textContent = "autorizado";
-    txt.textContent = `Os arquivos vão para ${d.pasta || "a pasta do Drive"}.`;
+    txt.textContent = `A pasta de destino é ${d.pasta || "a pasta do Drive"}, e esta leva `
+      + `vai para "${nomeDaEntrega()}" dentro dela.`;
     return;
   }
   if (!d.instalado) {
@@ -14502,7 +15251,14 @@ async function pedirEntrega(subir) {
     $("ent_subir").disabled = $("ent_so_pacote").disabled = true;
     $("ent_feito").hidden = true;
     $("ent_obra").hidden = false;
-    $("ent_barra").style.width = "0%";
+    // A LISTA VOLTA PARA A FILA, e o estado é escrito de novo peça a peça pelo andamento:
+    // é o "não pode ser um bagulho mockado" na prática. Recomeçar com as marcas do envio
+    // anterior faria a tela dizer "no Drive" para uma peça que ainda não saiu daqui.
+    NO_DRIVE.clear();
+    desenhaAListaDaEntrega();
+    reabrirObra("ent");
+    pintarObra("ent", { total: pecasDaEntrega().length, feitos: 0, fim: false },
+               "peças entregues");
     document.querySelector("#ent_obra .cfg-girando").style.display = "";
     $("ent_obra_txt").textContent = "Pedido Deixado";
     $("ent_obra_nota").textContent = "O empacotamento começa em até um minuto.";
@@ -14535,7 +15291,22 @@ function andouAEntrega(d) {
     return;
   }
   const total = d.total || ENT_OBRA.total, feitos = d.feitos || 0;
-  $("ent_barra").style.width = Math.round(feitos / Math.max(1, total) * 100) + "%";
+  // UMA MARCA POR PEÇA, no padrão do Fabricar, no lugar da tarja de cinco pixels.
+  pintarObra("ent", { total: total, feitos: feitos, falhas: d.falhas || 0,
+                      atual: d.atual || "", segundos: d.segundos || 0, fim: false },
+             "peças entregues");
+  // OS DOCUMENTOS ANDAM JUNTO DOS VÍDEOS, e o selo diz os dois: é a dupla que ele pediu
+  // ("entrega o vídeo lá a nível de pasta e também entrega o arquivo Docs ali"). O número
+  // dos documentos vem do programa, e não é o dos vídeos repetido: peça sem descrição sobe
+  // só com o vídeo, e nesse caso os dois números divergem de propósito.
+  const docs = $("ent_s_docs");
+  if (docs) docs.textContent = num(d.documentos == null ? 0 : d.documentos);
+  // O ESTADO DE CADA LINHA, uma a uma, no instante em que o programa diz que aquela subiu.
+  for (let i = NO_DRIVE.size; i < feitos && i < total; i++) {
+    NO_DRIVE.add(i);
+    repintarALinha(i);
+  }
+  contaDaEntrega();
   $("ent_obra_txt").textContent = `${FASES[d.fase] || "Trabalhando"} `
     + `${Math.min(feitos + 1, total)} de ${total}`;
   $("ent_obra_nota").textContent = d.atual ? `Agora: ${d.atual}` : "";
@@ -14598,6 +15369,12 @@ function linhasDoFecho(d, queria) {
      transferido zero por ja' estarem la'. Agora sao os dois numeros, e eles sao
      diferentes de proposito: o que existe la', e o que foi enviado nesta rodada. */
   let html = umaLinha("No Drive", `${num(d.conferidos || 0)} de ${pecas}, conferidas`)
+           // A DUPLA, DITA: o vídeo e o documento. Ordem dele de 05/09/2026, e ela merece
+           // linha própria porque os dois números podem divergir, e a diferença é uma peça
+           // que subiu sem descrição.
+           + umaLinha("Os documentos", `${num(d.documentos || 0)} `
+               + (d.documentos === 1 ? "documento ao lado do vídeo"
+                                     : "documentos, um ao lado de cada vídeo"))
            + umaLinha("Enviadas agora", d.subiu_agora === 0
                ? "nenhuma, as peças já estavam lá"
                : `${num(d.subiu_agora || 0)} nesta rodada`)
@@ -14611,6 +15388,13 @@ function linhasDoFecho(d, queria) {
   html += umaLinha("A cópia na casa",d.apagou
     ? `apagada, ${num(d.liberado_mb || 0)} MB livres no disco da casa`
     : (d.nao_apagou || "mantida"));
+  // A ESCRITA QUEBRADA TEM LINHA PRÓPRIA, e não some dentro do "sem descrição": as duas
+  // sobem só com o vídeo, mas por motivos diferentes, e só uma delas é defeito.
+  if (d.quebradas) {
+    html += umaLinha("Descrição quebrada", `${num(d.quebradas)} `
+      + (d.quebradas === 1 ? "peça: o texto não virou documento"
+                           : "peças: o texto não virou documento"));
+  }
   if (d.sem_descricao) {
     html += umaLinha("Sem descrição", `${num(d.sem_descricao)} `
       + (d.sem_descricao === 1 ? "peça subiu só com o vídeo"
@@ -14626,7 +15410,20 @@ async function terminouAEntrega(d) {
   $("ent_subir").disabled = $("ent_so_pacote").disabled = false;
   if (d.erro) { $("ent_obra_txt").textContent = "Não deu: " + d.erro; return; }
   ENTREGUE = d;
-  $("ent_barra").style.width = "100%";
+  const feitos = d.feitos || 0, total = d.total || feitos;
+  pintarObra("ent", { total: total, feitos: feitos, falhas: d.falhas || 0,
+                      segundos: d.segundos || 0, fim: true }, "peças entregues");
+  const docs = $("ent_s_docs");
+  if (docs) docs.textContent = num(d.documentos == null ? 0 : d.documentos);
+  for (let i = 0; i < feitos && i < total; i++) NO_DRIVE.add(i);
+  desenhaAListaDaEntrega();
+  /* O SELO SÓ FECHA COM O DRIVE CONFERIDO, e o texto dele diz as DUAS contas: os vídeos e
+     os documentos. Fechar com "entregue" sem a conferência do outro lado é a mentira que a
+     auditoria de 24/08/2026 achou no título, e ela não volta pela porta do selo. */
+  if (d.verificado && feitos && !d.falhas) {
+    fecharObra("ent", num(feitos) + " Vídeos E " + num(d.documentos || 0)
+                      + " Documentos No Drive: Conferido");
+  }
   $("ent_obra_txt").textContent = `${d.feitos || 0} `
     + ((d.feitos === 1) ? "peça empacotada" : "peças empacotadas")
     + (d.sem_descricao ? `, ${d.sem_descricao} sem descrição` : "");
@@ -14658,8 +15455,7 @@ async function terminouAEntrega(d) {
   // A PORTA DE AUTORIZAR APARECE AQUI SE FOI ISSO QUE FALTOU, para ele não ter de
   // procurar o que fazer em seguida.
   if (d.autorizar) verODrive();
-  $("ent_conta").innerHTML = `<b>${num(d.feitos || 0)}</b> `
-    + (d.verificado ? "entregues" : "empacotadas");
+  contaDaEntrega();
   desenhaSubTrilho4();
 
   /* ENTREGUE E MARCADO NAO E' MAIS RASCUNHO, e ate 24/08/2026 continuava sendo.
@@ -15008,3 +15804,688 @@ function revelar(raiz) {
 }
 
 montarOsOlhos();
+
+
+/* =========================================================== A SUB-ABA CONTAS
+   (espec `docs/ESPEC/cd-3-aba.md`, proposta 1, escolhida por ele em 05/09/2026)
+
+   ELA MORA NO FIM DO ARQUIVO, e isso é fronteira e não gosto: há outra sessão trabalhando
+   na aba de Edição, que ocupa o meio deste arquivo inteiro. Um bloco de trezentas linhas
+   no meio do trabalho dela é conflito que ninguém resolve lendo; no fim, e com uma linha
+   só dentro do `irParaCfg`, é.
+
+   AS TRÊS PERGUNTAS DELE, na ordem em que ele as fez, e cada bloco responde uma:
+
+     "quando tá conectado com o meu computador, quando não está"
+     "se aquelas contas estão vinculadas ao meu IP residencial"
+     o que está acontecendo agora, ao vivo
+
+   E ELE PEDIU ISSO NA TELA POR UM MOTIVO ESCRITO: "caso futuramente eu queira vender esse
+   sistema, o processo pra poder configurar as contas e o IP tá batendo com o IP
+   residencial precisa estar na aba de configurações. Não pode ser uma coisa que fique
+   escondida no back-end."
+
+   QUEM SABE O QUÊ. O cofre das contas mora no computador dele, e esta tela vem da casa. A
+   ponta manda o resumo sem segredo a cada batida, a casa guarda, e a tela pergunta à casa:
+   um interlocutor só. Falar daqui com um endereço local exigiria permissão de origem
+   cruzada e o consentimento de rede privada do navegador. */
+
+// DE QUANTO EM QUANTO A SUB-ABA PERGUNTA. A ponta bate de trinta em trinta segundos, então
+// perguntar mais rápido que isso não traz notícia nova; perguntar mais devagar faria o
+// selo demorar a mudar depois de ele ligar a máquina. Oito segundos é o que aproxima o
+// pior caso (uma batida perdida) de meio minuto.
+const CTA_RELOGIO = 8000;
+
+// DEZ POR PÁGINA, o mesmo número da maquete que ele aprovou. Com cinquenta contas dá cinco
+// páginas, e os números das páginas existem de verdade em vez de serem um enfeite.
+const CTA_POR_PAGINA = 10;
+
+const CTA = {
+  vigia: null,        // o relógio da volta, vivo só enquanto a sub-aba está aberta
+  pagina: 1,
+  contas: null,       // null é "ainda não sei", e nunca lista vazia (trava 2)
+  ilegivel: false,
+  ponta: null,
+  balcao: null,
+  naoLi: "",          // o que impediu a última leitura, para a tela dizer em vez de mentir
+  passo: 1,           // dentro da janela
+  conta: null,        // a conta em cadastro, enquanto a janela está aberta
+};
+
+/* OS CINCO ESTADOS SÃO OS DO COFRE, e nenhum outro. Estado que a tela desenha e o programa
+   não guarda é promessa que ninguém cumpre; estado que o programa guarda e a tela não
+   conhece sai CRU na tela, com sublinhado, que foi o que ele viu em 03/09/2026. */
+const CTA_ESTADOS = {
+  viva: "Viva",
+  vencida: "Vencida",
+  esperando_codigo: "Esperando Código",
+  bloqueada: "Bloqueada",
+  nunca_entrou: "Nunca Entrou",
+};
+
+const CTA_IC = {
+  chave: '<path d="M15.5 7.5a4.5 4.5 0 1 0-4.24 4.49L9 14.25V17H6v3H3v-3.75l6.26-6.26"/>'
+    + '<circle cx="16.5" cy="7.5" r="1"/>',
+  usuario: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>'
+    + '<circle cx="12" cy="7" r="4"/>',
+  correio: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  escudo: '<path d="M12 3l8 3v6c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V6z"/>'
+    + '<path d="m9 12 2 2 4-4"/>',
+  casa: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+  relogio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+};
+const ctaIc = n => '<svg viewBox="0 0 24 24">' + (CTA_IC[n] || "") + "</svg>";
+
+/** A sub-aba entrou em cena: lê agora e passa a reler sozinha.
+
+    O NOME NÃO É `desenhaAsContas`, e a razão é medida: esse nome já existe neste arquivo
+    desde 27/08/2026, na fase 1 da aba de Edição, onde ele desenha as CONTAS DO TEMPLATE.
+    Duas coisas com o mesmo apelido é a trava 62n, e aqui a segunda simplesmente apagaria
+    a primeira: a fase 1 pararia de pintar e ninguém saberia por quê. */
+function desenhaSubAbaContas() {
+  clearInterval(CTA.vigia);
+  lerAsContas();
+  CTA.vigia = setInterval(() => {
+    // O RELÓGIO MORRE COM A SUB-ABA. Sem isto ele continuaria perguntando à casa com ele
+    // olhando a aba de Edição, de oito em oito segundos, para sempre.
+    const viva = document.querySelector('#aba-config .cfg-pagina[data-pg="contas"]');
+    if (!viva || !viva.classList.contains("cfg-ativa")) {
+      clearInterval(CTA.vigia);
+      CTA.vigia = null;
+      return;
+    }
+    lerAsContas();
+  }, CTA_RELOGIO);
+}
+
+/** Pergunta à casa e redesenha. Falha de leitura NUNCA vira lista vazia. */
+async function lerAsContas() {
+  try {
+    const d = await noPosto("/contas");
+    CTA.ponta = d.ponta || null;
+    // AUSENTE NÃO É VAZIO (trava 3). `contas` nulo quer dizer que a casa nunca recebeu
+    // resumo nenhum, e a tabela escreve isso em vez de "nenhuma conta cadastrada".
+    CTA.contas = Array.isArray(d.contas) ? d.contas : null;
+    CTA.ilegivel = !!d.cofre_ilegivel;
+    CTA.balcao = d.balcao || null;
+    CTA.naoLi = "";
+  } catch (e) {
+    // A LEITURA QUE FALHOU NÃO APAGA O QUE JÁ ESTAVA DESENHADO, e é o motivo por que o
+    // `CTA.contas` não é zerado aqui: uma volta ruim de rede limparia a tabela dele e ele
+    // leria isso como "o sistema perdeu minhas contas". O que muda é o recado.
+    CTA.naoLi = e.message || "não consegui falar com a casa do Estúdio";
+  }
+  pintaAPonta();
+  pintaAsContas();
+  pintaORegistro();
+}
+
+/* ------------------------------------------------------------- 1. o computador dele */
+
+function pintaAPonta() {
+  const linha = $("pnt_linha"), diz = $("pnt_diz"), instalar = $("pnt_instalar");
+  if (!linha) return;
+  const p = CTA.ponta;
+
+  /* QUATRO ESTADOS, E O QUARTO É O QUE ESTE PROJETO MAIS DEFENDE. "Não consegui saber"
+     não é "desligado": a primeira frase manda ele procurar defeito no computador, e o
+     defeito pode estar na casa ou na rede daqui. Zero e "não sei" são coisas diferentes. */
+  if (CTA.naoLi || !p) {
+    linha.innerHTML = '<span class="pnt-selo ruim"><span class="bolha"></span>'
+      + "Não Consegui Saber</span>";
+    diz.textContent = CTA.naoLi
+      || "a casa do Estúdio não respondeu, então eu não sei dizer se o seu computador "
+       + "está ligado. O que aparecer abaixo pode estar velho.";
+    instalar.hidden = true;
+    return;
+  }
+
+  const rotulos = {
+    ligada: ["ok", "Ligado"],
+    desligada: ["ruim", "Desligado"],
+    nunca_bateu: ["cinza", "Nunca Ligou"],
+  };
+  const [cor, palavra] = rotulos[p.estado] || ["cinza", "Nunca Ligou"];
+  const campo = (rot, val, classe) =>
+    '<div class="pnt-campo"><span class="rot">' + escapar(rot) + "</span>"
+    + '<span class="val ' + (classe || "") + '">' + escapar(val) + "</span></div>";
+
+  let html = '<span class="pnt-selo ' + cor + '"><span class="bolha"></span>'
+    + palavra + "</span>";
+  // CADA CAMPO SÓ APARECE QUANDO FOI MEDIDO. Endereço nulo vira "ainda não sei", e não um
+  // número velho com cara de agora: a ponta não enxerga o próprio endereço público, quem
+  // mede é a casa, pela conexão.
+  html += campo("Máquina", p.apelido || "ainda não sei");
+  html += campo("Endereço da sua internet", p.endereco || "ainda não sei", "pnt-ip");
+  html += campo("Última batida", p.ultima_batida ? haQuanto(p.ultima_batida) : "nunca");
+  html += campo("Versão", p.versao == null ? "ainda não sei" : String(p.versao));
+  linha.innerHTML = html;
+
+  const frases = {
+    ligada: "As contas ficam guardadas no seu computador, e a leitura logada roda lá. É o "
+      + "seu endereço residencial que o Instagram aceita: o da casa do Estúdio é de "
+      + "datacenter, e é o mais punido.",
+    desligada: "O seu computador parou de dar sinal. Enquanto ele estiver desligado, "
+      + "nenhuma conta descartável trabalha, e o que você pedir aqui fica esperando ele "
+      + "voltar.",
+    nunca_bateu: "Este computador ainda não se apresentou à casa do Estúdio. Siga os "
+      + "passos abaixo uma vez, e ele passa a ligar sozinho quando o Windows abrir.",
+  };
+  diz.textContent = frases[p.estado] || frases.nunca_bateu;
+
+  /* O PASSO A PASSO DA INSTALAÇÃO É PEDIDO DELE, e não enfeite: "o processo pra poder
+     configurar as contas precisa estar na aba de configurações", para quem comprar o
+     sistema conseguir ligar a própria máquina.
+
+     E A TELA NUNCA MANDA ELE DIGITAR COMANDO (critério 8 da espec). O que aparece é o que
+     ele clica e o que ele vê, e o nome do arquivo aparece como arquivo, não como linha de
+     terminal. */
+  instalar.hidden = p.estado === "ligada";
+  if (!instalar.hidden) {
+    const passos = [
+      "Baixe o instalador da ponta, que é o programa que fica no seu computador.",
+      "Abra o arquivo baixado. Ele não pede administrador e não abre janela nenhuma.",
+      "Deixe a máquina ligada. A partir daí ela se apresenta sozinha, a cada meio minuto, "
+        + "e este bloco passa a dizer Ligado.",
+    ];
+    instalar.innerHTML =
+      "<h4>Como Ligar Este Computador</h4>"
+      + '<div class="pnt-passos">'
+      + passos.map((t, i) => '<div class="pnt-passo"><b>' + (i + 1) + "</b><span>"
+          + escapar(t) + "</span></div>").join("")
+      + "</div>"
+      + '<a class="acao" href="' + POSTO + '/arquivo?onde='
+      + encodeURIComponent("instalar-ponta.ps1") + '" download>Baixar O Instalador</a>';
+  }
+}
+
+/* ------------------------------------------------------------------ 2. as contas */
+
+function pintaAsContas() {
+  const rolo = $("cta_rolo"), pe = $("cta_pe"), quantas = $("cta_quantas");
+  if (!rolo) return;
+
+  // TRÊS LEITURAS, E NÃO DUAS. Ilegível não é vazio, e "ainda não sei" não é vazio:
+  // desenhar tabela sem linha para os três casos é o falso relato que este projeto combate.
+  if (CTA.ilegivel) {
+    quantas.textContent = "";
+    pe.hidden = true;
+    rolo.innerHTML = '<div class="cta-nao-sei">O cofre existe no seu computador e não deu '
+      + "para ler. Nada foi apagado, e nenhuma conta foi perdida: enquanto estiver assim, "
+      + "o Estúdio não grava nada por cima dele.</div>";
+    return;
+  }
+  if (CTA.contas === null) {
+    quantas.textContent = "";
+    pe.hidden = true;
+    rolo.innerHTML = '<div class="cta-nao-sei">Ainda não sei quais contas existem. O seu '
+      + "computador é quem sabe, e ele conta isso à casa a cada meio minuto; enquanto ele "
+      + "não der sinal, esta lista não é zero, é desconhecida.</div>";
+    return;
+  }
+  if (!CTA.contas.length) {
+    quantas.textContent = "nenhuma ainda";
+    pe.hidden = true;
+    rolo.innerHTML = '<div class="cta-vazio"><b>Nenhuma conta cadastrada.</b>'
+      + "Clique em Cadastrar Uma Conta aqui em cima. Sem nenhuma conta, a mineração cai "
+      + "para o caminho anônimo, que hoje é recusado pelo Instagram.</div>";
+    return;
+  }
+
+  const total = CTA.contas.length;
+  const paginas = Math.max(1, Math.ceil(total / CTA_POR_PAGINA));
+  if (CTA.pagina > paginas) CTA.pagina = paginas;
+  const de = (CTA.pagina - 1) * CTA_POR_PAGINA;
+  const fatia = CTA.contas.slice(de, de + CTA_POR_PAGINA);
+  quantas.textContent = total + (total === 1 ? " cadastrada" : " cadastradas");
+
+  const enderecoDeAgora = (CTA.ponta || {}).endereco || null;
+  rolo.innerHTML =
+    '<table class="cta-tab"><thead><tr>'
+    + "<th>Conta</th><th>Estado</th><th>Vínculo do endereço</th>"
+    + '<th class="num">Leituras hoje</th><th class="num">Última leitura</th><th></th>'
+    + "</tr></thead><tbody>"
+    + fatia.map((c, i) => linhaDaConta(c, de + i + 1, enderecoDeAgora)).join("")
+    + "</tbody></table>";
+
+  /* O AVISO DO ENDERECO, UMA VEZ SO', e so' quando ha' conta que nao bate NESTA pagina:
+     dizer "alguma conta mudou" com as dez da tela batendo manda ele procurar o que nao
+     esta' ali. */
+  const mudaram = fatia.filter(c => c.endereco && enderecoDeAgora
+                                    && c.endereco !== enderecoDeAgora).length;
+  const aviso = $("cta_mudou");
+  if (aviso) {
+    aviso.hidden = !mudaram;
+    aviso.textContent = !mudaram ? "" : (mudaram === 1
+      ? "Uma conta desta página foi cadastrada num endereço diferente do de agora: ela "
+        + "pode pedir código de novo."
+      : mudaram + " contas desta página foram cadastradas num endereço diferente do de "
+        + "agora: elas podem pedir código de novo.");
+  }
+
+  pe.hidden = false;
+  $("cta_diz").textContent = (de + 1) + " a " + (de + fatia.length) + " de " + total
+    + (total === 1 ? " conta" : " contas");
+  $("cta_pag").innerHTML = paginadorDasContas(CTA.pagina, paginas);
+}
+
+function linhaDaConta(c, ordem, enderecoDeAgora) {
+  const estado = CTA_ESTADOS[c.estado] ? c.estado : "nunca_entrou";
+  // O VÍNCULO COMPARA COM O ENDEREÇO DA ÚLTIMA BATIDA, e diz o que a diferença custa. Sem
+  // a frase, "Mudou" é uma etiqueta que não responde à pergunta seguinte, que é "e daí?".
+  let vinc;
+  if (!c.endereco) {
+    vinc = '<span class="cta-vinc"><code>ainda não sei</code></span>';
+  } else if (!enderecoDeAgora) {
+    vinc = '<span class="cta-vinc"><code>' + escapar(c.endereco) + "</code></span>";
+  } else {
+    const bate = c.endereco === enderecoDeAgora;
+    /* A ETIQUETA E' POR LINHA, A EXPLICACAO E' UMA SO'. A primeira versao repetia a
+       frase inteira em cada conta que nao batia, e a foto mostrou o preco: com o
+       endereco trocado, dez linhas com quatro linhas de texto cada viraram uma parede
+       e a tabela dobrou de altura. O que muda por conta e' o selo; o porque e' o
+       mesmo para todas, e mora acima da tabela. */
+    vinc = '<span class="cta-vinc"><code>' + escapar(c.endereco) + "</code>"
+      + '<span class="cta-marca ' + (bate ? "bate" : "mudou") + '">'
+      + (bate ? "Bate" : "Mudou") + "</span></span>";
+  }
+  const testes = Number(c.testes_hoje || 0);
+  const podeTestar = testes < 3 && c.tem_sessao;
+  return '<tr data-conta="' + escapar(c.usuario) + '">'
+    + '<td><div class="cta-quem-cel"><span class="cta-ord">'
+      + String(ordem).padStart(2, "0") + "</span><div>"
+      + '<div class="nm">' + escapar(c.apelido || c.usuario) + "</div>"
+      + '<div class="ar">@' + escapar(c.usuario) + "</div></div></div></td>"
+    + '<td><span class="cta-pill ' + estado + '"><span class="pt"></span>'
+      + CTA_ESTADOS[estado] + "</span></td>"
+    + "<td>" + vinc + "</td>"
+    + '<td class="num">' + Number(c.leituras_hoje || 0) + "</td>"
+    + '<td class="num">'
+      + (c.ultima_leitura ? escapar(haQuanto(c.ultima_leitura)) : "nunca") + "</td>"
+    + '<td class="cta-acoes"><button class="acao" type="button" data-testar="'
+      + escapar(c.usuario) + '"' + (podeTestar ? "" : " disabled")
+      + ' title="' + (podeTestar ? "Pergunta ao Instagram se esta sessão ainda vale"
+          : (c.tem_sessao ? "já foram três testes hoje nesta conta"
+             : "esta conta ainda não entrou")) + '">Testar Agora</button>'
+      + '<button class="acao" type="button" data-tirar="' + escapar(c.usuario)
+      + '">Tirar</button></td>'
+    + "</tr>";
+}
+
+function paginadorDasContas(atual, paginas) {
+  const seta = d => d === "e"
+    ? '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>';
+  let n = "";
+  for (let p = 1; p <= paginas; p++) {
+    n += '<button class="cta-pag-n" type="button" data-pag="' + p + '"'
+      + (p === atual ? ' aria-current="true"' : "") + ">" + p + "</button>";
+  }
+  // OS EXTREMOS TRAVAM, e é isso que o critério 11c mede: botão que não leva a lugar
+  // nenhum e continua clicável ensina que clicar não faz nada.
+  return '<button class="cta-pag-bt" type="button" data-pag="' + (atual - 1) + '"'
+    + (atual <= 1 ? " disabled" : "") + ' aria-label="Página anterior">' + seta("e")
+    + "</button>" + n
+    + '<button class="cta-pag-bt" type="button" data-pag="' + (atual + 1) + '"'
+    + (atual >= paginas ? " disabled" : "") + ' aria-label="Próxima página">' + seta("d")
+    + "</button>";
+}
+
+/* ------------------------------------------------------------------ 3. o registro */
+
+async function pintaORegistro() {
+  const log = $("cta_log"), sub = $("cta_reg_sub");
+  if (!log) return;
+  let d = null;
+  try {
+    d = await noPosto("/mineracao/registro");
+  } catch (e) {
+    sub.textContent = "não consegui ler agora";
+    log.innerHTML = '<div class="cta-nao-sei">' + escapar(e.message) + "</div>";
+    return;
+  }
+  // REGISTRO QUE NÃO CHEGOU NÃO VIRA "PARADO" (critério 6 da espec do registro): a tela
+  // dizia calma com dezenove vagas rodando, e foi assim que ele perdeu uma hora.
+  if (d.ilegivel) {
+    sub.textContent = "não consegui ler";
+    log.innerHTML = '<div class="cta-nao-sei">O registro existe e não deu para ler. Isso '
+      + "não quer dizer que nada está acontecendo: quer dizer que eu não sei.</div>";
+    return;
+  }
+  const passos = Array.isArray(d.passos) ? d.passos : [];
+  sub.textContent = "ao vivo, direto da sua máquina";
+  if (!passos.length) {
+    log.innerHTML = '<div class="cta-vazio">Nada acontecendo agora. Quando a mineração '
+      + "correr, cada página lida aparece aqui na hora.</div>";
+    return;
+  }
+  log.innerHTML = passos.slice().reverse().slice(0, 12).map(p => {
+    const estado = ["passou", "falhou", "em_curso"].includes(p.estado)
+      ? p.estado : "em_curso";
+    const de = [p.conta, p.caminho === "ponta" ? "pelo seu computador" : null,
+                p.quantos != null ? p.quantos + " posts" : null]
+      .filter(Boolean).map(escapar).join(" &middot; ");
+    return '<div class="cta-passo"><span class="cta-mk ' + estado + '">'
+      + (estado === "falhou" ? "!" : "") + "</span>"
+      + '<span class="cta-log-txt"><b>' + escapar(p.perfil || "") + "</b>"
+      + (p.etapa ? " " + escapar(p.etapa) : "")
+      + (de ? '<span class="de"> &middot; ' + de + "</span>" : "") + "</span>"
+      + '<span class="cta-log-hora">'
+      + (p.quando ? escapar(horaCurta(p.quando)) : "") + "</span></div>";
+  }).join("");
+}
+
+/* ---------------------------------------------------------- a janela do cadastro */
+
+function ctaCab(simbolo, titulo, sub) {
+  $("cta_av").innerHTML = ctaIc(simbolo);
+  $("cta_titulo").textContent = titulo;
+  $("cta_passo").textContent = sub;
+}
+
+function ctaTrilha(n, de) {
+  let t = "";
+  for (let i = 1; i <= de; i++) {
+    t += '<span class="cta-tr ' + (i < n ? "feito" : (i === n ? "agora" : "")) + '"></span>';
+  }
+  return '<div class="cta-trilha">' + t + "</div>";
+}
+
+function abreOCadastro() {
+  CTA.passo = 1;
+  CTA.conta = null;
+  $("cta_fundo").hidden = false;
+  $("cta_pop").hidden = false;
+  desenhaOCadastro();
+  const x = $("cta_x");
+  if (x) x.focus();
+}
+
+function fechaOCadastro() {
+  $("cta_fundo").hidden = true;
+  $("cta_pop").hidden = true;
+  $("cta_corpo").innerHTML = "";
+  $("cta_pe_pop").innerHTML = "";
+}
+
+/** O recado do que acabou de acontecer, embaixo da tabela. */
+function ctaRecado(texto, tom) {
+  const d = $("cta_recado");
+  if (!d) return;
+  d.textContent = texto || "";
+  d.className = "pop-diz " + (tom || "");
+}
+
+function desenhaOCadastro() {
+  const corpo = $("cta_corpo"), pe = $("cta_pe_pop");
+  if (CTA.passo === 0) {
+    /* TIRAR A ULTIMA CONTA DIZ O QUE ISSO CUSTA (criterio 16). Com zero contas o caminho
+       principal deixa de existir, e o anonimo, que e' a reserva, e' hoje recusado pelo
+       Instagram DE QUALQUER ENDERECO: foi o que a auditoria 1a mediu em 04/09/2026. E a
+       esteira do acervo para de varrer ate' ele repor uma, que e' a resposta dele de
+       "pra ate' eu repor". */
+    const quem = (CTA.conta || {}).usuario || "";
+    const ultima = Array.isArray(CTA.contas) && CTA.contas.length === 1;
+    ctaCab("escudo", "Tirar A Conta", "@" + quem);
+    corpo.innerHTML =
+      '<div class="cta-et"><span class="cta-et-ic espera">' + ctaIc("escudo") + "</span>"
+      + "<h4>Tirar @" + escapar(quem) + " Do Seu Computador?</h4>"
+      + "<p>A sessão guardada dela é apagada da sua máquina. Para usá-la de novo você "
+      + "cadastra a senha outra vez.</p>"
+      + (ultima
+        ? '<div class="cta-jura"><svg viewBox="0 0 24 24">' + CTA_IC.escudo + "</svg>"
+          + "<span><b>Esta é a última conta.</b> Sem nenhuma, a mineração passa a "
+          + "depender do caminho anônimo, que hoje é recusado pelo Instagram de qualquer "
+          + "endereço, e a esteira do acervo para de varrer até você repor uma."
+          + "</span></div>"
+        : "")
+      + "</div>";
+    pe.innerHTML =
+      '<button class="acao cta-voltar" type="button" data-cta="fechar">Não Tirar</button>'
+      + '<button class="acao forte" type="button" data-cta="tirar">Tirar A Conta</button>';
+    return;
+  }
+  if (CTA.passo === 1) {
+    ctaCab("chave", "Cadastrar Uma Conta", "passo 1 de 3");
+    corpo.innerHTML = ctaTrilha(1, 3)
+      + '<div class="cta-et"><span class="cta-et-ic">' + ctaIc("casa") + "</span>"
+      + "<h4>O Login Acontece No Seu Computador</h4>"
+      + "<p>O Estúdio abre um navegador <b>na sua máquina</b> e faz o login por ela. É o "
+      + "seu endereço residencial que o Instagram aceita: o da casa do Estúdio é de "
+      + "datacenter, e é o mais punido.</p>"
+      /* A FRASE DIZ O QUE ACONTECE DE VERDADE, e ela foi reescrita em 05/09/2026. A
+         maquete prometia que a senha não passava pela casa, e ele escolheu, entre três
+         caminhos, justamente o que a faz passar: "na própria tela, e a senha passa pela
+         casa". Manter a promessa antiga seria a trava 2 na frase mais sensível da tela. */
+      + '<div class="cta-jura">' + ctaIc("escudo")
+      + "<span><b>Por onde a senha passa.</b> Ela sai desta página, atravessa a casa do "
+      + "Estúdio uma vez e vai para o seu computador, que é quem faz o login. A casa "
+      + "guarda o pedido só na memória e o apaga no instante em que a sua máquina o "
+      + "busca: ela não grava a senha em disco nem em registro nenhum. O que fica "
+      + "guardado, no seu computador, é a sessão, e ela nunca volta para a tela.</span>"
+      + "</div>"
+      + '<p class="cta-et-pe">Você não copia cookie, e não existe automação de código.</p>'
+      + "</div>";
+    pe.innerHTML = '<span class="nota mini">Leia e siga</span>'
+      + '<button class="acao forte" type="button" data-cta="p2">Avançar</button>';
+  } else if (CTA.passo === 2) {
+    ctaCab("usuario", "Cadastrar Uma Conta", "passo 2 de 3");
+    corpo.innerHTML = ctaTrilha(2, 3)
+      + '<div class="cta-et"><span class="cta-et-ic">' + ctaIc("usuario") + "</span>"
+      + "<h4>Usuário E Senha Da Conta</h4>"
+      + "<p>O apelido é como <b>você</b> chama esta conta na tabela. O usuário vai sem o "
+      + "arroba.</p>"
+      + '<div class="cta-campos">'
+      + '<label class="cfg-campo"><span>Apelido</span>'
+      + '<input id="cta_apelido" type="text" autocomplete="off" '
+      + 'placeholder="como você chama esta conta"></label>'
+      + '<label class="cfg-campo"><span>Usuário do Instagram</span>'
+      + '<input id="cta_usuario" type="text" autocomplete="off" spellcheck="false" '
+      + 'placeholder="sem o arroba"></label>'
+      + '<label class="cfg-campo"><span>Senha</span>'
+      + '<input id="cta_senha" type="password" autocomplete="off" '
+      + 'placeholder="usada uma vez, e guardada só na sua máquina"></label>'
+      + "</div></div>";
+    pe.innerHTML =
+      '<button class="acao cta-voltar" type="button" data-cta="p1">Voltar</button>'
+      + '<button class="acao forte" type="button" data-cta="entrar">Entrar E Guardar'
+      + "</button>";
+  } else if (CTA.passo === 3) {
+    ctaCab("correio", "Cadastrar Uma Conta", "passo 3 de 3");
+    corpo.innerHTML = ctaTrilha(3, 3)
+      + '<div class="cta-et"><span class="cta-et-ic espera">' + ctaIc("correio")
+      + "</span><h4>O Instagram Pediu Um Código</h4>"
+      + "<p>Ele foi mandado para o e-mail ou para o aplicativo desta conta. <b>O navegador "
+      + "continua aberto</b> no seu computador, esperando: fechar e abrir de novo faria o "
+      + "Instagram tratar a volta como uma tentativa nova.</p>"
+      + '<div class="cta-campos"><label class="cfg-campo">'
+      + "<span>Código do Instagram</span>"
+      + '<input class="cta-cod" id="cta_cod" inputmode="numeric" maxlength="8" '
+      + 'autocomplete="off" placeholder="000000"></label></div>'
+      + '<span class="cta-relogio">' + ctaIc("relogio")
+      + "Vence em <b>15 min</b></span>"
+      + '<p class="cta-et-pe">Passado o prazo, o navegador sai sozinho e a conta volta '
+      + "para Nunca Entrou, com o motivo escrito.</p></div>";
+    pe.innerHTML = '<span class="nota mini">Não existe automação de código</span>'
+      + '<button class="acao forte" type="button" data-cta="codigo">Confirmar Código'
+      + "</button>";
+  } else {
+    const c = CTA.conta || {};
+    ctaCab("check", "@" + (c.usuario || ""), "conta pronta");
+    corpo.innerHTML =
+      '<div class="cta-et"><span class="cta-et-ic">' + ctaIc("check") + "</span>"
+      + "<h4>" + escapar(c.apelido || c.usuario || "") + " Está Pronta</h4>"
+      + "<p>Ela entrou no rodízio e já pode ler perfis pelo seu endereço.</p>"
+      + '<div class="cta-linhas">'
+      + ctaPas("escudo", "A Sessão", "Guardada no cofre do seu computador. Ela nunca "
+          + "volta para esta tela.", "guardada")
+      + ctaPas("casa", "Vínculo Do Endereço",
+          ((CTA.ponta || {}).endereco
+            ? "A leitura vai sair de " + escapar(CTA.ponta.endereco) + "."
+            : "O endereço ainda não foi medido pela casa."),
+          (CTA.ponta || {}).endereco ? "medido" : "não sei")
+      + ctaPas("relogio", "Teto Do Dia", "São seis leituras por conta a cada dia, e o dia "
+          + "vira à meia-noite do seu computador.", "6 cabem")
+      + "</div>"
+      + '<div class="cta-jura">' + ctaIc("escudo")
+      + "<span><b>Você não faz isto de novo.</b> A sessão é reusada enquanto valer, e o "
+      + "código só volta a aparecer se o Instagram derrubar ela. Quando isso acontecer, a "
+      + "conta fica Vencida na tabela e o Estúdio pede o login uma vez, não em laço."
+      + "</span></div></div>";
+    pe.innerHTML = '<span class="nota mini">Cadastrada agora</span>'
+      + '<button class="acao forte" type="button" data-cta="fechar">Concluir</button>';
+  }
+}
+
+function ctaPas(simbolo, titulo, texto, valor) {
+  return '<div class="cta-pas"><span class="ic">' + ctaIc(simbolo) + "</span>"
+    + '<span class="c"><b>' + titulo + "</b><span>" + texto + "</span></span>"
+    + (valor ? '<span class="v">' + escapar(valor) + "</span>" : "") + "</div>";
+}
+
+/** Troca o texto de um botão enquanto ele trabalha, e devolve como devolver. */
+function ctaOcupado(b, texto) {
+  const antes = b.textContent;
+  b.textContent = texto;
+  b.disabled = true;
+  return () => { b.textContent = antes; b.disabled = false; };
+}
+
+function ctaErro(campo, recado) {
+  const velho = document.querySelector(".cta-erro");
+  if (velho) velho.remove();
+  const onde = campo ? $(campo) : null;
+  const alvo = onde ? onde.parentElement : $("cta_corpo");
+  alvo.insertAdjacentHTML("beforeend",
+    '<div class="cta-erro">' + escapar(recado) + "</div>");
+  if (onde) onde.focus();
+}
+
+/* ESPERA O COMPUTADOR DELE RESPONDER, com corte de tempo.
+   Quem faz o login é a máquina dele, e a casa é só o balcão: entre o clique e a resposta
+   passam a próxima batida (até meio minuto) e o login inteiro. Sem corte, um computador
+   que não veio buscar deixaria a janela girando para sempre, que é exatamente o defeito
+   que o roteiro de conferir ao contrário achou no `login.py` em 05/09/2026. */
+async function esperaOComputador(id, quantoTempo) {
+  const ate = Date.now() + (quantoTempo || 120000);
+  while (Date.now() < ate) {
+    await new Promise(r => setTimeout(r, 2000));
+    let d;
+    try { d = await noPosto("/contas"); } catch (e) { continue; }
+    CTA.ponta = d.ponta || null;
+    if (Array.isArray(d.contas)) CTA.contas = d.contas;
+    CTA.balcao = d.balcao || null;
+    pintaAsContas();
+    const r = ((d.balcao || {}).resultados || []).find(x => x.id === id);
+    if (r && r.estado !== "em_curso") return r;
+  }
+  return { estado: "erro",
+           motivo: "o seu computador não respondeu a tempo. Confira se ele está ligado, "
+                 + "no bloco 1 desta página, e tente de novo." };
+}
+
+async function pedirAoComputador(tipo, corpo, botao, dizendo) {
+  const solta = ctaOcupado(botao, dizendo);
+  try {
+    const d = await noPosto("/contas/pedir", { tipo, ...corpo });
+    return await esperaOComputador(d.id);
+  } catch (e) {
+    return { estado: "erro", motivo: e.message };
+  } finally {
+    solta();
+  }
+}
+
+/* ------------------------------------------------------------------- os cliques */
+
+/* UM OUVINTE SÓ, no documento, e não um por botão. A tabela é redesenhada a cada oito
+   segundos: ligar evento em cada linha seria religar cinquenta eventos a cada volta. */
+document.addEventListener("click", async ev => {
+  if (ev.target.closest("#cta_novo")) return abreOCadastro();
+
+  const pag = ev.target.closest("#cta_pag [data-pag]");
+  if (pag) {
+    CTA.pagina = Math.max(1, Number(pag.dataset.pag) || 1);
+    return pintaAsContas();
+  }
+
+  const testar = ev.target.closest("[data-testar]");
+  if (testar) {
+    const quem = testar.dataset.testar;
+    const r = await pedirAoComputador("testar", { usuario: quem }, testar, "Testando…");
+    // O RESULTADO APARECE NO REGISTRO, e não numa janela: ele pediu que o log dissesse o
+    // que está acontecendo, e um teste é uma coisa que aconteceu.
+    ctaRecado(r.motivo || (r.estado === "viva" ? "a conta continua valendo" : "não deu"),
+              r.estado === "viva" ? "boa" : "ruim");
+    return lerAsContas();
+  }
+
+  const tirar = ev.target.closest("[data-tirar]");
+  if (tirar) {
+    /* QUEM PERGUNTA E' A JANELA DESTA CASA, e nao o aviso do navegador. Ele ja' reprovou
+       isso uma vez, na fabricacao da leva: "o aviso do navegador nao serve, ele nao e'
+       desta casa e nao sabe contar peca" (trava 66f). Aqui ele precisa contar conta. */
+    CTA.conta = { usuario: tirar.dataset.tirar };
+    CTA.passo = 0;
+    $("cta_fundo").hidden = false;
+    $("cta_pop").hidden = false;
+    desenhaOCadastro();
+    return;
+  }
+
+  if (ev.target.closest("#cta_x") || ev.target.closest("#cta_fundo")) {
+    return fechaOCadastro();
+  }
+  const b = ev.target.closest("#cta_pe_pop [data-cta]");
+  if (!b) return;
+  const qual = b.dataset.cta;
+  if (qual === "fechar") { fechaOCadastro(); return lerAsContas(); }
+  if (qual === "tirar") {
+    const quem = (CTA.conta || {}).usuario || "";
+    const r = await pedirAoComputador("tirar", { usuario: quem }, b, "Tirando…");
+    fechaOCadastro();
+    ctaRecado(r.estado === "tirada"
+      ? "a conta @" + quem + " foi tirada do seu computador"
+      : (r.motivo || "não deu"), r.estado === "tirada" ? "boa" : "ruim");
+    return lerAsContas();
+  }
+  if (qual === "p1") { CTA.passo = 1; return desenhaOCadastro(); }
+  if (qual === "p2") {
+    CTA.passo = 2;
+    desenhaOCadastro();
+    const campo = $("cta_apelido");
+    if (campo) campo.focus();
+    return;
+  }
+  if (qual === "entrar") {
+    const usuario = ($("cta_usuario").value || "").trim().replace(/^@/, "");
+    const senha = $("cta_senha").value || "";
+    const apelido = ($("cta_apelido").value || "").trim();
+    if (!usuario) return ctaErro("cta_usuario", "Escreva o usuário da conta.");
+    if (!senha) return ctaErro("cta_senha", "Escreva a senha da conta.");
+    CTA.conta = { usuario, apelido: apelido || usuario };
+    const r = await pedirAoComputador("entrar", { usuario, senha, apelido }, b,
+                                      "Abrindo O Navegador…");
+    // A SENHA MORRE AQUI, na tela também: o campo é limpo assim que o pedido sai, e o
+    // valor não fica pendurado num objeto para o resto da visita (critério 13).
+    const campoSenha = $("cta_senha");
+    if (campoSenha) campoSenha.value = "";
+    if (r.estado === "esperando_codigo") { CTA.passo = 3; return desenhaOCadastro(); }
+    if (r.estado === "viva") { CTA.passo = 4; lerAsContas(); return desenhaOCadastro(); }
+    return ctaErro("cta_senha", r.motivo || "não deu para entrar com essa conta");
+  }
+  if (qual === "codigo") {
+    const codigo = ($("cta_cod").value || "").trim();
+    if (!codigo) return ctaErro("cta_cod", "Digite o código antes de confirmar.");
+    const r = await pedirAoComputador("codigo",
+      { usuario: (CTA.conta || {}).usuario, codigo, apelido: (CTA.conta || {}).apelido },
+      b, "Conferindo…");
+    if (r.estado === "viva") { CTA.passo = 4; lerAsContas(); return desenhaOCadastro(); }
+    return ctaErro("cta_cod", r.motivo || "esse código não confere");
+  }
+});
+
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && !$("cta_pop").hidden) fechaOCadastro();
+});

@@ -69,6 +69,11 @@ GRAVIDADE = {
     "estouro": "falha",
     # o vigia reapresentando perfil travado e' anomalia, nao andamento normal
     "vigia": "aviso",
+    # A LEITURA LOGADA DA CASA. Ela monta o evento no `casa.evento_casa`, FORA desta
+    # tabela, e por isso a varredura que cruza esta lista com a tela nunca a alcancava:
+    # chave nova da casa passava verde. Ela entra aqui para ser varrida junto, e a
+    # gravidade escrita e' a mesma que o `casa.py` ja' usava no caminho bom.
+    "casa": "evento",
 }
 
 
@@ -194,12 +199,20 @@ def apagar_nota(caminho: str) -> None:
         pass
 
 
+# POR QUAL CAMINHO O PERFIL FOI LIDO. Os eventos escritos aqui sao os da esteira, que e' o
+# caminho ANONIMO; os da leitura logada trazem `ponta` (`casa.evento_casa`). Sem este
+# campo, os dois ficavam com a mesma cara na tela e nao havia como saber se o caminho novo
+# pegou (espec cd-6-virada, criterio 14).
+CAMINHO_DESTE_ESCRITOR = "anonimo"
+
+
 def anotar(livro: dict, tipo: str, quando: int, texto: str, **detalhe) -> None:
     livro["eventos"].append({
         "quando": int(quando),
         "tipo": tipo,
         "gravidade": GRAVIDADE.get(tipo, "evento"),
         "texto": texto,
+        "caminho": CAMINHO_DESTE_ESCRITOR,
         **({"detalhe": detalhe} if detalhe else {}),
     })
 

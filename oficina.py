@@ -2613,6 +2613,60 @@ def frase_em_imagem(frase: str) -> bytes | None:
     return saco.getvalue()
 
 
+# AS VARIAVEIS DO MOLDE DE DESCRICAO, e a lista mora aqui porque quem escreve e' este
+# programa. A tela tem a mesma lista para o glossario e para a previa, e a prova `descricao`
+# compara as duas saidas com o mesmo molde: duas contas parecidas divergem na primeira
+# variavel nova, e a divergencia so' apareceria depois de 180 descricoes pagas.
+VARIAVEIS_DO_MOLDE = ("texto", "frase", "frase_min", "conta", "n", "leva")
+
+
+def aplicar_o_molde(molde: str, d: dict) -> str:
+    """O molde do padrao com as variaveis desta peca no lugar.
+
+    A ORDEM IMPORTA: `frase_min` sai ANTES de `frase`, senao o `{frase` de `{frase_min}`
+    casaria primeiro e sobraria um `_min}` solto no texto. E' o mesmo cuidado que a tela
+    toma na funcao irma, e por isso as duas trocam na mesma ordem.
+    """
+    frase = str(d.get("frase") or "")
+    fora = str(molde or "")
+    fora = fora.replace("{texto}", str(d.get("texto") or ""))
+    fora = fora.replace("{frase_min}",
+                        (frase[:1].lower() + frase[1:]) if frase else "")
+    fora = fora.replace("{frase}", frase)
+    fora = fora.replace("{conta}", str(d.get("conta") or ""))
+    fora = fora.replace("{n}", str(d.get("n") or ""))
+    fora = fora.replace("{leva}", str(d.get("leva") or ""))
+    return fora
+
+
+# O QUE E' ESCRITA QUEBRADA, e a lista nao e' de gosto: e' o rastro que uma codificacao
+# errada deixa. O losango U+FFFD e' o que o navegador poe no lugar de um byte que nao soube
+# ler; o "Ã§" e o "â€™" sao UTF-8 lido como Latin-1; e meio emoji e' um par cortado no meio.
+_MOJIBAKE = re.compile(r"Ã[\x80-\xbf]|â€[\x80-\xbf¦]|Â[\xa0-\xbf]")
+
+
+def escrita_quebrada(texto: str) -> str:
+    """O motivo, em portugues, quando o texto chegaria quebrado. Vazio quando esta' inteiro.
+
+    POR QUE ELA MORA AQUI TAMBEM, e nao so' na tela. A tela confere antes de mandar, que e'
+    o que evita o trabalho perdido; este programa confere antes de GRAVAR, que e' o que
+    evita o arquivo quebrado chegar ao Drive dele. Ordem de 05/09/2026: "pra que nao chegue
+    la' no Drive de forma quebrada". Portao que so' existe na tela e' portao que some quando
+    o pedido chega por outro caminho.
+    """
+    t = str(texto or "")
+    if "�" in t:
+        return ("tem o losango de interrogacao, que e' o sinal de letra que nao foi lida")
+    if _MOJIBAKE.search(t):
+        return ("a acentuacao chegou trocada (o A-til no lugar do c-cedilha), que e' texto "
+                "lido com a codificacao errada")
+    try:
+        t.encode("utf-8")
+    except UnicodeEncodeError:
+        return "tem metade de um emoji, sem o par que o completa"
+    return ""
+
+
 def originais_da_leva(pasta: str) -> dict:
     """A legenda original de cada peca, lida do `_lote.json` da leva.
 
@@ -2667,6 +2721,15 @@ def cumprir_descrever(caminho: Path, p: dict) -> None:
     # dizer sem fecho. Era o que o comentario do RODAPE_PADRAO prometia e o codigo nao
     # cumpria: `or` engolia os dois casos. Auditoria de 25/08/2026.
     rodape = ((p["rodape"] or "") if "rodape" in p else RODAPE_PADRAO).strip()
+    # O MOLDE DO PADRAO ESCOLHIDO (05/09/2026), e ele SUBSTITUI o fecho quando vem.
+    #
+    # ORDEM DELE: "eu vou cadastrar alguns padroes, e ai' eu escolho o padrao de descricao,
+    # e ele vai replicar e fazer as alteracoes em cima desse padrao". O fecho fixo so' sabia
+    # colar DEPOIS do texto da IA; o molde poe o texto onde ele mandar, e tambem antes.
+    #
+    # PEDIDO SEM MOLDE CONTINUA VALENDO, com o fecho de sempre: e' o caminho de quem gravou
+    # o rascunho antes desta mudanca, e ele nao pode quebrar por causa dela.
+    molde = str(p.get("molde") or "").strip()
     ia = ler_ia()
 
     if not (ia.get("chaves") or []):
@@ -2736,8 +2799,19 @@ def cumprir_descrever(caminho: Path, p: dict) -> None:
                 break
             continue
         if texto:
-            # O FECHO ENTRA AQUI, depois de a IA responder e antes de guardar.
-            saida[nome] = (texto + ("\n\n" + rodape if rodape else "")).strip()
+            # O MOLDE, OU O FECHO. O molde entra aqui, depois de a IA responder e antes de
+            # guardar, no mesmo ponto em que o fecho entrava: e' o ultimo lugar em que o
+            # texto ainda esta' inteiro na memoria deste programa.
+            if molde:
+                saida[nome] = aplicar_o_molde(molde, {
+                    "texto": texto,
+                    "frase": str(peca.get("frase") or ""),
+                    "conta": (doLote.get(nome) or {}).get("conta", ""),
+                    "n": str(peca.get("n") or i),
+                    "leva": str(p.get("leva") or ""),
+                }).strip()
+            else:
+                saida[nome] = (texto + ("\n\n" + rodape if rodape else "")).strip()
             feitos += 1
             print(f"  {i}/{len(pecas)} {nome}: {texto[:60]}")
             # A COPIA EM DISCO SAI A CADA LEGENDA, com o OSError engolido como nos
@@ -3072,7 +3146,7 @@ def cumprir_entregar(caminho: Path, p: dict) -> None:
         renovar_tranca()   # a subida de uma leva e' longa; a tranca nao envelhece
 
     # ------------------------------------------------------------ 1. empacotar
-    empacotadas = sem_descricao = 0
+    empacotadas = sem_descricao = documentos = quebradas = 0
     diario = []
     # DE QUEM E' CADA PECA. Com uma conta so' na leva, e' ela em todas e nao ha' o que
     # procurar. Com mais de uma, o `_lote.json` e' quem sabe, peca por peca.
@@ -3080,11 +3154,25 @@ def cumprir_entregar(caminho: Path, p: dict) -> None:
     largura = len(str(len(videos)))
     usados = set()
     for i, v in enumerate(videos, 1):
-        contar("empacotando", empacotadas, len(videos), {"atual": v.name})
+        contar("empacotando", empacotadas, len(videos),
+               {"atual": v.name, "documentos": documentos})
         texto = (descricoes.get(v.name) or "").strip()
+        # A CONFERENCIA DA ESCRITA, no ultimo lugar em que da' para impedir (05/09/2026).
+        # Descricao quebrada NAO VIRA DOCUMENTO: a peca sobe so' com o video, e o diario diz
+        # qual e por que. Gravar assim mesmo poria o defeito no Drive dele, e desfazer isso
+        # e' apagar arquivo do Drive de outra pessoa.
+        motivo = escrita_quebrada(texto) if texto else ""
+        if motivo:
+            quebradas += 1
+            diario.append({"arquivo": v.name,
+                           "erro": f"a descricao nao virou documento: {motivo}"})
+            print(f"  {i}/{len(videos)} {v.name}: descricao quebrada, {motivo}")
+            texto = ""
         if not texto:
             sem_descricao += 1
             diario.append({"arquivo": v.name, "aviso": "sobe sem descricao"})
+        else:
+            documentos += 1
         de_quem = ((doLote.get(v.name) or {}).get("conta")
                    or (contas[0] if contas else ""))
         nome = nome_simples_da_peca(i, largura, de_quem, texto, v.name)
@@ -3227,6 +3315,12 @@ def cumprir_entregar(caminho: Path, p: dict) -> None:
     andamento(pid, {"id": pid, "tipo": "entregar", "fim": True, "rotulo": rotulo,
                     "total": len(videos), "feitos": empacotadas,
                     "sem_descricao": sem_descricao, "pasta": str(casa),
+                    # A DUPLA, CONTADA: quantos videos e quantos DOCUMENTOS. Sao dois
+                    # numeros porque podem divergir de proposito (peca sem descricao sobe
+                    # so' com o video), e um numero so' esconderia isso. Ordem de
+                    # 05/09/2026: "entrega o video la' a nivel de pasta e tambem entrega o
+                    # arquivo Docs ali".
+                    "documentos": documentos, "quebradas": quebradas,
                     "onde": "entregas/" + rotulo,
                     # O QUE SUBIU E' O QUE O DRIVE CONFIRMOU, e nao o que o rclone
                     # disse. Ate' 24/08/2026 `subiu` era o codigo de saida do rclone, e a
