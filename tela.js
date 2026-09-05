@@ -30,7 +30,26 @@ function irPara(chave, empurrar) {
   if (bolha) bolha.hidden = chave !== "baixar";
   // SAIR DA ABA SAI DO MODO FOCADO. A classe vive no `body`, entao ela sobreviveria a
   // troca de aba e deixaria o sistema inteiro sem cabecalho, sem nada explicando.
-  if (chave !== "editar") document.body.classList.remove("ed-focado");
+  if (chave !== "editar") {
+    document.body.classList.remove("ed-focado");
+    /* E SAI DO MODO ESTEIRA JUNTO, que e' a classe irma e ficou de fora ate' 04/09/2026.
+       O DEFEITO QUE ISTO FECHA: quem saisse da Edicao estando na Bancada trancava o
+       Estudio INTEIRO sem cabecalho e sem rodape', em qualquer aba, ate' dar F5. Medido:
+       depois do clique em Sair, o `ed-focado` saia mas o `esteira-aberta` continuava, e a
+       regra `body:has(.ed-tela.esteira-aberta)` da folha esconde a navegacao olhando o
+       `body` inteiro. E' quase certo que foi isto que ele viu quando escreveu "la' em
+       cima, cade o cabecalho" e "o sistema inteiro bugou".
+
+       TIRAR A CLASSE NA MAO, e nao chamar o `porOModoEsteira`. Medido: com o sistema ja'
+       trancado, aquela funcao deixa a classe como estava, porque ela decide por
+       `EDIT_PASSO === 3 && TPL_SUB === 6`, e sair da oficina nao mexe nesse par. Ela
+       RECOLOCA o que se queria tirar. */
+    // PELA CLASSE, E NAO PELO `TELAS`: o `irPara` roda na ABERTURA da pagina, antes de o
+    // `TELAS` existir, e pedir por ele aqui derruba o programa inteiro na primeira linha.
+    // Pegar quem tem a classe tambem e' mais honesto: tira de quem estiver com ela.
+    for (const el of document.querySelectorAll(".ed-tela.esteira-aberta"))
+      el.classList.remove("esteira-aberta");
+  }
   // A ABA DE CONFIGURACOES SE PINTA AO SER ABERTA, e nao no carregamento da pagina: ela
   // depende da pasta do Estudio, que so' e' liberada na aba de Edicao.
   if (chave === "config" && PRONTA) { retomarPastaEler(); }
@@ -4360,7 +4379,34 @@ async function guardarRascunho(r) {
 
 /* APAGAR NOS DOIS. Apagar so' de um lado ressuscita o rascunho na visita seguinte, que e'
    o mesmo defeito que ja' fez leva entregue voltar para a portaria. */
+/* APAGADO NAO RESSUSCITA, e ate' 04/09/2026 ressuscitava. Queixa dele, de viva voz: "nao
+   estou conseguindo excluir o rascunho".
+
+   O APAGAR SEMPRE FUNCIONOU, medido: o xis tira do cofre do navegador E do disco da casa, e
+   o gesto isolado deixa os tres lugares vazios. Quem trazia de volta era o RELOGIO de 600
+   milissegundos do `anotarMexida`, que ninguem cancelava ao sair da oficina: ele disparava
+   depois do apagar, encontrava `EDIT_RASCUNHO` e `EDIT_LEVA` ainda na mao, e regravava o
+   MESMO id. Medido no gesto dele (mexer, Sair Da Edicao, xis): 2,5 segundos depois o mesmo
+   rascunho estava de volta nos tres lugares.
+
+   NAO E' O `ed_sair`, e essa foi a primeira suspeita. Traco do gesto: a gravacao direta do
+   Sair pousa em +10ms e o apagar em +321ms, ou seja 311 milissegundos ANTES. Quem ressuscita
+   e' so' o relogio, em +612ms.
+
+   TRES FECHOS, e o primeiro sozinho ja' resolve. O relogio morre; o par na mao e' largado
+   quando o apagado e' o aberto; e o id entra na lista dos mortos, que a gravacao consulta.
+   Os tres juntos porque cada um fecha uma porta diferente: o relogio pendente, uma gravacao
+   ja' em voo na fila, e a proxima mexida na tela. */
+const RASCUNHOS_MORTOS = new Set();
+
 async function apagarRascunho(id) {
+  RASCUNHOS_MORTOS.add(id);
+  if (RELOGIO_DO_RASCUNHO) { clearTimeout(RELOGIO_DO_RASCUNHO); RELOGIO_DO_RASCUNHO = null; }
+  // O PAR NA MAO SO' SE LARGA SE FOR ESTE. Zerar sempre quebraria apagar o rascunho de
+  // OUTRA leva com a atual aberta, que e' o gesto normal na portaria.
+  if (EDIT_RASCUNHO && EDIT_RASCUNHO.id === id) {
+    EDIT_RASCUNHO = null; EDIT_LEVA = null; ULTIMO_RASCUNHO_GRAVADO = "";
+  }
   await noCofre(COFRE.rascunhos, true, s => s.delete(id));
   if (!(await postoDePe())) return;
   try { await noPosto("/rascunho-apagar", { id }); } catch (e) { /* fica para a proxima */ }
@@ -4408,6 +4454,11 @@ async function salvarRascunhoDeVerdade() {
      A MARCA E' DA LEVA, E NAO DO REGISTRO. Enquanto o registro pode ser apagado e
      recriado, o numero da leva encerrada fica, e e' ele que fecha a porta. */
   if (ENCERRADAS.has(EDIT_LEVA.numero)) return;
+  /* RASCUNHO APAGADO NAO VOLTA. Quarta porta, irma da de cima e pela mesma logica: la' a
+     marca e' da leva encerrada, aqui e' do registro que ele mandou apagar. Sem ela, uma
+     gravacao ja' em VOO na fila (o `RASCUNHO_NA_VEZ` logo acima) pousaria depois do apagar
+     e recriaria o mesmo id, que e' o que ele viu acontecer. */
+  if (EDIT_RASCUNHO && RASCUNHOS_MORTOS.has(EDIT_RASCUNHO.id)) return;
   // RASCUNHO DE OUTRA LEVA NO BOLSO NAO SERVE: entrar na leva 31 com o registro da 30
   // ainda carregado reescreveria o registro da 30 como se fosse da 31, e a portaria
   // ganharia um repetido convertido.
@@ -4538,6 +4589,29 @@ async function salvarRascunhoDeVerdade() {
   // de cima; deixá-la de pé faria a gravação seguinte criar mais um, e mais um, porque o
   // que a adoção impede é justamente isso.
   EDICAO_NOVA = false;
+  /* GRAVACAO IGUAL A' ANTERIOR NAO SOBE (04/09/2026). Medido com a leva de 180 pecas: cada
+     clique de aba mandava DOIS `POST /rascunhos` de 20.828 bytes cada, byte a byte iguais,
+     41.656 bytes por troca, mais 4 a 6 idas ao posto em fila.
+
+     POR QUE DOIS: dois caminhos gravam o mesmo rascunho sem saber um do outro. O clique da
+     aba grava na hora, e o `entrarNoTemplate` marca mexida, que dispara a MESMA gravacao
+     600 milissegundos depois. Nenhum dos dois esta' errado sozinho; errado e' mandar duas
+     vezes o mesmo corpo.
+
+     POR QUE ISSO E' A LENTIDAO QUE ELE SENTE. Cronometrado com o posto em 127.0.0.1, o
+     clique custa de 19 a 49 milissegundos e nao ha' tarefa longa: aqui a lentidao dele NAO
+     reproduz. Mas a casa mora numa maquina alugada, e ali cada ida e' ida e volta de rede.
+     Vinte kilobytes subindo duas vezes, com quatro a seis pedidos um esperando o outro, e'
+     a explicacao que sobra de pe'.
+
+     A COMPARACAO IGNORA O `mexido`, que e' o relogio e muda sempre: comparar com ele
+     dentro nunca daria igual, e a trava nao pegaria nada. */
+  const corpoAgora = JSON.stringify({ ...r, mexido: 0 });
+  if (corpoAgora === ULTIMO_RASCUNHO_GRAVADO) {
+    if (!$("ed_portaria").hidden) desenhaRascunhos();
+    return;
+  }
+  ULTIMO_RASCUNHO_GRAVADO = corpoAgora;
   await guardarRascunho(r);
   // A LISTA SÓ SE REDESENHA QUANDO ELA ESTÁ NA FRENTE DELE. Redesenhar a portaria a cada
   // gravação significa reler o banco do navegador inteiro no meio de um arrasto.
@@ -4549,6 +4623,10 @@ async function salvarRascunhoDeVerdade() {
    de escrita à toa e engasgaria o arrasto. Seiscentos milissegundos de silêncio bastam
    para saber que ele parou de mexer. */
 let RELOGIO_DO_RASCUNHO = null;
+// A ASSINATURA DA ULTIMA GRAVACAO. Ela mora fora da funcao porque a comparacao e' entre
+// UMA gravacao e a SEGUINTE. Zerada ao trocar de leva, mais abaixo, para a leva nova nao
+// herdar a assinatura da anterior e desistir de gravar a primeira vez.
+let ULTIMO_RASCUNHO_GRAVADO = "";
 function anotarMexida() {
   if (RELOGIO_DO_RASCUNHO) clearTimeout(RELOGIO_DO_RASCUNHO);
   RELOGIO_DO_RASCUNHO = setTimeout(() => {
@@ -4561,7 +4639,7 @@ function anotarMexida() {
 function ondeParou(r) {
   const passo = r.passo || 1;
   if (passo < 2) return "vendo as peças da leva";
-  if (passo === 2) return "no recorte do B-roll";
+  if (passo === 2) return "na medida do B-roll";
   if (passo >= 4) return "na legenda";
   return ["", "escolhendo o template", "montando o template",
           "pronto para montar"][r.sub || 1] || "no template";
@@ -4668,6 +4746,17 @@ function trocarAgora(qual) {
     el.classList.remove("saindo");
   }
   focar(qual === "oficina");
+  /* SAIR DA OFICINA TIRA O MODO ESTEIRA. Mesma razao da linha irma no `irPara`: a classe
+     mora no `#ed_oficina` e a regra da folha a le' pelo `body`, entao ela sobrevive a'
+     troca de tela e esconde a navegacao do Estudio inteiro. Aqui e' o caminho de dentro
+     (Sair Da Edicao volta para a portaria); la' e' o de fora (trocar de aba do sistema). */
+  if (qual !== "oficina") {
+    // PELA CLASSE, E NAO PELO `TELAS`: o `irPara` roda na ABERTURA da pagina, antes de o
+    // `TELAS` existir, e pedir por ele aqui derruba o programa inteiro na primeira linha.
+    // Pegar quem tem a classe tambem e' mais honesto: tira de quem estiver com ela.
+    for (const el of document.querySelectorAll(".ed-tela.esteira-aberta"))
+      el.classList.remove("esteira-aberta");
+  }
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -4740,7 +4829,7 @@ async function desenhaLevasDaEdicao(indice) {
       retrato(MINERADOS.find(p => p.conta === c) || { conta: c, foto: false })).join("");
     // O QUE O RASCUNHO DIZ, em palavra dele: o passo por nome, e quando foi a última
     // mexida. "Passo 3" sozinho não diz nada a quem não conta passo de cabeça.
-    const NOME_DO_PASSO = { 1: "a seleção da leva", 2: "o recorte do B-roll",
+    const NOME_DO_PASSO = { 1: "a seleção da leva", 2: "a medida do B-roll",
                             3: "a montagem da peça", 4: "a legenda e a entrega" };
     const conta = antes
       ? `você parou n${NOME_DO_PASSO[antes.passo] ? "" : "o passo "}`
@@ -4851,6 +4940,11 @@ $("ed_levas").addEventListener("click", async ev => {
     EDIT_LEVA = (LOTES || []).find(l => l.numero === n) || { numero: n };
     EDIT_RASCUNHO = null;
     EDICAO_NOVA = true;
+    // A LISTA DOS MORTOS SE ESVAZIA AQUI. Ela e' a defesa contra o rascunho apagado que
+    // ressuscita, e vale so' ate' ele pedir uma edicao nova: guardada para sempre, ela
+    // faria a gravacao desistir de um id reaproveitado e o botao viraria teatro.
+    RASCUNHOS_MORTOS.clear();
+    ULTIMO_RASCUNHO_GRAVADO = "";
     esquecerOsPassos();
     await entrarNaOficina(1, undefined);
     return;
@@ -4978,8 +5072,11 @@ function esquecerOsPassos() {
 const ETAPAS_DO_TRILHO = [
   { n: 1, passo: 1, sub: null },
   { n: 2, passo: 3, sub: 1 },   // A Marca    <- Modelo Do Template
-  { n: 3, passo: 3, sub: 6 },   // A Bancada  <- Revisao Peca A Peca
-  { n: 4, passo: 3, sub: 4 },   // As Frases  <- Escrita Das Frases
+  // AS DUAS TROCARAM DE NUMERO EM 04/09/2026, por ordem dele. A ordem DESTE array tem de
+  // acompanhar a ordem do documento: o `abrirAAba` indexa por etapa menos um (mais abaixo
+  // neste arquivo), entao inverter aqui sem inverter no `corpo.html` abriria a aba trocada.
+  { n: 3, passo: 3, sub: 4 },   // As Frases  <- Escrita Das Frases
+  { n: 4, passo: 3, sub: 6 },   // A Bancada  <- Revisao Peca A Peca
   { n: 5, passo: 3, sub: 5 },   // Fabricar   <- Fabricar As Pecas
   { n: 6, passo: 4, sub: null }, // A Entrega <- Legenda E Entrega
 ];
@@ -5012,8 +5109,23 @@ function pintarOTrilho() {
     // para adivinhar, com a tira de abas vira um botao do tamanho dos outros que nao faz
     // nada quando clicado, que e' a queixa dele sobre o passo 4.
     const sub = p.dataset.sub ? Number(p.dataset.sub) : null;
-    p.classList.toggle("travado",
-      (q > 1 && !EDIT_LEVA) || (q > 1 && !RECORTADO) || (sub ? !podeIrAoSub(sub) : false));
+    /* A ENTREGA TAMBEM TRANCA, e ate' 04/09/2026 ela era a UNICA que nunca trancava.
+       Medido: com a leva aberta, a medida cumprida e nenhuma conta escolhida, a tira
+       devolvia 1 e 2 livres, 3, 4 e 5 trancadas com opacidade 0,42, e a 6 LIVRE. O clique
+       passava e abria o passo 4 vazio.
+
+       A CONTA NAO ESQUECEU DELA, ela caiu no buraco do `data-sub`: a aba 6 aponta para o
+       passo 4 e nao tem sub nenhuma, entao a terceira parcela virava `false` e so' a falta
+       de leva ou de medida a fechava. So' que A Entrega vem DEPOIS de Fabricar no caminho,
+       e por isso ela tem de estar pelo menos tao fechada quanto ele: quem nao pode
+       fabricar nao tem o que entregar. */
+    const trancaDaEntrega = !p.dataset.sub && q > 2 && !podeIrAoSub(5);
+    const trancada = (q > 1 && !EDIT_LEVA) || (q > 1 && !RECORTADO)
+      || (sub ? !podeIrAoSub(sub) : trancaDaEntrega);
+    p.classList.toggle("travado", trancada);
+    // QUEM NAVEGA POR TECLADO TAMBEM PRECISA SABER. A opacidade nao chega ao leitor de
+    // tela, e a aba continuava se anunciando como uma aba comum, aberta.
+    p.setAttribute("aria-disabled", trancada ? "true" : "false");
     // A BARRA CHEIA É PASSO RESOLVIDO; a do passo atual mostra o quanto dele já foi
     // feito. No passo 1, resolvido quer dizer leva escolhida, e ela já está. Ninguem ve'
     // nenhuma das duas desde 25/08/2026, e quem le' e' a prova.
@@ -5065,6 +5177,38 @@ function irParaPasso(n, sub) {
    padrao dela. */
 let MP_RECADO_FORCADO = "";
 
+/* A ENTREGA DO RECADO DA ABA TRANCADA (04/09/2026), e por que ela virou funcao.
+
+   O DEFEITO QUE ISTO FECHA e' a queixa dele de viva voz: "eu cliquei aqui na bancada, o
+   sistema inteiro bugou, nao acontece nada". A aba estava TRANCADA porque faltava aplicar
+   o template na aba 2, e a tela nao disse uma palavra: ele descobriu sozinho, depois de
+   dois F5.
+
+   POR QUE O RECADO MORRIA. Ele era guardado nesta variavel e entregue de CARONA no fim do
+   `pintarAsMolduras`, que e' a pintura das miniaturas das molduras e nao tem nada com o
+   assunto. Essa funcao tem cinco saidas, e a entrega estava em UMA delas, dentro do
+   `if (!faltou.length)`. Medido: com a conta ainda sem arte cadastrada, que e' justamente
+   o estado de quem ainda nao configurou a leva, a pintura desiste na primeira linha e o
+   recado nunca chega. Pior, ele fica ARMADO na variavel e aparece fora de hora, na proxima
+   pintura que terminar bem, falando de um clique que ele deu minutos atras.
+
+   O CONSERTO NAO E' TROCAR QUEM ESCREVE, e sim fazer TODA saida entregar. Escrever direto
+   na hora do clique ja' foi tentado e some em milissegundos, porque a pintura passa por
+   cima; agora ela respeita o forcado em todos os caminhos, entao escrever na hora tambem
+   passou a ser seguro, e e' o que da' resposta imediata ao dedo dele. */
+function entregarORecadoDaMarca() {
+  const el = $("mp_recado");
+  if (!el) return;
+  const forcado = MP_RECADO_FORCADO;
+  el.textContent = forcado || MP_RECADO_PADRAO;
+  // O RECADO DA TRAVA NAO E' TEXTO DE APOIO. Medido antes: ele nascia na mesma caixa do
+  // subtitulo explicativo da aba, 1126 por 20 pixels, mesma cor cinza e mesma letra. Mudava
+  // uma frase cinza no meio de outra frase cinza, e mais nada na tela. A classe lhe da'
+  // corpo proprio, para o olho saber que ALGUMA COISA respondeu ao clique.
+  el.classList.toggle("mp-travou", !!forcado);
+  MP_RECADO_FORCADO = "";
+}
+
 document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
   const abrirAAba = async () => {
     const e = ETAPAS_DO_TRILHO[Number(p.dataset.etapa) - 1];
@@ -5092,6 +5236,10 @@ document.querySelectorAll("#ed_trilho .ed-ponto").forEach(p => {
       MP_RECADO_FORCADO = "escolha a conta desta leva primeiro: as frases, a bancada e a "
         + "fabricação trabalham em cima da variação que ela define.";
       irParaPasso(3, 1);
+      // NA HORA, e nao so' de carona na pintura: o dedo dele tem de receber resposta no
+      // mesmo quadro. A pintura respeita o forcado nos cinco caminhos, entao ela nao
+      // apaga isto quando terminar.
+      entregarORecadoDaMarca();
       salvarRascunho();
       return;
     }
@@ -5238,7 +5386,7 @@ function desenhaPecas() {
   $("ed_p1_qual").textContent = valendo === 1 ? "peça" : "peças";
   $("ed_fora_linha").hidden = !fora;
   if (fora) {
-    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pelo recorte, nem pela IA, nem pela montagem. O arquivo continua guardado na casa do Estúdio.`;
+    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pela medida, nem pela IA, nem pela montagem. O arquivo continua guardado na casa do Estúdio.`;
   }
 
   // O VÍDEO CARREGA SÓ O CABEÇALHO, e o quadro mostrado é o do segundo e meio. Pedir os
@@ -5368,7 +5516,7 @@ function contaDaLeva() {
   $("ed_p1_qual").textContent = valendo === 1 ? "peça" : "peças";
   $("ed_fora_linha").hidden = !fora;
   if (fora) {
-    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pelo recorte, nem pela IA, nem pela montagem. O arquivo continua guardado na casa do Estúdio.`;
+    $("ed_fora_diz").innerHTML = `<b>${num(fora)}</b> ${fora === 1 ? "peça tirada" : "peças tiradas"} da leva. ${fora === 1 ? "Ela não passa" : "Elas não passam"} pela medida, nem pela IA, nem pela montagem. O arquivo continua guardado na casa do Estúdio.`;
   }
 }
 
@@ -5735,9 +5883,9 @@ async function procurarRecortes() {
       // estado não é apagado (certo), e agora a causa fica escrita onde se olha.
       const aviso = $("rec_diz");
       if (aviso) {
-        aviso.textContent = "não consegui ler os recortes desta leva: "
+        aviso.textContent = "não consegui ler as medidas desta leva: "
           + (e && e.message ? e.message : "falha ao falar com o posto")
-          + " — recarregue e tente de novo antes de recortar qualquer coisa.";
+          + " — recarregue e tente de novo antes de medir qualquer coisa.";
       }
       return;
     }
@@ -5861,12 +6009,12 @@ function desenhaRecortado() {
   const r2 = $("ed_r2");
   if (r2 && tem) {
     r2.textContent = num(RECORTADO.pecas)
-      + (RECORTADO.pecas === 1 ? " recorte pronto" : " recortes prontos")
-      + (faltam ? `, ${num(faltam)} sem recorte` : "");
+      + (RECORTADO.pecas === 1 ? " peça medida" : " peças medidas")
+      + (faltam ? `, ${num(faltam)} sem medida` : "");
   }
   $("rec_aplicar").hidden = tem && !faltam;
   if (faltam) {
-    dizNoBotao("rec_aplicar", `Recortar As ${num(faltam)} Que Faltaram`);
+    dizNoBotao("rec_aplicar", `Medir As ${num(faltam)} Que Faltaram`);
   }
   $("rec_feito").hidden = !tem;
   if (!tem) return;
@@ -5916,9 +6064,9 @@ function desenhaOFechoDoRecorte() {
   desenhaTiras({ total: lista.length, marcas, fim: true, feitos: feitas });
   $("rec_obra_tempo").textContent = "";
   $("rec_obra_txt").textContent = num(feitas)
-    + (feitas === 1 ? " recorte pronto" : " recortes prontos")
+    + (feitas === 1 ? " peça medida" : " peças medidas")
     + (feitas < lista.length
-       ? ", " + num(lista.length - feitas) + " sem recorte" : "");
+       ? ", " + num(lista.length - feitas) + " sem medida" : "");
   $("rec_obra_nota").innerHTML = "estão em <a href=\"#\" data-abrir=\""
     + escapa("levas/" + (RECORTADO.pasta || "")) + "\">" + escapa(RECORTADO.pasta)
     + "</a>. Os brutos continuam onde estavam, intactos.";
@@ -5992,7 +6140,7 @@ function seloDoFecho(feitas, total) {
   caixa.hidden = false;
   fecho.hidden = false;
   $("rec_fecho_txt").textContent = num(total)
-    + (total === 1 ? " Recorte Pronto" : " Recortes Prontos")
+    + (total === 1 ? " Peça Medida" : " Peças Medidas")
     + ", 100%: Pode Avançar";
   caixa.classList.add("fechada");
 }
@@ -6083,7 +6231,7 @@ function desenhaTiras(d) {
 
   $("rec_feitas").textContent = num(feitas);
   $("rec_de").textContent = " de " + num(total)
-    + (total === 1 ? " peça recortada" : " peças recortadas");
+    + (total === 1 ? " peça medida" : " peças medidas");
   $("rec_atual").textContent = d.fim ? "" : (d.atual || "");
   $("rec_s_card").textContent = num(conta.card);
   $("rec_s_cheio").textContent = num(conta.cheio + conta.cega);
@@ -6228,7 +6376,7 @@ async function pedirAMedida() {
     $("rec_fecho").hidden = true;
     desenhaTiras({ total: alvos.length, marcas: "", fim: false });
     $("rec_obra_txt").textContent = "pedido deixado";
-    $("rec_obra_nota").textContent = "o recorte começa em até um minuto, que é o passo do "
+    $("rec_obra_nota").textContent = "a medida começa em até um minuto, que é o passo do "
       + "programa que faz esse trabalho na casa do Estúdio.";
     REC_OBRA.relogio = setInterval(olharORecorte, 3000);
     olharORecorte();
@@ -6300,7 +6448,7 @@ async function olharORecorte() {
     if (REC_OBRA.mudo * 3 >= 180) {
       const viu = REC_OBRA.jaViu;
       return pararORecorte(viu
-        ? "perdi o contato com o programa no meio do recorte. Recarregue a página (F5): o que ele já recortou está na pasta."
+        ? "perdi o contato com o programa no meio da medida. Recarregue a página (F5): o que ele já mediu está guardado."
         : "a oficina do Estúdio não pegou o pedido em três minutos. Confira se ela está de pé (a passagem de montar edições, de minuto em minuto).");
     }
     $("rec_obra_txt").textContent = "sem contato com o programa";
@@ -6865,12 +7013,10 @@ async function entrarNaIA() {
   $("ia_sem_chave").hidden = !campos.length || temChave;
   $("ia_corpo").hidden = !campos.length || !temChave;
   contaEscrito();
-  /* A LISTA NAO DEPENDE DA CHAVE, e por isso ela e' desenhada ANTES da desistencia de
-     baixo. Sem chave esta funcao retorna e o resto nunca roda; se a lista morasse depois,
-     ela ficaria escondida justamente de quem vai escrever tudo na mao. O que ela depende
-     e' de haver caixa aberta e peca na leva, que e' o que o proprio `desenhaAsFrases`
-     confere. */
-  await desenhaAsFrases();
+  /* A CHAMADA DA LISTA SAIU DAQUI EM 04/09/2026, junto com a lista. Ela morava ANTES da
+     desistencia de baixo de proposito, para a lista aparecer tambem sem chave, "porque sem
+     chave ele escreve na mao". Sem a lista, a aba sem chave passa a mostrar so' o recado de
+     configurar a IA, e isso e' honesto: sem chave nao ha' escrita para acompanhar. */
   if (!campos.length || !temChave) return;
   const n = pecas3().length;
   $("ia_quem").textContent = "Escrevendo com " + nomeDoServico(vivas[0].servico);
@@ -6893,174 +7039,51 @@ function contaEscrito() {
     const g = ESCRITO.get(p.nome) || {};
     if (campos.length && campos.every(c => (g[c.id] || "").trim())) cheias++;
   }
+  /* A PARCELA DAS SEM FRASE VEIO PARA CA' EM 04/09/2026, quando a lista saiu e levou o
+     rodape' dela junto. Sem ela esta conta NUNCA fecha numa leva com reel sem card: o
+     `cheias` so' soma peca com todas as caixas cheias, e reel sem manchete nao tem o que
+     escrever. Medido antes: 180 pecas, 175 escritas e 5 sem card davam "175 de 180", com o
+     botao dizendo "Todas escritas" e travado ao lado. Duas contas, na mesma tela,
+     discordando sobre o mesmo trabalho.
+
+     A PERGUNTA QUE ELA RESPONDE E' A DELE, de viva voz: "gerou todas as frases? Todas as
+     frases ali ja' foram geradas?". Com a terceira parcela a soma fecha em 180. */
+  const semFrase = quantasSemFrase();
   $("ed_conta_ia").innerHTML = `<b>${cheias}</b> de ${n} `
-    + (n === 1 ? "peça escrita" : "peças escritas");
+    + (n === 1 ? "peça escrita" : "peças escritas")
+    + (semFrase ? ` · <b>${num(semFrase)}</b> sem frase no card para ler` : "");
   // O BOTAO DE APAGAR SO' EXISTE QUANDO HA' O QUE APAGAR.
   const apagar = $("ia_apagar");
   if (apagar) apagar.hidden = !cheias;
-  /* A CONTA DO FIM DA LISTA ANDA JUNTO, e SO' A CONTA. Refazer a lista aqui apagaria o
-     cursor dele a cada 700 ms, porque quem chama esta funcao e' o relogio do
-     `escreverAMao`: ele digita, o relogio dispara, e a linha em que o dedo esta' seria
-     redesenhada por baixo dele. */
-  const rod = $("fz_rodape");
-  if (rod && $("fz_casa") && !$("fz_casa").hidden) rod.innerHTML = fzConta();
-}
-
-/* ================================================== A LISTA DAS FRASES (03/09/2026)
-
-   ELA E' A ABA 4 DA MAQUETE, e nasce DEPOIS da IA, nao no lugar dela. O que ele cortou em
-   21/08/2026 foi a lista que vinha ANTES, pedindo o texto de cada peca na mao; esta e' a de
-   depois, para corrigir o que ficou torto. A propria frase dele previa: "no final eu vou
-   conseguir pegar e avaliar cada um desses".
-
-   O BACK-END E' O DA BANCADA, inteiro: quem grava e' o `escreverAMao`, o mesmo que o bloco
-   "A Frase" da coluna de ferramentas usa. Duas telas escrevendo a mesma frase por dois
-   caminhos diferentes divergiriam na primeira mudanca. */
-let FZ_ONDE = -1;                  // a ultima linha que ele tocou, para voltar nela
-
-/** O rotulo embaixo do campo: quem escreveu esta frase, e se ela precisou apertar. */
-function fzQuem(p, k) {
-  const n = "peça " + String(k + 1).padStart(2, "0");
-  if (SEM_FRASE && SEM_FRASE.has(p.nome))
-    return `Este reel não tinha frase no card para a inteligência ler · ${n}`;
-  const apertou = Object.values(AJUSTES.get(p.nome) || {})
-    .some(a => a && a.tamanho != null);
-  const quem = A_MAO.has(p.nome)
-    ? "Corrigida por você"
-    : "Escrita pela inteligência a partir da manchete do card";
-  return `${quem} · ${n}`
-    + (apertou ? ` · <span class="apertou">precisou encolher para caber</span>` : "");
-}
-
-/** A conta do fim da lista. No desenho ela e' "e mais 175 pecas"; aqui e' o numero real. */
-function fzConta() {
-  const pecas = pecas3(), campos = abertas();
-  if (!pecas.length || !campos.length) return "";
-  const semFrase = quantasSemFrase();
-  const faltam = faltamEscrever().length;
-  const escritas = Math.max(0, pecas.length - faltam - semFrase);
-  return `<b>${num(pecas.length)}</b> ${pecas.length === 1 ? "frase" : "frases"} nesta leva`
-    + (escritas ? ` · <b>${num(escritas)}</b> escritas` : "")
-    + (semFrase ? ` · <b>${num(semFrase)}</b> sem frase no card para ler` : "")
-    + (faltam ? ` · <b>${num(faltam)}</b> por escrever` : "");
-}
-
-/* DESENHA A LISTA INTEIRA, e so' chama isto quem TROCA de estado: entrar na fase, a IA
-   terminar, ou ele apagar tudo. NUNCA se chama isto enquanto ele digita: refazer o
-   `innerHTML` com o dedo dentro de um campo joga o cursor para fora a cada tecla. */
-async function desenhaAsFrases() {
-  const casa = $("fz_casa");
-  if (!casa) return;
-  const pecas = pecas3(), campos = abertas();
-  casa.hidden = !pecas.length || !campos.length;
-  if (casa.hidden) return;
-
-  /* AS ARTES DESCEM UMA VEZ, E ANTES DE PINTAR. O `enderecoDo` so' olha o cache na ENTRADA:
-     cento e oitenta chamadas ao mesmo tempo para um arquivo que ainda nao desceu criariam
-     cento e oitenta enderecos de blob para a mesma imagem, e o cache guardaria o ultimo.
-     Aqui ele e' chamado uma vez por variacao da conta, que sao quatro na leva 31, e a lista
-     le' o cache ja' quente, exatamente como a fila da Bancada faz.
-
-     A GUARDA DO `contaModelo` NAO E' ENFEITE: sem conta escolhida, `variacoesDaConta`
-     devolve vazio e esta linha nao pode explodir, porque a prova do botao de apagar a IA
-     roda nesse estado. */
-  const vars = (TPL && TPL.contaModelo) ? variacoesDaConta(TPL.contaModelo) : [];
-  await Promise.all(vars.map(v => enderecoDo(v.arquivo).catch(() => null)));
-
-  const lista = $("fz_lista");
-  lista.innerHTML = pecas.map((p, k) => {
-    const v = variacaoDaPeca(p.nome);
-    const arte = v && ED_IMGS.get(v.arquivo);
-    const g = ESCRITO.get(p.nome) || {};
-    return `<div class="caixa fz-linha${k === FZ_ONDE ? " agora" : ""}" data-k="${k}">`
-      + `<span class="fz-mini">`
-      + (arte ? `<img alt="" src="${escapar(arte)}">` : `<i class="vazio"></i>`)
-      + `</span>`
-      + `<div class="fz-campo">`
-      + campos.map(c =>
-          `<input type="text" class="fz-texto" data-k="${k}" data-campo="${escapar(c.id)}"`
-          + ` aria-label="Frase da peça ${k + 1}" spellcheck="false"`
-          + ` value="${escapar(g[c.id] || c.texto || "")}">`).join("")
-      + `<div class="fz-quem">${fzQuem(p, k)}</div>`
-      + `</div>`
-      + `<button class="acao fz-ver" type="button" data-ver="${k}">Ver Na Peça</button>`
-      + `</div>`;
-  }).join("");
-  $("fz_rodape").innerHTML = fzConta();
-  const agora = lista.querySelector(".agora");
-  if (agora && agora.scrollIntoView) agora.scrollIntoView({ block: "center" });
-}
-
-/* SO' O VALOR, E SEM REFAZER NADA. E' o que roda enquanto a IA escreve: as frases chegam de
-   tres em tres segundos e a lista tem de mostrar o que ja' chegou, sem tirar o dedo dele do
-   campo em que esta' escrevendo. */
-function atualizarAsFrases() {
-  const lista = $("fz_lista");
-  if (!lista || !$("fz_casa") || $("fz_casa").hidden) return;
-  const pecas = pecas3();
-  for (const el of lista.querySelectorAll(".fz-texto")) {
-    if (el === document.activeElement) continue;
-    const p = pecas[Number(el.dataset.k)];
-    if (!p) continue;
-    const t = (ESCRITO.get(p.nome) || {})[el.dataset.campo] || "";
-    if (el.value !== t) el.value = t;
+  /* O SELO DE VERIFICADO TAMBEM SE PINTA NA ENTRADA, e nao so' no fim de uma escrita ao
+     vivo. Quem recarregava a pagina com a leva inteira escrita entrava numa fase sem
+     nenhum sinal de que o trabalho estava feito: medido, o `#ia_fecho` ficava escondido. */
+  const fecho = $("ia_fecho");
+  if (fecho && n && !faltamEscrever().length) {
+    fecho.hidden = false;
+    $("ia_fecho_txt").textContent = semFrase
+      ? `${num(n - semFrase)} escritas, ${num(semFrase)} sem frase no card`
+      : `As ${num(n)} peças estão escritas`;
   }
-  $("fz_rodape").innerHTML = fzConta();
 }
 
-/* OS TRES GESTOS DA LISTA, por delegacao e nao por fechamento por linha: com 180 linhas e
-   um campo em cada, pendurar tres funcoes por linha custaria 540 fechamentos vivos para
-   fazer o que tres ouvintes fazem. */
-$("fz_lista").addEventListener("input", ev => {
-  const el = ev.target.closest(".fz-texto");
-  if (!el) return;
-  const p = pecas3()[Number(el.dataset.k)];
-  const campo = abertas().find(c => c.id === el.dataset.campo);
-  if (!p || !campo) return;
-  escreverAMao(p, campo, el.value);
-});
+/* A LISTA DAS FRASES SAIU EM 04/09/2026, um dia depois de entrar, por ordem dele:
 
-/* O `change` FECHA O QUE O `input` DEIXA ABERTO, e nao e' redundancia.
+     "essa questao de eu poder criar a frase do zero nao deve aparecer aqui, e nem deve
+      aparecer a opcao de editar a frase. A frase mais tarde vai ser editada na etapa de
+      bancada e nao aqui onde eu to agora. A unica coisa que deve ter aqui e' aquele
+      negocinho de carregamento onde eu consigo acompanhar."
 
-   O `escreverAMao` adia o acerto de cabimento em 700 ms com UM relogio so'. Na Bancada ha'
-   uma peca de cada vez e um relogio basta. Numa lista de 180, digitar na linha 3 e pular
-   para a linha 4 antes dos 700 ms CANCELA o acerto da linha 3, e a frase dela ficaria
-   gravada com a letra do texto velho. O `change` dispara ao sair do campo, e so' quando o
-   valor mudou: e' a garantia de que nenhuma linha fica pela metade. */
-$("fz_lista").addEventListener("change", ev => {
-  const el = ev.target.closest(".fz-texto");
-  if (!el) return;
-  const k = Number(el.dataset.k);
-  const p = pecas3()[k];
-  const campo = abertas().find(c => c.id === el.dataset.campo);
-  if (!p || !campo) return;
-  caberDeNovo(p, campo);
-  contaEscrito();
-  anotarMexida();
-  const linha = el.closest(".fz-linha");
-  if (linha) linha.querySelector(".fz-quem").innerHTML = fzQuem(p, k);
-});
+   SAIRAM JUNTOS 155 linhas daqui (`FZ_ONDE`, `fzQuem`, `fzConta`, `desenhaAsFrases`,
+   `atualizarAsFrases` e os tres ouvintes de `#fz_lista`), o `#fz_casa` do `corpo.html` e
+   o bloco `fz-` da folha. A parcela das sem frase do `fzConta` NAO se perdeu: ela foi
+   para o `contaEscrito`, mais acima, porque sem ela a conta da fase nunca fecha numa
+   leva com reel sem card.
 
-/* VER NA PECA LEVA PARA A BANCADA, naquela peca.
+   ONDE A FRASE SE CORRIGE AGORA: na Bancada, no cartao A FRASE DESTA PECA, que ja'
+   existia, ja' grava pelo mesmo `escreverAMao` e mostra a peca ao lado enquanto ele
+   escreve, que era a metade que faltava na lista. */
 
-   A MAQUETE PROMETE A FRASE APARECENDO NA PECA enquanto ele digita, e nesta tela nao ha'
-   peca nenhuma desenhada: e' a Bancada que tem o palco, e la' a digitacao ja' muda a peca
-   ao vivo. Entao o botao leva o olho ate' onde a promessa se cumpre, em vez de esta tela
-   fingir que a cumpre.
-
-   O `AJ_I` E' POSTO ANTES do `irParaSub(6)`, e nao pelo `irParaAPeca`: aquele desiste calado
-   quando o alvo ja' e' a peca aberta, e quem desenha ao entrar na fase e' o `entrarNoAjuste`,
-   que le' o `AJ_I`. */
-$("fz_lista").addEventListener("click", ev => {
-  const b = ev.target.closest("[data-ver]");
-  if (!b) return;
-  const k = Number(b.dataset.ver);
-  if (!Number.isFinite(k) || !pecas3()[k]) return;
-  FZ_ONDE = k;
-  AJ_I = k;
-  AJ_SEL = null;
-  irParaSub(6);
-});
 
 /* APAGAR O QUE A IA ESCREVEU, e comecar aquela fase do zero.
 
@@ -7109,9 +7132,6 @@ $("ia_apagar").onclick = () => {
   }
   contaEscrito();
   desenhaGaleria();
-  // AQUI A LISTA PODE SER REFEITA INTEIRA: ele acabou de clicar num botao, nao esta'
-  // digitando, e todos os campos ficaram vazios de uma vez.
-  desenhaAsFrases();
   salvarRascunho();
   parado("ia_recado", `${n} ${n === 1 ? "frase apagada" : "frases apagadas"}. `
     + "Clique em escrever para a IA fazer de novo.");
@@ -7308,12 +7328,12 @@ async function olharAEscrita() {
   // no fim quem grava é o `salvarRascunho` que já está lá embaixo, depois do acerto
   // de cabimento: gravar duas vezes na mesma volta seria escrita repetida.
   if (chegouFrase && !d.fim) salvarRascunho();
-  /* AS FRASES CHEGAM DE TRES EM TRES SEGUNDOS, e a lista tem de mostrar o que ja' chegou.
-     Sem esta linha ela ficaria com os campos vazios enquanto o `ESCRITO` ja' tem as frases
-     pagas dentro, que e' a tela negando o que aconteceu. E' o `atualizarAsFrases` e nao o
-     `desenhaAsFrases` de proposito: aquele so' troca VALOR, e nao tira o dedo dele do
-     campo em que estiver escrevendo. */
-  if (chegouFrase) atualizarAsFrases();
+  /* A CONTA ANDA COM AS FRASES QUE CHEGAM, de tres em tres segundos. Ate' 04/09/2026 quem
+     andava aqui era a lista; ela saiu, e o que sobra e' a conta do rodape', que e' a
+     resposta a' pergunta dele: "gerou todas as frases?". Sem esta linha o numero ficaria
+     parado enquanto o `ESCRITO` ja' tem as frases pagas dentro, que e' a tela negando o
+     que aconteceu. */
+  if (chegouFrase) contaEscrito();
 
   const parar = () => {
     clearInterval(IA_OBRA.relogio);
@@ -7613,6 +7633,7 @@ async function postoDePe() {
       { cache: "no-store", signal: AbortSignal.timeout(4000) });
     POSTO_DE_PE = r.ok;
     try { CASA_INFO = await r.json(); } catch (e) { /* corpo velho, sem os campos */ }
+    porOsBotoesDePasta();
   } catch (e) { POSTO_DE_PE = false; }
   POSTO_PERGUNTADO = Date.now();
   return POSTO_DE_PE;
@@ -10891,14 +10912,44 @@ function fecharGaveta() {
    E O `bn_ver` NASCEU SEM ACAO. O estilo mostrava o `aria-pressed` certinho e clicar em
    "Ver" nao fazia nada: o botao existia na tela e nao existia no programa. E' o tipo de
    defeito que so' a prova pega, porque a tela parece completa. */
+/* O PAR PASSOU A MUDAR A PECA, e nao so' a si mesmo (04/09/2026).
+
+   O QUE ELE ERA: um interruptor de dois estados que trocava o `aria-pressed` e mais nada.
+   Medido antes e depois de apertar Ajustar: os punhos do B-roll continuavam escondidos nos
+   dois estados, a peca continuava com as MESMAS 852 letras de conteudo, e a coluna
+   continuava no mesmo lugar. Botao que promete e nao cumpre, a mesma familia do abrir
+   pasta que ele reclamou.
+
+   POR QUE ELE MORREU SOZINHO: o par foi feito quando as ferramentas eram uma gaveta que
+   deslizava por CIMA da peca, e abrir mudava a tela de verdade. Quando a gaveta virou
+   coluna fixa, em 03/09/2026, as duas regras que a abertura usava foram anuladas de
+   proposito e nada entrou no lugar. E os punhos nunca dependeram do modo: eles dependem de
+   a filmagem estar escolhida no palco, que e' o que o `porOsPunhosNoLugar` confere.
+
+   ENTAO O MODO PASSA A FAZER O QUE O NOME DIZ: Ajustar escolhe a filmagem, e os punhos
+   acendem; Ver larga a selecao, e eles apagam. E' o mesmo gesto que clicar na filmagem ja'
+   fazia, agora com nome e botao. */
+function escolherAFilmagem(sim) {
+  if (!(EDT && EDT.tela)) return;
+  if (sim && EDT.filmagem) EDT.tela.setActiveObject(EDT.filmagem);
+  else EDT.tela.discardActiveObject();
+  EDT.tela.requestRenderAll();
+  porOsPunhosNoLugar();
+}
+
 $("bn_ver").onclick = () => {
   if ($("aj_gaveta").classList.contains("aberta")) fecharGaveta();
   else marcarOModo(false);
+  escolherAFilmagem(false);
 };
 $("aj_abrir_gaveta").onclick = () => {
-  if ($("aj_gaveta").classList.contains("aberta")) return marcarOModo(true);
+  if ($("aj_gaveta").classList.contains("aberta")) {
+    marcarOModo(true);
+    return escolherAFilmagem(true);
+  }
   desenhaAjustePainel();
   abrirGaveta();
+  escolherAFilmagem(true);
 };
 $("aj_g_fechar").onclick = fecharGaveta;
 
@@ -11659,11 +11710,15 @@ function desenhaSubTrilho() {
 
 /* O REGISTRO DE CLIQUE DA SUB-LISTA SAIU JUNTO COM ELA, em 03/09/2026. Quem leva de uma
    fase a outra agora e' a aba da tira, no registro que fica logo depois de `irParaPasso`. */
-$("ed_vai_ajuste").onclick = () => irParaSub(5);
+// O AVANCAR DAS FRASES LEVA A' BANCADA, e nao ao Fabricar. Trocado em 04/09/2026 junto
+// com o numero das abas 3 e 4: medido, ele pulava a Bancada inteira e caia na sub 5.
+$("ed_vai_ajuste").onclick = () => irParaSub(6);
 // O VOLTAR DA ESCRITA LEVA AO MODELO. Ele levava a's Imagens Do Template, que nao
 // existem mais, e desde a excisao era um botao que nao fazia nada.
 $("ed_volta_imagens").onclick = () => irParaSub(1);
-$("ed_volta_ia").onclick = () => irParaSub(4);
+// O `ed_volta_ia` SAIU DA TELA em 04/09/2026, e o registro dele saiu junto: dois botoes de
+// voltar na mesma fileira, para abas diferentes, era escolha sem criterio. Deixar a linha
+// aqui com o elemento fora do corpo faria o `conferir.py` reprovar com razao.
 $("ajs_um_a_um").onclick = () => irParaSub(6);
 // O VOLTAR A' VISAO GERAL SAIU COM A VISAO GERAL (29/08/2026). Fabricar e' o botao
 // ao lado, e o trilho continua levando a qualquer fase.
@@ -12403,7 +12458,9 @@ function oQueAContaTem(vs, meus) {
    proprio, porque o caminho de volta e' outro. */
 async function pintarAsMolduras(ger) {
   const imgs = [...$("mp_lista").querySelectorAll("[data-arte-img]")];
-  if (!imgs.length) return;
+  // CONTA SEM ARTE E' O CASO DE QUEM AINDA NAO CONFIGUROU A LEVA, que e' exatamente quem
+  // tromba na aba trancada. Sem esta linha o recado morria aqui, na primeira saida.
+  if (!imgs.length) return entregarORecadoDaMarca();
   const faltou = [];
   await Promise.all(imgs.map(async im => {
     const arq = im.dataset.arteImg;
@@ -12434,8 +12491,7 @@ async function pintarAsMolduras(ger) {
        trancada escreve aqui o motivo de estar trancada, e esta funcao roda logo depois,
        por causa do `await` das miniaturas. Sem esta guarda, a explicacao aparecia e sumia
        sozinha em milissegundos, sem erro nenhum no console. */
-    $("mp_recado").textContent = MP_RECADO_FORCADO || MP_RECADO_PADRAO;
-    MP_RECADO_FORCADO = "";
+    entregarORecadoDaMarca();
     return;
   }
   if (CASA_INFO && CASA_INFO.sessao === "vencida") {
@@ -12453,6 +12509,10 @@ async function pintarAsMolduras(ger) {
   }
   $("mp_recado").textContent = "A arte da moldura não desceu do posto, mesmo "
     + "tentando de novo: confira se ele está no ar e recarregue a página.";
+  // O RECADO DA TRAVA NAO FICA ARMADO PARA APARECER FORA DE HORA. Aqui a pintura falhou e
+  // quem manda na tela e' a falha; o forcado se descarta em vez de esperar a proxima
+  // pintura boa e falar de um clique de minutos atras.
+  MP_RECADO_FORCADO = "";
 }
 
 /** Pinta o par: a variacao que a medida escolheu, crua e vestida com o recorte da vez. */
@@ -14682,6 +14742,35 @@ $("ent_feito_sair").onclick = () => {
    UM OUVINTE SO' PARA TODOS OS BOTOES, e nao um por botao: um deles e' escrito dentro
    de um recado que se redesenha, e ligar evento em elemento que renasce e' ligar
    evento que se perde. */
+/* OS QUATRO BOTOES DE ABRIR PASTA SO' EXISTEM ONDE HA' PASTA A ABRIR (04/09/2026).
+
+   A QUEIXA DELE, de viva voz: "ele me da' o botao de abrir a pasta da leva e quando eu
+   clico nele, ele buga. Esse botao de abrir a pasta nao deveria existir."
+
+   ELE ESTAVA CERTO NOS DOIS. A casa mudou para a VPS em 25/08/2026, e servidor Linux nao
+   tem Explorador: o botao prometia o que a casa nao pode cumprir. E "buga" era literal,
+   medido: o clique escrevia o aviso DENTRO do proprio botao com `textContent`, o que apaga
+   os quatro filhos que desenham a pilula. Ele saia de 181 por 40 com circulo, seta e
+   rotulo, e virava uma tarja de 592 por 40 com o caminho do servidor dentro, sem `href` e
+   sem `data-abrir`. E nao voltava: trocar de aba, sair do Estudio e voltar deixavam a tarja
+   morta. So' o F5 devolvia o botao, porque nada reescreve aquele pedaco do documento.
+
+   NAO SAO APAGADOS, SAO ESCONDIDOS, porque a casa local existe e continua valendo: numa
+   maquina com Explorador o botao funciona e e' util. Quem decide e' o `/vivo`, que conta
+   `abre_pastas`. Enquanto o posto nao respondeu, ficam como estao: esconder por suposicao
+   tiraria o botao de quem tem direito a ele. */
+function porOsBotoesDePasta() {
+  // A LISTA MORA DENTRO DA FUNCAO de proposito: quem chama e' o `postoDePe`, que esta'
+  // milhares de linhas ACIMA daqui. A funcao sobe por icamento, mas um `const` de fora
+  // nao sobe, e a primeira chamada estouraria antes de o arquivo chegar nesta linha.
+  const BOTOES_DE_PASTA = ["rec_pasta", "apl_pasta", "pos_abrir", "ent_feito_pasta"];
+  const remota = !!(CASA_INFO && CASA_INFO.abre_pastas === false);
+  for (const id of BOTOES_DE_PASTA) {
+    const el = $(id);
+    if (el) el.hidden = remota;
+  }
+}
+
 async function abrirNoComputador(relativo, ondeAvisar, elemento) {
   // SEM LUGAR DE AVISO, O AVISO TOMA O LUGAR DO LINK: metade dos botões de abrir não
   // tem `data-avisa`, e o clique deles morria calado. O link que não pode cumprir o
@@ -14689,6 +14778,13 @@ async function abrirNoComputador(relativo, ondeAvisar, elemento) {
   const avisa = (t) => {
     if (ondeAvisar && $(ondeAvisar)) return parado(ondeAvisar, t);
     if (elemento) {
+      /* BOTAO DE VERDADE NAO E' DESMANCHADO PARA VIRAR RECADO. Quando o elemento tem
+         filhos, ele e' uma pilula desenhada (circulo, rotulo e setas), e trocar o
+         `textContent` apaga os tres de uma vez, sem volta. Nesse caso o recado vai para o
+         rotulo e o botao continua botao. O caminho de baixo continua valendo para o link
+         escrito DENTRO de um recado, que se redesenha inteiro e nao perde nada. */
+      const rotulo = elemento.querySelector(".txt");
+      if (rotulo) { rotulo.textContent = t; return; }
       elemento.textContent = t;
       elemento.removeAttribute("data-abrir");
       elemento.removeAttribute("href");

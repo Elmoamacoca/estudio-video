@@ -158,6 +158,59 @@ CHAVE_DA_RETIRADA = Path.home() / ".claude" / "secrets" / "estudio_retirada.txt"
 CHAVE_DA_PONTE = Path.home() / ".claude" / "secrets" / "estudio_ponte.txt"
 
 
+# O SEGREDO DO COMPUTADOR DELE, desde 04/09/2026 (espec cd-1-elo). E' o quinto cofre,
+# ao lado dos quatro que o CLAUDE.md declara. A ponta (o programa que roda no computador
+# dele) liga para a casa procurando trabalho, e a rota da fila precisa saber que quem
+# bate e' ela: sem segredo, seria rota aberta na rua, e qualquer um poderia dizer
+# "estou ligado" e a tela mostraria Ligado com o computador dele desligado.
+#
+# O NOME E' "COMPUTADOR", E NAO "PONTA", DE PROPOSITO. A espec chama o programa de ponta,
+# e o cofre vizinho se chama CHAVE_DA_PONTE: duas constantes diferindo por UMA LETRA, num
+# arquivo que decide segredo, e' a trava 62n esperando acontecer. Aqui o nome diz o lugar,
+# que e' o que nao se confunde.
+CHAVE_DO_COMPUTADOR = Path.home() / ".claude" / "secrets" / "estudio_computador.txt"
+
+
+def segredo_do_computador() -> str | None:
+    """O segredo com que o computador dele se identifica na casa, ou None."""
+    return _segredo("ESTUDIO_COMPUTADOR", CHAVE_DO_COMPUTADOR)
+
+
+def restringir_ao_dono(caminho) -> None:
+    """Deixa o arquivo do segredo so' para o dono, de verdade.
+
+    No Windows o `os.chmod` e' quase um enfeite: mexe so' no bit de somente-leitura e nao
+    aplica dono nenhum. A protecao de verdade e' o `icacls`, que tira a heranca da pasta e
+    concede acesso so' ao usuario atual. Em Linux e Mac, o `chmod 0o600` basta.
+
+    FALHA AQUI NAO DERRUBA NADA: o pior caso e' o arquivo herdar a permissao da pasta
+    `~/.claude`, que ja' e' do usuario. Derrubar a gravacao do cofre por causa de uma
+    permissao seria trocar um risco pequeno por perder as contas dele.
+
+    MORA AQUI, e nao no `casa.py`, porque quem manda em caminho e' este arquivo (trava
+    10) e agora sao dois os programas que guardam segredo em disco. Duas copias da mesma
+    regra e' a trava 60, e foi assim que `encaixeNaJanela` quase saiu diferente dos dois
+    lados.
+    """
+    try:
+        os.chmod(caminho, 0o600)
+    except OSError:
+        pass
+    if os.name != "nt":
+        return
+    usuario = os.environ.get("USERNAME") or ""
+    if not usuario:
+        return
+    try:
+        import subprocess
+        subprocess.run(
+            ["icacls", str(caminho), "/inheritance:r", "/grant:r", f"{usuario}:F"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            timeout=15, check=False)
+    except Exception:
+        pass
+
+
 def _segredo(nome_no_ambiente: str, arquivo: Path) -> str | None:
     do_ambiente = (os.environ.get(nome_no_ambiente) or "").strip()
     if do_ambiente:
@@ -185,6 +238,24 @@ def segredo_da_ponte() -> str | None:
 # GitHub, e NUNCA e' commitada, impressa ou mandada para a nuvem (nem VPS, nem esteira,
 # nem ponte): endereco de datacenter com conta logada e' o que o Instagram mais pune.
 CHAVE_DO_INSTAGRAM = Path.home() / ".claude" / "secrets" / "ig_sessao.txt"
+
+# O COFRE DAS CONTAS DESCARTAVEIS, desde 04/09/2026 (espec cd-2-cofre). O arquivo acima
+# guarda UM cookie, de UMA conta, numa linha. A ordem dele foi outra: "a quantidade de
+# contas descartaveis e' irrelevante, eu vou estar sempre adicionando varias contas, ele
+# tem que aguentar o maximo de contas possiveis". Entao nasce um cofre com N contas, e o
+# `ig_sessao.txt` vira a primeira delas, adotado na primeira leitura.
+#
+# ELE MORA NO COMPUTADOR DELE, e nao na casa. A terceira linha do `casa.py` diz por que:
+# endereco de datacenter com conta logada e' o que o Instagram mais pune, e a senha de N
+# contas na VPS seria a mesma aposta multiplicada por N.
+#
+# NAO E' CIFRADO, e isso e' decisao escrita, nao esquecimento. Chave guardada no mesmo
+# disco e do mesmo dono nao protege da ameaca local: quem le' o cofre le' a chave no
+# mesmo `ls`. E derivar a chave do segredo da ponte, que e' rotacionado
+# (`ponte/publicar-ponte.py`), tornaria as N senhas indecifraveis na proxima troca dele,
+# sem aviso. A protecao e' permissao de dono, a mesma postura ja' declarada para a chave
+# da IA.
+COFRE_DAS_CONTAS = Path.home() / ".claude" / "secrets" / "ig_contas.json"
 
 DONO, REPO = "Elmoamacoca", "estudio-video"
 ACERVO_CRU = f"https://raw.githubusercontent.com/{DONO}/{REPO}/main"

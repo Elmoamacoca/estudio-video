@@ -33,7 +33,7 @@ from pathlib import Path
 
 import atividade
 from minerar import (CABECALHO, PASTA, POR_PAGINA, abre_pelo_arroba, limpa_post,
-                     pagina_de_reels, grava)
+                     pagina_de_reels, grava, vias_do_feed)
 
 FONTES = Path("dados/fontes.json")
 REGUA = Path("dados/regua.json")
@@ -197,17 +197,11 @@ def _uma_pagina(uid: str, marcador: str | None,
     caminho que às vezes falha por um caminho só. Sem o `conta` (chamador antigo) ele
     continua sendo o único, que é o comportamento de antes.
     """
-    rabo = f"&max_id={marcador}" if marcador else ""
-    vias = []
-    if conta:
-        vias.append(("o arroba",
-                     f"https://www.instagram.com/api/v1/feed/user/{conta}/username/"
-                     f"?count={POR_PAGINA}{rabo}"))
-    for dominio in ("www.instagram.com", "i.instagram.com"):
-        vias.append((dominio,
-                     f"https://{dominio}/api/v1/feed/user/{uid}/?count=12{rabo}"))
+    # A LISTA DE VIAS MORA NO `minerar.vias_do_feed` DESDE 04/09/2026, e nao mais aqui.
+    # O `casa.py` montava a dele por conta propria, e as duas ja' divergiam: esta tinha
+    # tres vias, aquela tinha duas. Uma regra, um lugar (trava 60).
     motivos = []
-    for rotulo, url in vias:
+    for _e_principal, rotulo, url in vias_do_feed(conta, uid, marcador):
         try:
             req = urllib.request.Request(url, headers=CABECALHO)
             with urllib.request.urlopen(req, timeout=25) as r:
@@ -443,10 +437,15 @@ def bater_ponto(conta: str, estado: dict, vaga: int) -> None:
 # há marca nenhuma, e a falha total fica com a mesma cara do descanso. O dono do
 # sistema perdeu dias com esse silêncio.
 #
-# Então cada ramo de falha grava seu evento datado em dados/atividade/<conta>.json,
-# dizendo o que tentou, que resposta veio e qual é o próximo passo automático. Quem
-# leva o arquivo para o acervo é o passo "Guardar o avanco" do fluxo, o mesmo git
-# add de dados/ que já guarda o resto.
+# Então cada ramo de falha deixa uma NOTA datada em dados/notas/, dizendo o que tentou,
+# que resposta veio e qual é o próximo passo automático. Quem leva a nota para o acervo é
+# o passo "Guardar o avanco" do fluxo, o mesmo git add de dados/ que já guarda o resto.
+#
+# A NOTA, E NÃO O LIVRO, DESDE 04/09/2026. Até aqui esta linha dizia que cada ramo
+# gravava direto em dados/atividade/<conta>.json, e era verdade: dez vagas escreviam o
+# mesmo arquivo por rodada, contra o que o próprio atividade.py declara no cabeçalho.
+# Quem aplica as notas nos livros é o fechamento da rodada, que é uma máquina só, depois
+# de todas as vagas terem terminado.
 
 # a rede de segurança do fim do arquivo precisa saber de quem era a vez
 _CONTA_DA_VEZ = None
@@ -507,21 +506,15 @@ def _resumo_da_resposta(fala: str) -> str:
 
 
 def anotar_abertura_falhada(conta: str, vaga: int, fala: str) -> None:
-    """A identificação que não passou vira evento, e a tentativa vira contador.
+    """A identificação que não passou vira NOTA da vaga, e o fechamento aplica.
 
-    O contador (tentativas_id) fica no próprio livro do perfil e sobe a cada
-    tentativa, de qualquer vaga: é dele que o cartão tira o "Tentativa N". Quando a
-    abertura enfim passa, o main() zera o campo e o cartão volta ao normal.
+    O contador (tentativas_id) sobe a cada tentativa, de qualquer vaga: é dele que o
+    cartão tira o "Tentativa N". Quem o incrementa é o recolhimento, porque só lá a
+    rodada inteira está sobre a mesa; a vaga não pode somar num campo que outras nove
+    vagas estão somando ao mesmo tempo.
     """
-    livro = atividade.carregar(conta)
-    tentativa = int(livro.get("tentativas_id") or 0) + 1
-    livro["tentativas_id"] = tentativa
-    atividade.anotar_de_novo(
-        livro, "falha_abertura", int(time.time()),
-        f"Abertura Pelo Arroba Não Passou: {_resumo_da_resposta(fala)}. "
-        f"{tentativa}ª Tentativa De Abertura.",
-        tentativa=tentativa, vaga=vaga, resposta=fala.strip()[-280:] or None)
-    atividade.gravar(livro)
+    atividade.deixar_nota(conta, vaga, "falha_abertura",
+                          resposta=fala.strip()[-280:] or None)
 
 
 def anotar_vaga_sem_leitura(conta: str, vaga: int, caminho: str, fala: str) -> None:
@@ -532,41 +525,162 @@ def anotar_vaga_sem_leitura(conta: str, vaga: int, caminho: str, fala: str) -> N
     outras vagas avançam, ele é um aviso que a varredura seguinte deixa para trás;
     quando ninguém avança, ele é o único sinal vivo, datado e com contador subindo.
     """
-    livro = atividade.carregar(conta)
-    ev = livro["eventos"]
-    # O CONTADOR CONTA RODADA, E NAO VAGA, e essa era a origem do "Tentativa 54" em uma
-    # hora. Com dois perfis na fila e vinte vagas, DEZ vagas caem no mesmo perfil a cada
-    # rodada (`posicao = (vaga - 1) % len(fila)`), e cada uma somava um. O numero subia
-    # dez vezes mais rapido que a realidade e nao media nada que se pudesse usar.
-    rodada_agora = str(os.environ.get("GITHUB_RUN_NUMBER") or "")
-    seguidas, vagas = 1, 1
-    if ev and ev[-1].get("tipo") == "sem_leitura":
-        antes = ev[-1].get("detalhe") or {}
-        mesma = rodada_agora and str(antes.get("rodada") or "") == rodada_agora
-        seguidas = int(antes.get("seguidas") or 0) + (0 if mesma else 1)
-        vagas = int(antes.get("vagas") or 0) + 1 if mesma else 1
-    # E O PRAZO NAO VAI GRAVADO. O livro e' permanente e a esteira EMENDA a propria
-    # rodada (trava 22): "em ate 30 min" fica escrito para sempre e contradiz a propria
-    # tela, que le' o `/vivo` e sabe quando a esteira volta de verdade. O evento diz o que
-    # ACONTECEU; quem diz quando volta e' quem esta' olhando a hora.
-    atividade.anotar_de_novo(
-        livro, "sem_leitura", int(time.time()),
-        f"Nenhuma Página Veio ({caminho.capitalize()}): {_resumo_da_resposta(fala)}. "
-        + (f"{seguidas}ª Rodada Seguida Sem Página"
-           + (f", {vagas} Vagas Recusadas Nesta." if vagas > 1 else ".")),
-        seguidas=seguidas, vagas=vagas, rodada=rodada_agora or None,
-        vaga=vaga, caminho=caminho, resposta=fala.strip()[-280:] or None)
-    atividade.gravar(livro)
+    atividade.deixar_nota(conta, vaga, "sem_leitura", caminho=caminho,
+                          rodada=str(os.environ.get("GITHUB_RUN_NUMBER") or "") or None,
+                          resposta=fala.strip()[-280:] or None)
 
 
 def anotar_estouro(conta: str, vaga: int, erro: str) -> None:
-    """O estouro sem tratamento vira evento no livro do perfil da vez."""
-    livro = atividade.carregar(conta)
-    atividade.anotar_de_novo(
-        livro, "estouro", int(time.time()),
-        f"A Vaga Estourou No Meio Do Trabalho: {erro}.",
-        vaga=vaga, erro=erro)
-    atividade.gravar(livro)
+    """O estouro sem tratamento vira nota da vaga, e o fechamento leva ao livro."""
+    atividade.deixar_nota(conta, vaga, "estouro", erro=erro)
+
+
+def anotar_abertura_ok(conta: str, vaga: int, com_conteudo: bool) -> None:
+    """A abertura que PASSOU tambem vira nota, e e' ela que zera o contador."""
+    atividade.deixar_nota(conta, vaga, "abriu", com_conteudo=bool(com_conteudo))
+
+
+def anotar_vazio_visto(conta: str, vaga: int, publicas: int) -> None:
+    """A vaga viu vazio. Quem CONTA as visoes e decide encerrar e' o fechamento."""
+    atividade.deixar_nota(conta, vaga, "vazio_visto", publicas=int(publicas or 0))
+
+
+def _aplicar_nota(livro: dict, nota: dict) -> None:
+    """Uma nota de vaga vira linha no livro do perfil. Chamado só no recolhimento.
+
+    O TEXTO SE MONTA AQUI, E NÃO NA VAGA, porque `seguidas` e `vagas` fazem parte da
+    frase e só se sabem com a rodada inteira sobre a mesa. Montar na vaga escreveria
+    "1ª Rodada Seguida" dez vezes, que foi o número que não media nada.
+    """
+    tipo = nota.get("tipo")
+    quando = int(nota.get("quando") or time.time())
+    vaga = int(nota.get("vaga") or 0)
+    fala = str(nota.get("resposta") or "")
+
+    if tipo == "falha_abertura":
+        tentativa = int(livro.get("tentativas_id") or 0) + 1
+        livro["tentativas_id"] = tentativa
+        atividade.anotar_de_novo(
+            livro, "falha_abertura", quando,
+            f"Abertura Pelo Arroba Não Passou: {_resumo_da_resposta(fala)}. "
+            f"{tentativa}ª Tentativa De Abertura.",
+            tentativa=tentativa, vaga=vaga, resposta=fala or None)
+        return
+
+    if tipo == "sem_leitura":
+        # O CONTADOR CONTA RODADA, E NAO VAGA, e essa era a origem do "Tentativa 54" em
+        # uma hora. Com dois perfis na fila e vinte vagas, DEZ vagas caem no mesmo perfil
+        # a cada rodada, e cada uma somava um: o numero subia dez vezes mais rapido que a
+        # realidade. Aqui `vagas` conta as recusas DESTA rodada e `seguidas` conta as
+        # rodadas, que sao as duas coisas que se pode querer saber.
+        ev = livro["eventos"]
+        rodada_agora = str(nota.get("rodada") or "")
+        seguidas, vagas = 1, 1
+        if ev and ev[-1].get("tipo") == "sem_leitura":
+            antes = ev[-1].get("detalhe") or {}
+            mesma = rodada_agora and str(antes.get("rodada") or "") == rodada_agora
+            seguidas = int(antes.get("seguidas") or 0) + (0 if mesma else 1)
+            vagas = int(antes.get("vagas") or 0) + 1 if mesma else 1
+        # E O PRAZO NAO VAI GRAVADO. O livro e' permanente e a esteira EMENDA a propria
+        # rodada (trava 22): "em ate 30 min" fica escrito para sempre e contradiz a
+        # propria tela, que le' o `/vivo` e sabe quando a esteira volta de verdade. O
+        # evento diz o que ACONTECEU; quem diz quando volta e' quem esta' olhando a hora.
+        caminho = str(nota.get("caminho") or "")
+        atividade.anotar_de_novo(
+            livro, "sem_leitura", quando,
+            f"Nenhuma Página Veio ({caminho.capitalize()}): "
+            f"{_resumo_da_resposta(fala)}. "
+            + (f"{seguidas}ª Rodada Seguida Sem Página"
+               + (f", {vagas} Vagas Recusadas Nesta." if vagas > 1 else ".")),
+            seguidas=seguidas, vagas=vagas, rodada=rodada_agora or None,
+            vaga=vaga, caminho=caminho, resposta=fala or None)
+        return
+
+    if tipo == "estouro":
+        erro = str(nota.get("erro") or "")
+        atividade.anotar_de_novo(
+            livro, "estouro", quando,
+            f"A Vaga Estourou No Meio Do Trabalho: {erro}.", vaga=vaga, erro=erro)
+        return
+
+    if tipo == "abriu":
+        # A ABERTURA PASSOU: o contador de tentativas zera, senao o cartao continuaria
+        # dizendo "Tentativa N" para um perfil que ja' entrou. Como as notas sao aplicadas
+        # em ordem de hora, uma abertura posterior desfaz a falha anterior, que e' a ordem
+        # verdadeira dos fatos; ao vivo, era a falha que ganhava da abertura.
+        livro["tentativas_id"] = 0
+        if nota.get("com_conteudo"):
+            # abriu COM conteudo: o vazio de antes era recusa mesmo
+            livro.pop("vazios_vistos", None)
+        return
+
+    if tipo == "vazio_visto":
+        publicas = int(nota.get("publicas") or 0)
+        vezes = int(livro.get("vazios_vistos") or 0) + 1
+        livro["vazios_vistos"] = vezes
+        atividade.anotar_de_novo(
+            livro, "sem_leitura", quando,
+            (f"O Instagram Respondeu Vazio, Mas Os Retratos Registram {publicas} "
+             "Publicações: Recusa Disfarçada, Outra Vaga Tenta."
+             if publicas > 0 else
+             "O Instagram Respondeu Vazio. Pode Ser Conta Sem Posts Ou Recusa "
+             "Disfarçada: Outra Rodada Confirma Antes De Encerrar."),
+            vaga=vaga, vezes=vezes, publicas=publicas)
+        # E O ENCERRAMENTO TAMBEM E' DAQUI, porque so' aqui o contador vale. Duas visoes
+        # de vazio em momentos diferentes, e nenhuma publicacao nos retratos: ai' sim o
+        # perfil sai da fila com motivo escrito, em vez de ser tentado para sempre.
+        if publicas == 0 and vezes >= 2:
+            conta = livro.get("conta")
+            estado = estado_de(conta)
+            estado["perfil"] = {"conta": conta, "id": None, "nome": None,
+                                "seguidores": 0, "publicacoes": 0, "privado": None}
+            estado["vazio"] = True
+            estado["completo"] = True
+            estado["atualizado"] = quando
+            grava(conta, estado)
+            print(f"[{conta}] SEM POSTS PUBLICOS: confirmado em duas visoes.")
+
+
+def recolher_notas() -> int:
+    """O fechamento da rodada leva as notas das vagas para os livros. Um escritor só.
+
+    NOTA ILEGÍVEL NÃO É APAGADA. Ela fica onde está, com aviso: apagá-la perderia a
+    única pista de por que um perfil parou, e é a diferença entre "li e não tinha nada"
+    e "não consegui ler" (trava 3). Ela não trava o recolhimento das outras.
+    """
+    notas = atividade.ler_notas()
+    if not notas:
+        print("nenhuma nota de vaga para recolher.")
+        return 0
+    # A RODADA DE QUEM NAO TEM NUMERO E' ESTE RECOLHIMENTO. Fora do GitHub nao existe
+    # `GITHUB_RUN_NUMBER`, e sem ele o contador comparava vazio com vazio: ou toda nota
+    # virava rodada nova (e "3ª Rodada Seguida" saia de uma passagem so'), ou todas
+    # viravam a mesma para sempre. As notas recolhidas juntas SAO uma rodada, entao o
+    # carimbo sai daqui, uma vez, e vale para as que chegaram sem numero.
+    lote = f"r{int(time.time())}"
+    por_conta, ilegiveis = {}, 0
+    for n in notas:
+        if n.get("ilegivel"):
+            ilegiveis += 1
+            print(f"  nota ilegivel, deixo onde esta': {n.get('_arquivo')}")
+            continue
+        if not n.get("rodada"):
+            n["rodada"] = lote
+        por_conta.setdefault(n["conta"], []).append(n)
+    aplicadas = 0
+    for conta, lista in por_conta.items():
+        livro = atividade.carregar(conta)
+        for n in lista:
+            _aplicar_nota(livro, n)
+            aplicadas += 1
+        atividade.gravar(livro)
+        # SÓ DEPOIS DE GRAVADO O LIVRO. Apagar antes perderia a nota se a gravação
+        # falhasse, e a próxima rodada não teria de onde refazê-la.
+        for n in lista:
+            atividade.apagar_nota(n["_arquivo"])
+    print(f"{aplicadas} nota(s) de vaga aplicada(s) em {len(por_conta)} perfil(is)"
+          + (f"; {ilegiveis} ilegivel(is) deixada(s) no lugar." if ilegiveis else "."))
+    return 0
 
 
 def main() -> int:
@@ -646,16 +760,17 @@ def main() -> int:
             anotar_abertura_falhada(conta, vaga, fala)
             print(f"[{conta}] a abertura não passou nesta vaga. A próxima tenta.")
             return 0
-        # A ABERTURA PASSOU: o contador de tentativas zera aqui, senão o cartão
-        # continuaria dizendo "Tentativa N" para um perfil que já entrou.
-        livro = atividade.carregar(conta)
-        if livro.get("tentativas_id") or (livro.get("vazios_vistos")
-                                          and not aberto.get("vazio")):
-            livro["tentativas_id"] = 0
-            if not aberto.get("vazio"):
-                # abriu com conteudo: o vazio de antes era recusa mesmo
-                livro.pop("vazios_vistos", None)
-            atividade.gravar(livro)
+        # A ABERTURA PASSOU, E ISSO TAMBEM VIRA NOTA (04/09/2026, espec cd-0-terreno).
+        #
+        # ELA ZERA O CONTADOR DE TENTATIVAS, e por isso PRECISA ser nota. O `revisor-codigo`
+        # mediu o estrago: a vaga 4 falhava e deixava a nota, a vaga 9 abria e zerava o
+        # contador AO VIVO, e o fechamento vinha depois e aplicava a nota velha. Resultado
+        # medido: `tentativas_id` de volta em 1, com cartao vermelho dizendo "Abertura Pelo
+        # Arroba Nao Passou" num perfil aberto e sendo lido. E' a trava 2 na etiqueta.
+        #
+        # Como nota, ela entra na MESMA fila, ordenada por hora: a abertura que aconteceu
+        # depois zera o que a falha anterior somou, que e' a ordem verdadeira dos fatos.
+        anotar_abertura_ok(conta, vaga, com_conteudo=not aberto.get("vazio"))
         if aberto.get("vazio"):
             # O VAZIO MENTE. Um endereco de datacenter pode levar 200 com nada dentro
             # como recusa disfarçada, e em 25/08/2026 isso encerrou o startse, conta
@@ -663,30 +778,16 @@ def main() -> int:
             # Encerrar exige DUAS visoes de vazio em momentos diferentes, e nunca
             # contra a evidencia dos retratos: publicacoes > 0 la' e' prova de que a
             # conta tem conteudo, e o vazio daqui e' recusa, nao fato.
-            publicas = publicacoes_conhecidas(conta)
-            vezes = int(livro.get("vazios_vistos") or 0) + 1
-            if publicas > 0 or vezes < 2:
-                livro["vazios_vistos"] = vezes
-                atividade.anotar_de_novo(
-                    livro, "sem_leitura", int(time.time()),
-                    (f"O Instagram Respondeu Vazio, Mas Os Retratos Registram "
-                     f"{publicas} Publicações: Recusa Disfarçada, Outra Vaga Tenta."
-                     if publicas > 0 else
-                     "O Instagram Respondeu Vazio. Pode Ser Conta Sem Posts Ou "
-                     "Recusa Disfarçada: Outra Rodada Confirma Antes De Encerrar."),
-                    vaga=vaga, vezes=vezes)
-                atividade.gravar(livro)
-                print(f"[{conta}] resposta vazia (visao {vezes}); nao encerro ainda.")
-                return 0
-            # sai da fila com motivo escrito, em vez de ser tentado para sempre
-            estado["perfil"] = {"conta": conta, "id": None, "nome": None,
-                                "seguidores": 0, "publicacoes": 0, "privado": None}
-            estado["vazio"] = True
-            estado["completo"] = True
-            estado["atualizado"] = int(time.time())
-            grava(conta, estado)
-            print(f"[{conta}] SEM POSTS PÚBLICOS: conta fechada ou sem publicação, "
-                  "confirmado em duas visoes.")
+            #
+            # E QUEM CONTA AS VISOES E' O FECHAMENTO, e nao a vaga. A vaga so' diz "eu vi
+            # vazio, e os retratos dizem N". Com dois perfis na fila, DEZ vagas caem no
+            # mesmo perfil por rodada, e cada uma lia o contador, somava um e gravava: ou
+            # todas liam o mesmo numero e a segunda visao nunca chegava, ou o contador
+            # pulava de uma vez para dez e o perfil era encerrado na primeira rodada. Com
+            # a rodada inteira sobre a mesa, "duas visoes em momentos diferentes" volta a
+            # querer dizer o que esta' escrito.
+            anotar_vazio_visto(conta, vaga, publicacoes_conhecidas(conta))
+            print(f"[{conta}] resposta vazia; quem conta as visoes e' o fechamento.")
             return 0
         # SO' O QUE FOI PEDIDO ENTRA, ja' na abertura. A primeira leitura vem misturada
         # porque e' assim que o Instagram entrega, mas o que fica guardado e' a escolha.
@@ -847,6 +948,11 @@ if __name__ == "__main__":
     # Aqui o estouro vira evento no livro do perfil da vez (ou na saúde geral, quando
     # a vez ainda não tinha dono), e a vaga sai com código zero DE PROPÓSITO, para o
     # passo que grava o acervo rodar e levar o evento junto.
+    # O RECOLHIMENTO NAO E' UMA VAGA, e por isso sai antes da rede de seguranca dela:
+    # ele roda no fechamento da rodada, que e' uma maquina so', e um estouro aqui nao
+    # tem "perfil da vez" para chamar de seu.
+    if "--recolher" in sys.argv:
+        raise SystemExit(recolher_notas())
     try:
         raise SystemExit(main())
     except SystemExit:

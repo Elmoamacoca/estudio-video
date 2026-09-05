@@ -29,6 +29,23 @@ from pathlib import Path
 PASTA = Path("dados/atividade")
 PERFIS = Path("dados/perfis")
 
+# A CAIXA DE NOTAS DAS VAGAS (04/09/2026, espec cd-0-terreno).
+#
+# O cabeçalho acima diz "quem escreve é uma máquina só", e os ramos de falha da vaga
+# desobedeciam isso desde 24/08: eles chamavam `gravar` direto, do meio da vaga. Com
+# dois perfis na fila e vinte vagas, DEZ vagas caem no mesmo perfil por rodada
+# (`posicao = (vaga - 1) % len(fila)`), e o perfil murado é justamente o que recebe as
+# dez: dez máquinas reescrevendo o mesmo arquivo, disputando o mesmo galho.
+#
+# Cada vaga passa a deixar a nota num arquivo SÓ DELA, cujo nome traz a vaga, então
+# não há dois escritores no mesmo caminho em momento nenhum. O fechamento da rodada,
+# que é uma máquina depois de todas terem terminado, recolhe e aplica.
+#
+# E ISSO CONSERTA O CONTADOR DE GRAÇA: `seguidas` e `vagas` liam o último evento do
+# livro, que num instante qualquer da rodada só conhece as vagas que já gravaram. No
+# recolhimento a rodada inteira está sobre a mesa de uma vez.
+NOTAS = Path("dados/notas")
+
 # Os tipos de evento, e a gravidade de cada um na tela. As três gravidades são as mesmas
 # do console: falha é o que não devia ter acontecido, aviso é o que foi barrado de
 # propósito, evento é o andamento normal.
@@ -66,7 +83,16 @@ def mil(n) -> str:
 
 
 def caminho(conta: str) -> Path:
-    return PASTA / f"{conta}.json"
+    """O livro daquele perfil. O nome e' higienizado AQUI, que e' o portao de todos.
+
+    `carregar` e `gravar` passam por esta funcao, entao fechar o buraco aqui fecha para
+    quem chamar de onde for. Medido pelo `revisor-codigo` em 04/09/2026, com
+    `../../FUGIU` no lugar do perfil: o livro foi escrito FORA da raiz do acervo.
+    """
+    seguro = conta_segura(conta)
+    if not seguro:
+        raise ValueError("nome de perfil vazio depois de higienizado")
+    return PASTA / f"{seguro}.json"
 
 
 def carregar(conta: str) -> dict:
@@ -83,6 +109,89 @@ def gravar(livro: dict) -> None:
     PASTA.mkdir(parents=True, exist_ok=True)
     caminho(livro["conta"]).write_text(
         json.dumps(livro, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def conta_segura(conta) -> str:
+    """O nome de perfil reduzido ao que pode virar nome de arquivo. Vazio se não sobrar.
+
+    ELA VALE NA IDA E NA VOLTA, e a primeira versão só valia na ida. O `revisor-codigo`
+    mediu o buraco: o nome do ARQUIVO era higienizado e a conta ia CRUA dentro do corpo,
+    o recolhimento usava a crua, e `carregar`/`gravar` montavam o caminho com ela. Com
+    `../../FUGIU` no lugar do perfil, o livro foi escrito **fora da raiz do acervo**.
+
+    O buraco é anterior a esta atividade (`rodada.contas_pedidas` só tira espaço e
+    arroba), mas a docstring que nasceu aqui **afirmava que ele estava fechado**, citando
+    a trava 73n pelo nome. Afirmar fechado o que está aberto é pior que o buraco.
+    """
+    return "".join(c for c in str(conta or "") if c.isalnum() or c in "._-")[:64]
+
+
+def deixar_nota(conta: str, vaga: int, tipo: str, **campos) -> None:
+    """A vaga deixa o que viu num arquivo só dela, e não no livro do perfil.
+
+    O NOME CARREGA A VAGA **E A HORA**, e é isso que garante um escritor por caminho sem
+    perder nada. Só com a vaga, o `revisor-codigo` mediu a perda: a nota de uma rodada
+    não recolhida era sobrescrita pela da rodada seguinte, na mesma vaga, e o contador de
+    "Nª Rodada Seguida" passava a **sub**contar. Basta o `git push` de uma vaga falhar
+    uma vez, e o fluxo já engole essa falha de propósito.
+
+    A GRAVAÇÃO É ATÔMICA (trava 8): escreve ao lado e troca de uma vez. A nota vai ao
+    acervo pelo `git add dados/`, e nota lida pela metade viraria nota ilegível, que o
+    recolhimento deixa parada para sempre.
+    """
+    seguro = conta_segura(conta)
+    if not seguro:
+        return
+    NOTAS.mkdir(parents=True, exist_ok=True)
+    p = NOTAS / f"{seguro}.{int(vaga)}.{int(time.time() * 1000)}.json"
+    tmp = p.with_suffix(".novo")
+    tmp.write_text(json.dumps(
+        {"conta": seguro, "vaga": int(vaga), "tipo": tipo,
+         "quando": int(time.time()), **campos},
+        ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp.replace(p)
+
+
+def ler_notas() -> list:
+    """As notas das vagas, em ordem de quando aconteceram.
+
+    ILEGÍVEL NÃO É AUSENTE (trava 3): nota que não deu para ler não vira lista vazia,
+    ela é devolvida com `ilegivel` marcado, para quem recolhe não apagá-la calado. A
+    ordem por `quando` importa porque `anotar_de_novo` colapsa o mesmo tropeço repetido,
+    e colapsar fora de ordem escreveria a hora errada na linha.
+    """
+    if not NOTAS.exists():
+        return []
+    fora = []
+    for p in sorted(NOTAS.glob("*.json")):
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+            # A CONTA E' HIGIENIZADA NA VOLTA TAMBEM, e nao so' na ida. Quem le' daqui
+            # monta `dados/atividade/<conta>.json` com ela, e nota escrita por uma versao
+            # antiga (ou por qualquer coisa que caia nesta pasta) traria a conta crua.
+            if isinstance(d, dict) and conta_segura(d.get("conta")) and d.get("tipo"):
+                d["conta"] = conta_segura(d["conta"])
+                d["_arquivo"] = str(p)
+                fora.append(d)
+            else:
+                fora.append({"_arquivo": str(p), "ilegivel": True})
+        except Exception:
+            fora.append({"_arquivo": str(p), "ilegivel": True})
+    fora.sort(key=lambda d: int(d.get("quando") or 0))
+    return fora
+
+
+def apagar_nota(caminho: str) -> None:
+    """A nota some depois de aplicada, e só depois.
+
+    Apagar antes de aplicar perderia a única pista de por que um perfil parou; deixar
+    depois de aplicada faria a rodada seguinte reaplicá-la para sempre, que é a trava 7
+    vista do outro lado.
+    """
+    try:
+        Path(caminho).unlink()
+    except OSError:
+        pass
 
 
 def anotar(livro: dict, tipo: str, quando: int, texto: str, **detalhe) -> None:

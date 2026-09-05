@@ -128,6 +128,51 @@ def identifica(conta: str, prazo: float) -> dict | None:
     }
 
 
+def vias_do_feed(conta: str, uid: str | None, marcador: str | None) -> list:
+    """As vias de pedir uma pagina do feed, em ordem. Devolve [(e_principal, rotulo, url)].
+
+    ESTA FUNCAO EXISTE PORQUE A REGRA ESTAVA ESCRITA DUAS VEZES (04/09/2026, espec
+    cd-0-terreno). O `rodada._uma_pagina` e o `casa._pagina_logada` decidiam por conta
+    propria por qual endereco pedir a pagina, e o "Como se mede" da espec dizia por
+    extenso que as duas funcoes passariam a chamar o MESMO ajudante. Nao passavam: eram
+    dois ajudantes, e ja' divergiam no dia em que nasceram, um com duas vias e o outro com
+    tres. E' a trava 60, e foi o `revisor-escopo` quem a pegou.
+
+    A MEDICAO QUE MANDA NA ORDEM, feita em 03/09/2026 nesta maquina, com segundos entre
+    as chamadas:
+
+        /feed/user/<CONTA>/username/?count=12                    200, 12 posts
+        /feed/user/<CONTA>/username/?count=12&max_id=<marcador>  200, 12 posts NOVOS
+        a terceira, com o marcador da segunda                    200, 12 posts NOVOS
+        /feed/user/<UID>/?count=12                               401
+        /feed/user/<UID>/?count=12&max_id=<marcador>             401
+        o mesmo por i.instagram.com                              401
+        o mesmo sem o X-IG-App-ID                                401
+
+    O caminho do arroba ACEITA `max_id` e pagina de verdade. O caminho do numero interno
+    fica como RESERVA e nao sai daqui: ele ja' foi o principal, pode voltar a passar num
+    endereco de saida que o do arroba recuse, e tira-lo trocaria um caminho que as vezes
+    falha por um caminho so'.
+
+    O PRIMEIRO CAMPO E' O QUE SEPARA UM 401 DO OUTRO. Recusa pela PRINCIPAL, com cookie,
+    e' sessao morta. Recusa pela RESERVA nao diz nada sobre a conta: aquele endereco
+    recusa ate' anonimo. Aposentar a conta por causa dele seria condena-la pelo defeito do
+    caminho, e o dono so' descobriria recadastrando uma conta que nunca teve problema.
+    """
+    rabo = f"&max_id={marcador}" if marcador else ""
+    vias = []
+    if conta:
+        vias.append((True, "o arroba",
+                     f"https://www.instagram.com/api/v1/feed/user/{conta}/username/"
+                     f"?count={POR_PAGINA}{rabo}"))
+    if uid:
+        for dominio in ("www.instagram.com", "i.instagram.com"):
+            vias.append((False, dominio,
+                         f"https://{dominio}/api/v1/feed/user/{uid}/"
+                         f"?count={POR_PAGINA}{rabo}"))
+    return vias
+
+
 def abre_pelo_arroba(conta: str, prazo: float) -> dict | None:
     """A primeira pagina de um perfil, pedida pelo @, sem numero nenhum.
 
@@ -155,8 +200,11 @@ def abre_pelo_arroba(conta: str, prazo: float) -> dict | None:
     varrer: serve so' para a tela dizer "300 de 2.253". A ponte preenche esse numero
     quando consegue, e quando nao consegue a tela mostra o que foi lido, sem fracao.
     """
-    url = (f"https://www.instagram.com/api/v1/feed/user/{conta}/username/"
-           f"?count={POR_PAGINA}")
+    # A QUINTA E ULTIMA COPIA DESTA URL, e ela morava no mesmo arquivo do ajudante. As
+    # outras quatro (a abertura da casa, a paginacao dela, o `--testar` e o resgate) ja'
+    # tinham sido reunidas; deixar esta de fora manteria a regra escrita duas vezes
+    # dentro do proprio dono dela, que e' o pior lugar para a divergencia nascer.
+    url = vias_do_feed(conta, None, None)[0][2]
     d = _pega_alternando([url], voltas=3, prazo=prazo, rotulo=f"[{conta}] abertura")
     if not d:
         return None

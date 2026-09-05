@@ -988,6 +988,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
      text-decoration:none;white-space:nowrap;
      transition:border-color .6s cubic-bezier(.23,1,.32,1),
                 color .6s cubic-bezier(.23,1,.32,1)}
+/* O PAR DO ESCONDER, a trava 66g da casa: toda regra que declara `display` precisa da irma
+   com `[hidden]`, senao o esconder do programa perde para a folha e o elemento continua na
+   tela. Havia duas versoes escopadas la' embaixo (`.lv-repescar` e `.lv-adiante`), e nenhuma
+   geral: os quatro botoes de abrir pasta, escondidos em 04/09/2026 quando a casa e' remota,
+   continuariam desenhados sem esta linha. */
+.btn[hidden]{display:none}
 .btn:hover{border-color:transparent;color:var(--paper);text-decoration:none}
 .btn:active{transform:scale(.95)}
 .btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -1264,8 +1270,33 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 /* O `.ed-sair` VIROU SO' O LUGAR, e nao mais o desenho: quem desenha e' o `.btn` que
    mora dentro dele desde 25/08/2026. Continuar pintando pilula aqui punha uma borda em
    volta da outra, e era isso que aparecia na tela: dois botoes encaixados. */
-.ed-sair{position:absolute;top:22px;right:clamp(20px,3vw,44px);z-index:5;
-  display:inline-flex}
+/* O SAIR SAIU DO AR E ENTROU NO FLUXO (04/09/2026), e este e' o primeiro ponto do print
+   dele: "o botao de sair da edicao ta' bugado, olha onde ele ta' aparecendo".
+
+   O QUE ACONTECIA, medido em janela de 1400 por 1000: o botao ficava em [1219, 76, 139, 40]
+   e a tira das abas em [42, 80, 1316, 48]. A tira cobria 36 DOS 40 pixels do botao, ou 90%
+   dele. Amostrando 20 pontos na vertical do meio, so' 2 chegavam ao botao e 18 devolviam a
+   tira; o clique no centro caia na tira. Sobrava um alvo de 4 pixels, sem rotulo e sem
+   pista de onde acertar, que e' a listra que ele fotografou como "so' um retangulo". E
+   depois de rolar a pagina (1446 pixels num vidro de 1000) o botao ia para y -224 enquanto
+   a tira grudava em zero: ai' a saida sumia de vez.
+
+   A RAIZ E' GEOMETRICA, e nao o empate de camadas. Este bloco era `position:absolute` com
+   `top:22px` dentro de um `#ed_oficina` de 26px de respiro no topo, escrito quando a tira
+   era uma COLUNA a' esquerda. Quando ela virou barra deitada e grudada no topo, em
+   03/09/2026, os dois passaram a ocupar a mesma faixa de altura. Prova de que a camada e'
+   so' o desempate: numa janela de 880 pixels, com as MESMAS camadas, a sobreposicao era
+   zero, porque a regra estreita la' embaixo descia o botao.
+
+   POR QUE NAO FOI SO' SUBIR O `z-index`: ficaria um botao flutuando por cima da barra de
+   abas, e com a janela estreita a tira quebra em duas linhas (`flex-wrap`, mais abaixo) e a
+   colisao voltaria noutro lugar. No fluxo ele nao colide com nada, nunca.
+
+   E' O QUE A BANCADA JA' FAZIA, e por isso ela era a unica aba onde o botao funcionava:
+   o `porOModoEsteira` tira o botao do `#ed_oficina` e o pendura no cabecalho dela, no
+   fluxo. Aqui as outras cinco abas ganham a mesma sorte, sem depender de acidente. */
+.ed-sair{display:flex;justify-content:flex-end;margin:0 0 12px;
+  padding-right:clamp(20px,3vw,44px)}
 .ed-tela:not(.x) .ed-sair{opacity:.75}
 .ed-sair:hover{opacity:1}
 /* A GALERIA OCUPA A LARGURA QUE SOBRA, e é isso que o rabisco do Gabriel mostra: fileira
@@ -1305,7 +1336,10 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 }
 @media(max-width:900px){
   .ed-focado .ed-tela{grid-template-columns:1fr;padding-top:64px}
-  .ed-sair{top:14px}
+  /* O `.ed-sair{top:14px}` SAIU EM 04/09/2026 junto com o `position:absolute`. Ele era o
+     remendo que fazia o botao escapar da tira nas janelas estreitas, e por isso o defeito
+     das janelas largas ficou escondido: quem medisse em 880 pixels via sobreposicao zero e
+     concluia que estava tudo bem. No fluxo nao ha' o que empurrar. */
 }
 /* A TELA QUE SAI. Sem ela a troca é um corte seco: uma some e a outra aparece no mesmo
    quadro, e por mais bonita que seja a entrada da seguinte, o olho perde o fio. */
@@ -1816,7 +1850,12 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ent-drive-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .ent-drive-topo h3{margin:0}
 .ent-drive .linha,.ent-caixa .linha,.ent-feito .linha{margin-top:16px}
+/* O PAR DO ESCONDER (trava 66g). Medido em 04/09/2026: 8 de 49 elementos que o
+   programa esconde na edicao continuavam com caixa na tela, dois deles com mais de
+   140 pixels de largura, e o `#aj_pronta` da Bancada continuava CLICAVEL escondido.
+   O `[hidden]` do navegador vale 0,1,0 de forca e perde para qualquer destas. */
 .ent-drive .acao{text-decoration:none;display:inline-flex;align-items:center}
+.ent-drive .acao[hidden]{display:none}
 /* O ROTULO E' LEGENDA, E NAO TITULO. Apagado e menor que a resposta que ele apresenta. */
 .ent-linha .ed-rot{font-size:12.5px;font-weight:500;color:var(--muted);
                    line-height:1.45}
@@ -1830,9 +1869,11 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .ent-feito .nota{margin-bottom:2px}
 .ent-feito #ent_feito_linhas .ent-linha:first-child{padding-top:0}
 .ent-feito .acao{text-decoration:none;display:inline-flex;align-items:center}
+.ent-feito .acao[hidden]{display:none}
 .apl-feito{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .apl-feito[hidden]{display:none}
 .apl-feito .acao{text-decoration:none;display:inline-flex;align-items:center}
+.apl-feito .acao[hidden]{display:none}
 /* ---------------------------------------------------- 2.4 · a quem se aplica */
 .apl-escolhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:12px}
@@ -2219,6 +2260,20 @@ body.aj-sem-selecao{user-select:none}
 .aj-pe-txt b{display:block;font-size:15px;font-weight:800;letter-spacing:-.01em;
   white-space:nowrap}
 .aj-pe-txt b span{font-weight:600;color:var(--muted);font-size:13px}
+/* O NUMERO VOLTA PARA DENTRO DO ANEL (04/09/2026). Ele circulou no print: o "1" solto ao
+   lado do circulo, no alto do palco.
+
+   ERA UM EMPATE DE FORCA, e nao um erro de conta. `.aj-anel b` (mais acima) e `.aj-pe-txt
+   b` (logo aqui) casam com o MESMO elemento e valem o mesmo: uma classe mais uma etiqueta.
+   No empate ganha a de baixo, que troca o `display:grid` com `place-items:center` por
+   `display:block`. A caixa continuava 52 por 52 por causa do `inset:0`, mas a letra ia para
+   o canto de cima e a' esquerda. Medido: o centro da letra ficava a 20,9 pixels do centro
+   do circulo, e o raio e' 18,6. Ou seja, FORA.
+
+   O ANEL FICA, e nao se apaga: ele nasceu de um pedido dele em agosto ("nao acho em que
+   peca estou") e mostra o quanto da leva ja' foi assinado. Quem sai e' o empate: esta regra
+   vale duas classes mais uma etiqueta e ganha das duas. */
+.aj-pe-txt .aj-anel b{display:grid;place-items:center;font-size:14px}
 .aj-pe-txt > span{font-size:12px;color:var(--muted);display:block;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
 .aj-pe-txt > span.tocada{color:var(--brasa,#BA5A18)}
@@ -3382,8 +3437,15 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .aj-esteira.com-gaveta{padding-right:0}
 .ed-tela.esteira-aberta{--aj-gaveta:0px}
 
+/* O RESPIRO LATERAL FALTAVA, e a Bancada era a UNICA tela colada nas duas bordas da
+   janela. Medido em sete tamanhos: o cabecalho da fase tem 30px de cada lado, mas a
+   fila comecava em x=0 e a coluna de ferramentas terminava exatamente na largura da
+   janela, com o Voltar Ao Comeco encostado na borda. Duas medidas diferentes
+   empilhadas na mesma tela: o cabecalho herdou o respiro da fase anterior e a grade
+   de tres colunas nasceu sem nenhum. A maquete aprovada pede 34. */
 .bn-bancada{display:grid;grid-template-columns:186px minmax(0,1fr) 296px;
-  gap:20px;align-items:start;margin-top:14px}
+  gap:20px;align-items:start;margin-top:14px;
+  padding-inline:clamp(14px,2.4vw,30px)}
 
 /* ---------------------------------------------------------------- 1 · a fila */
 .bn-fila{background:var(--branco);border:1px solid var(--rule-solid);
@@ -3396,8 +3458,19 @@ body.aj-arrastando .aj-gaveta{transition:none}
 /* A FILA ROLA DENTRO, E NAO CRESCE PARA FORA, e esta linha e' a que a receita da maquete
    guarda. Sem o `overflow`, cento e oitenta miniaturas esticariam a caixa ate' o pe' da
    pagina e o palco iria junto: a altura da fila e' a unica medida que denuncia isso. */
+/* A BARRA DE ROLAGEM DA FILA E' A DA CASA, e ate' 04/09/2026 era a do Windows. Ele
+   circulou no print: "essa barra de rolagem que ta' esquisita, nao deveria aparecer".
+   Medido: 15px de largura, `scrollbar-width` em auto, contra os 10px finos e escuros
+   da vizinha dela na MESMA tela, a coluna de ferramentas. Era a unica barra da casa
+   fora do padrao, que mora mais acima nesta folha e se repete em outros quatro
+   lugares. A regra tinha sido copiada da maquete sem as duas declaracoes da barra.
+   O eixo horizontal nunca tem o que rolar aqui, entao `overflow-y` e nao `overflow`. */
 .bn-fila-rolo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
-  max-height:clamp(320px,61vh,590px);overflow:auto;padding-right:3px}
+  max-height:clamp(320px,61vh,590px);overflow-y:auto;padding-right:3px;
+  scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
+.bn-fila-rolo::-webkit-scrollbar{width:9px}
+.bn-fila-rolo::-webkit-scrollbar-track{background:transparent}
+.bn-fila-rolo::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:8px}
 .bn-fp{position:relative;border-radius:7px;overflow:hidden;cursor:pointer;
   aspect-ratio:9/16;background:#000;border:2px solid transparent;padding:0}
 .bn-fp img{width:100%;height:100%;object-fit:cover;display:block;opacity:.72}
@@ -3473,7 +3546,13 @@ body.aj-arrastando .aj-gaveta{transition:none}
   border-radius:var(--r-lg);box-shadow:var(--sombra);padding:15px 16px;margin:0}
 .bn-ferr .aj-bloco h4{font-size:12px;font-weight:750;letter-spacing:.045em;
   color:var(--muted);margin:0 0 11px;text-transform:uppercase}
-.bn-ferr .aj-gaveta-pe{position:static;padding:0;border:0;background:none;
+/* O PE' DA COLUNA VOLTOU A TER FRONTEIRA (04/09/2026). Sem ela o corte da rolagem parecia
+   um cartao fatiado ao meio: o miolo mostra 427 de 1413 pixels, e o que sobrava embaixo da
+   linha de corte encostava direto nos botoes, como se fizesse parte do cartao cortado. A
+   borda diz "a coluna acaba aqui, e o que vem abaixo e' o pe'", que e' a diferenca entre
+   uma tela que rola e uma tela quebrada. */
+.bn-ferr .aj-gaveta-pe{position:static;padding:12px 0 0;background:none;
+  border:0;border-top:1px solid var(--rule-solid);
   display:flex;gap:8px}
 
 /* O TROCADOR DE MOLDURA E' A PRIMEIRA FERRAMENTA DA COLUNA, e a ordem responde a queixa
@@ -3546,8 +3625,16 @@ body.aj-arrastando .aj-gaveta{transition:none}
    dentro do flex (sem ele, o filho pede a altura inteira do conteudo e nada rola). */
 .bn-ferr{display:flex;flex-direction:column;gap:14px;
   max-height:calc(100vh - 124px)}
+/* O CORTE NAO CAI MAIS NO MEIO DE UM CARTAO. Medido em 04/09/2026: a coluna fecha em
+   819px e o miolo mostra 427 de 1413, ou seja 986 pixels por baixo, e a linha de corte
+   caia em y=593, FATIANDO o cartao A Fonte e tres palavras ao meio, 15px cada.
+
+   O RESPIRO DE BAIXO faz o corte cair entre cartoes, e a sombra conta que ha' mais
+   coisa embaixo: a barra de rolagem existe (10px, do padrao da casa) mas e' discreta
+   demais para ser o unico aviso de que 986 pixels ficaram escondidos. */
 .bn-ferr .aj-gaveta-corpo{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
-  padding-right:4px}
+  padding-right:4px;padding-bottom:18px;
+  mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
 .bn-ferr .aj-gaveta-pe,
 .bn-ferr > .aj-bloco,
 .bn-ferr > .aj-linha,
@@ -3590,6 +3677,7 @@ body.aj-arrastando .aj-gaveta{transition:none}
    `width:100%` num botao `block` faz o rotulo, o visto e o selo do atalho se comportarem
    como texto corrido, e nao como fileira. */
 .aj-esteira .acao.grande.bn-ok{display:flex;align-items:center;justify-content:center}
+.aj-esteira .acao.grande.bn-ok[hidden]{display:none}
 
 /* ================================================================= O TRILHO RASO
    (03/09/2026, espec `docs/ESPEC/bancada-front/o-trilho.md`)
@@ -3680,8 +3768,27 @@ body.aj-arrastando .aj-gaveta{transition:none}
 
 /* A ABA TRANCADA DIZ QUE ESTA' TRANCADA. O portao fecha em silencio hoje, e aba que nao
    reage ao clique sem dizer por que' e' a queixa que ele fez do passo 4 em 23/08/2026. */
-.ed-trilho.raso .ed-ponto.travado{opacity:.42}
+/* A ABA TRANCADA SE DECLARA TRANCADA (04/09/2026), e nao so' desbota.
+
+   Medido antes: opacidade 0,42 e cursor de link. A tela oferecia um botao do tamanho dos
+   outros, com a mao do mouse dizendo "pode clicar", e o clique nao levava a lugar nenhum.
+   Quem navega por teclado nao tinha nem a opacidade: o `aria-disabled` entrou junto, do
+   lado do programa. */
+.ed-trilho.raso .ed-ponto.travado{opacity:.42;cursor:not-allowed}
 .ed-trilho.raso .ed-ponto.travado:hover{background:none}
+
+/* O RECADO DA TRAVA TEM CORPO PROPRIO. Ele mora no subtitulo da aba A Marca, que e' texto
+   de apoio cinza de 20 pixels: sem esta regra, bater numa aba trancada trocava uma frase
+   cinza por outra frase cinza no mesmo lugar, e o olho nao via nada acontecer. */
+#mp_recado.mp-travou{color:var(--ink);font-weight:600;
+  border-left:3px solid var(--accent);padding:9px 12px;margin:2px 0 0;
+  background:color-mix(in srgb,var(--accent) 9%,transparent);
+  border-radius:0 var(--r-md) var(--r-md) 0;
+  animation:mp-travou-entra .22s cubic-bezier(.23,1,.32,1)}
+@keyframes mp-travou-entra{
+  from{opacity:0;transform:translateY(-4px)}
+  to{opacity:1;transform:none}
+}
 
 /* ------------------------------------------- 4 · a Bancada nao engole mais a tira */
 /* HOJE O TRILHO SOME NA BANCADA (`.ed-tela.esteira-aberta > .ed-trilho{display:none}`,
@@ -3690,10 +3797,21 @@ body.aj-arrastando .aj-gaveta{transition:none}
    ele vai da Bancada para As Frases. Entao a tira vira faixa fixa no alto e o palco
    comeca logo abaixo. O `inset` e' reescrito, e nao apagado: apagar a regra original
    tiraria o `position:fixed` e a Bancada voltaria para dentro da grade. */
-.ed-tela.esteira-aberta{--tr-alto:57px}
+/* A TIRA GANHOU RESPIRO EM CIMA (04/09/2026), e ela nascia no pixel zero.
+
+   O QUE ELE VIU e escreveu no print: "la' em cima, cade o cabecalho, porra?". A Bancada
+   esconde a navegacao do Estudio de proposito, para a peca tomar a tela, e isso e' o
+   desenho aprovado. So' que a tira colada no zero absoluto, encostando nas quatro bordas,
+   nao parece tela cheia: parece tela decapitada, cortada acima do que se ve'.
+
+   O `--tr-alto` E' A UNICA MEDIDA, e o palco se amarra nela. Sao os 48 da tira mais o vao
+   de cima e de baixo: mexer num numero sem o outro descola a barra do conteudo, e ai' a
+   tira flutua sobre a fila ou sobra uma faixa vazia no meio da tela. */
+.ed-tela.esteira-aberta{--tr-vao:10px;--tr-alto:68px}
 .ed-tela.esteira-aberta > .ed-trilho.raso{display:flex;position:fixed;
   top:0;left:0;right:0;z-index:26;margin:0;
-  padding:0 clamp(20px,3vw,44px);background:var(--paper);box-shadow:var(--sombra)}
+  padding:var(--tr-vao) clamp(20px,3vw,44px);
+  background:var(--paper);box-shadow:var(--sombra)}
 .ed-tela.esteira-aberta > .ed-palco{inset:var(--tr-alto) 0 0 0}
 
 /* ---------------------------------------------------- 5 · a entrada em escadinha */
@@ -3916,86 +4034,13 @@ body.aj-arrastando .aj-gaveta{transition:none}
 /* O PAINEL TOMA A LARGURA DA LISTA, e nao a do par que morreu. */
 .bm-marca .mp-aplicando{max-width:1020px}
 
-/* ================================================================== AS FRASES
-   (03/09/2026, espec `bancada-front/as-frases`, aba 4 da maquete aprovada)
+/* O BLOCO `fz-` SAIU EM 04/09/2026, um dia depois de entrar. Ele vestia a lista de 180
+   frases da aba As Frases, e a lista saiu inteira por ordem dele: a correcao de frase
+   mora na Bancada, e esta fase volta a ser so' o acompanhamento da escrita.
 
-   O QUE ESTE BLOCO ACRESCENTA: a lista de correcao, que nasce EMBAIXO da tela de
-   carregamento da IA e nao no lugar dela. O que ele cortou em 21/08/2026 foi a lista que
-   vinha ANTES de a IA escrever; esta e' a de depois, para corrigir o que ficou torto.
-
-   AS MEDIDAS SAO AS DO DESENHO (linhas 187 a 194 do `index.html` da proposta): vao de 10,
-   respiro de 12 por 14, miniatura de 40 por 71, campo de 40 de altura, legenda de 11,5.
-
-   AS CORES SAO TODAS VARIAVEIS, pelo mesmo motivo da Bancada: a maquete foi desenhada so'
-   no claro e esta tela tem tema escuro. O unico valor literal e' o preto do fundo da
-   miniatura, que e' o fundo do quadro e e' preto nos dois temas. */
-
-.fz-casa[hidden]{display:none}
-
-/* A LISTA ROLA POR DENTRO, e nao cresce para fora. Com 180 linhas de 96px ela empurraria o
-   rodape' desta fase para oito mil pixels abaixo da dobra, e BOTAO QUE SO' EXISTE DEPOIS DE
-   ROLAR E' BOTAO QUE NAO EXISTE, que e' a regra que derrubou a coluna da Bancada em
-   03/09/2026.
-
-   OS 540px SAO MEDIDOS, e nao escolhidos. A primeira versao desta regra era
-   `clamp(320px,52vh,560px)`, copiada da fila da Bancada, e a prova `frases-fabricar`
-   reprovou na hora: numa janela de 1000px o botao "Ir Para Fabricar" ia de 981 a 1025, ou
-   seja 25 pixels abaixo da dobra. Medido no navegador em 03/09/2026, com a fase inteira no
-   ar: 150px acima da sub-tela (a barra de abas da oficina mais a tira das etapas de 48), 80
-   do cabecalho, 145 do aviso de que nao ha' IA configurada, 65 do rodape', mais os respiros.
-   Sao 505px que nunca sao da lista, e os 540 sao esses 505 com 35 de folga, para o dia em
-   que o recado da IA tiver duas linhas em vez de uma.
-
-   O PISO DE 200px E' O LIMITE HONESTO DESTA CONTA: abaixo de uma janela de 740px a fase nao
-   cabe inteira, e ai' quem rola e' o palco. Encolher a lista para menos do que duas linhas e
-   meia nao resolveria isso, so' esconderia o assunto da tela. */
-.fz-lista{display:grid;gap:10px;max-width:1020px;
-  max-height:clamp(200px,calc(100vh - 540px),560px);
-  overflow-y:auto;overflow-x:hidden;padding-right:6px}
-
-/* O RESPIRO DA LINHA PRECISA GANHAR DO `.caixa` DA CASA, que crava 20px por todos os lados.
-   Os dois seletores tem a mesma forca, entao quem ganha e' o que vem depois: este bloco
-   mora no fim do arquivo de proposito. */
-.fz-linha{display:flex;gap:14px;align-items:center;padding:12px 14px;min-width:0}
-
-/* A MINIATURA E' A ARTE DA VARIACAO, no formato da peca: 40 por 71 e' 1080 por 1920
-   arredondado. Ela nao e' o quadro do reel como no desenho, e a razao e' medida: o quadro
-   exigiria abrir 180 videos, que e' exatamente o que ele vetou em 29/08/2026. */
-.fz-mini{position:relative;display:block;width:40px;height:71px;flex:none;
-  border-radius:8px;overflow:hidden;background:#000}
-.fz-mini img{width:100%;height:100%;object-fit:cover;display:block}
-.fz-mini .vazio{position:absolute;inset:0;background:var(--paper-2)}
-
-.fz-campo{flex:1;min-width:0;display:grid;gap:5px}
-
-/* O CAMPO PRECISA VENCER DUAS REGRAS DA CASA, e nenhuma das duas e' engano:
-     `input[type=number],input[type=text]` crava 44px de altura, 13px de respiro e letra
-     MONOESPACADA, que e' certo num campo de configuracao e errado numa frase que vai sair
-     na peca;
-     o `.campo` global tem `min-width:160px`, que numa lista de 180 linhas empurraria a
-     caixa inteira de dentro para fora.
-   Por isso o seletor e' `.fz-campo input[type=text]`, com dois nomes contra um. */
-.fz-campo input[type=text]{width:100%;height:40px;padding:0 12px;
-  font:14px/1 var(--fonte);background:var(--paper-2);color:var(--ink);
-  border:1px solid var(--rule-solid);border-radius:var(--r-filtro)}
-.fz-campo input[type=text]:focus{outline:2px solid var(--accent);outline-offset:-1px;
-  border-color:var(--accent);background:var(--branco)}
-
-/* A LEGENDA DIZ QUEM ESCREVEU E QUAL PECA E', e ela muda quando ele corrige: dizer que a
-   inteligencia escreveu uma frase que ELE reescreveu seria a tela contando o que nao
-   aconteceu. */
-.fz-quem{font-size:11.5px;color:var(--soft);line-height:1.35}
-.fz-quem b{color:var(--muted);font-weight:600}
-.fz-quem .apertou{color:var(--ambar);font-weight:600}
-
-.fz-linha .acao{flex:none}
-
-/* A LINHA DE AGORA e' so' uma marca de "voce estava aqui", para quando ele volta da
-   Bancada. Ela nao seleciona nada e nao muda o que o campo faz. */
-.fz-linha.agora{border-color:var(--accent)}
-
-.fz-rodape{color:var(--muted);font-size:13px;padding:8px 4px}
-.fz-rodape b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+   ERAM 80 LINHAS: `.fz-casa`, `.fz-lista` com o teto de rolagem, `.fz-linha`, a
+   miniatura de 40 por 71, o campo de texto, a legenda de quem escreveu e o rodape' da
+   conta. Nada mais na folha usa o prefixo, conferido por busca. */
 
 /* =================================================================== FABRICAR
    (03/09/2026, espec `bancada-front/fabricar`, aba 5 da maquete aprovada)

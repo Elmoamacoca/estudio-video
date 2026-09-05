@@ -173,9 +173,17 @@ jobs:
           # esteira emendou de seis em seis minutos com as vinte vagas levando 401, e foi
           # assim que o contador do perfil dele chegou a "Tentativa 54" numa hora.
           #
-          # O criterio e' o CONTEUDO: mexeu so' no livro, e' nota; mexeu na ficha do
-          # perfil, e' leitura de verdade.
-          if git diff --staged --name-only | grep -qv '^dados/atividade/'; then
+          # O criterio e' o CONTEUDO: mexeu so' no livro ou deixou nota, e' nota; mexeu
+          # na ficha do perfil, e' leitura de verdade.
+          #
+          # `dados/notas/` ENTROU AQUI EM 04/09/2026, e sem isso o conserto do escritor
+          # unico teria RESSUSCITADO o defeito de 03/09: a vaga deixou de escrever no
+          # livro e passou a escrever a nota noutra pasta, entao um commit so' de nota
+          # voltaria a se chamar "vaga N" e a ser contado como avanco pelo passo que
+          # decide a emenda. A esteira emendaria de seis em seis minutos com as vinte
+          # vagas levando 401, que e' exatamente o que produziu a "Tentativa 54".
+          if git diff --staged --name-only \
+               | grep -qv -e '^dados/atividade/' -e '^dados/notas/'; then
             git commit -m "vaga ${{ matrix.elo }}"
           else
             git commit -m "nota da vaga ${{ matrix.elo }}"
@@ -204,6 +212,23 @@ jobs:
           # o livro de atividade conta as gravacoes de cada perfil pelo historico do
           # proprio acervo, entao ele precisa do historico inteiro e nao do ultimo commit
           fetch-depth: 0
+      - name: Recolher as notas das vagas
+        # UM ESCRITOR SO' NO LIVRO DO PERFIL (04/09/2026, espec cd-0-terreno). Ate' aqui
+        # cada vaga escrevia direto em `dados/atividade/<conta>.json`, e com dois perfis
+        # na fila DEZ vagas caem no mesmo perfil por rodada: dez maquinas reescrevendo o
+        # mesmo arquivo. Agora cada vaga deixa a nota em `dados/notas/<conta>.<vaga>.json`,
+        # que e' caminho so' dela, e este passo, que roda depois de todas e numa maquina
+        # so', aplica as notas nos livros. E' a regra que o proprio atividade.py declara
+        # no cabecalho desde o comeco, e que os ramos de falha da vaga desobedeciam.
+        #
+        # E ELE NAO DERRUBA O FECHAMENTO (trava 7). Este e' o PRIMEIRO passo do `fechar`:
+        # um estouro aqui, sem esta linha, pularia `Aplicar a regua`, `Publicar` e
+        # `Emendar a proxima rodada`, e a rodada inteira ficaria sem selecao, sem estado,
+        # sem carimbo de saude e sem emenda, com as vinte vagas tendo trabalhado. E' o
+        # silencio de 24/08/2026 refeito por outra porta. As notas nao aplicadas ficam
+        # onde estao e o recolhimento seguinte as pega: nota nao se perde por adiamento.
+        continue-on-error: true
+        run: python rodada.py --recolher
       - name: Aplicar a regua e atualizar a tela
         run: |
           # sem argumentos: a regua vem de dados/regua.json, escolhida na tela

@@ -935,21 +935,36 @@
         </div>
       </div>
 
-      <div class="ed-ponto" data-etapa="3" data-passo="3" data-sub="6"
+      <!-- AS FRASES VEM ANTES DA BANCADA, e a troca e' de 04/09/2026, dele, de viva voz:
+           "nao era pras frases ser a terceira opcao e a bancada ser a quarta? Por que as
+           frases vem depois? Tem que reordenar."
+
+           ELE NAO INVERTEU O FLUXO, ele fez a numeracao parar de mentir sobre o fluxo que
+           ja' existia. A tira anterior desenhava a Bancada como 3 e As Frases como 4, mas
+           o caminho executado sempre foi o contrario: "Usar Nesta Leva" termina em
+           `irParaSub(4)`, As Frases, PULANDO a 3. Medido em 04/09: parado em As Frases a
+           aba acesa era a 4 e a barrinha do passo marcava 33,33%; parado na Bancada, aba 3
+           e barrinha em 66,67%. A aba de numero MENOR marcava progresso MAIOR, ou seja os
+           dois instrumentos da mesma tira se contradiziam.
+
+           O QUE NAO MUDOU, e e' de proposito: `data-passo` e `data-sub` continuam os
+           mesmos, e o `POSICAO_DA_SUB` do programa tambem. E' a pele por cima do par, e e'
+           ela que deixa o rascunho ja' gravado no disco reabrir sem migracao nenhuma. -->
+      <div class="ed-ponto" data-etapa="3" data-passo="3" data-sub="4"
            role="tab" tabindex="0" aria-selected="false">
         <div class="ed-ponto-n">3</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
-          <div class="ed-ponto-txt"><h3>A Bancada</h3></div>
+          <div class="ed-ponto-txt"><h3>As Frases</h3></div>
         </div>
       </div>
 
-      <div class="ed-ponto" data-etapa="4" data-passo="3" data-sub="4"
+      <div class="ed-ponto" data-etapa="4" data-passo="3" data-sub="6"
            role="tab" tabindex="0" aria-selected="false">
         <div class="ed-ponto-n">4</div>
         <div class="ed-ponto-corpo">
           <div class="ed-barra"><i></i><b style="height:0%"></b></div>
-          <div class="ed-ponto-txt"><h3>As Frases</h3></div>
+          <div class="ed-ponto-txt"><h3>A Bancada</h3></div>
         </div>
       </div>
 
@@ -1275,10 +1290,16 @@
         <div class="ed-sub-tela" data-sub="4" hidden>
           <div class="ed-cab">
             <h2><span class="ed-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span>As Frases</h2>
+            <!-- A PROMESSA TERMINA NA PASSADA, e nao na lista. A frase seguinte dizia
+                 "depois a lista abre aqui embaixo e voce corrige o que ficou torto", e a
+                 lista saiu em 04/09/2026: a correcao mora na Bancada. Esta frase nao tem
+                 identificador e nao aparece em busca por `fz`, entao um conserto que
+                 procurasse so' pelos nomes do bloco a teria deixado prometendo uma tela
+                 que nao existe mais. -->
             <p class="nota">A inteligência lê a manchete do card de cada reel e escreve uma
               equivalente na faixa de escrita da arte que a peça veste. Uma passada só, em
-              todas as peças. Depois a lista abre aqui embaixo e você corrige o que ficou
-              torto.</p>
+              todas as peças. Depois você corrige o que ficou torto na
+              <b>A Bancada</b>, peça a peça.</p>
           </div>
 
           <div class="leg-vazio" id="ia_sem_campo" hidden>
@@ -1292,8 +1313,7 @@
             <b>Nenhuma IA configurada.</b>
             <p class="nota">A chave, o serviço e o prompt moram na aba de
               <a href="#config" data-aba="config">Configurações</a>. Configure lá uma vez
-              e esta fase passa a funcionar sozinha. Sem ela a lista abaixo continua
-              valendo: as frases podem ser escritas na mão.</p>
+              e esta fase passa a funcionar sozinha.</p>
           </div>
 
           <div id="ia_corpo" hidden>
@@ -1346,39 +1366,44 @@
             </div>
           </div>
 
-          <!-- ------------------------------------------------------- A LISTA DAS FRASES
+          <!-- A LISTA DAS FRASES SAIU EM 04/09/2026, um dia depois de entrar, e a ordem
+               foi dele, olhando a tela pronta:
 
-               A LISTA ROLA POR DENTRO, e nao cresce para fora. Com 180 linhas de 96px ela
-               empurraria o rodape' desta fase para oito mil pixels abaixo da dobra, e botao
-               que so' existe depois de rolar e' botao que nao existe (a mesma regra que
-               derrubou a coluna da Bancada em 03/09/2026).
+                 "essa questao de eu poder criar a frase do zero nao deve aparecer aqui, e
+                  nem deve aparecer a opcao de editar a frase. A frase mais tarde vai ser
+                  editada na etapa de bancada e nao aqui onde eu to agora. A unica coisa
+                  que deve ter aqui e' aquele negocinho de carregamento onde eu consigo
+                  acompanhar. Gerou todas as frases? Ai' sim eu avancaria pra bancada."
 
-               A MINIATURA E' A ARTE DA VARIACAO, e nao o quadro do reel como no desenho.
-               E' a mesma decisao que a fila da Bancada ja' tomou no `desenhaAFila`: o
-               quadro do reel exigiria abrir 180 videos, que e' exatamente o que ele vetou
-               em 29/08/2026. A arte sai do cache `ED_IMGS`, com no maximo uma imagem por
-               variacao da conta, quatro na leva 31. -->
-          <div class="fz-casa" id="fz_casa" hidden>
-            <div class="fz-lista" id="fz_lista"></div>
-            <!-- A LINHA DO FIM E' A CONTA DE VERDADE. No desenho ela diz "e mais 175
-                 pecas" porque a maquete so' desenhou cinco de 180. Aqui as 180 estao na
-                 lista, entao repetir aquela frase seria a tela afirmando o que nao
-                 aconteceu. Ela vira a conta: quantas ha', quantas escritas, quantas sem
-                 frase no card e quantas por escrever. -->
-            <div class="fz-rodape" id="fz_rodape"></div>
-          </div>
+               O QUE ELA ERA: 180 linhas, cada uma com miniatura, campo de texto aberto e
+               "Ver Na Peca". Medida antes de sair: 1020 por 460, com 19.250 pixels rolando
+               por dentro, ocupando 496 dos 815 pixels desta fase. Os campos eram
+               editaveis de verdade, e campo vazio aceitava frase inventada do zero.
 
+               POR QUE ELA TINHA ENTRADO: a maquete aprovada desenha esta aba como lista de
+               correcao. Ela desenha, e ele mandou tirar depois de usar. Quem manda e' quem
+               usa, e a maquete perde para o dono nesta linha.
+
+               O QUE FICA NO LUGAR: o `#ia_obra` logo acima, que e' o "negocinho de
+               carregamento" e nunca saiu daqui. A correcao de frase mora na Bancada, no
+               cartao A FRASE DESTA PECA, que ja' existe e ja' grava. -->
           <!-- O RODAPE' CONTINUA, e os dois rotulos mudaram junto com a tira de etapas.
-               O `ed_volta_imagens` vai ao `irParaSub(1)`, que hoje e' A Marca, e o
-               `ed_vai_ajuste` ao `irParaSub(5)`, que e' Fabricar. "Ver As Pecas Prontas"
-               descrevia a galeria de previas, que ele mandou remover em 29/08/2026: o
-               rotulo tinha ficado prometendo uma tela que nao existe mais. -->
+               O `ed_volta_imagens` vai ao `irParaSub(1)`, que hoje e' A Marca.
+
+               O AVANCAR PASSOU A LEVAR A' BANCADA em 04/09/2026, junto com a troca de
+               numero das abas 3 e 4. Ele levava direto ao Fabricar, PULANDO a Bancada
+               inteira: medido, sair daqui deixava a tela na sub 5 e a sub 6 nao era
+               visitada em nenhum momento do caminho para frente. Avancar uma etapa a
+               partir das Frases e' A Bancada, e e' isso que o rotulo passa a dizer.
+
+               O IDENTIFICADOR CONTINUA `ed_vai_ajuste`, de proposito: trocar o nome
+               quebraria as chamadas dele sem melhorar nada na tela. -->
           <div class="ed-pe">
             <button class="acao" id="ed_volta_imagens" type="button">
               Voltar À Marca</button>
             <div class="ed-pe-conta" id="ed_conta_ia"></div>
             <button class="acao forte" id="ed_vai_ajuste" type="button">
-              Ir Para Fabricar</button>
+              Ir Para A Bancada</button>
           </div>
         </div>
 
@@ -1522,8 +1547,16 @@
             apagado daqui e a tela diz por quê.
           </p>
 
+          <!-- UM VOLTAR SO', E ELE VOLTA UM DEGRAU. Ate' 04/09/2026 havia DOIS botoes de
+               voltar lado a lado, para abas diferentes: "Voltar A's Frases" e "Voltar A'
+               Bancada". Duas portas de volta na mesma fileira e' escolha sem criterio na
+               tela, e sobrou de quando o caminho era Marca, Frases, Fabricar, com a
+               Bancada alcancada de lado. Na ordem nova o degrau anterior ao Fabricar e' A
+               Bancada, e e' para la' que o voltar leva.
+
+               O `ed_volta_ia` SAIU, e nao so' o rotulo: quem quiser as Frases tem a aba 3
+               na tira, a dois centimetros dali. -->
           <div class="ed-pe">
-            <button class="acao" id="ed_volta_ia" type="button">Voltar Às Frases</button>
             <div class="apl-resumo" id="apl_resumo"></div>
             <!-- A PORTA DA REVISAO. Pedido dele em 23/08/2026: "não precisa e não deve
                  aparecer todos de uma vez, o meu PC não tem memória RAM". -->
@@ -1817,7 +1850,7 @@
                 <p class="nota mini" id="aj_folga_diz"></p>
                 <button class="acao mini larga" id="aj_broll_todas" type="button">
                   Usar Este Enquadramento Em Todas</button>
-                <p class="nota mini" id="aj_broll_sem" hidden>Esta peça não tem recorte de
+                <p class="nota mini" id="aj_broll_sem" hidden>Esta peça não tem medida de
                   B-roll para reenquadrar.</p>
               </section>
 
@@ -1837,6 +1870,33 @@
                 <div class="ed-passo" id="aj_x"></div>
                 <div class="ed-passo" id="aj_y"></div>
               </section>
+
+              <!-- O TECLADO ENTROU NO MIOLO QUE ROLA em 04/09/2026, e ele estava FORA.
+
+                   Ele circulou no print e disse "essa questao daqui do teclado tambem nao
+                   deveria aparecer". Medido: 296 por 207 pixels, ou 25% dos 819 da coluna,
+                   e IDENTICO nos quatro estados testados, porque estava pendurado como
+                   filho direto do aside, com `flex:none`. Ele nunca saia de cena, e nenhum
+                   botao da tela o escondia: a busca por "teclado" em identificador, titulo
+                   e rotulo devolveu lista vazia.
+
+                   O ESPACO DELE ERA ESPACO QUE O MIOLO PERDIA: com ele preso no pe', mais o
+                   pe' de comando, a fileira de andar e o botao de aprovar, sobravam 427 de
+                   1413 pixels para cinco cartoes de ferramenta. Dentro do miolo ele rola
+                   junto com os outros e devolve 221 pixels, sem sumir do produto.
+
+                   E' A POSICAO QUE A MAQUETE APROVADA LHE DA': ultimo bloco da coluna,
+                   antes do Aprovar E Seguir. -->
+              <section class="aj-bloco">
+                <h4>O Teclado</h4>
+                <div class="bn-teclas">
+                  <div class="bn-tecla"><kbd>1</kbd><kbd>4</kbd> trocar de moldura</div>
+                  <div class="bn-tecla"><kbd>↑</kbd><kbd>↓</kbd> mover a filmagem</div>
+                  <div class="bn-tecla"><kbd>+</kbd><kbd>−</kbd> tamanho</div>
+                  <div class="bn-tecla"><kbd>A</kbd> ver ou ajustar</div>
+                  <div class="bn-tecla"><kbd>Enter</kbd> aprovar e ir para a próxima</div>
+                </div>
+              </section>
             </div>
 
             <div class="aj-gaveta-pe">
@@ -1854,19 +1914,6 @@
                 Voltar Ao Começo</button>
             </div>
 
-              <!-- O TECLADO. Ele nao tem botao nenhum: so' diz o que as teclas fazem,
-                   porque o assunto desta tela e' fazer cada gesto caber em um segundo,
-                   cento e oitenta vezes seguidas. -->
-              <section class="aj-bloco">
-                <h4>O Teclado</h4>
-                <div class="bn-teclas">
-                  <div class="bn-tecla"><kbd>1</kbd><kbd>4</kbd> trocar de moldura</div>
-                  <div class="bn-tecla"><kbd>↑</kbd><kbd>↓</kbd> mover a filmagem</div>
-                  <div class="bn-tecla"><kbd>+</kbd><kbd>−</kbd> tamanho</div>
-                  <div class="bn-tecla"><kbd>A</kbd> ver ou ajustar</div>
-                  <div class="bn-tecla"><kbd>Enter</kbd> aprovar e ir para a próxima</div>
-                </div>
-              </section>
 
               <!-- ANDAR NA FILA, no fim da coluna. Eram o rodape' da fase inteira. -->
               <div class="aj-linha nao-quebra aj-pe-dir" style="margin-top:2px">
@@ -1960,8 +2007,13 @@
                mesma promessa quebrada do botao que nao fazia nada. -->
           <div class="leg-vazio" id="dsc_sem_pecas" hidden>
             <b>Esta leva ainda não foi fabricada.</b>
-            <p class="nota">A etapa 4 trabalha em cima das peças prontas. Volte ao
-              <b>passo 3</b>, na primeira olhada, e clique em <b>Fabricar as peças</b>.
+            <!-- OS NOMES SAO OS DA BARRA, e nao os de dentro do programa. Ate' 04/09/2026
+                 esta frase mandava ele para "o passo 3, na primeira olhada", e nenhum dos
+                 dois existe na tela: a barra tem seis abas com nome proprio desde 03/09, e
+                 a primeira olhada morreu junto com o recorte. Mandar alguem a um lugar que
+                 nao esta' escrito em lugar nenhum e' pior que nao mandar. -->
+            <p class="nota">A Entrega trabalha em cima das peças prontas. Volte a
+              <b>Fabricar</b>, a aba 5, e clique em <b>Fabricar A Leva</b>.
               Se você já fabricou e nada aparece, o posto pode estar reiniciando:
               espere um pouco e recarregue a página.</p>
           </div>
@@ -2052,7 +2104,7 @@
             <div class="linha">
               <a class="acao" id="pos_abrir" href="#">Abrir A Pasta</a>
             </div>
-            <p class="nota">Os recortes continuam onde estavam, intactos.</p>
+            <p class="nota">Os vídeos da leva continuam onde estavam, intactos.</p>
           </div>
 
           <!-- O DRIVE, E O ÚNICO PONTO DO SISTEMA QUE DEPENDE DELE. Entrar na conta do
