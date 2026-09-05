@@ -15848,6 +15848,7 @@ const CTA = {
   ponta: null,
   balcao: null,
   naoLi: "",          // o que impediu a última leitura, para a tela dizer em vez de mentir
+  instalador: false,  // a casa tem o instalador da ponta? só o sim desenha o botão
   passo: 1,           // dentro da janela
   conta: null,        // a conta em cadastro, enquanto a janela está aberta
 };
@@ -15909,6 +15910,9 @@ async function lerAsContas() {
     CTA.contas = Array.isArray(d.contas) ? d.contas : null;
     CTA.ilegivel = !!d.cofre_ilegivel;
     CTA.balcao = d.balcao || null;
+    // A CASA DIZ SE TEM O INSTALADOR. Nulo é "ainda não perguntei": o botão só aparece
+    // com um sim, e nunca por otimismo.
+    CTA.instalador = d.instalador === true;
     CTA.naoLi = "";
   } catch (e) {
     // A LEITURA QUE FALHOU NÃO APAGA O QUE JÁ ESTAVA DESENHADO, e é o motivo por que o
@@ -15989,14 +15993,25 @@ function pintaAPonta() {
       "Deixe a máquina ligada. A partir daí ela se apresenta sozinha, a cada meio minuto, "
         + "e este bloco passa a dizer Ligado.",
     ];
+    /* O BOTAO SO' APARECE SE O ARQUIVO EXISTIR NA CASA, e o endereço dele é a rota
+       própria do instalador.
+
+       O QUE ESTAVA ERRADO, e ele achou no primeiro clique: o botão apontava para
+       `/arquivo?onde=instalar-ponta.ps1`, e aquela rota serve CONTEÚDO da casa (levas,
+       recortes, peças), com lista de pastas e de extensões. O instalador é programa, mora
+       ao lado do posto, e o download devolvia 404. Botão que promete e não entrega é a
+       trava 2 no lugar em que ele mais precisa que funcione. */
     instalar.innerHTML =
       "<h4>Como Ligar Este Computador</h4>"
       + '<div class="pnt-passos">'
       + passos.map((t, i) => '<div class="pnt-passo"><b>' + (i + 1) + "</b><span>"
           + escapar(t) + "</span></div>").join("")
       + "</div>"
-      + '<a class="acao" href="' + POSTO + '/arquivo?onde='
-      + encodeURIComponent("instalar-ponta.ps1") + '" download>Baixar O Instalador</a>';
+      + (CTA.instalador
+        ? '<a class="acao" href="' + POSTO + '/instalador" download="instalar-ponta.ps1">'
+          + "Baixar O Instalador</a>"
+        : '<p class="nota">O instalador não está nesta casa do Estúdio. Enquanto ele não '
+          + "chegar, este computador não tem como se apresentar sozinho.</p>");
   }
 }
 

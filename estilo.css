@@ -73,6 +73,13 @@ input[type=number],input[type=text]{width:100%;height:var(--h-filtro);
 .acao{height:var(--h-filtro);padding:0 18px;border-radius:var(--r-filtro);cursor:pointer;
       font:500 14px/1 inherit;color:var(--ink);background:var(--branco);
       border:1px solid var(--rule-solid);transition:.16s}
+/* O LINK QUE VESTE `.acao` PARECE BOTAO. `.acao` tem `height` e `padding`, e `<a>` e'
+   inline: a altura nao se aplica, o texto nao centra e o sublinhado do link fica. Foi
+   assim nas SETE ocorrencias de `<a class="acao">` da tela ate' 05/09/2026, quando ele
+   circulou de vermelho o Baixar O Instalador. `.acao` promete botao; quem a veste tem
+   de parecer um. */
+a.acao{display:inline-flex;align-items:center;justify-content:center;
+       text-decoration:none;box-sizing:border-box}
 .acao:hover{border-color:var(--accent);color:var(--accent)}
 .acao.forte{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 .acao.forte:hover{filter:brightness(1.07);color:#fff}
