@@ -15987,11 +15987,20 @@ function pintaAPonta() {
      terminal. */
   instalar.hidden = p.estado === "ligada";
   if (!instalar.hidden) {
+    /* OS PASSOS DIZEM O QUE FAZER DE VERDADE, e mudaram em 05/09/2026.
+
+       O QUE ESTAVA ERRADO: eles mandavam "abra o arquivo baixado", e o arquivo baixado era
+       um roteiro SOLTO. Ele registra uma tarefa apontando para a pasta em que estiver, e
+       caindo em Downloads a tarefa nascia apontando para uma pasta sem `ponta.py` dentro.
+       Ele instalou, nada aconteceu, e nada aqui dizia por quê. Hoje o download é um pacote
+       com os programas, a receita e o segredo desta máquina, e o passo do meio é extrair. */
     const passos = [
-      "Baixe o instalador da ponta, que é o programa que fica no seu computador.",
-      "Abra o arquivo baixado. Ele não pede administrador e não abre janela nenhuma.",
-      "Deixe a máquina ligada. A partir daí ela se apresenta sozinha, a cada meio minuto, "
-        + "e este bloco passa a dizer Ligado.",
+      "Baixe o pacote da ponta, que é o programa que fica no seu computador.",
+      "Extraia o ZIP numa pasta fixa, e não rode de dentro dele: o Windows extrai num "
+        + "lugar temporário e apaga depois.",
+      "Dentro da pasta, dê dois cliques em INSTALAR.bat. Ele não pede administrador.",
+      "Não há passo quatro. Em até meio minuto este bloco passa a dizer Ligado, com o "
+        + "nome da sua máquina do lado.",
     ];
     /* O BOTAO SO' APARECE SE O ARQUIVO EXISTIR NA CASA, e o endereço dele é a rota
        própria do instalador.
@@ -16008,8 +16017,8 @@ function pintaAPonta() {
           + escapar(t) + "</span></div>").join("")
       + "</div>"
       + (CTA.instalador
-        ? '<a class="acao" href="' + POSTO + '/instalador" download="instalar-ponta.ps1">'
-          + "Baixar O Instalador</a>"
+        ? '<a class="acao" href="' + POSTO + '/instalador" download="estudio-ponta.zip">'
+          + "Baixar O Pacote Da Ponta</a>"
         : '<p class="nota">O instalador não está nesta casa do Estúdio. Enquanto ele não '
           + "chegar, este computador não tem como se apresentar sozinho.</p>");
   }
