@@ -15985,7 +15985,27 @@ function pintaAPonta() {
      E A TELA NUNCA MANDA ELE DIGITAR COMANDO (critério 8 da espec). O que aparece é o que
      ele clica e o que ele vê, e o nome do arquivo aparece como arquivo, não como linha de
      terminal. */
-  instalar.hidden = p.estado === "ligada";
+  /* E O PROGRAMA VELHO NO COMPUTADOR DELE TEM DE APARECER.
+
+     O PROGRAMA DA PONTA RODA DA PASTA ONDE ELE EXTRAIU O PACOTE, e não da casa: conserto
+     de ponta que fica só na casa não chega nele nunca. Em 06/09/2026 o login foi
+     consertado aqui e no acervo, e a máquina dele continuaria rodando o programa velho,
+     dando o mesmo defeito, sem nada na tela dizendo por quê.
+
+     A COMPARAÇÃO É DE NÚMERO MEDIDO CONTRA NÚMERO MEDIDO: a versão que bateu, contra a que
+     a casa tem. Faltando qualquer um dos dois, não se afirma nada (trava 2). */
+  const velha = p.versao != null && p.versao_da_casa != null
+    && p.versao < p.versao_da_casa;
+  instalar.hidden = p.estado === "ligada" && !velha;
+  if (velha) {
+    html += campo("A casa já tem", "versão " + p.versao_da_casa, "pnt-velha");
+    linha.innerHTML = html;
+    diz.textContent = "O programa do seu computador está velho: ele é da versão "
+      + p.versao + " e a casa do Estúdio já está na versão " + p.versao_da_casa
+      + ". Ele roda da "
+      + "pasta em que você o extraiu, então baixar o pacote de novo e rodar o INSTALAR é o "
+      + "que traz o conserto para a sua máquina.";
+  }
   if (!instalar.hidden) {
     /* OS PASSOS DIZEM O QUE FAZER DE VERDADE, e mudaram em 05/09/2026.
 
@@ -16011,7 +16031,11 @@ function pintaAPonta() {
        ao lado do posto, e o download devolvia 404. Botão que promete e não entrega é a
        trava 2 no lugar em que ele mais precisa que funcione. */
     instalar.innerHTML =
-      "<h4>Como Ligar Este Computador</h4>"
+      // O TÍTULO DIZ QUAL DOS DOIS CASOS É. Os passos são os mesmos, mas "Como Ligar Este
+      // Computador" com o computador dele LIGADO na linha de cima é uma tela que se
+      // contradiz, e ele lê isso como defeito.
+      "<h4>" + (velha ? "Atualize O Programa Do Seu Computador"
+                      : "Como Ligar Este Computador") + "</h4>"
       + '<div class="pnt-passos">'
       + passos.map((t, i) => '<div class="pnt-passo"><b>' + (i + 1) + "</b><span>"
           + escapar(t) + "</span></div>").join("")
@@ -16386,13 +16410,46 @@ function ctaErro(campo, recado) {
   if (onde) onde.focus();
 }
 
+/* O QUE ESTÁ ACONTECENDO AGORA, dentro da janela, enquanto o computador dele trabalha.
+
+   ELE CHAMOU A ESPERA DE BUG, e estava certo: entre apertar Entrar E Guardar e a resposta
+   passam a próxima batida do computador dele (até meio minuto) e o login inteiro, e nesse
+   tempo a única coisa que mudava na tela era o texto do botão. Tela parada sem explicação
+   ele lê como travada, e já leu antes: é a trava 50, "toda espera tem nome".
+
+   O QUE ELA DIZ É MEDIDO, e não estimado. Enquanto a casa não tem resultado nenhum para
+   este pedido, o computador dele ainda não veio buscar; assim que ele busca, a casa marca
+   `em_curso` e a frase muda. Os dois estados vêm da casa, e nenhum é adivinhado aqui. */
+function ctaEsperando(recado) {
+  const pop = $("cta_pop");
+  if (!pop || pop.hidden) return;
+  let el = pop.querySelector(".cta-espera");
+  if (!recado) { if (el) el.remove(); return; }
+  if (!el) {
+    const alvo = $("cta_corpo");
+    if (!alvo) return;
+    alvo.insertAdjacentHTML("beforeend", '<div class="cta-espera"></div>');
+    el = pop.querySelector(".cta-espera");
+  }
+  el.textContent = recado;
+}
+
 /* ESPERA O COMPUTADOR DELE RESPONDER, com corte de tempo.
    Quem faz o login é a máquina dele, e a casa é só o balcão: entre o clique e a resposta
    passam a próxima batida (até meio minuto) e o login inteiro. Sem corte, um computador
    que não veio buscar deixaria a janela girando para sempre, que é exatamente o defeito
-   que o roteiro de conferir ao contrário achou no `login.py` em 05/09/2026. */
+   que o roteiro de conferir ao contrário achou no `login.py` em 05/09/2026.
+
+   TRÊS MINUTOS, E NÃO DOIS. A conta do pior caso, medida peça a peça em 06/09/2026: até
+   30 s para o computador dele vir buscar, 2 s para conferir o navegador, 3 s para abrir a
+   página, 1 s para preencher e até 20 s para o Instagram responder ao clique. Dá 56 s com
+   folga larga, e o corte anterior já cabia; o que não cabia era o caso em que a batida
+   dele acabou de passar E a página demora. Corte curto demais faz a tela acusar o
+   computador dele de um silêncio que é dela. */
 async function esperaOComputador(id, quantoTempo) {
-  const ate = Date.now() + (quantoTempo || 120000);
+  const comecou = Date.now();
+  const ate = comecou + (quantoTempo || 180000);
+  let buscou = false;
   while (Date.now() < ate) {
     await new Promise(r => setTimeout(r, 2000));
     let d;
@@ -16402,8 +16459,15 @@ async function esperaOComputador(id, quantoTempo) {
     CTA.balcao = d.balcao || null;
     pintaAsContas();
     const r = ((d.balcao || {}).resultados || []).find(x => x.id === id);
-    if (r && r.estado !== "em_curso") return r;
+    if (r && r.estado !== "em_curso") { ctaEsperando(""); return r; }
+    if (r) buscou = true;
+    const seg = Math.round((Date.now() - comecou) / 1000);
+    ctaEsperando(buscou
+      ? "o seu computador está fazendo isso agora, há " + seg + " s"
+      : "esperando o seu computador vir buscar o pedido; ele pergunta à casa a cada meio "
+        + "minuto (há " + seg + " s)");
   }
+  ctaEsperando("");
   return { estado: "erro",
            motivo: "o seu computador não respondeu a tempo. Confira se ele está ligado, "
                  + "no bloco 1 desta página, e tente de novo." };
@@ -16411,10 +16475,22 @@ async function esperaOComputador(id, quantoTempo) {
 
 async function pedirAoComputador(tipo, corpo, botao, dizendo) {
   const solta = ctaOcupado(botao, dizendo);
+  // O ERRO DA TENTATIVA ANTERIOR SAI ANTES DA NOVA COMEÇAR. Deixado onde estava, ele fica
+  // embaixo do "esperando" e diz duas coisas ao mesmo tempo, uma delas velha.
+  const erroVelho = document.querySelector(".cta-erro");
+  if (erroVelho) erroVelho.remove();
   try {
     const d = await noPosto("/contas/pedir", { tipo, ...corpo });
+    // SEM BILHETE NÃO HÁ O QUE ESPERAR. Sem esta linha, uma resposta sem `id` levava a
+    // espera a rodar os três minutos inteiros e a terminar acusando o computador dele de
+    // um silêncio que nunca foi dele: a casa é que não tinha aberto pedido nenhum.
+    if (!d || !d.id) {
+      return { estado: "erro",
+               motivo: "a casa do Estúdio não abriu o pedido; tente de novo" };
+    }
     return await esperaOComputador(d.id);
   } catch (e) {
+    ctaEsperando("");
     return { estado: "erro", motivo: e.message };
   } finally {
     solta();

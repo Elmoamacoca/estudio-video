@@ -257,6 +257,20 @@ CHAVE_DO_INSTAGRAM = Path.home() / ".claude" / "secrets" / "ig_sessao.txt"
 # da IA.
 COFRE_DAS_CONTAS = Path.home() / ".claude" / "secrets" / "ig_contas.json"
 
+# O DIARIO DA PONTA, no computador dele, e ele NAO fica na pasta dos segredos: nada do que
+# se escreve aqui e' segredo, e por isso ele mora um andar acima.
+#
+# ELE NASCEU EM 06/09/2026 com um comentario que era mentira. O `login.py` passou a mandar
+# o nome tecnico da excecao para "o registro desta maquina" em vez de para a tela dele, e
+# registro nenhum existia: a ponta roda por `pythonw.exe`, que nao tem saida, entao todo
+# `print` dela cai no vazio. Recado tecnico que nao vai a lugar nenhum e' um beco sem
+# saida para quem for consertar da proxima vez.
+#
+# O QUE ENTRA AQUI E' HORA E O QUE ACONTECEU, e nunca o corpo de um pedido: e' a mesma
+# regra do caderno da portaria (trava 9), e este arquivo e' ainda mais sensivel, porque o
+# unico corpo que passa pela ponta e' o que traz a senha.
+DIARIO_DA_PONTA = Path.home() / ".claude" / "estudio-ponta.txt"
+
 DONO, REPO = "Elmoamacoca", "estudio-video"
 ACERVO_CRU = f"https://raw.githubusercontent.com/{DONO}/{REPO}/main"
 # O ENDERECO PUBLICO DA CASA, que as vagas da esteira usam para retirar os arquivos de

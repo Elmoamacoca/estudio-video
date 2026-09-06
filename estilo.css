@@ -2866,6 +2866,18 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .pop-cab{display:flex;align-items:center;gap:12px;padding:16px 18px;
   border-bottom:1px solid var(--rule-solid)}
 .pop-cab b{font-size:15px;letter-spacing:-.2px}
+/* O BOTAO DE FECHAR DOS POP-UPS, e ele passou um tempo SEM ESTILO NENHUM.
+   A regra nasceu na lupa da galeria e foi apagada junto com ela no commit `b7532ea`, na
+   excisao das previas. Cinco botoes do `corpo.html` continuaram usando a classe, e os
+   cinco viraram botao cru do navegador: um quadrado cinza com borda e um `x` miudo,
+   dentro de janelas de canto arredondado. Foi o que ele viu em 06/09/2026, e chamou de
+   pop-up bugado.
+   E' a licao da trava 62k: o `conferir.py` acha funcao chamada e nunca escrita, e nao
+   classe usada e nunca estilizada. Quem tira um bloco varre as classes que ficaram sem
+   dono no `corpo.html` e no `tela.js`, uma linha de regex, antes de fechar. */
+.gal-x{width:30px;height:30px;flex:0 0 30px;border:0;border-radius:8px;cursor:pointer;
+  background:transparent;color:var(--muted);font-size:20px;line-height:1}
+.gal-x:hover{background:var(--paper-2);color:var(--ink)}
 .pop-cab .gal-x{margin-left:auto}
 .pop-corpo{display:flex;flex-direction:column;gap:16px;padding:20px 18px}
 .pop-corpo .cfg-campo{min-width:0}
@@ -4249,6 +4261,10 @@ body.aj-arrastando .aj-gaveta{transition:none}
   text-transform:uppercase;color:var(--soft)}
 .pnt-campo .val{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
 .pnt-ip{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+/* O AVISO DE PROGRAMA VELHO na linha da ligacao. Ele e' ambar, e nao vermelho: o
+   computador dele esta' ligado e trabalhando, so' com o programa de ontem. Vermelho
+   ensinaria ele a ignorar vermelho. */
+.pnt-velha{color:#c98a20;font-weight:700}
 .pnt-instalar{margin-top:14px;padding-top:14px;border-top:1px solid var(--rule-solid)}
 .pnt-instalar[hidden]{display:none}
 .pnt-passos{display:flex;flex-direction:column;gap:9px;margin:10px 0 12px}
@@ -4415,6 +4431,16 @@ body.aj-arrastando .aj-gaveta{transition:none}
 /* O ERRO NASCE JUNTO DO CAMPO, e nao no lugar da etapa: erro que troca a tela inteira
    obriga a refazer o caminho so' para reler o que deu errado. E' a terceira decisao
    herdada do postador. */
+/* O QUE ESTA ACONTECENDO ENQUANTO O COMPUTADOR DELE TRABALHA. Ela e' a irma calma da
+   `.cta-erro`: mesma caixa, tom da casa em vez do vermelho, e o pontinho que pulsa para a
+   tela nao parecer congelada. Ele chamou a espera muda de bug, e tinha razao. */
+.cta-espera{margin-top:12px;padding:10px 12px 10px 30px;border-radius:10px;
+  font-size:12.5px;line-height:1.5;text-align:left;position:relative;
+  background:var(--paper-2);color:var(--muted);
+  border:1px solid var(--rule-solid)}
+.cta-espera::before{content:"";position:absolute;left:13px;top:15px;width:7px;height:7px;
+  border-radius:50%;background:var(--accent);animation:cta-pulso 1.4s ease-in-out infinite}
+@keyframes cta-pulso{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:none}}
 .cta-erro{margin-top:8px;padding:10px 12px;border-radius:10px;font-size:12.5px;
   background:color-mix(in srgb,#e0574b 14%,transparent);color:#e0574b;font-weight:600;
   line-height:1.5;border:1px solid color-mix(in srgb,#e0574b 30%,transparent)}
