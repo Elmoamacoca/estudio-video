@@ -16246,8 +16246,11 @@ function abreOCadastro() {
   $("cta_fundo").hidden = false;
   $("cta_pop").hidden = false;
   desenhaOCadastro();
-  const x = $("cta_x");
-  if (x) x.focus();
+  /* O FOCO VAI NO PRIMEIRO CAMPO, e nao no X de fechar. Ele ia no X porque o passo 1 era
+     uma tela de leitura, sem campo nenhum onde pousar; hoje a janela abre nos campos, e
+     mandar o foco para o botao de fechar seria mandar embora quem acabou de chegar. */
+  const primeiro = $("cta_apelido") || $("cta_x");
+  if (primeiro) primeiro.focus();
 }
 
 function fechaOCadastro() {
@@ -16294,32 +16297,16 @@ function desenhaOCadastro() {
       + '<button class="acao forte" type="button" data-cta="tirar">Tirar A Conta</button>';
     return;
   }
+  /* A JANELA ABRE NOS CAMPOS, e nao numa tela de leitura. Ate' 06/09/2026 o primeiro passo
+     era so' texto: dois paragrafos sobre endereco de datacenter e por onde a senha passa,
+     com um botao "Avancar" e o rodape dizendo "Leia e siga". Ele abriu, viu isso e disse
+     que a janela estava horrivel e o processo nao fluia. A explicacao NAO sumiu, porque a
+     frase da senha e' a mais sensivel da tela: ela virou uma dobra fechada logo abaixo dos
+     campos, no molde dos `details` que a aba de ajuda ja' usa. Quem quer ler, abre; quem
+     quer cadastrar, cadastra. */
   if (CTA.passo === 1) {
-    ctaCab("chave", "Cadastrar Uma Conta", "passo 1 de 3");
-    corpo.innerHTML = ctaTrilha(1, 3)
-      + '<div class="cta-et"><span class="cta-et-ic">' + ctaIc("casa") + "</span>"
-      + "<h4>O Login Acontece No Seu Computador</h4>"
-      + "<p>O Estúdio abre um navegador <b>na sua máquina</b> e faz o login por ela. É o "
-      + "seu endereço residencial que o Instagram aceita: o da casa do Estúdio é de "
-      + "datacenter, e é o mais punido.</p>"
-      /* A FRASE DIZ O QUE ACONTECE DE VERDADE, e ela foi reescrita em 05/09/2026. A
-         maquete prometia que a senha não passava pela casa, e ele escolheu, entre três
-         caminhos, justamente o que a faz passar: "na própria tela, e a senha passa pela
-         casa". Manter a promessa antiga seria a trava 2 na frase mais sensível da tela. */
-      + '<div class="cta-jura">' + ctaIc("escudo")
-      + "<span><b>Por onde a senha passa.</b> Ela sai desta página, atravessa a casa do "
-      + "Estúdio uma vez e vai para o seu computador, que é quem faz o login. A casa "
-      + "guarda o pedido só na memória e o apaga no instante em que a sua máquina o "
-      + "busca: ela não grava a senha em disco nem em registro nenhum. O que fica "
-      + "guardado, no seu computador, é a sessão, e ela nunca volta para a tela.</span>"
-      + "</div>"
-      + '<p class="cta-et-pe">Você não copia cookie, e não existe automação de código.</p>'
-      + "</div>";
-    pe.innerHTML = '<span class="nota mini">Leia e siga</span>'
-      + '<button class="acao forte" type="button" data-cta="p2">Avançar</button>';
-  } else if (CTA.passo === 2) {
-    ctaCab("usuario", "Cadastrar Uma Conta", "passo 2 de 3");
-    corpo.innerHTML = ctaTrilha(2, 3)
+    ctaCab("usuario", "Cadastrar Uma Conta", "passo 1 de 2");
+    corpo.innerHTML = ctaTrilha(1, 2)
       + '<div class="cta-et"><span class="cta-et-ic">' + ctaIc("usuario") + "</span>"
       + "<h4>Usuário E Senha Da Conta</h4>"
       + "<p>O apelido é como <b>você</b> chama esta conta na tabela. O usuário vai sem o "
@@ -16334,14 +16321,31 @@ function desenhaOCadastro() {
       + '<label class="cfg-campo"><span>Senha</span>'
       + '<input id="cta_senha" type="password" autocomplete="off" '
       + 'placeholder="usada uma vez, e guardada só na sua máquina"></label>'
-      + "</div></div>";
+      + "</div>"
+      /* A FRASE DIZ O QUE ACONTECE DE VERDADE, e ela foi reescrita em 05/09/2026. A
+         maquete prometia que a senha não passava pela casa, e ele escolheu, entre três
+         caminhos, justamente o que a faz passar: "na própria tela, e a senha passa pela
+         casa". Manter a promessa antiga seria a trava 2 na frase mais sensível da tela. */
+      + '<details class="cta-saiba"><summary>Onde o login acontece, e por onde a senha '
+      + "passa</summary>"
+      + "<p>O Estúdio abre um navegador <b>na sua máquina</b> e faz o login por ela. É o "
+      + "seu endereço residencial que o Instagram aceita: o da casa do Estúdio é de "
+      + "datacenter, e é o mais punido.</p>"
+      + "<p>A senha sai desta página, atravessa a casa do Estúdio uma vez e vai para o seu "
+      + "computador, que é quem faz o login. A casa guarda o pedido só na memória e o "
+      + "apaga no instante em que a sua máquina o busca: ela não grava a senha em disco "
+      + "nem em registro nenhum. O que fica guardado, no seu computador, é a sessão, e ela "
+      + "nunca volta para a tela.</p>"
+      + "<p>Você não copia cookie, e não existe automação de código.</p>"
+      + "</details>"
+      + "</div>";
     pe.innerHTML =
-      '<button class="acao cta-voltar" type="button" data-cta="p1">Voltar</button>'
+      '<button class="acao cta-voltar" type="button" data-cta="fechar">Cancelar</button>'
       + '<button class="acao forte" type="button" data-cta="entrar">Entrar E Guardar'
       + "</button>";
-  } else if (CTA.passo === 3) {
-    ctaCab("correio", "Cadastrar Uma Conta", "passo 3 de 3");
-    corpo.innerHTML = ctaTrilha(3, 3)
+  } else if (CTA.passo === 2) {
+    ctaCab("correio", "Cadastrar Uma Conta", "passo 2 de 2");
+    corpo.innerHTML = ctaTrilha(2, 2)
       + '<div class="cta-et"><span class="cta-et-ic espera">' + ctaIc("correio")
       + "</span><h4>O Instagram Pediu Um Código</h4>"
       + "<p>Ele foi mandado para o e-mail ou para o aplicativo desta conta. <b>O navegador "
@@ -16550,14 +16554,9 @@ document.addEventListener("click", async ev => {
       : (r.motivo || "não deu"), r.estado === "tirada" ? "boa" : "ruim");
     return lerAsContas();
   }
-  if (qual === "p1") { CTA.passo = 1; return desenhaOCadastro(); }
-  if (qual === "p2") {
-    CTA.passo = 2;
-    desenhaOCadastro();
-    const campo = $("cta_apelido");
-    if (campo) campo.focus();
-    return;
-  }
+  /* OS GESTOS `p1` E `p2` SUMIRAM EM 06/09/2026, com a tela de leitura que existia antes
+     dos campos. Ela era o passo 1, e o "Avançar" dela era o `p2`. Agora a janela abre nos
+     campos, então não há para onde voltar: o botão da esquerda fecha. */
   if (qual === "entrar") {
     const usuario = ($("cta_usuario").value || "").trim().replace(/^@/, "");
     const senha = $("cta_senha").value || "";
@@ -16571,8 +16570,8 @@ document.addEventListener("click", async ev => {
     // valor não fica pendurado num objeto para o resto da visita (critério 13).
     const campoSenha = $("cta_senha");
     if (campoSenha) campoSenha.value = "";
-    if (r.estado === "esperando_codigo") { CTA.passo = 3; return desenhaOCadastro(); }
-    if (r.estado === "viva") { CTA.passo = 4; lerAsContas(); return desenhaOCadastro(); }
+    if (r.estado === "esperando_codigo") { CTA.passo = 2; return desenhaOCadastro(); }
+    if (r.estado === "viva") { CTA.passo = 3; lerAsContas(); return desenhaOCadastro(); }
     return ctaErro("cta_senha", r.motivo || "não deu para entrar com essa conta");
   }
   if (qual === "codigo") {
@@ -16581,7 +16580,7 @@ document.addEventListener("click", async ev => {
     const r = await pedirAoComputador("codigo",
       { usuario: (CTA.conta || {}).usuario, codigo, apelido: (CTA.conta || {}).apelido },
       b, "Conferindo…");
-    if (r.estado === "viva") { CTA.passo = 4; lerAsContas(); return desenhaOCadastro(); }
+    if (r.estado === "viva") { CTA.passo = 3; lerAsContas(); return desenhaOCadastro(); }
     return ctaErro("cta_cod", r.motivo || "esse código não confere");
   }
 });

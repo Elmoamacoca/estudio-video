@@ -4428,6 +4428,27 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .cta-et-pe{font-size:11.5px;color:var(--soft);margin-top:12px}
 .cta-campos{width:100%;text-align:left;margin-top:15px;display:flex;
   flex-direction:column;gap:12px}
+/* A DOBRA DA EXPLICACAO. Ate' 06/09/2026 este texto era uma TELA INTEIRA antes dos campos,
+   com um "Avancar" e o rodape "Leia e siga"; ele abriu, viu, e disse que a janela estava
+   horrivel e o processo nao fluia. O texto nao podia sumir, porque a frase de por onde a
+   senha passa e' a mais sensivel desta tela, entao ele virou dobra: fechada por padrao,
+   embaixo dos campos, no molde dos `details` da aba de ajuda. */
+.cta-saiba{width:100%;text-align:left;margin-top:14px;border-radius:10px;
+  border:1px solid var(--rule-solid);background:var(--paper-2)}
+.cta-saiba>summary{cursor:pointer;list-style:none;padding:10px 13px;font-size:12.5px;
+  font-weight:600;color:var(--muted);display:flex;align-items:center;gap:8px}
+.cta-saiba>summary::-webkit-details-marker{display:none}
+/* A SETA E' DESENHADA AQUI e nao vem de imagem: o triangulo do navegador muda de forma e
+   de cor entre eles, e nesta janela ele saia cinza-claro no tema escuro. */
+.cta-saiba>summary::before{content:"";width:6px;height:6px;flex:none;
+  border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;
+  transform:rotate(-45deg);transition:transform .18s ease;margin-left:2px}
+.cta-saiba[open]>summary::before{transform:rotate(45deg)}
+.cta-saiba>summary:hover{color:var(--ink)}
+.cta-saiba p{font-size:12.5px;color:var(--muted);line-height:1.6;
+  padding:0 13px 11px;margin:0;max-width:none}
+.cta-saiba p+p{padding-top:9px}
+.cta-saiba p b{font-weight:700;color:var(--ink)}
 /* O ERRO NASCE JUNTO DO CAMPO, e nao no lugar da etapa: erro que troca a tela inteira
    obriga a refazer o caminho so' para reler o que deu errado. E' a terceira decisao
    herdada do postador. */
