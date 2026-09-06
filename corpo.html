@@ -2787,7 +2787,12 @@
   <div class="pop-cab">
     <span class="cta-av" id="cta_av"></span>
     <span class="cta-quem"><b id="cta_titulo">Cadastrar Uma Conta</b>
-      <span id="cta_passo">passo 1 de 3</span></span>
+      <!-- O TEXTO AQUI E' O VALOR DE PARTIDA, e o `ctaCab` o troca a cada passo. Ele
+           ficou dizendo "passo 1 de 3" depois de a janela virar de dois, em 06/09/2026:
+           ninguem via, porque o JavaScript escreve por cima ao abrir, mas se ele nao
+           chegar a rodar e' esta frase que fica na tela. Numero cravado em dois lugares
+           envelhece no que ninguem le'. -->
+      <span id="cta_passo">passo 1 de 2</span></span>
     <button class="gal-x" id="cta_x" type="button" aria-label="Fechar">&times;</button>
   </div>
   <div class="pop-corpo" id="cta_corpo"></div>
