@@ -15862,6 +15862,11 @@ const CTA_ESTADOS = {
   esperando_codigo: "Esperando Código",
   bloqueada: "Bloqueada",
   nunca_entrou: "Nunca Entrou",
+  /* DE MOLHO É ESTADO DE PASSAGEM, e nasceu em 06/09/2026 com o vigia que substituiu os
+     tetos. Ele NÃO é Bloqueada nem Vencida, e essa é a razão de existir dele: a conta de
+     molho volta sozinha em duas horas, e as outras duas esperam ele fazer alguma coisa.
+     Sem estado próprio, ele iria renovar senha de conta que só estava cansada. */
+  de_molho: "De Molho",
 };
 
 const CTA_IC = {
@@ -16119,7 +16124,14 @@ function pintaAsContas() {
 }
 
 function linhaDaConta(c, ordem, enderecoDeAgora) {
-  const estado = CTA_ESTADOS[c.estado] ? c.estado : "nunca_entrou";
+  let estado = CTA_ESTADOS[c.estado] ? c.estado : "nunca_entrou";
+  /* O MOLHO VENCE O "VIVA" NA PASTILHA, e só nela: no cofre a conta continua viva, porque
+     ela é. O que muda é o que a tabela precisa dizer agora, que é "esta não vai trabalhar
+     nas próximas horas, e não é problema seu". O relógio é o do navegador dele, o mesmo
+     que conta o dia. */
+  const molhoAte = Number(c.de_molho_ate || 0) * 1000;
+  const descansando = estado === "viva" && molhoAte > Date.now();
+  if (descansando) estado = "de_molho";
   // O VÍNCULO COMPARA COM O ENDEREÇO DA ÚLTIMA BATIDA, e diz o que a diferença custa. Sem
   // a frase, "Mudou" é uma etiqueta que não responde à pergunta seguinte, que é "e daí?".
   let vinc;
@@ -16146,9 +16158,23 @@ function linhaDaConta(c, ordem, enderecoDeAgora) {
       + '<div class="nm">' + escapar(c.apelido || c.usuario) + "</div>"
       + '<div class="ar">@' + escapar(c.usuario) + "</div></div></div></td>"
     + '<td><span class="cta-pill ' + estado + '"><span class="pt"></span>'
-      + CTA_ESTADOS[estado] + "</span></td>"
+      + CTA_ESTADOS[estado] + "</span>"
+      /* O PORQUÊ VAI JUNTO DA PASTILHA, e não num aviso solto: "De Molho" sozinho é uma
+         etiqueta que obriga a perguntar, e a pergunta seguinte é sempre a mesma. */
+      + (descansando
+        ? '<div class="cta-molho">volta às ' + escapar(horaCurta(c.de_molho_ate))
+          + (c.motivo_do_molho ? "; " + escapar(c.motivo_do_molho) : "") + "</div>"
+        : "") + "</td>"
     + "<td>" + vinc + "</td>"
-    + '<td class="num">' + Number(c.leituras_hoje || 0) + "</td>"
+    /* AS LEITURAS DE HOJE PERDERAM O TETO EM 06/09/2026, e ganharam o que interessa ao
+       lado: a MELHOR MARCA desta conta, que é quantas leituras ela já aguentou num dia
+       sem tropeçar uma vez. É o número que ele pediu para descobrir, e ele é medido: só
+       sobe quando o dia fecha limpo, então nunca conta um dia em que a conta apanhou. */
+    + '<td class="num">' + Number(c.leituras_hoje || 0)
+      + (Number(c.melhor_dia || 0) > 0
+        ? '<span class="cta-marca-dia" title="a maior marca desta conta num dia sem '
+          + 'tropeço">recorde ' + Number(c.melhor_dia) + "</span>"
+        : "") + "</td>"
     + '<td class="num">'
       + (c.ultima_leitura ? escapar(haQuanto(c.ultima_leitura)) : "nunca") + "</td>"
     + '<td class="cta-acoes"><button class="acao" type="button" data-testar="'
@@ -16504,7 +16530,13 @@ async function esperarAJanela(usuario, apelido) {
     if (!r) continue;
     if (r.estado === "viva") {
       CTA.passo = 3;
-      lerAsContas();
+      // O `await` NÃO É ZELO: a tela do fim mostra o endereço de onde a leitura vai sair,
+      // e ela lia o `CTA.ponta` que estivesse na memória no instante do desenho. Desenhada
+      // antes de a leitura voltar, ela escrevia "ainda não sei" com o endereço já medido
+      // do outro lado, e ele viu isso em 06/09/2026, logo depois de cadastrar a primeira
+      // conta. Desenho que congela dado que chega depois mente uma vez só, e é a pior das
+      // mentiras porque nunca se corrige sozinha.
+      await lerAsContas();
       return desenhaOCadastro();
     }
     if (r.estado !== "entrando_a_mao") {
@@ -16620,7 +16652,11 @@ document.addEventListener("click", async ev => {
     // está viva no cofre, o computador dele responde "viva" na primeira resposta, sem
     // janela nenhuma. Sem esta linha, cadastrar uma conta que já tinha entrado mostrava
     // erro em cima de um caminho que deu certo.
-    if (r.estado === "viva") { CTA.passo = 3; lerAsContas(); return desenhaOCadastro(); }
+    if (r.estado === "viva") {
+      CTA.passo = 3;
+      await lerAsContas();                 // pela mesma razão do `esperarAJanela`
+      return desenhaOCadastro();
+    }
     return ctaErro("cta_usuario", r.motivo || "não deu para abrir a janela");
   }
   if (qual === "desistir") {

@@ -27,10 +27,29 @@ import time
 
 import cofre
 
-# QUANTAS LEITURAS UMA CONTA FAZ POR DIA. Seis e' o mesmo numero do teto por perfil, e a
-# razao e' a mesma: e' quanto uma conta de verdade leria sem parecer robo. Ele sobe quando
-# a auditoria da gentileza medir que da', e nao por intuicao.
-TETO_DIARIO_POR_CONTA = 6
+# ============================================================ o teto que ELE mandou tirar
+#
+# ATE' 06/09/2026 ISTO ERA `TETO_DIARIO_POR_CONTA = 6`, e o comentario ao lado dizia, com
+# todas as letras, que o numero subiria "quando a auditoria da gentileza medir que da', e
+# nao por intuicao". A auditoria nunca rodou, e o seis ficou. Ele leu isso na tela e
+# mandou tirar:
+#
+#     "remove esse teto de seguranca, nao faz sentido, vou colocar o maximo de contas que
+#      eu puder porra, mas coloca um sistema que identifica quando uma conta esta' dando
+#      muito bug ou ate' mesmo desconectado muito, que ai' vamos descobrir o teto real"
+#
+# ELE ESTA' CERTO NA RAIZ: um numero chutado nao protege conta nenhuma, so' limita o
+# trabalho e finge que protegeu. O que protege e' olhar o que a conta responde.
+#
+# O QUE ENTROU NO LUGAR, e por que nao e' "nada": a conta nao para por contagem, para por
+# COMPORTAMENTO. Cada tropeco vira registro datado na ficha; tropeco demais numa janela
+# curta poe a conta DE MOLHO sozinha, com o motivo escrito; e a ficha guarda a MELHOR
+# MARCA de cada conta, que e' quantas leituras ela aguentou num dia sem tropecar. Essa
+# marca e' o teto real que ele quer descobrir, e ela e' medida, nao chutada.
+TROPECOS_PARA_O_MOLHO = 3        # tropecos dentro da janela abaixo poem a conta de molho
+JANELA_DO_TROPECO = 60 * 60      # uma hora: tropeco mais velho que isso nao conta mais
+MOLHO = 2 * 60 * 60              # duas horas de descanso, e depois ela volta sozinha
+TROPECOS_GUARDADOS = 40          # o historico tem teto, senao a ficha cresce para sempre
 
 # UMA CONTA DE CADA VEZ. Duas lendo ao MESMO TEMPO e' o desenho que o Instagram reconhece:
 # duas sessoes diferentes, do mesmo endereco, no mesmo segundo. A passagem le' ate' dois
@@ -79,12 +98,74 @@ def somar_leitura(ficha: dict) -> None:
     ficha["ultima_leitura"] = int(time.time())
 
 
-def vivas(contas: list) -> list:
-    """As contas que podem trabalhar agora: vivas, com sessao, e com cota do dia."""
+# ==================================================================== a saude da conta
+#
+# ELA MORA NA FICHA, NO COFRE, e nao na memoria: o computador dele reinicia, e um vigia
+# que esquece o que viu antes de reiniciar e' um vigia que nunca acumula prova nenhuma.
+# E' a mesma razao do contador de leituras.
+
+
+def tropecos(ficha: dict, agora: float | None = None) -> list:
+    """Os tropecos desta conta dentro da janela que ainda conta."""
+    agora = time.time() if agora is None else agora
+    todos = (ficha.get("saude") or {}).get("tropecos") or []
+    return [t for t in todos
+            if isinstance(t, dict) and agora - float(t.get("quando") or 0)
+            <= JANELA_DO_TROPECO]
+
+
+def anotar_tropeco(ficha: dict, motivo: str, agora: float | None = None) -> bool:
+    """Registra um tropeco e devolve se ele foi o que mandou a conta de molho.
+
+    O MOTIVO E' TEXTO PARA A TELA, e nao codigo: e' ele que responde "por que essa conta
+    esta' descansando", que e' a pergunta que ele vai fazer olhando a tabela.
+    """
+    agora = time.time() if agora is None else agora
+    s = ficha.setdefault("saude", {})
+    lista = [t for t in (s.get("tropecos") or []) if isinstance(t, dict)]
+    lista.append({"quando": int(agora), "motivo": str(motivo or "")[:120],
+                  # QUANTAS LEITURAS ELA JA' TINHA FEITO QUANDO TROPECOU. E' o dado que
+                  # transforma o historico em resposta: "essa conta tropeca sempre depois
+                  # da decima quinta" e' uma frase que so' existe com este numero.
+                  "leituras_no_dia": contar_hoje(ficha)})
+    s["tropecos"] = lista[-TROPECOS_GUARDADOS:]
+    if len(tropecos(ficha, agora)) >= TROPECOS_PARA_O_MOLHO:
+        s["de_molho_ate"] = int(agora + MOLHO)
+        s["motivo_do_molho"] = str(motivo or "")[:120]
+        return True
+    return False
+
+
+def de_molho(ficha: dict, agora: float | None = None) -> bool:
+    agora = time.time() if agora is None else agora
+    return float((ficha.get("saude") or {}).get("de_molho_ate") or 0) > agora
+
+
+def marcar_melhor_dia(ficha: dict) -> None:
+    """Guarda a maior marca limpa desta conta: leituras num dia SEM tropeco.
+
+    ESTE E' O NUMERO QUE ELE PEDIU. Ele so' sobe quando o dia fecha sem tropeco nenhum,
+    entao ele nunca conta um dia em que a conta apanhou: e' a melhor marca CONFIAVEL, e
+    nao o recorde de teimosia.
+    """
+    s = ficha.setdefault("saude", {})
+    if tropecos(ficha):
+        return
+    hoje = contar_hoje(ficha)
+    if hoje > int(s.get("melhor_dia") or 0):
+        s["melhor_dia"] = hoje
+
+
+def vivas(contas: list, agora: float | None = None) -> list:
+    """As contas que podem trabalhar agora: vivas, com sessao, e fora do molho.
+
+    A COTA DO DIA SAIU DAQUI EM 06/09/2026, por ordem dele. O que sobrou no lugar nao e'
+    "nada": e' o molho, que para a conta por COMPORTAMENTO e nao por contagem.
+    """
     return [c for c in contas
             if c.get("estado") == "viva"
             and c.get("sessao")
-            and contar_hoje(c) < TETO_DIARIO_POR_CONTA]
+            and not de_molho(c, agora)]
 
 
 def escolher(contas: list) -> dict | None:
@@ -218,6 +299,33 @@ def e_bloqueio(codigo, corpo=None) -> bool:
     return PAGINA_DE_VERIFICACAO in texto
 
 
+# AS RESPOSTAS QUE SAO TROPECO, e nao queda. Tropeco e' a conta indo mal sem morrer, e ele
+# existe porque ate' 06/09/2026 o sistema so' enxergava DOIS estados: deu certo, ou a conta
+# caiu. Entre os dois ha' uma faixa larga que ninguem olhava, e e' nela que a conta avisa
+# que esta' sendo apertada, antes de ser derrubada.
+#
+# 401 E BLOQUEIO NAO ENTRAM AQUI de proposito: aqueles ja' tiram a conta de circulacao
+# sozinhos, e conta-los duas vezes so' embaralharia a contagem do molho.
+def e_tropeco(resposta: dict) -> str:
+    """Devolve o motivo do tropeco, em portugues, ou "" quando a leitura foi limpa."""
+    r = resposta if isinstance(resposta, dict) else {}
+    codigo = r.get("codigo")
+    if codigo == 429:
+        return "o Instagram pediu para ir mais devagar"
+    if isinstance(codigo, int) and codigo >= 500:
+        return f"o Instagram respondeu com erro {codigo}"
+    if r.get("ok") is False and codigo not in (401,) and not e_bloqueio(codigo,
+                                                                       r.get("corpo")):
+        return "a leitura não veio inteira"
+    # A REGRA DO VAZIO, que ja' e' lei nesta casa desde 25/08/2026: resposta 200 com nada
+    # dentro e' recusa disfarcada ate' prova em contrario. Aqui ela nao encerra o perfil,
+    # so' conta como tropeco DA CONTA, que e' o que ela de fato indica quando a leitura e'
+    # logada: uma conta boa nao recebe pagina vazia de um perfil que tem publicacao.
+    if codigo == 200 and r.get("vazio") is True:
+        return "veio uma página vazia, que costuma ser recusa disfarçada"
+    return ""
+
+
 def _achar(contas: list, usuario: str):
     alvo = str(usuario or "").strip().lstrip("@").lower()
     return [c for c in contas
@@ -237,6 +345,10 @@ class Passagem:
         self.dorme = dorme
         self.usadas: list[str] = []
         self.caidas: list[str] = []
+        # QUEM FOI DORMIR NESTA PASSAGEM. Separado das caidas de proposito: conta de molho
+        # volta sozinha em duas horas, conta caida espera ele fazer alguma coisa. Misturar
+        # as duas na tela faria ele ir renovar senha de conta que so' estava cansada.
+        self.demolho: list[str] = []
         self.parou_por = ""
 
     def rodar(self, perfis: list, ler) -> list:
@@ -256,7 +368,16 @@ class Passagem:
                 break
             conta = escolher(self.contas)
             if conta is None:
-                self.parou_por = "nenhuma conta viva com cota do dia"
+                # O MOTIVO DIZ QUAL DOS DOIS CASOS E', porque eles pedem coisas
+                # diferentes dele: sem conta nenhuma ele cadastra; com todas de molho ele
+                # so' espera. Ate' 06/09/2026 os dois saiam como "sem cota do dia", que
+                # era a frase de um teto que nem existe mais.
+                descansando = [c for c in self.contas
+                               if c.get("estado") == "viva" and de_molho(c)]
+                self.parou_por = (
+                    f"as {len(descansando)} contas vivas estão de molho, descansando "
+                    "depois de tropeçar" if descansando
+                    else "nenhuma conta viva com sessão")
                 break
             if n > 0:
                 # A PAUSA ENTRE CONTAS VEM ANTES DA SEGUNDA, e nao depois da primeira:
@@ -271,6 +392,16 @@ class Passagem:
             elif e_bloqueio(r.get("codigo"), r.get("corpo")):
                 marcar_bloqueada(self.contas, conta["usuario"])
                 self.caidas.append(conta["usuario"])
+            else:
+                # O VIGIA MORA AQUI, no lugar do teto que saiu. Leitura limpa levanta a
+                # melhor marca da conta; leitura torta vira tropeco, e o terceiro numa
+                # hora manda a conta descansar sozinha.
+                motivo = e_tropeco(r)
+                if motivo:
+                    if anotar_tropeco(conta, motivo):
+                        self.demolho.append(conta["usuario"])
+                else:
+                    marcar_melhor_dia(conta)
             fora.append({"perfil": perfil, "conta": conta["usuario"], **r})
         # E A PARADA E' DITA MESMO QUANDO ELA COINCIDE COM O FIM DA PASSAGEM. Com
         # `POR_PASSAGEM = 2`, duas contas caindo esgotam a lista de perfis no mesmo

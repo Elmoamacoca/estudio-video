@@ -4312,6 +4312,19 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .cta-pill.viva .pt{background:var(--accent)}
 .cta-pill.vencida{background:color-mix(in srgb,#c98a20 16%,transparent);color:#c98a20}
 .cta-pill.vencida .pt{background:#c98a20}
+/* DE MOLHO E' AZUL, E NAO AMBAR NEM VERMELHO, de proposito: ele nasceu em 06/09/2026 com
+   o vigia que substituiu os dois tetos de seis, e a conta de molho NAO tem problema, ela
+   esta' descansando e volta sozinha. Pintar de cor de aviso mandaria ele agir onde nao ha'
+   nada a fazer, que e' o oposto do que esta pastilha existe para dizer. */
+.cta-pill.de_molho{background:color-mix(in srgb,#4a86c8 16%,transparent);color:#4a86c8}
+.cta-pill.de_molho .pt{background:#4a86c8}
+.cta-molho{font-size:10.5px;color:var(--soft);margin-top:3px;line-height:1.4;
+  max-width:200px}
+/* O RECORDE E' DISCRETO AO LADO DO NUMERO DE HOJE. Ele e' o teto REAL que ele mandou
+   descobrir, e por isso mora na tabela e nao num relatorio: e' olhando a coluna que ele
+   vai decidir quantas contas precisa. */
+.cta-marca-dia{display:block;font-size:10px;color:var(--soft);font-weight:600;
+  margin-top:2px;white-space:nowrap}
 .cta-pill.esperando_codigo{background:color-mix(in srgb,var(--accent) 22%,transparent);
   color:var(--accent)}
 .cta-pill.esperando_codigo .pt{background:var(--accent);
