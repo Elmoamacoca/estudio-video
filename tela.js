@@ -2374,6 +2374,14 @@ async function aoVivo() {
       if (!primeiraVez) {
         acabeiDeEscrever();
         atualizar();
+        /* E O SALDO DA APIFY, SE ELE ESTIVER OLHANDO A SUB-ABA DELA.
+
+           A casa remede o gasto assim que a passagem acaba, mas esta lista só é
+           desenhada quando ele entra na sub-aba: com ela já aberta, o número ficava o de
+           antes da corrida. Fora da sub-aba isto não custa nada, porque o elemento não
+           tem pai visível e a chamada nem acontece. */
+        const apf = document.getElementById("apf_lista");
+        if (apf && apf.offsetParent !== null) desenhaAApify();
       }
     }
   } catch (e) {
