@@ -206,6 +206,23 @@ const pegarDaPonte = (dentro, sinal) =>
                     : { tem: false, sumiu: r.status === 404, via: "ponte" })
     .catch(() => ({ tem: false, via: "ponte" }));
 
+/* A CASA LENDO O ACERVO, e ela é a via SEM BORDA (07/09/2026).
+
+   POR QUE ELA NASCEU: ele minerou, a varredura terminou, o acervo foi reescrito no mesmo
+   minuto, e a tabela de Minerados e os quatro números da Situação continuaram os de
+   antes. Quem desenha esses dois é o `selecao.json`, e ele vinha do endereço cru, que
+   serve a cópia da borda por até cinco minutos.
+
+   A JANELA DA VERDADE JÁ EXISTIA E NÃO ALCANÇAVA ELE: ela passava pela ponte da
+   Cloudflare, e por lá o `selecao.json` leva trinta segundos (medido), então ele estava
+   de fora de propósito. A casa lê pela via de programação do GitHub, que não tem borda
+   nenhuma, e é a mesma que o `casa.py` usa para gravar. */
+const pegarDaCasa = (dentro, sinal) =>
+  fetch(`${POSTO}/banco/${dentro}?t=${Date.now()}`, { cache: "no-store", signal: sinal })
+    .then(r => r.ok ? r.json().then(d => ({ tem: !!d.tem, d: d.d, via: "casa" }))
+                    : { tem: false, via: "casa" })
+    .catch(() => ({ tem: false, via: "casa" }));
+
 /* FALHA NÃO GANHA CORRIDA. Sem isto, uma via que quebra em vinte milissegundos venceria
    a outra que ia responder certo em duzentos, e a leitura devolveria nada tendo o dado
    disponível. A promessa que nunca se resolve tira a perdedora da disputa sem cancelá-la:
@@ -277,6 +294,25 @@ async function ler(caminho) {
   // bilhete não muda, e aí a cópia guardada está certa: só se paga a ponte quando há
   // rodada no ar, e são duzentos bytes por perfil ativo.
   const bilheteDeQuemTrabalha = caminho.startsWith("dados/andamento/") && ESTEIRA_NO_AR;
+
+  /* DENTRO DA JANELA, QUEM RESPONDE É A CASA, E ANTES DE QUALQUER OUTRA VIA.
+
+     ELA VALE PARA TODOS OS ARQUIVOS, e não para três: o que ele viu quebrado foi
+     justamente o `selecao.json`, que desenha os quatro números da Situação e a tabela de
+     Minerados inteira, e que estava fora da janela porque pela ponte ele é lento demais.
+
+     E A JANELA ABRE EM DOIS MOMENTOS: quando ele manda alguma coisa (o clique do Iniciar)
+     e quando o registro mostra uma varredura que acabou de terminar. O segundo é novo, e
+     é o que importa aqui: quem escreve no acervo hoje é a CASA, e a tela não tem como
+     saber disso sozinha. */
+  if (escritaRecente() && POSTO_DE_PE) {
+    const corteCasa = new AbortController();
+    const tc = setTimeout(() => corteCasa.abort(), PACIENCIA);
+    const c = await pegarDaCasa(dentro, corteCasa.signal).finally(() => clearTimeout(tc));
+    // `tem:false` DA CASA NÃO É "NÃO EXISTE": pode ser a chave do GitHub falhando. Só o
+    // dado que veio encurta o caminho; o resto segue para as vias de sempre.
+    if (c.tem) return c.d;
+  }
 
   if (((SO_PELA_PONTE.has(caminho) && escritaRecente()) || bilheteDeQuemTrabalha)
       && !ponteDeCama()) {
@@ -2308,6 +2344,16 @@ function desenhaRegistro() {
   if (logSeguir) alvo.scrollTop = alvo.scrollHeight;
 }
 
+/* A ÚLTIMA VARREDURA QUE A TELA JÁ SOUBE QUE ACABOU.
+
+   Serve para uma coisa só, e ela é o conserto do que ele viu em 07/09/2026: o log dizia
+   "Varredura Completa" e a tabela de Minerados e os quatro números continuavam os de
+   antes, porque quem escreveu no acervo foi a CASA e a tela não tinha como saber. Agora
+   ela sabe pelo próprio registro, e trata isso como escrita dela: abre a janela da
+   verdade (que faz a leitura vir pela casa, sem a borda que atrasa cinco minutos) e
+   redesenha o painel na hora. */
+let ULTIMO_DESFECHO = 0;
+
 async function aoVivo() {
   try {
     const d = await noPosto("/mineracao/registro");
@@ -2315,6 +2361,21 @@ async function aoVivo() {
     // A LISTA JÁ VEM EM ORDEM DE HORA da casa, e a virada do passo parado em falha
     // também é feita lá: a tela desenha, e não decide.
     LOG_PASSOS = (d && Array.isArray(d.passos)) ? d.passos : [];
+
+    const desfechos = LOG_PASSOS.filter(p => p.perfil
+      && (p.estado === "passou" || p.estado === "falhou"));
+    const fim = desfechos.length ? (desfechos[desfechos.length - 1].quando || 0) : 0;
+    if (fim > ULTIMO_DESFECHO) {
+      // NA PRIMEIRA CARGA NÃO SE ATUALIZA NADA: sem isto, abrir a tela com uma varredura
+      // de ontem no registro dispararia uma volta inteira à toa. O que interessa é a
+      // varredura que termina COM ELE OLHANDO.
+      const primeiraVez = ULTIMO_DESFECHO === 0;
+      ULTIMO_DESFECHO = fim;
+      if (!primeiraVez) {
+        acabeiDeEscrever();
+        atualizar();
+      }
+    }
   } catch (e) {
     // SILÊNCIO NÃO É "PARADO". Sem resposta, o que está na tela continua, e a linha do
     // rodapé é que diz que a última leitura não voltou.
@@ -3010,6 +3071,11 @@ $("ini_vai").onclick = async () => {
   carregando("ini_recado", "Abrindo o pedido na casa", "onda");
   try {
     const d = await noPosto("/mineracao/entrar", { contas, regua });
+    // A JANELA DA VERDADE ABRE AQUI. A casa acabou de escrever no acervo (a régua e a
+    // lista de origem), e daqui a alguns minutos vai escrever de novo, com a varredura.
+    // Sem esta linha, a tela lê o passado pelo endereço cru por cinco minutos: era o
+    // `mandar()` da ponte que abria esta janela, e o clique não passa mais por ele.
+    acabeiDeEscrever();
     const entraram = d.entraram || [], barrados = d.barrados || [];
 
     // QUEM FOI BARRADO PERDE O CARTÃO DO CLIQUE, senão apareceria duas vezes: uma como
