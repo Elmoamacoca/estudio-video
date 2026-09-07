@@ -8,7 +8,13 @@
    "origem": "resgate",
    "gravidade": "falha",
    "texto": "O Resgate Quebrou No Meio Da Passagem (HTTP 504 Do GitHub)"
+  },
+  {
+   "quando": 1788760819,
+   "origem": "resgate",
+   "gravidade": "falha",
+   "texto": "A Conta Descartável @vestiariomolhado Caiu: Entre De Novo Na Sub-Aba Contas, Dentro De Configurações"
   }
  ],
- "atualizado": 1788559223
+ "atualizado": 1788760819
 }
