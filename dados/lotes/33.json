@@ -1,0 +1,13 @@
+{
+ "numero": 33,
+ "passos": [
+  {
+   "quando": 1788802118,
+   "tipo": "escolha",
+   "texto": "Escolhidos: @mapaempresariall",
+   "contas": [
+    "mapaempresariall"
+   ]
+  }
+ ]
+}
