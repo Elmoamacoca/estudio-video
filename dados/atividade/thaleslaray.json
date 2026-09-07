@@ -20,6 +20,17 @@
     "vaga": 19,
     "resposta": "[thaleslaray] abertura via 1 recusou (401)\n[thaleslaray] abertura nao passou nesta rodada"
    }
+  },
+  {
+   "quando": 1788776304,
+   "tipo": "casa",
+   "gravidade": "aviso",
+   "texto": "Não Consegui Abrir Logado Nesta Passagem (HTTP 500). Tento De Novo Na Próxima",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 500,
+    "media_count": 0
+   }
   }
  ],
  "tentativas_id": 10
