@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "lifeofarjav",
+   "primeiro": 1788796635,
+   "nome": "Arjav Jain | Claude, AI & Automation",
+   "ultimo": 1788796635,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "casa",
+   "lidos": 87,
+   "publicacoes": 0,
+   "completo": true
+  },
+  {
    "conta": "jackroberts___",
    "nome": "Jack Roberts",
    "rotulo": "carrosséis",
@@ -113,5 +126,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788795630
+ "atualizado": 1788796637
 }
