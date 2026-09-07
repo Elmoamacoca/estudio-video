@@ -49,6 +49,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@castilho.ia",
+   "indice": 766.37,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@leisdamentemilionaria",
    "indice": 648.47,
    "etapa": "reels",
@@ -93,6 +99,18 @@
   {
    "origem": "@leisdamentemilionaria",
    "indice": 410.96,
+   "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@castilho.ia",
+   "indice": 384.17,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@hubjournal",
+   "indice": 363.0,
    "etapa": "reels",
    "situacao": "selecionada"
   },
@@ -151,6 +169,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@castilho.ia",
+   "indice": 228.74,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@leisdamentemilionaria",
    "indice": 210.54,
    "etapa": "reels",
@@ -187,6 +211,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@castilho.ia",
+   "indice": 190.8,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@leisdamentemilionaria",
    "indice": 187.77,
    "etapa": "reels",
@@ -196,6 +226,12 @@
    "origem": "@leisdamentemilionaria",
    "indice": 182.81,
    "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@castilho.ia",
+   "indice": 176.4,
+   "etapa": "carrossel",
    "situacao": "selecionada"
   },
   {
@@ -247,6 +283,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@castilho.ia",
+   "indice": 139.2,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@leisdamentemilionaria",
    "indice": 138.43,
    "etapa": "reels",
@@ -265,6 +307,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@castilho.ia",
+   "indice": 111.03,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@leisdamentemilionaria",
    "indice": 107.93,
    "etapa": "reels",
@@ -277,9 +325,21 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@castilho.ia",
+   "indice": 94.23,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@leisdamentemilionaria",
    "indice": 92.3,
    "etapa": "reels",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@castilho.ia",
+   "indice": 87.37,
+   "etapa": "carrossel",
    "situacao": "selecionada"
   },
   {
@@ -295,71 +355,11 @@
    "situacao": "selecionada"
   },
   {
-   "origem": "@leisdamentemilionaria",
-   "indice": 74.4,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 73.86,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 73.39,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 71.53,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 69.04,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 66.26,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 66.11,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@mapaempresariall",
-   "indice": 56.02,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 52.7,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 51.49,
-   "etapa": "reels",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@leisdamentemilionaria",
-   "indice": 51.31,
-   "etapa": "reels",
+   "origem": "@ratosdeia",
+   "indice": 83.38,
+   "etapa": "carrossel",
    "situacao": "selecionada"
   }
  ],
- "atualizado": 1788797688
+ "atualizado": 1788800755
 }
