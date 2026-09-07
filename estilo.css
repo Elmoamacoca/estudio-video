@@ -160,6 +160,72 @@ a.acao{display:inline-flex;align-items:center;justify-content:center;
 /* as máquinas só aparecem enquanto a rodada está no ar */
 .kon-maquinas{padding:0 20px 16px;border-top:1px solid var(--rule);padding-top:16px}
 .kon-maquinas[hidden]{display:none}
+
+/* ---------------------------------------------------------------- O REGISTRO É UM LOG
+   A proposta A, escolhida por ele em 07/09/2026: linha corrida com hora, origem, perfil,
+   o que foi feito e quanto durou. A largura das colunas é fixa de propósito, e a fonte da
+   hora é monoespaçada: coluna que dança a cada linha impede o olho de descer a lista
+   comparando horários, que é o gesto de quem lê um log. */
+.tm-barra{display:flex;align-items:center;gap:9px;padding:12px 20px;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.tm-past{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--rule-solid);
+  background:transparent;color:var(--muted);font:600 11.5px var(--fonte);cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.tm-past:hover{border-color:var(--accent);color:var(--ink)}
+.tm-past.on{border-color:var(--accent);color:var(--accent);background:var(--accent-tint)}
+.tm-cor{width:7px;height:7px;border-radius:2px;flex:none}
+.tm-cor-tela{background:var(--chart-4)}
+.tm-cor-casa{background:var(--accent)}
+.tm-cor-apify{background:var(--chart-3)}
+.tm-cor-ponta{background:var(--chart-2)}
+.tm-barra .ct-busca{height:30px;flex:1 1 auto;min-width:0;max-width:270px;
+  margin-left:auto;font-size:12px}
+
+.tm-log{list-style:none;margin:0;padding:6px 0;max-height:430px;overflow:auto;
+  scroll-behavior:smooth;
+  /* A BARRA É A DA CASA, e não a do Windows: ele reprovou a cinza de sistema em
+     07/09/2026. A receita é a mesma da `.aj-gaveta-corpo`, e não uma segunda escrita. */
+  scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
+.tm-log::-webkit-scrollbar{width:9px}
+.tm-log::-webkit-scrollbar-track{background:transparent}
+.tm-log::-webkit-scrollbar-thumb{background:var(--rule-solid);border-radius:999px;
+  border:2px solid transparent;background-clip:content-box}
+.tm-log::-webkit-scrollbar-thumb:hover{background:var(--muted);
+  border:2px solid transparent;background-clip:content-box}
+/* A COLUNA DA ORIGEM TEM 92 PIXELS, e o número saiu de medir a etiqueta mais longa:
+   "SEU COMPUTADOR" a 10px com espaçamento de letra ocupa 85. Com os 62 de antes ela
+   quebrava em duas linhas e empurrava a linha inteira para baixo, visto na foto. */
+.tm-log li{display:grid;grid-template-columns:74px 92px 148px 1fr auto;gap:12px;
+  align-items:baseline;padding:5px 20px;line-height:1.5;cursor:pointer;
+  border-left:2px solid transparent}
+.tm-log li:hover{background:var(--paper-2)}
+.tm-log li.curso{border-left-color:var(--accent)}
+.tm-log li.falha{border-left-color:var(--vermelho)}
+.tm-hora{color:var(--soft);font-size:11.5px;font-variant-numeric:tabular-nums;
+  font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tm-de{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  border-radius:5px;padding:2px 0;text-align:center;white-space:nowrap;overflow:hidden;
+  font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tm-de-tela{color:var(--chart-4);background:color-mix(in srgb,var(--chart-4) 14%,transparent)}
+.tm-de-casa{color:var(--accent);background:var(--accent-tint)}
+.tm-de-apify{color:var(--chart-3);background:color-mix(in srgb,var(--chart-3) 14%,transparent)}
+.tm-de-ponta{color:var(--chart-2);background:color-mix(in srgb,var(--chart-2) 14%,transparent)}
+.tm-quem{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tm-txt{color:var(--ink);font-size:13px;font-weight:500}
+.tm-txt b{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.tm-log li.falha .tm-txt{color:var(--vermelho)}
+.tm-log li.falha .tm-txt b{color:var(--vermelho)}
+.tm-dur{color:var(--soft);font-size:11px;font-variant-numeric:tabular-nums}
+.tm-dur.correndo{color:var(--accent);font-weight:600}
+.tm-cru{grid-column:1/-1;margin:6px 0 3px;padding:9px 12px;border-radius:8px;
+  background:var(--paper-2);border:1px solid var(--rule);color:var(--muted);
+  font-size:11.5px;line-height:1.6;white-space:pre-wrap;
+  font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tm-pe{display:flex;align-items:center;gap:14px;padding:11px 20px;
+  border-top:1px solid var(--rule);color:var(--muted);font-size:12px}
+.tm-pe .dir{margin-left:auto;display:flex;align-items:center;gap:9px}
 /* Os filtros dentro do cartão, na linha logo abaixo das medidas. */
 .liv-filtros{display:flex;gap:10px;flex-wrap:wrap;padding:15px 20px;
              border-top:1px solid var(--rule)}
@@ -4882,30 +4948,58 @@ body.aj-arrastando .aj-gaveta{transition:none}
 
    TRÊS ESTADOS, TRÊS DESENHOS, e é o mesmo vocabulário de cor do resto da casa: em curso
    pulsa em âmbar, passou é verde, falhou é vermelho. Nada de cor nova. */
-.kon-passos{display:flex;flex-direction:column;border-top:1px solid var(--rule-solid)}
+.kon-passos{display:block;border-top:1px solid var(--rule-solid);padding:15px 18px 17px}
+
+/* O TOPO DA TRILHA diz uma vez só o que era repetido em toda linha: de quem é a passagem,
+   por qual degrau ela desceu e há quanto tempo. O rótulo à esquerda usa o mesmo tratamento
+   dos rótulos das medidas logo acima (miúdo, espaçado, em maiúsculas), para o bloco entrar
+   na mesma família e parar de parecer sobra colada no pé do mostrador. */
+.kon-tri-topo{display:flex;align-items:baseline;gap:10px;margin:0 0 11px}
+.kon-tri-rot{font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);flex:0 0 auto}
+.kon-tri-quem{font-size:12px;color:var(--txt);min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.kon-tri-quando{margin-left:auto;flex:0 0 auto;font-size:11.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+
+/* O FIO É O QUE FAZ AS ETAPAS SEREM UMA COISA SÓ. Sem ele são três faixas soltas; com
+   ele são o caminho de uma corrida, lido de cima para baixo. O fio para antes do primeiro
+   ponto e depois do último de propósito: linha que vaza nas pontas parece corte. */
+.kon-tri{list-style:none;margin:0;padding:0 0 0 19px;position:relative}
+.kon-tri::before{content:"";position:absolute;left:3px;top:9px;bottom:9px;width:1px;
+  background:var(--rule-solid)}
+.kon-etapa{position:relative;display:flex;align-items:baseline;gap:8px;
+  padding:4px 0;font-size:13px;line-height:1.45;color:var(--muted)}
+.kon-etapa .kon-pt{position:absolute;left:-19px;top:6px}
+/* O DESFECHO É O ÚNICO EM DESTAQUE, e ele é sempre o último da trilha: as etapas do meio
+   contam o caminho, e ele conta o resultado. Dar peso a todas seria não dar peso a
+   nenhuma. */
+.kon-etapa.passou,.kon-etapa.falhou,.kon-etapa.em_curso{color:var(--txt);font-weight:600}
+.kon-etapa-mais{margin-left:auto;flex:0 0 auto;font-size:11.5px;color:var(--muted);
+  font-weight:400}
 /* O DESLIGA VEM JUNTO COM O LIGA. A lista nasce com `hidden` no molde, e `display:flex`
    escrito sem par vence o `hidden` do navegador: sem esta linha a moldura vazia ficava de
    pé antes do primeiro passo chegar. É a mesma dupla da `.kon-maquinas`, que mora no
    mesmo mostrador e já tinha aprendido isso. */
+/* O DESLIGA VEM JUNTO COM O LIGA. O bloco nasce com `hidden` no molde, e `display` escrito
+   sem par vence o `hidden` do navegador: sem esta linha a moldura vazia ficava de pé antes
+   do primeiro passo chegar. É a mesma dupla da `.kon-maquinas`, que mora no mesmo
+   mostrador e já tinha aprendido isso. */
 .kon-passos[hidden]{display:none}
-.kon-passo{display:flex;align-items:center;gap:11px;padding:10px 16px;
-  border-top:1px solid var(--rule-solid);font-size:13px}
-.kon-passo:first-child{border-top:0}
-.kon-pt{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--soft)}
-.kon-passo.passou .kon-pt{background:var(--verde)}
-.kon-passo.falhou .kon-pt{background:var(--vermelho)}
+/* TETO DE ALTURA, porque este bloco mora ENTRE as medidas e a barra de filtros da lista de
+   atividade. Sem teto, uma passagem comprida empurra a busca e os dois seletores para o
+   meio do painel, e eles passam a parecer órfãos, longe da lista que filtram. Foi o que
+   ele viu: "do nada o bagulho de pesquisar, atividade, foi parar lá embaixo". */
+.kon-passos{max-height:250px;overflow-y:auto}
+.kon-pt{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--soft)}
+.kon-etapa.passou .kon-pt{background:var(--verde)}
+.kon-etapa.falhou .kon-pt{background:var(--vermelho)}
 /* O PULSO É SÓ DO QUE ESTÁ ACONTECENDO AGORA. Um ponto piscando ao lado de um trabalho
    que já terminou é o tipo de sinal que ensina a ignorar sinal. */
-.kon-passo.em_curso .kon-pt{background:var(--ambar);
+.kon-etapa.em_curso .kon-pt{background:var(--ambar);
   animation:kon-pulsa 1.6s ease-in-out infinite}
 @keyframes kon-pulsa{
   0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ambar) 55%,transparent)}
   60%{box-shadow:0 0 0 6px color-mix(in srgb,var(--ambar) 0%,transparent)}
 }
-@media(prefers-reduced-motion:reduce){.kon-passo.em_curso .kon-pt{animation:none}}
-.kon-quem2{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
-.kon-quem2 b{font-size:13px;font-weight:700;letter-spacing:-.1px}
-.kon-quem2 span{font-size:12px;color:var(--muted);line-height:1.4;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kon-meta{flex:0 0 auto;font-size:11.5px;color:var(--muted);
-  font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.kon-etapa.em_curso .kon-pt{animation:none}}

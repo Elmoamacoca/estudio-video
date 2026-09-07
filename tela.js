@@ -366,28 +366,16 @@ async function mandar(rota, corpo) {
   return d;
 }
 
-/* O /contas TRABALHA EM PARCELAS, desde 25/08/2026: a Cloudflare corta a ponte em 50
-   subpedidos por chamada, entao ela olha poucos nomes por vez e devolve o resto em
-   `ficaram`. Aqui se manda de novo ate' esvaziar, somando as respostas numa so', e a
-   regua (quando ha') vai apenas na primeira, porque gravar duas vezes seria a mesma
-   verdade escrita em dobro. O teto de voltas e' rede de seguranca contra uma ponte
-   que devolvesse sempre a mesma fila. */
-async function mandarContas(contas, regua) {
-  let fila = contas, soma = null;
-  for (let volta = 0; volta < 40 && fila.length; volta++) {
-    const d = await mandar("/contas",
-      volta === 0 && regua ? { contas: fila, regua } : { contas: fila });
-    if (!soma) soma = d;
-    else {
-      soma.novos = (soma.novos || []).concat(d.novos || []);
-      soma.bloqueados = (soma.bloqueados || []).concat(d.bloqueados || []);
-      if (d.avisos) soma.avisos = (soma.avisos || []).concat(d.avisos);
-      if (d.contas != null) soma.contas = d.contas;
-    }
-    fila = d.ficaram || [];
-  }
-  return soma || { novos: [], bloqueados: [] };
-}
+/* O `/contas` DA PONTE SAIU DAQUI EM 07/09/2026, junto com a `mandarContas`.
+
+   Ela existia para uma limitacao da Cloudflare: o Worker e' cortado em 50 subpedidos por
+   chamada, entao a ponte identificava UM perfil novo por vez e devolvia o resto em
+   `ficaram`, e esta funcao mandava de novo ate' esvaziar. Tres perfis eram tres idas a'
+   Cloudflare, em serie, cada uma esperando ate' 40 segundos pela maquina dele.
+
+   QUEM RECEBE O CLIQUE AGORA E' A CASA, na rota `/mineracao/entrar` do posto, e ela nao
+   identifica nada: grava a regua, barra quem ja' foi minerado, poe o resto na fila e
+   dispara a passagem. A escada faz o resto. */
 
 /* ---------------------------------------------------------- sinal de carregamento
 
@@ -1808,54 +1796,15 @@ $("min-fim").onclick = () => { minPagina = 1e9; desenhaMinerados(); };
    um perfil encerrado, porque é ela quem atende um pedido gravado no acervo, mas a tela
    não oferece mais esse pedido a ninguém. */
 
-/* --------------------------------------------------- as três medidas do cartão
+/* AS TRÊS MEDIDAS DO CARTÃO SAÍRAM EM 07/09/2026, com a proposta A do registro.
 
-   ELAS CONTAM O LIVRO, e não a sessão do navegador. Contavam as mensagens que tinham
-   aparecido na tela desde que a página abriu: fechar a aba zerava tudo, e o número
-   respondia "quanto tempo esta janela está aberta" em vez de "o que aconteceu".
+   Elas eram falhas, avisos e registros, cada uma com um traço de catorze dias embaixo, e
+   somavam o histórico INTEIRO de todos os perfis do livro. Para preenchê-las, a tela
+   buscava no acervo a ficha de cada perfil a cada volta: uma leitura por perfil, de vinte
+   e cinco em vinte e cinco segundos, para atualizar três números que não decidem nada.
 
-   O traço embaixo é a atividade dos últimos catorze dias, um ponto por dia. Sem
-   movimento ele sai reto e apagado, que é a verdade daquele período. */
-const DIAS_DO_TRACO = 14;
-
-function medir(eventos) {
-  const contas = { falha: 0, aviso: 0, evento: 0 };
-  const dia = t => Math.floor(t / 86400);
-  const hoje = dia(Date.now() / 1000);
-  const series = { falha: [], aviso: [], evento: [] };
-  for (const g of Object.keys(series))
-    series[g] = new Array(DIAS_DO_TRACO).fill(0);
-
-  // A TERCEIRA COLUNA É O TOTAL, e não a terceira fatia. "Registros: 13" ao lado de
-  // "avisos: 2" fazia parecer que havia 15 coisas em três caixas, quando a leitura
-  // certa é: quinze registros, dos quais dois são aviso e nenhum é falha.
-  for (const e of eventos) {
-    const atras = hoje - dia(e.quando);
-    const dentro = atras >= 0 && atras < DIAS_DO_TRACO;
-    contas.evento += 1;
-    if (dentro) series.evento[DIAS_DO_TRACO - 1 - atras] += 1;
-    const peso = pesoDe(e);
-    if (peso === "falha" || peso === "aviso") {
-      contas[peso] += 1;
-      if (dentro) series[peso][DIAS_DO_TRACO - 1 - atras] += 1;
-    }
-  }
-
-  for (const g of Object.keys(contas)) {
-    $("k_" + g).textContent = num(contas[g]);
-    const alvo = $("t_" + g), serie = series[g], teto = Math.max(...serie, 0);
-    if (!teto) {
-      alvo.classList.add("parado");
-      alvo.querySelector("path").setAttribute("d", "M0 19H100");
-      continue;
-    }
-    alvo.classList.remove("parado");
-    const passo = 100 / (serie.length - 1);
-    alvo.querySelector("path").setAttribute("d", serie.map((v, i) =>
-      `${i ? "L" : "M"}${(i * passo).toFixed(1)} ${(19 - (v / teto) * 17).toFixed(1)}`
-    ).join(" "));
-  }
-}
+   O QUE OCUPA O LUGAR DELAS é o log corrido, que diz o que está acontecendo AGORA e com
+   qual perfil. Saíram junto a `medir`, a `medirLivro` e o `DIAS_DO_TRACO`. */
 
 /* ========================================================= O LIVRO DE ATIVIDADE
 
@@ -2197,332 +2146,268 @@ function linhaDoAgora(b) {
   return ln;
 }
 
-/* -------------------------------------------------- o cabeçalho do bloco ao vivo
+/* ------------------------------------------------ O REGISTRO AO VIVO É UM TERMINAL
 
-   ELE SÓ AFIRMA O QUE PODE PROVAR.
+   ESCOLHA DELE, em 07/09/2026, entre três propostas desenhadas e abertas no navegador:
+   "eu gosto muito da proposta A e da proposta B, porém eu quero aquela que será mais
+   fiel das duas, e eu acho que a mais fiel vai ser a proposta A". A proposta A é o log
+   corrido: uma linha por acontecimento, com hora, origem, perfil, o que foi feito e
+   quanto durou, e o detalhe cru abrindo no clique da linha.
 
-   Esta linha já disse "varrendo" toda vez que havia uma corrida aberta no GitHub. Só
-   que a rodada abre com uma máquina que apenas CONFERE se há trabalho e fecha com outra
-   que carimba a hora: com os perfis todos em dia, a tela anunciava leitura sem ninguém
-   ter tocado no Instagram. Parecer que relê o que já foi lido é o pior defeito que este
-   sistema pode ter, e ele custa a confiança de quem olha mesmo quando é só aparência.
+   O QUE ESTAVA AQUI ANTES, E POR QUE SAIU. O cabeçalho falava da ESTEIRA DO GITHUB:
+   perguntava à ponte quantas das vinte máquinas estavam no ar e escrevia sobre elas. A
+   esteira não lê nada desde 03/09, e quem minera desde 07/09 é a escada (Apify, conta
+   descartável, anônimo). Ele abria o mostrador e via "Esteira parada" com duas
+   varreduras completas acontecendo, e a frase dele foi que o registro é uma mentira.
 
-   Agora a leitura é afirmada por uma coisa só: existe ELO EM ANDAMENTO neste momento.
-   Conferir e fechar têm nome próprio na tela, porque é isso que eles são.
+   E A LISTA DE FAIXAS TAMBÉM SAIU. Ela mostrava só a última passagem, em três linhas
+   soltas, sem hora e sem dizer em qual máquina cada etapa aconteceu. Um log responde
+   "por que demorou tanto?"; aquilo não respondia.
 
-   Sem resposta da ponte, o cabeçalho fica com o texto que já estava. Chute nenhum. */
-const ANDANDO = new Set(["in_progress", "queued", "waiting", "pending", "requested"]);
-
-/* A MINERAÇÃO DE VERDADE VEM ANTES DA ESTEIRA (07/09/2026), e este é o conserto da
-   reclamação mais antiga dele: "o registra ao vivo não cospe nada, ele não me traz a
-   realidade".
-
-   POR QUE ELE NÃO TRAZIA: este cabeçalho sempre falou da ESTEIRA DO GITHUB, que é o
-   TERCEIRO caminho da escada. Ele pergunta `${PONTE}/andamento`, conta quantas das vinte
-   máquinas estão no ar e escreve sobre elas. Só que a esteira não lê nada desde 03/09, e
-   desde 07/09 quem minera é a Apify, dentro da casa. Ele abria o mostrador e via "Esteira
-   parada" enquanto duas varreduras completas aconteciam.
-
-   AGORA A ORDEM É A DA ESCADA: o que está sendo minerado AGORA manda, e a esteira só
-   fala quando não há mineração acontecendo. É a mesma regra do resto desta tela: quem
-   tem prova do trabalho ganha de quem tem indício. */
-async function mineracaoAgora() {
-  try {
-    const d = await noPosto("/mineracao/registro");
-    if (!d || d.ilegivel || !Array.isArray(d.passos)) return null;
-    const emCurso = d.passos.filter(p => p.estado === "em_curso");
-    const ultimos = d.passos.slice(-8).reverse();
-    return { emCurso, ultimos, total: d.passos.length };
-  } catch (e) {
-    // SILÊNCIO NÃO É "PARADO". Sem resposta, esta função devolve nulo e o ramo da esteira
-    // assume, como sempre assumiu: dizer "parado" aqui seria afirmar o que não se mediu.
-    return null;
-  }
-}
-
+   TODAS AS LINHAS VÊM DE `/mineracao/registro`, que é escrito na hora em que cada coisa
+   acontece, pela máquina que a fez. Nada aqui vem do acervo, que a borda do GitHub
+   segura por até cinco minutos (trava 16). */
+const ORIGEM_NA_TELA = { tela: "Tela", casa: "Casa", apify: "Apify",
+                         ponta: "Seu Computador" };
 const CAMINHO_NA_TELA = { apify: "Apify", ponta: "conta descartável",
                           anonimo: "esteira anônima", casa: "casa" };
 
-/* AS LINHAS DO REGISTRO, uma por passo, com a cor do estado.
+let LOG_PASSOS = [], LOG_ILEGIVEL = false;
+let logDe = "", logSoRuim = false, logBusca = "", logSeguir = true;
+const logAbertos = new Set();
 
-   TRÊS ESTADOS, TRÊS DESENHOS, e nenhum inventado: `em_curso` pulsa, `passou` é verde,
-   `falhou` é vermelho com o motivo escrito. O passo que começou e não deu sinal há mais
-   de cinco minutos já chega aqui como `falhou`, virado pela casa na leitura: a tela não
-   decide isso, ela desenha. */
-function pintaOsPassos(passos) {
-  const alvo = $("vivo_passos");
+/** Quanto durou, curto o bastante para caber na ponta da linha sem empurrar o texto. */
+function duracaoCurta(seg) {
+  seg = Math.max(0, Math.round(seg));
+  if (seg < 60) return seg + "s";
+  const m = Math.floor(seg / 60), s = seg % 60;
+  return s ? `${m}min${String(s).padStart(2, "0")}` : `${m}min`;
+}
+
+/** A hora de parede do passo, com os segundos. Log sem segundo não deixa medir espera. */
+function horaDoPasso(ts) {
+  return new Date((ts || 0) * 1000).toLocaleTimeString("pt-BR", { hour12: false });
+}
+
+/* QUANTO DUROU CADA ETAPA, e a regra é a mesma do `vivo.py`: o registro só sabe escrever,
+   nunca fechar, e quem encerra uma etapa é a PRÓXIMA do mesmo perfil, porque ela só
+   existe porque a anterior saiu do caminho.
+
+   AS DUAS FORMAS QUE ISSO TOMA NA TELA, e as duas foram medidas com o registro na mão:
+   uma etapa com sucessor mostra a duração fechada ("Lendo Pela Apify, 6min13"), e a
+   última etapa viva mostra o cronômetro correndo. Etapa que é o próprio desfecho não
+   ganha duração: "Varredura Completa, 496 posts" é um instante, não um intervalo.
+
+   E EVENTO SEM PERFIL FECHA NO PRÓXIMO EVENTO, seja de quem for: a espera do relógio da
+   casa é da passagem inteira, e não de um perfil. */
+function fechosDoRegistro(lista) {
+  const fim = new Map();
+  lista.forEach((p, i) => {
+    // `feito` ENTRA AQUI TAMBÉM, e essa linha custou uma medição na tela: a casa já
+    // marca como `feito` a etapa que foi superada por uma seguinte, então a etapa
+    // terminada chegava aqui SEM ser `em_curso` e ficava sem duração nenhuma. Quem
+    // acabou é justamente quem mais precisa dizer quanto levou.
+    if (p.estado !== "em_curso" && p.estado !== "feito") return;
+    const resto = lista.slice(i + 1);
+    const seg = p.perfil ? resto.find(x => x.perfil === p.perfil) : resto[0];
+    if (seg) fim.set(i, seg.quando);
+  });
+  return fim;
+}
+
+/** O que a linha mostra à direita: a duração fechada, ou o cronômetro correndo. */
+function duracaoDaLinha(p, i, fim, agora) {
+  if (fim.has(i)) return [duracaoCurta(fim.get(i) - p.quando), false];
+  if (p.estado === "em_curso") return [duracaoCurta(agora - p.quando), true];
+  return ["", false];
+}
+
+function desenhaRegistro() {
+  const alvo = $("vivo_log");
   if (!alvo) return;
-  if (!passos || !passos.length) { alvo.hidden = true; alvo.innerHTML = ""; return; }
-  alvo.hidden = false;
-  alvo.innerHTML = passos.map(p => {
-    const estado = ["passou", "falhou", "em_curso"].includes(p.estado)
-      ? p.estado : "em_curso";
+  const agora = Math.floor(Date.now() / 1000);
+  const fim = fechosDoRegistro(LOG_PASSOS);
+
+  /* A CABEÇA FALA DO QUE ESTÁ EM CURSO, e nada além disso.
+
+     "EM CURSO" É O QUE NÃO TEM DESFECHO. Sem esta conta, o cabeçalho anunciava
+     "Minerando @fulano, ao vivo" com a varredura encerrada havia dez minutos, porque
+     ninguém volta ao registro para dizer que uma etapa acabou. */
+  const emCurso = LOG_PASSOS
+    .map((p, i) => [p, i])
+    .filter(([p, i]) => p.estado === "em_curso" && !fim.has(i));
+  const ultimo = LOG_PASSOS[LOG_PASSOS.length - 1];
+
+  if (LOG_ILEGIVEL) {
+    // NÃO CONSEGUIR LER NÃO É "PARADO" (trava 2). A tela diz o que aconteceu.
+    $("vivo_titulo").textContent = "Não Consegui Ler O Registro";
+    $("vivo_resumo").textContent = "O arquivo do registro existe e não deu para ler. "
+      + "A mineração pode estar acontecendo; esta lista é que não sabe dizer.";
+    $("vivo_quando").innerHTML = '<span class="kon-vivo"><i></i>sem leitura</span>';
+  } else if (emCurso.length) {
+    const [p] = emCurso[emCurso.length - 1];
+    const perfis = new Set(emCurso.map(([x]) => x.perfil).filter(Boolean)).size;
     const via = CAMINHO_NA_TELA[p.caminho] || "";
-    return `<div class="kon-passo ${estado}">`
-      + `<span class="kon-pt"></span>`
-      + `<span class="kon-quem2"><b>@${escapa(p.perfil || "")}</b>`
-      + `<span>${escapa(p.etapa || "")}</span></span>`
-      + `<span class="kon-meta">${via ? escapa(via) : ""}`
-      + (typeof p.quantos === "number" ? ` · ${num(p.quantos)} peças` : "")
-      + `</span></div>`;
+    $("vivo_titulo").textContent = !p.perfil && perfis === 0 ? p.etapa
+      : perfis > 1 ? `Minerando ${perfis} perfis ao mesmo tempo`
+      : `Minerando @${p.perfil}`;
+    // A VIA NÃO É DITA DUAS VEZES: a etapa já costuma trazer o nome do caminho
+    // ("Lendo Pela Apify"), e o sufixo saía como "Lendo Pela Apify · pela Apify".
+    $("vivo_resumo").textContent = [
+      p.perfil ? p.etapa : "",
+      via && !(p.etapa || "").toLowerCase().includes(via.toLowerCase())
+        ? `pela ${via}` : "",
+      `há ${duracaoCurta(agora - p.quando)}`,
+    ].filter(Boolean).join(" · ");
+    $("vivo_quando").innerHTML = '<span class="kon-vivo ativa"><i></i>ao vivo</span>';
+  } else if (ultimo) {
+    $("vivo_titulo").textContent = ultimo.perfil
+      ? (ultimo.estado === "falhou" ? `@${ultimo.perfil} não foi`
+                                    : `@${ultimo.perfil}, varredura encerrada`)
+      : ultimo.etapa;
+    $("vivo_resumo").textContent = [ultimo.perfil ? ultimo.etapa : "",
+                                    `há ${duracaoCurta(agora - ultimo.quando)}`]
+      .filter(Boolean).join(" · ");
+    $("vivo_quando").innerHTML = `<span class="kon-vivo"><i></i>${
+      ultimo.estado === "falhou" ? "parou" : "terminou"}</span>`;
+  } else {
+    $("vivo_titulo").textContent = "Nada Em Curso";
+    $("vivo_resumo").textContent = "Escreva os perfis acima e aperte Iniciar.";
+    $("vivo_quando").innerHTML = '<span class="kon-vivo"><i></i>parado</span>';
+  }
+
+  const lista = LOG_PASSOS.map((p, i) => [p, i]).filter(([p]) =>
+    (!logDe || (p.de || "casa") === logDe)
+    && (!logSoRuim || p.estado === "falhou")
+    && (!logBusca || ((p.etapa || "") + " " + (p.perfil || "") + " " + (p.cru || ""))
+         .toLowerCase().includes(logBusca)));
+
+  alvo.innerHTML = lista.map(([p, i]) => {
+    const [dur, correndo] = duracaoDaLinha(p, i, fim, agora);
+    const de = p.de || "casa";
+    // O ESTADO PINTA A LINHA, e são três, não quatro: em curso, terminou, falhou. Etapa
+    // superada pelo sucessor fica neutra, porque sair do caminho não mede sucesso nenhum.
+    const classe = p.estado === "falhou" ? "falha"
+      : correndo ? "curso" : p.estado === "passou" ? "ok" : "";
+    return `<li data-passo="${i}" class="${classe}">`
+      + `<span class="tm-hora">${horaDoPasso(p.quando)}</span>`
+      + `<span class="tm-de tm-de-${de}">${escapar(ORIGEM_NA_TELA[de] || "Casa")}</span>`
+      + `<span class="tm-quem">${p.perfil ? "@" + escapar(p.perfil) : "a passagem"}</span>`
+      + `<span class="tm-txt">${escapar(p.etapa || "")}${
+          typeof p.quantos === "number" ? ` <b>${num(p.quantos)}</b>` : ""}</span>`
+      + `<span class="tm-dur${correndo ? " correndo" : ""}">${dur}</span>`
+      + (logAbertos.has(String(i)) && p.cru
+          ? `<span class="tm-cru">${escapar(p.cru)}</span>` : "")
+      + `</li>`;
   }).join("");
+
+  $("vivo_vazio").hidden = lista.length > 0;
+  $("vivo_conta").textContent = lista.length === 1 ? "1 Linha"
+                                                   : `${lista.length} Linhas`;
+  // A ROLAGEM SEGUE O FIM, e é isso que faz um log parecer vivo. Ela é desligável porque
+  // ler uma linha antiga com a lista se movendo debaixo do olho é impossível.
+  if (logSeguir) alvo.scrollTop = alvo.scrollHeight;
 }
 
 async function aoVivo() {
-  // A MINERAÇÃO NA CASA MANDA, e ela é perguntada primeiro.
-  const agora = await mineracaoAgora();
-  if (agora && agora.emCurso.length) {
-    const p = agora.emCurso[agora.emCurso.length - 1];
-    const via = CAMINHO_NA_TELA[p.caminho] || p.caminho || "";
-    // CONTA PERFIS, E NÃO PASSOS. Um perfil deixa duas linhas em curso na mesma passagem
-    // (entrou na fila, está lendo), e contar linhas anunciava "2 perfis ao mesmo tempo"
-    // com um perfil só na mão. Número inflado numa tela de estado é a mesma família de
-    // mentira que este arquivo inteiro combate.
-    const perfis = new Set(agora.emCurso.map(x => x.perfil)).size;
-    $("vivo_titulo").textContent = perfis === 1
-      ? `Minerando @${p.perfil}`
-      : `Minerando ${perfis} perfis ao mesmo tempo`;
-    // E A VIA NÃO É DITA DUAS VEZES. A etapa já costuma trazer o nome do caminho
-    // ("Lendo Pela Apify"), e o sufixo saía como "Lendo Pela Apify · pela Apify".
-    $("vivo_resumo").textContent = p.etapa
-      + (via && !p.etapa.toLowerCase().includes(via.toLowerCase()) ? ` · pela ${via}` : "");
-    $("vivo_quando").innerHTML = '<span class="kon-vivo ativa"><i></i>ao vivo</span>';
-    pintaOsPassos(agora.ultimos);
-    return;
+  try {
+    const d = await noPosto("/mineracao/registro");
+    LOG_ILEGIVEL = !!(d && d.ilegivel);
+    // A LISTA JÁ VEM EM ORDEM DE HORA da casa, e a virada do passo parado em falha
+    // também é feita lá: a tela desenha, e não decide.
+    LOG_PASSOS = (d && Array.isArray(d.passos)) ? d.passos : [];
+  } catch (e) {
+    // SILÊNCIO NÃO É "PARADO". Sem resposta, o que está na tela continua, e a linha do
+    // rodapé é que diz que a última leitura não voltou.
+    LOG_PASSOS = LOG_PASSOS;
   }
-  if (agora && agora.ultimos.length) {
-    // NADA EM CURSO, MAS HOUVE TRABALHO. O último passo é o que responde "e aí, deu?", e
-    // ele fica na tela até o próximo começar, em vez de a tela voltar a falar da esteira.
-    const p = agora.ultimos[0];
-    const via = CAMINHO_NA_TELA[p.caminho] || p.caminho || "";
-    $("vivo_titulo").textContent = p.estado === "falhou"
-      ? `@${p.perfil} não foi` : `@${p.perfil}: ${p.etapa}`;
-    $("vivo_resumo").textContent = (p.estado === "falhou" ? p.etapa + " · " : "")
-      + (via ? `pela ${via}` : "") + (p.quantos ? ` · ${p.quantos} peças` : "");
-    $("vivo_quando").innerHTML = `<span class="kon-vivo"><i></i>${
-      p.estado === "falhou" ? "parou" : "terminou"}</span>`;
-    pintaOsPassos(agora.ultimos);
-    return;
-  }
-  // OS BILHETES PRIMEIRO, A CORRIDA DO GITHUB DEPOIS.
-  //
-  // O bilhete é escrito pela máquina que está lendo, a cada página: é prova do
-  // trabalho. O estado da corrida é indício, e indício erra. Numa rodada disparada
-  // enquanto outra ainda trabalhava, a ponte devolveu a corrida NOVA, que estava na
-  // fila e sem máquina nenhuma, e a tela anunciou "rodada concluída, nada a ler" com o
-  // cartão logo abaixo dizendo "varrendo agora, 24 de 2.252". Duas frases contrárias na
-  // mesma tela, e a errada era a de cima.
-  await ouvirBatimentos();
-  // A JANELA É A MESMA RÉGUA DO CARD, cinco minutos. Já foi dez, e a diferença criava
-  // a contradição de sempre em roupa nova: o card dizia "sem sinal há 6 min" e o
-  // cabeçalho, com o MESMO bilhete velho, anunciava "uma máquina buscando reels".
-  // Duas frases contrárias na mesma tela, uma régua só resolve. E declarar morte cedo
-  // demais não acontece: sem bilhete fresco, o ramo seguinte ainda afirma leitura
-  // pelos elos em andamento no GitHub, que é evidência viva de outra fonte.
-  const segundos = Date.now() / 1000;
-  const batendo = [...BATIMENTOS.values()]
-    .filter(b => !b.completo && (segundos - (b.quando || 0)) < VALIDADE_DO_BILHETE);
+  desenhaRegistro();
+}
 
-  let d = null;
+/* OS FILTROS DO LOG, pendurados uma vez na abertura. Eles são de LEITURA: nenhum deles
+   escreve nada nem pede nada à casa, então podem ser aplicados no que já está na mão. */
+document.getElementById("vivo_filtros").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-logde]");
+  if (b) {
+    logDe = b.dataset.logde;
+    document.querySelectorAll("#vivo_filtros [data-logde]")
+      .forEach(x => x.classList.toggle("on", x === b));
+    return desenhaRegistro();
+  }
+  if (ev.target.closest("#vivo_soruim")) {
+    logSoRuim = !logSoRuim;
+    $("vivo_soruim").classList.toggle("on", logSoRuim);
+    return desenhaRegistro();
+  }
+});
+$("vivo_busca").addEventListener("input", ev => {
+  logBusca = (ev.target.value || "").trim().toLowerCase();
+  desenhaRegistro();
+});
+$("vivo_seguir").addEventListener("click", () => {
+  logSeguir = !logSeguir;
+  $("vivo_seguir").classList.toggle("on", logSeguir);
+  if (logSeguir) desenhaRegistro();
+});
+/* A LINHA ABRE O DETALHE CRU, e é para isto que ele existe: o código que voltou, o prazo,
+   a chave que estava valendo. É o que ele hoje pede para a IA auditar toda vez que
+   acrescenta um perfil. */
+document.getElementById("vivo_log").addEventListener("click", ev => {
+  const li = ev.target.closest("li[data-passo]");
+  if (!li) return;
+  const i = li.dataset.passo;
+  logAbertos.has(i) ? logAbertos.delete(i) : logAbertos.add(i);
+  desenhaRegistro();
+});
+$("vivo_copiar").addEventListener("click", async () => {
+  // O REGISTRO COPIADO É TEXTO PLANO, na mesma ordem da tela: é o que ele cola quando
+  // quer perguntar a alguém o que aconteceu.
+  const fim = fechosDoRegistro(LOG_PASSOS);
+  const agora = Math.floor(Date.now() / 1000);
+  const texto = LOG_PASSOS.map((p, i) => {
+    const [dur] = duracaoDaLinha(p, i, fim, agora);
+    return [horaDoPasso(p.quando), (ORIGEM_NA_TELA[p.de || "casa"] || "Casa"),
+            p.perfil ? "@" + p.perfil : "a passagem", p.etapa || "",
+            dur, p.cru || ""].filter(Boolean).join("  ·  ");
+  }).join("\n");
+  try {
+    await navigator.clipboard.writeText(texto);
+    parado("recado", "Registro copiado.");
+  } catch (e) {
+    parado("recado", "o navegador não deixou copiar; selecione as linhas na mão");
+  }
+});
+
+/* A ESTEIRA CONTINUA SENDO OUVIDA, e só para isto: a leitura do acervo pela ponte precisa
+   saber se há alguém gravando lá do outro lado (é a `janela da verdade`, trava 17). Ela
+   NÃO fala mais no cabeçalho do registro, que é o que ele mandou tirar. */
+async function ouvirAEsteira() {
   try {
     const r = await fetch(`${PONTE}/andamento?t=${Date.now()}`, { cache: "no-store" });
-    if (r.ok) d = await r.json();
-  } catch (e) { /* sem sinal agora: o relógio tenta de novo em quinze segundos */ }
-
-  if (d && !d.erro) {
-    // QUEM SABE SE A ESTEIRA ESTÁ NO AR É ESTA RESPOSTA, e ela vem pela ponte, que
-    // pergunta ao GitHub na hora. Duas partes da tela dependem disso: o texto que fala
-    // da próxima rodada (dizer só o horário fixo com a esteira trabalhando é assustar
-    // à toa) e a leitura do bilhete, que precisa vir fresca enquanto há quem o escreva.
-    // Sem resposta, o valor anterior fica: silêncio da ponte não é prova de esteira
-    // parada, e trocar um pelo outro é a mentira que este arquivo inteiro combate.
-    ESTEIRA_NO_AR = !!d.rodando;
-    const elos = Array.isArray(d.elos) ? d.elos : [];
-    const emPe = e => ANDANDO.has(e.situacao);
-    const lendo = elos.filter(e => /^elo/.test(e.nome || "") && emPe(e));
-    const conferindo = elos.some(e => e.nome === "conferir" && emPe(e));
-    const fechando = elos.some(e => e.nome === "fechar" && emPe(e));
-    const rodada = d.numero ? `rodada ${d.numero}` : "";
-
-    let titulo = "Esteira parada", resumo = "Nenhuma rodada em andamento.";
-    let selo = "parada", viva = false, desde = null;
-
-    // NINGUÉM ESTÁ LENDO ENQUANTO NÃO SE SABE QUEM É O PERFIL, e a tela precisa dizer
-    // isso com todas as letras. Aqui aparecia "19 máquinas lendo ao mesmo tempo" com
-    // zero posts entrando, porque as vinte máquinas realmente sobem: elas é que não
-    // conseguem descobrir o identificador do perfil, levam 429 e desligam. Anunciar
-    // leitura nesse momento é a tela contando uma coisa e o Instagram fazendo outra.
-    const esperando = LIVRO.filter(c => c.aguardando);
-    const nenhumPronto = esperando.length && esperando.length === LIVRO.length;
-
-    if (batendo.length) {
-      viva = true; selo = "ao vivo";
-      const alvoDoTexto = rotuloDosFormatos(batendo[0]);
-      titulo = (batendo.length === 1 ? "Uma máquina" : `${batendo.length} máquinas`)
-        + (filtrando() || (batendo[0] && batendo[0].rotulo
-                           && batendo[0].rotulo !== "publicações")
-            ? ` buscando ${alvoDoTexto}` : " lendo o Instagram");
-      resumo = batendo.map(b => {
-        const nome = rotuloDosFormatos(b);
-        return `@${b.conta}: ${num(b.lidos)}`
-          + (b.publicacoes ? ` de ${num(b.publicacoes)} ${nome}` : ` ${nome}`);
-      }).join(" · ");
-      desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
-    } else if (nenhumPronto) {
-      viva = true; selo = "identificando";
-      titulo = esperando.length === 1 ? "Abrindo o perfil pelo arroba"
-                                      : `Abrindo ${esperando.length} perfis pelo arroba`;
-      resumo = "A primeira chamada traz o identificador e os doze primeiros posts de "
-        + "uma vez. Cada vaga da esteira abre um perfil.";
-    } else if (lendo.length && LIVRO.some(c => {
-      // O BILHETE MANDA TAMBÉM AQUI. A capa do livro só é reescrita quando a rodada
-      // fecha, então um perfil que acabou de terminar continua marcado como pendente
-      // por mais alguns minutos, e a tela anunciava "onze máquinas lendo" com a
-      // varredura encerrada.
-      const b = BATIMENTOS.get(c.conta);
-      return b ? !b.completo : !c.completo;
-    })) {
-      // A RESSALVA IMPORTA: as vinte máquinas sobem e ficam no ar até o fim da rodada,
-      // mesmo quando já não há o que ler. Sem esta condição a tela anunciava leitura com
-      // todos os perfis fechados, que é a mesma mentira de sempre em roupa nova.
-      viva = true; selo = "ao vivo";
-      titulo = lendo.length === 1 ? "Uma máquina lendo o Instagram"
-                                  : `${lendo.length} máquinas lendo ao mesmo tempo`;
-      resumo = "Cada uma lê uma página de doze posts e passa a vez"
-             + (rodada ? `, ${rodada}.` : ".");
-      desde = lendo.map(e => e.inicio).filter(Boolean).sort()[0];
-    } else if (conferindo) {
-      viva = true; selo = "conferindo";
-      titulo = "Conferindo se há página por ler";
-      resumo = "Uma máquina só. As outras vinte não sobem se estiver tudo em dia.";
-    } else if (fechando) {
-      viva = true; selo = "fechando";
-      titulo = "Fechando a rodada";
-      resumo = "Aplicando a régua, separando os links e carimbando o registro.";
-    } else if (LIVRO.length && LIVRO.every(c => {
-      const b = BATIMENTOS.get(c.conta);
-      return b ? b.completo : c.completo;
-    })) {
-      titulo = LIVRO.length === 1 ? "Perfil varrido, nada pendente"
-                                  : `${LIVRO.length} perfis varridos, nada pendente`;
-      resumo = "A esteira só volta a trabalhar quando entrar perfil novo.";
-    } else if (d.rodando) {
-      // CORRIDA ABERTA SEM MÁQUINA NENHUMA é fila, e não conclusão. O GitHub segura uma
-      // rodada enquanto a anterior trabalha, de propósito, para as duas não gravarem por
-      // cima uma da outra. Sem este ramo, essa espera era anunciada como rodada pronta.
-      viva = true; selo = "na fila";
-      titulo = `Rodada ${d.numero} esperando a vez`;
-      resumo = "A anterior ainda está no ar, e duas não gravam ao mesmo tempo.";
-    } else if (!LIVRO.length) {
-      // BANCO VAZIO FALA DO VAZIO. Sem isto, a tela zerada abria anunciando a última
-      // rodada que existiu, com as vinte máquinas dela: número grande de trabalho antigo
-      // em cima de um banco sem um perfil sequer, que é a leitura errada mais fácil de
-      // fazer nesta tela.
-      titulo = "Nenhum perfil no banco";
-      resumo = "Escreva as contas no campo acima e aperte Iniciar.";
-    } else if (d.numero) {
-      // SKIPPED É A PORTA TENDO FUNCIONADO, e não falha: quando não há o que ler, as
-      // vinte vagas são puladas de propósito. Dizer isso com todas as letras.
-      const subiram = elos.filter(e => /^elo/.test(e.nome || "")
-                                    && e.situacao !== "skipped").length;
-      titulo = d.resultado === "failure" ? `Rodada ${d.numero} terminou com falha`
-                                         : `Rodada ${d.numero} concluída`;
-      resumo = subiram
-        ? `${subiram} ${subiram === 1 ? "máquina leu" : "máquinas leram"} nesta rodada.`
-        : "Nada a ler: todos os perfis estavam em dia.";
-    }
-
-    $("vivo_titulo").textContent = titulo;
-    $("vivo_resumo").textContent = resumo;
-    const corrido = desde ? Math.round((Date.now() - new Date(desde).getTime()) / 60000) : 0;
-    $("vivo_quando").innerHTML = `<span class="kon-vivo${viva ? " ativa" : ""}"><i></i>`
-      + selo + (corrido > 0 ? ` · ${corrido} min` : "") + "</span>";
-  }
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d && !d.erro) ESTEIRA_NO_AR = !!d.rodando;
+  } catch (e) { /* sem sinal agora: o valor anterior continua valendo */ }
 }
+setInterval(ouvirAEsteira, 60000);
+ouvirAEsteira();
 
-/* ------------------------------------------ A INSISTÊNCIA PELA IDENTIFICAÇÃO
+/* A INSISTÊNCIA PELA IDENTIFICAÇÃO MORREU EM 07/09/2026, e com ela a `mandarContas`.
 
-   POR QUE ISTO PRECISA EXISTIR, com o que foi medido em 17/08/2026:
+   ELAS EXISTIAM PARA UM PROBLEMA QUE DEIXOU DE EXISTIR: a identificação do perfil era
+   feita pela ponte da Cloudflare, anônima, e falhava três vezes em quatro. Então a tela
+   ficava reenviando os arrobas sem identificação, de oito em oito segundos no começo,
+   com teto de três voltas por perfil. Cada volta gravava duas vezes no acervo.
 
-     - do GitHub, o Instagram devolve 429 nas DUAS vias. Está no log da rodada 67:
-       "identificacao via 1 recusou (429)", idem via 2, nas vinte máquinas. Quer dizer
-       que a esteira NÃO identifica perfil nenhum, por mais vagas que tenha;
-     - da ponte, ele responde, mas não sempre: quatro chamadas seguidas ao mesmo perfil
-       deram três recusas e um acerto.
+   HOJE NÃO SE IDENTIFICA MAIS NADA NA ENTRADA: quem descobre o nome, a foto e o total de
+   publicações é a varredura, pela escada (Apify, conta descartável, anônimo), na mesma
+   corrida em que ela lê os posts. Perfil aguardando é perfil na fila da passagem, e a
+   passagem já foi disparada no clique.
 
-   Junte os dois e aparece o beco: se as quatro tentativas do Iniciar caírem todas no
-   lado ruim do rodízio, ninguém mais tenta, e o perfil fica parado na fila para sempre
-   sem nada acontecer. Foi exatamente isso que apareceu como "adicionei e não deu nada".
+   O QUE FOI TIRADO, por inteiro: `TENTATIVAS`, `ULTIMA_TENTATIVA`, `TETO_TENTATIVAS`,
+   `ESPERA_CURTA`, `ESPERA_LONGA`, `insistirIdentificacao`, `marcarProximaTentativa` e a
+   `mandarContas`, que era a única a falar `/contas` com a Cloudflare. */
 
-   Então quem insiste é a tela, de quarenta e cinco em quarenta e cinco segundos,
-   enquanto houver perfil sem identificação. Não é elegante; é o que funciona com o
-   material que existe. Cada tentativa aparece no cartão, com o número dela.
-
-   TRÊS FREIOS, porque cada tentativa deixa duas gravações no acervo:
-     1. teto de vinte e cinco tentativas por perfil, e depois disso ele espera o Iniciar;
-     2. uma de cada vez, sem empilhar chamada em cima de chamada;
-     3. só enquanto existir perfil sem identificação, que é o único caso que precisa. */
-const TENTATIVAS = new Map();
-const ULTIMA_TENTATIVA = new Map();
-// TRÊS, E NÃO VINTE E CINCO. Este laço já foi a única saída para um perfil travado, e
-// por isso insistia muito. Não é mais: quem abre o perfil é a esteira, pelo arroba, e
-// ela passa sempre. O que a ponte ainda acrescenta é o total de publicações e o retrato,
-// que o caminho do arroba não traz. Isso é enfeite, e enfeite não justifica gravar no
-// acervo de quarenta em quarenta segundos, ainda mais com dez perfis de uma vez.
-const TETO_TENTATIVAS = 3;
-let insistindo = false;
-// RÁPIDO NO COMEÇO, e não a cada quarenta e cinco segundos desde a primeira. Com uma
-// espera fixa, o perfil recém-adicionado ficava quase um minuto marcando "tentativa 0",
-// que é a tela dizendo que não está fazendo nada. As cinco primeiras saem de oito em
-// oito segundos, e só depois o intervalo abre.
-const ESPERA_CURTA = 8000, ESPERA_LONGA = 40000, TENTATIVAS_RAPIDAS = 1;
-
-async function insistirIdentificacao() {
-  // SEM EXIGIR A ABA À VISTA. A trava de visibilidade parecia prudente e era um tiro no
-  // pé: o normal é deixar esta tela aberta numa aba de fundo e ir fazer outra coisa, que
-  // é justamente quando o perfil precisa ser identificado sozinho. Quem limita o gasto é
-  // o teto de tentativas, que já basta: vinte e cinco chamadas e acabou.
-  if (insistindo) return;
-  // CARTÃO DO CLIQUE NÃO ENTRA AQUI. Ele existe para preencher os segundos em que a
-  // resposta ainda está no ar; insistir sobre ele seria pedir a mesma identificação
-  // duas vezes ao mesmo tempo. Quem manda nesta lista é a leitura de verdade.
-  const alvos = LIVRO.filter(c => c.aguardando && !c.local).map(c => c.conta)
-    .filter(c => (TENTATIVAS.get(c) || 0) < TETO_TENTATIVAS);
-  if (!alvos.length) return;
-
-  insistindo = true;
-  try {
-    for (const c of alvos) {
-      TENTATIVAS.set(c, (TENTATIVAS.get(c) || 0) + 1);
-      ULTIMA_TENTATIVA.set(c, Date.now());
-    }
-    desenhaLivro();
-    const d = await mandarContas(alvos);
-    const passaram = (d.novos || []).filter(n => n.ok);
-    if (passaram.length) {
-      // o perfil nasceu: a esteira tem o que ler, e o cartão tem o que mostrar
-      HISTORICOS.clear();
-      await mandar("/varrer").catch(() => {});
-      await atualizar();
-    } else {
-      desenhaLivro();
-    }
-  } catch (e) { /* a ponte não respondeu agora; o relógio seguinte tenta */ }
-  insistindo = false;
-  marcarProximaTentativa();
-}
-
-/** Marca a próxima tentativa, curta no começo e longa depois. */
-let relogioDaInsistencia = null;
-function marcarProximaTentativa() {
-  clearTimeout(relogioDaInsistencia);
-  const esperando = LIVRO.filter(c => c.aguardando && !c.local);
-  if (!esperando.length) return;
-  const voltas = Math.max(...esperando.map(c => TENTATIVAS.get(c.conta) || 0));
-  if (voltas >= TETO_TENTATIVAS) return;
-  relogioDaInsistencia = setTimeout(insistirIdentificacao,
-    voltas < TENTATIVAS_RAPIDAS ? ESPERA_CURTA : ESPERA_LONGA);
-}
 
 function livroFiltrado() {
   const q = ($("liv_q").value || "").trim().toLowerCase();
@@ -2654,12 +2539,6 @@ function desenhaLivro() {
  * Busca o histórico de cada um, o que é uma requisição por perfil. Isso é barato
  * porque cada arquivo é pequeno e fica guardado depois da primeira vez: abrir um
  * cartão em seguida não custa nada. */
-async function medirLivro() {
-  const todos = [];
-  for (const c of LIVRO) todos.push(...await historicoDe(c.conta));
-  medir(todos);
-}
-
 /** O histórico de um perfil, buscado só quando o cartão abre. */
 async function historicoDe(conta) {
   // VAZIO NÃO SE GUARDA.
@@ -3184,11 +3063,10 @@ async function atualizar() {
   const rot = rotuloDosFormatos(null, null);
   $("rot_lidos").textContent = rot === "publicações" ? "publicações varridas"
                                                      : rot + " varridos";
-  // COMEÇA NA HORA: se há perfil sem identificação, a primeira tentativa sai agora, e
-  // não daqui a quarenta e cinco segundos.
-  if (aguardando.length) marcarProximaTentativa();
+  // AQUI COMEÇAVA A INSISTÊNCIA PELA IDENTIFICAÇÃO, e ela saiu em 07/09/2026: perfil
+  // aguardando agora espera a PASSAGEM, que já foi disparada no clique, e não uma segunda
+  // pergunta ao Instagram pela ponte.
   desenhaLivro();
-  medirLivro();
 
   desenhaProntos(MINERADOS);
 
@@ -3420,60 +3298,49 @@ $("ini_vai").onclick = async () => {
   }
   $("ini_vai").disabled = true;
   $("ini_cancelar").disabled = true;
-  // PEDIU, TEM CARTÃO, E ANTES DE QUALQUER IDA À REDE. Daqui até a resposta da ponte
-  // passam segundos, porque ela ainda vai perguntar quem é o perfil ao Instagram; sem
-  // isto, a lista abaixo continua vazia durante todo esse tempo.
+  // PEDIU, TEM CARTÃO, E ANTES DE QUALQUER IDA À REDE.
   contas.forEach(c => anotarPedida(c));
   desenhaLivro();
-  // A ESPERA ACONTECE AQUI DENTRO, que é onde o Gabriel está olhando. Identificar cada
-  // perfil no Instagram leva alguns segundos, e a folha sem sinal parecia travada.
-  carregando("ini_recado", contas.length === 1 ? "Identificando o perfil"
-                                               : `Identificando ${contas.length} perfis`, "onda");
+
+  /* O CLIQUE PASSOU A FALAR COM A CASA, E SÓ COM ELA (07/09/2026).
+
+     O QUE ELE MANDOU: "todo o processo é feito com a Apify, dela cai para as contas
+     descartáveis e no terceiro e último cenário o método do anônimo. Tudo isso que
+     envolve o GitHub e a Cloudflare não faz sentido."
+
+     O QUE ACONTECIA AQUI ATÉ HOJE, e é de onde saía o minuto de espera que ele
+     cronometrou: este botão mandava `/contas` para a ponte da Cloudflare, que
+     identificava CADA perfil no Instagram, um por chamada, perguntando à casa, que
+     perguntava ao computador dele, que só bate de trinta em trinta segundos. Três
+     perfis eram três esperas em série. Depois disso ele ainda acordava a esteira do
+     GitHub, parada desde 03/09. Nenhuma dessas etapas é a escada.
+
+     O QUE ACONTECE AGORA: uma chamada à casa, que grava a régua, barra quem já foi
+     minerado, põe o resto na fila e dispara a passagem na hora. A identificação deixou
+     de existir como etapa: quem descobre o nome, a foto e a contagem é a varredura, na
+     mesma corrida em que lê os posts.
+
+     E O REGISTRO COMEÇA NO CLIQUE, não três minutos depois: cada uma dessas escritas
+     entra no registro ao vivo com a hora e a máquina em que aconteceu. */
+  carregando("ini_recado", "Abrindo o pedido na casa", "onda");
   try {
-    const d = await mandarContas(contas, regua);
-    const barrados = d.bloqueados || [];
-    let entraram = (d.novos || []).filter(n => n.ok);
-    let teimosos = (d.novos || []).filter(n => !n.ok).map(n => n.conta);
+    const d = await noPosto("/mineracao/entrar", { contas, regua });
+    const entraram = d.entraram || [], barrados = d.barrados || [];
 
-    // TENTAR DE NOVO, PORQUE A RECUSA É DE MOMENTO E NÃO DE PERFIL.
-    //
-    // Medido em 17/08: pedindo o mesmo @brandsdecoded__ quatro vezes seguidas pela
-    // ponte, três voltaram sem identificação e a quarta trouxe as 2.252 publicações.
-    // O Instagram limita por endereço de saída, e o endereço da ponte é compartilhado:
-    // é sorte de rodízio, não perfil inexistente.
-    //
-    // Antes disto, a primeira recusa era o fim. O perfil entrava na lista de origem, a
-    // esteira NÃO era chamada, e a tela ainda dizia "os 0 perfis já estão minerados".
-    // Foi exatamente esse silêncio que apareceu como perfil adicionado sem nada
-    // acontecer na tela.
-    for (let volta = 2; volta <= 4 && teimosos.length; volta++) {
-      carregando("ini_recado",
-        `O Instagram recusou a consulta, tentativa ${volta} de 4`, "orbita");
-      await new Promise(ok => setTimeout(ok, 4000));
-      const outra = await mandarContas(teimosos);
-      entraram = entraram.concat((outra.novos || []).filter(n => n.ok));
-      teimosos = (outra.novos || []).filter(n => !n.ok).map(n => n.conta);
-    }
-
-    // A PRÓPRIA RESPOSTA JÁ TRAZ O QUE FALTAVA NO CARTÃO, e ela é mais nova que
-    // qualquer leitura: quem foi identificado ganha nome e contagem agora, e quem foi
-    // barrado por já estar no banco perde o cartão do clique, senão apareceria duas
-    // vezes, uma como pedido e outra como perfil de verdade.
+    // QUEM FOI BARRADO PERDE O CARTÃO DO CLIQUE, senão apareceria duas vezes: uma como
+    // pedido e outra como o perfil de verdade que já estava no banco.
     for (const c of barrados) {
       PEDIDAS.delete(c);
       LIVRO = LIVRO.filter(x => !(x.local && x.conta === c));
     }
+    // O CARTÃO NASCE SEM NÚMERO, E ISSO É HONESTO. A contagem de publicações vinha da
+    // identificação, que não existe mais; ela chega quando a varredura ler o perfil.
+    // Inventar zero aqui seria a trava 2 outra vez.
     const agoraSeg = Math.floor(Date.now() / 1000);
-    for (const n of entraram)
-      anotarPedida(n.conta, { aguardando: false, ultimo_tipo: "identificado",
-                              publicacoes: n.publicacoes || 0, eventos: 1,
-                              primeiro: agoraSeg, ultimo: agoraSeg });
+    for (const c of entraram)
+      anotarPedida(c, { aguardando: true, ultimo_tipo: "aguardando", eventos: 1,
+                        primeiro: agoraSeg, ultimo: agoraSeg });
     desenhaLivro();
-
-    // A ESTEIRA É CHAMADA MESMO SEM IDENTIFICAÇÃO. Quem entrou na lista de origem é
-    // trabalho pendente para ela, e as vinte máquinas dela têm vinte endereços de saída
-    // próprios: onde a ponte apanhou, alguma delas passa.
-    if (entraram.length || teimosos.length) await mandar("/varrer");
 
     $("fontes").value = "";
     delete $("fontes").dataset.tocado;
@@ -3483,18 +3350,17 @@ $("ini_vai").onclick = async () => {
     if (entraram.length)
       recado.push(entraram.length === 1 ? "1 perfil na fila"
                                         : `${entraram.length} perfis na fila`);
-    if (teimosos.length)
-      recado.push(teimosos.length === 1
-        ? `@${teimosos[0]} entrou sem identificação, a esteira tenta pelos endereços dela`
-        : `${teimosos.length} entraram sem identificação, a esteira tenta pelos endereços dela`);
     if (barrados.length)
       recado.push(barrados.length === 1 ? `@${barrados[0]} já estava no banco`
                                         : `${barrados.length} já estavam no banco`);
+    for (const a of (d.avisos || [])) recado.push(a);
+    if ((d.invalidas || []).length)
+      recado.push(`${d.invalidas.length} não eram perfil do Instagram`);
     parado("recado", recado.join(" · ")
-      + (entraram.length || teimosos.length ? ", acompanhe no registro abaixo" : ""));
-    // o cartão de cada perfil já existe no acervo neste ponto: a ponte o abre junto
-    // com a identificação, então a lista mostra o perfil antes da primeira página.
-    setTimeout(() => { aoVivo(); atualizar(); }, 1200);
+      + (entraram.length ? ", acompanhe no registro abaixo" : ""));
+    // A PASSAGEM JÁ ESTÁ DE PÉ neste ponto, e o registro já tem as linhas do clique: meio
+    // segundo basta para a primeira volta mostrá-las.
+    setTimeout(() => { aoVivo(); atualizar(); }, 500);
   } catch (e) {
     parado("ini_recado", e.message);
   }

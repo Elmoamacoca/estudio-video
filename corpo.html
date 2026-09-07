@@ -91,55 +91,54 @@
           <div class="kon-dir" id="vivo_quando">
             <span class="kon-vivo"><i></i>parada</span>
           </div>
+          <button class="acao" id="vivo_copiar" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9"
+                 width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0
+                 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar</button>
           <button class="acao" id="liv_exportar" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0
                  0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
         </div>
 
-        <div class="kon-medidas">
-          <div class="kon-medida falha">
-            <div class="kon-rot">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/>
-                <path d="M12 8v5M12 16h.01"/></svg><span>falhas</span>
-            </div>
-            <b id="k_falha">0</b>
-            <svg class="kon-traco parado" id="t_falha" viewBox="0 0 100 20"
-                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
-          </div>
-          <div class="kon-medida aviso">
-            <div class="kon-rot">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/>
-                <path d="M12 16v-5M12 8h.01"/></svg><span>avisos</span>
-            </div>
-            <b id="k_aviso">0</b>
-            <svg class="kon-traco parado" id="t_aviso" viewBox="0 0 100 20"
-                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
-          </div>
-          <div class="kon-medida evento">
-            <div class="kon-rot">
-              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/>
-                <path d="m20 20-4.3-4.3"/></svg><span>registros</span>
-            </div>
-            <b id="k_evento">0</b>
-            <svg class="kon-traco parado" id="t_evento" viewBox="0 0 100 20"
-                 preserveAspectRatio="none" aria-hidden="true"><path d="M0 19H100"/></svg>
-          </div>
+        <!-- O LOG, E ELE É A PROPOSTA A, escolhida por ele em 07/09/2026 entre três
+             desenhos abertos no navegador.
+
+             O QUE MORAVA AQUI: três medidas grandes (falhas, avisos, registros) com um
+             risquinho de atividade cada, e abaixo delas as etapas da última passagem em
+             faixas soltas. As medidas ninguém alimentava desde que a mineração saiu da
+             esteira, e as faixas não diziam a hora nem em qual máquina cada etapa
+             aconteceu, que é justamente o que responde "por que demora tanto?".
+
+             A LINHA TEM CINCO COLUNAS, e cada uma existe por uma pergunta dele: a hora
+             (quando), a origem (em qual máquina o tempo foi gasto), o perfil (e o meu
+             perfil?), o que foi feito, e quanto durou. O detalhe cru abre no clique. -->
+        <div class="tm-barra" id="vivo_filtros">
+          <button class="tm-past on" type="button" data-logde="">Tudo</button>
+          <button class="tm-past" type="button" data-logde="tela">
+            <i class="tm-cor tm-cor-tela"></i>Tela</button>
+          <button class="tm-past" type="button" data-logde="casa">
+            <i class="tm-cor tm-cor-casa"></i>Casa</button>
+          <button class="tm-past" type="button" data-logde="apify">
+            <i class="tm-cor tm-cor-apify"></i>Apify</button>
+          <button class="tm-past" type="button" data-logde="ponta">
+            <i class="tm-cor tm-cor-ponta"></i>Seu Computador</button>
+          <button class="tm-past" type="button" id="vivo_soruim">Só As Falhas</button>
+          <input class="ct-busca" id="vivo_busca" type="text" autocomplete="off"
+                 spellcheck="false" placeholder="Buscar No Registro">
         </div>
 
-        <!-- OS PASSOS DA MINERAÇÃO, PERFIL POR PERFIL (07/09/2026).
+        <ol class="tm-log" id="vivo_log"></ol>
+        <div class="gal-vazia" id="vivo_vazio" hidden>Nenhuma linha com esses filtros.</div>
 
-             O QUE ELE DIZIA ANTES DESTE BLOCO EXISTIR: "eu abro o log do Tales, cara,
-             aqui não explica nada". Não explicava mesmo: o cabeçalho acima falava da
-             esteira do GitHub, e o histórico por perfil vinha do acervo, que a borda
-             segura por até cinco minutos e que só é escrito quando a passagem TERMINA.
-
-             ESTAS LINHAS VÊM DO REGISTRO AO VIVO DA CASA, gravado a cada etapa: entrou
-             na fila, está lendo, terminou com N peças, ou parou com o motivo. É o que
-             responde, sem sessão e sem espera, a pergunta que ele faz: e o meu perfil? -->
-        <div class="kon-passos" id="vivo_passos" hidden></div>
-
-        <div class="kon-maquinas elos" id="vivo_elos" hidden></div>
+        <div class="tm-pe">
+          <span id="vivo_conta">0 Linhas</span>
+          <div class="dir">
+            <button class="tm-past on" type="button" id="vivo_seguir">
+              Rolagem Automática</button>
+          </div>
+        </div>
 
         <div class="liv-filtros">
           <input class="ct-busca" id="liv_q" type="text" autocomplete="off"
