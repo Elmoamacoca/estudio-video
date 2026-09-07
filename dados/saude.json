@@ -92,7 +92,13 @@
    "origem": "resgate",
    "gravidade": "aviso",
    "texto": "A Leitura Logada Está Indo Pelo Caminho De Reserva: Falta O Cliente Que Imita O Navegador. Ela Funciona, E Corre Mais Risco De A Conta Ser Bloqueada"
+  },
+  {
+   "quando": 1788797532,
+   "origem": "resgate",
+   "gravidade": "aviso",
+   "texto": "A Leitura Logada Está Indo Pelo Caminho De Reserva: Falta O Cliente Que Imita O Navegador. Ela Funciona, E Corre Mais Risco De A Conta Ser Bloqueada"
   }
  ],
- "atualizado": 1788796574
+ "atualizado": 1788797532
 }
