@@ -7024,11 +7024,15 @@ async function entrarNaIA() {
   if (!campos.length || !temChave) return;
   const n = pecas3().length;
   $("ia_quem").textContent = "Escrevendo com " + nomeDoServico(vivas[0].servico);
+  /* A RESERVA NO SINGULAR E NO PLURAL (07/09/2026). Com duas chaves na fila, e ele tem
+     duas, saía "as outras 1 da fila assumem sozinhas": número no meio de um plural que
+     descreve uma coisa só. Ele leu isso na tela. */
+  const reserva = vivas.length - 1;
   $("ia_quanto").textContent =
     `${campos.length} ${campos.length === 1 ? "caixa aberta" : "caixas abertas"}, `
     + `em ${n} ${n === 1 ? "peça" : "peças"}`
-    + (vivas.length > 1
-       ? `. Se ela bater o limite, as outras ${vivas.length - 1} da fila assumem sozinhas.`
+    + (reserva === 1 ? ". Se ela bater o limite, a outra chave da fila assume sozinha."
+       : reserva > 1 ? `. Se ela bater o limite, as outras ${reserva} da fila assumem sozinhas.`
        : ". É a única chave da fila hoje.");
   const faltam = faltamEscrever().length;
   $("ia_escrever").disabled = !!IA_OBRA || !faltam;
@@ -7267,9 +7271,15 @@ function cabemAqui(campo) {
    contato, segue tentando, e so' para de girar depois de tres minutos mudos. */
 async function olharAEscrita() {
   if (!IA_OBRA) return;
+  /* DOIS RELÓGIOS NA MESMA CAIXA PRECISAM DIZER DE QUE SÃO (07/09/2026).
+
+     Ele fotografou a caixa marcando "39s" no canto e "Correndo Há 0s" logo abaixo, e
+     perguntou se estava certo. Estava: o de cima conta desde o clique DELE e o de baixo
+     conta o trabalho do programa, que naquele instante tinha acabado de pegar o pedido.
+     Dois números diferentes, os dois certos, e nada na tela dizendo qual era qual. */
   const seg = Math.round((Date.now() - IA_OBRA.desde) / 1000);
-  $("ia_obra_tempo").textContent = seg < 60 ? seg + "s"
-    : Math.floor(seg / 60) + " min " + (seg % 60) + "s";
+  $("ia_obra_tempo").textContent = (seg < 60 ? seg + "s"
+    : Math.floor(seg / 60) + " min " + (seg % 60) + "s") + " desde o clique";
 
   const semContato = (porque) => {
     IA_OBRA.mudo++;

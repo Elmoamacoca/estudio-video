@@ -626,28 +626,175 @@ def placa_de_video() -> bool:
 
 
 
-def guardar_frase(video: Path, achado: dict, arquivo: Path) -> bool:
-    """Guarda como imagem a faixa do card que fica ACIMA do B-roll.
+# QUANTO CONTRASTE UMA IMAGEM PRECISA TER PARA VALER UMA CHAMADA DE COTA.
+#
+# ELE E' UM FILTRO BARATO, E NAO O JUIZ. Medido nas duas levas em 07/09/2026, desvio da
+# escala de cinza: as 180 faixas da leva 31, todas com manchete legivel, vao de 15,3 para
+# cima; as 24 da leva 33, todas pretas, vao ate' 38,0. As duas nuvens SE ENCOSTAM, entao
+# nenhum numero separa as duas, e este aqui nao tenta: ele corta so' o que e' chapa de cor
+# sem discussao (17 das 24 da leva 33 ficaram abaixo de 12), poupando uma chamada certa de
+# "SEM FRASE" em cada. O que passar e nao tiver frase cai no plano B do `imagens_para_ler`,
+# que e' quem de fato resolve.
+CONTRASTE_MINIMO = 14.0
 
-    E' onde mora o arroba, o titulo e a frase do post original. O passo 2 apaga tudo isso
-    do video, e com razao: e' a marca de quem postou. Mas a fase 3 do template precisa
-    LER essa frase para escrever uma equivalente, entao ela sai daqui como recorte de
-    imagem antes de o preto cobrir o quadro.
+
+def tem_conteudo(cru: bytes) -> bool:
+    """Ha' alguma coisa nesta imagem, ou e' uma chapa de cor?
+
+    SEM AS BIBLIOTECAS DE IMAGEM, RESPONDE QUE SIM. A duvida aqui custa uma chamada de
+    cota; responder "nao" por falta de ferramenta jogaria fora uma frase legivel, que
+    custa a peca inteira.
     """
-    topo = float(achado.get("y", 0))
-    if topo < 0.06:
-        return False                     # nao sobra faixa nenhuma em cima do B-roll
+    try:
+        import io
+        from PIL import Image, ImageStat
+        cinza = Image.open(io.BytesIO(cru)).convert("L")
+        return ImageStat.Stat(cinza).stddev[0] >= CONTRASTE_MINIMO
+    except Exception:                                                # noqa: BLE001
+        return True
+
+
+def quadro_do_reel(video: Path, fracao: float = 0.5, largura: int = 640) -> bytes | None:
+    """Um quadro INTEIRO do reel, reduzido, em JPEG. `None` quando nao deu.
+
+    ELE E' O PLANO QUE NAO DEPENDE DE ONDE A MANCHETE ESTA'. O recorte da faixa de cima
+    parte de um palpite (a manchete fica acima do B-roll) que vale num perfil e nao vale no
+    outro. O quadro inteiro nao tem palpite dentro: a IA que le' imagem acha a frase onde
+    ela estiver, em cima, embaixo ou queimada no meio.
+
+    REDUZIDO A 640 DE LARGURA porque o que se pede a ela e' que LEIA, e nao que examine: o
+    original tem 1080, e a manchete continua legivel na metade disso. Em fichas de cota, um
+    quadro de 640 custa perto de um terco de um de 1080.
+    """
+    dur = ffprobe(video, "format=duration", fluxo="v:0")
+    try:
+        t = max(0.4, float((dur or ["2"])[0]) * max(0.02, min(0.95, fracao)))
+    except (TypeError, ValueError):
+        t = 2.0
+    alvo = Path(tempfile.gettempdir()) / f"estudio-quadro-{os.getpid()}-{int(t*100)}.jpg"
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-v", "error", "-y", "-ss", f"{t:.2f}", "-i", str(video),
+             "-frames:v", "1", "-vf", f"scale={largura}:-2", "-q:v", "3", str(alvo)],
+            capture_output=True)
+        if r.returncode != 0 or not alvo.is_file():
+            return None
+        return alvo.read_bytes()
+    except OSError:
+        return None
+    finally:
+        try:
+            alvo.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+# QUANTAS IMAGENS SE OFERECE A' IA POR PECA, no maximo.
+#
+# DUAS, E NAO TRES. Cada uma que ela olha custa uma chamada da cota do dia, e a cota tem
+# teto: com tres, uma leva de peca ilegivel triplicaria o gasto para chegar na mesma
+# resposta. Duas cobrem os dois casos que existem de verdade, o recorte que serve e o
+# quadro inteiro para quando ele nao serve.
+OLHARES_POR_PECA = 2
+
+
+def imagens_para_ler(medidas: Path, levas: Path, nome: str) -> list:
+    """As imagens que a IA vai olhar para achar a manchete desta peca, em ordem.
+
+    SAO DUAS PASTAS, E ELAS SAO DIFERENTES DE PROPOSITO: `medidas/<leva>/` guarda a ficha e
+    os recortes, `levas/<leva>/` guarda os videos. A separacao e' de 03/09/2026, quando o
+    recorte de video saiu do desenho.
+
+    ELA E' A RESPOSTA A' ORDEM DELE de 07/09/2026: "ela tem que ser capaz de ler
+    independente do insumo". Ate' aqui havia UMA imagem por peca, o recorte da faixa acima
+    do B-roll, e ela carregava um palpite embutido: o de que a manchete fica em cima. No
+    `mapaempresariall` ela fica embaixo, e a leva inteira voltou vazia.
+
+    A ORDEM E' DA MAIS BARATA PARA A MAIS COMPLETA:
+
+      1. `_frases/<peca>.png`, se existir e tiver contraste. E' a leitura mais limpa que
+         ha': so' a faixa da manchete, sem legenda de fala nem rosto para confundir;
+      2. o QUADRO INTEIRO do reel, tirado na hora. Nao ha' palpite nenhum dentro dele.
+
+    E A SEGUNDA SO' E' OLHADA SE A PRIMEIRA NAO DER FRASE, no laco de quem chama: uma leva
+    que ja' funciona continua custando uma chamada por peca, como sempre custou.
+
+    O RECORTE CHAPADO NEM ENTRA NA LISTA. Ele existe em disco, mas mandar uma chapa preta
+    para a IA e' pagar uma chamada para ouvir "SEM FRASE": foi isso, vinte e quatro vezes,
+    que gastou cinco minutos e meio de cota na leva 33.
+    """
+    fora = []
+    recorte = medidas / "_frases" / (Path(nome).stem + ".png")
+    try:
+        if recorte.is_file():
+            cru = recorte.read_bytes()
+            if cru and tem_conteudo(cru):
+                fora.append(cru)
+    except OSError:
+        pass                      # PNG rasgado no disco nao derruba a leva
+    video = levas / nome
+    if video.is_file() and len(fora) < OLHARES_POR_PECA:
+        cru = quadro_do_reel(video, 0.5)
+        # O QUADRO IGUAL AO RECORTE NAO SE MANDA DUAS VEZES: quando a medida ja' gravou o
+        # quadro inteiro (porque a faixa saiu chapada), os dois sao a mesma imagem.
+        if cru and cru not in fora:
+            fora.append(cru)
+    return fora[:OLHARES_POR_PECA]
+
+
+def guardar_frase(video: Path, achado: dict | None, arquivo: Path) -> bool:
+    """Guarda a imagem que a fase 3 vai LER para escrever a frase equivalente.
+
+    ELA DEIXOU DE SER "A FAIXA ACIMA DO B-ROLL" EM 07/09/2026, e o motivo esta' numa leva
+    inteira perdida. O desenho antigo recortava `crop=iw:ih*y:0:0`, a tira de cima do
+    quadro, porque nos cards do primeiro perfil minerado o arroba e a manchete ficam ali.
+    No `mapaempresariall` a manchete fica EMBAIXO da filmagem: as 24 tiras da leva 33
+    sairam pretas, a IA respondeu "SEM FRASE" nas 24, e o painel fechou em zero.
+
+    A ORDEM DELE FOI DIRETA: "ela tem que ser capaz de ler independente do insumo". Entao
+    o palpite sobre onde a manchete mora sai do caminho:
+
+      1. tenta a faixa de cima, que continua sendo a leitura mais barata e limpa quando
+         serve, porque nela nao ha' legenda de video nem rosto para confundir;
+      2. NAO TENDO CONTRASTE, grava o QUADRO INTEIRO, onde a manchete esta' de qualquer
+         jeito;
+      3. e devolve verdadeiro nos dois casos, porque nos dois ha' o que ler.
+
+    E ELA RODA PARA TODA PECA, e nao so' para as de card: reel de tela cheia costuma trazer
+    a frase queimada na imagem, e ate' hoje essas nem chegavam a ser tentadas.
+    """
     arquivo.parent.mkdir(parents=True, exist_ok=True)
+    topo = float((achado or {}).get("y", 0) or 0)
     dur = ffprobe(video, "format=duration", fluxo="v:0")
     try:
         t = max(0.5, float((dur or ["2"])[0]) * 0.5)
     except (TypeError, ValueError):
         t = 2.0
-    r = subprocess.run(
-        ["ffmpeg", "-v", "error", "-y", "-ss", f"{t:.2f}", "-i", str(video),
-         "-frames:v", "1", "-vf", f"crop=iw:ih*{topo:.4f}:0:0", str(arquivo)],
-        capture_output=True)
-    return r.returncode == 0 and arquivo.exists()
+
+    # 1. A FAIXA DE CIMA, quando ha' faixa de cima para recortar.
+    if topo >= 0.06:
+        r = subprocess.run(
+            ["ffmpeg", "-v", "error", "-y", "-ss", f"{t:.2f}", "-i", str(video),
+             "-frames:v", "1", "-vf", f"crop=iw:ih*{topo:.4f}:0:0", str(arquivo)],
+            capture_output=True)
+        if r.returncode == 0 and arquivo.is_file():
+            try:
+                if tem_conteudo(arquivo.read_bytes()):
+                    return True
+            except OSError:
+                pass
+
+    # 2. O QUADRO INTEIRO. Ele vale tanto para a manchete de baixo quanto para a peca de
+    # tela cheia, e e' o mesmo arquivo de saida: quem le' na fase 3 nao precisa saber qual
+    # dos dois caminhos foi usado.
+    cru = quadro_do_reel(video, 0.5)
+    if not cru:
+        return arquivo.is_file()
+    try:
+        arquivo.write_bytes(cru)
+        return True
+    except OSError:
+        return arquivo.is_file()
 
 
 
@@ -1470,9 +1617,14 @@ def medir_uma(origem: Path, destino: Path, peca: dict, tela: dict) -> tuple:
         # processo em que ela ainda existe, e a fase 3 do template precisa dela:
         # "pega essa frase, interpreta a frase, cria algo equivalente ou parecido".
         # Guardada como imagem, porque ler letra de video pede olho, e nao texto.
-        if modo == "card":
-            guardar_frase(entrada, achado,
-                          destino / "_frases" / (Path(nome).stem + ".png"))
+        #
+        # E ELA SAI PARA TODA PECA DESDE 07/09/2026, e nao so' para as de card. Reel de
+        # tela cheia costuma trazer a frase queimada na imagem, e ate' aqui essas nem
+        # chegavam a ser tentadas: nasciam sem `_frases/` e a fase 3 as descartava como
+        # "sem frase para ler" sem nunca ter olhado. O `guardar_frase` sabe se virar nos
+        # dois casos, porque o plano B dele e' o quadro inteiro.
+        guardar_frase(entrada, achado,
+                      destino / "_frases" / (Path(nome).stem + ".png"))
         # NADA DE VIDEO SAI DAQUI. O laudo mantem o formato de sempre porque quem o le'
         # (`ficha_da_peca` e o laco de fora) nao foi reescrito: `bytes` em zero e' MEDIDO,
         # e nao "nao sei", porque nada foi escrito em disco de proposito.
@@ -1495,8 +1647,11 @@ def ficha_da_peca(nome: str, achado: dict | None, laudo: dict, modo) -> dict:
     ficha, senao a bancada leria duas verdades diferentes.
     """
     return {"arquivo": nome, "origem": nome, "modo": modo,
-            "frase": ("_frases/" + Path(nome).stem + ".png")
-                     if modo == "card" else None,
+            # A FICHA APONTA A IMAGEM DE TODA PECA, e nao so' das de card (07/09/2026).
+            # O `guardar_frase` passou a gravar para todas, com o quadro inteiro de plano
+            # B; deixar `None` aqui nas de tela cheia faria a ficha negar um arquivo que
+            # existe em disco.
+            "frase": "_frases/" + Path(nome).stem + ".png",
             "quadro": laudo.get("quadro"),
             # ONDE O B-ROLL ESTA' NO QUADRO, em fracao. E' o campo mais importante da
             # ficha: e' com ele que a bancada desenha o aparo e que o `compor` corta,
@@ -1681,6 +1836,32 @@ PROMPT_DESCRICAO = (
 RODAPE_PADRAO = "Siga para acompanhar."
 
 PROMPT_PADRAO = (
+    "Voce olha o quadro de um post e escreve OUTRA frase equivalente a' manchete dele, "
+    "para um perfil diferente publicar.\n"
+    "ONDE ESTA' A MANCHETE: e' a frase GRANDE e parada do post, e ela pode estar em "
+    "qualquer lugar do quadro, em cima da filmagem, embaixo dela, ou por cima da imagem. "
+    "Nao confunda com a legenda de fala do video (letra pequena, no meio, que muda a cada "
+    "segundo), nem com o nome do perfil.\n"
+    "REGRAS:\n"
+    "1. Mesma noticia, mesmo sentido, palavras diferentes.\n"
+    "2. Uma linha so, no maximo {limite} caracteres.\n"
+    "3. Portugues do Brasil, direto, sem aspas, sem emoji, sem hashtag.\n"
+    "4. Nao invente numero, nome nem data que nao esteja na imagem.\n"
+    "5. So' responda SEM FRASE se nao houver texto NENHUM legivel no quadro inteiro.\n"
+    "Responda SO com a frase."
+)
+
+# O PROMPT DE ANTES DE 07/09/2026, guardado para uma migracao e nada mais.
+#
+# POR QUE ELE PRECISA FICAR AQUI: a aba de Configuracoes GRAVA o prompt no cofre da IA, e
+# o que esta' gravado ganha do padrao deste arquivo. O prompt dele hoje e' uma copia
+# palavra por palavra do padrao antigo (conferido no ar), entao trocar so' o
+# `PROMPT_PADRAO` nao mudaria uma virgula do que e' pedido a' IA.
+#
+# E A MIGRACAO E' EXATA DE PROPOSITO: so' quem tem a copia IGUAL a esta recebe o texto
+# novo. Prompt que ele tenha ajustado a' mao, ainda que num acento, fica como esta': o
+# cofre e' dele.
+PROMPT_ATE_07_09 = (
     "Voce le a frase de um card de noticia e escreve OUTRA frase equivalente, para um "
     "perfil diferente publicar.\n"
     "REGRAS:\n"
@@ -1691,6 +1872,18 @@ PROMPT_PADRAO = (
     "5. Se a imagem nao tiver frase legivel, responda exatamente: SEM FRASE.\n"
     "Responda SO com a frase."
 )
+
+
+def prompt_de_hoje(ia: dict) -> str:
+    """O prompt que vale agora, com a migracao do texto velho aplicada.
+
+    Uma funcao, e nao a expressao `ia.get("prompt") or PROMPT_PADRAO` espalhada em tres
+    lugares: assim a migracao vale para os tres de uma vez.
+    """
+    dito = str((ia or {}).get("prompt") or "").strip()
+    if not dito or dito == PROMPT_ATE_07_09.strip():
+        return PROMPT_PADRAO
+    return dito
 
 # OS SERVICOS QUE ENTRAM, e todos tem plano gratuito e leem imagem. Cada um e' so' um
 # endereco e um formato de corpo; trocar de um para o outro nao muda mais nada no
@@ -1998,12 +2191,19 @@ def pedir_a_ia(servico: str, chave: str, modelo: str, prompt: str,
     modelo = modelo or ficha["modelo"]
     url = ficha["url"].format(modelo=modelo)
     b64 = base64.b64encode(imagem).decode() if imagem else None
+    # O TIPO SAI DOS BYTES, E NAO DE UMA CONSTANTE (07/09/2026). Aqui estava cravado
+    # `image/png` nos dois envelopes, e isso valia enquanto tudo o que a fase 3 lia era o
+    # recorte da faixa, sempre PNG. Desde hoje ela tambem le' o QUADRO INTEIRO do reel, que
+    # sai do ffmpeg em JPEG por custar um terco em fichas de cota: anunciar PNG e mandar
+    # JPEG e' o tipo de mentira que um servico aceita e o outro recusa, e a recusa
+    # apareceria como "a IA falhou" sem dizer por que.
+    tipo = "image/jpeg" if imagem and imagem[:3] == b"\xff\xd8\xff" else "image/png"
     cabeca = {"Content-Type": "application/json", "User-Agent": QUEM_SOU}
 
     if servico == "gemini":
         partes = [{"text": prompt}]
         if b64:
-            partes.append({"inline_data": {"mime_type": "image/png", "data": b64}})
+            partes.append({"inline_data": {"mime_type": tipo, "data": b64}})
         corpo = {"contents": [{"parts": partes}],
                  "generationConfig": {"temperature": 0.9,
                                       "maxOutputTokens": TETO_DE_FICHAS}}
@@ -2012,7 +2212,7 @@ def pedir_a_ia(servico: str, chave: str, modelo: str, prompt: str,
         conteudo = [{"type": "text", "text": prompt}]
         if b64:
             conteudo.append({"type": "image_url",
-                             "image_url": {"url": "data:image/png;base64," + b64}})
+                             "image_url": {"url": f"data:{tipo};base64," + b64}})
         corpo = {"model": modelo, "temperature": 0.9,
                  "max_tokens": TETO_DE_FICHAS,
                  "messages": [{"role": "user", "content": conteudo}]}
@@ -2575,14 +2775,14 @@ def cumprir_provar_ia(caminho: Path, p: dict) -> None:
     t0 = time.time()
     try:
         dito, servico, cid = Rodizio(ia).escrever(
-            (ia.get("prompt") or PROMPT_PADRAO).replace("{limite}", "70"), imagem)
+            prompt_de_hoje(ia).replace("{limite}", "70"), imagem)
     except RuntimeError as e:
         andamento(pid, {"id": pid, "fim": True, "erro": str(e), "chaves": n})
         arquivar(caminho, p, 0, 1, round(time.time() - t0))
         return
     andamento(pid, {"id": pid, "fim": True, "chaves": n, "servico": servico,
                     "chave": cid, "frase": frase, "dito": dito,
-                    "prompt_de": len(ia.get("prompt") or PROMPT_PADRAO),
+                    "prompt_de": len(prompt_de_hoje(ia)),
                     "segundos": round(time.time() - t0, 1)})
     arquivar(caminho, p, 1, 0, round(time.time() - t0))
     print(f"prova da IA: {cid} ({servico}) respondeu: {dito[:70]}")
@@ -3391,7 +3591,7 @@ def cumprir_escrever(caminho: Path, p: dict) -> None:
         arquivar(caminho, p, 0, 0, 0)      # ver a nota logo acima
         return
 
-    prompt_base = (ia.get("prompt") or PROMPT_PADRAO)
+    prompt_base = prompt_de_hoje(ia)
     print(f"pedido {pid}: escrever {len(pecas)} pecas, {rodizio.vivas()} "
           f"{'chave' if rodizio.vivas() == 1 else 'chaves'} na fila")
     t0 = time.time()
@@ -3412,30 +3612,23 @@ def cumprir_escrever(caminho: Path, p: dict) -> None:
                         "atual": nome, "textos": saida,
                         "fim": False, "segundos": round(time.time() - t0)})
         renovar_tranca()   # leva de IA e' longa; a tranca do dono vivo nao envelhece
-        frase = origem / "_frases" / (Path(nome).stem + ".png")
-        # A FRASE ILEGIVEL NAO DERRUBA A LEVA: um PNG rasgado no disco (queda no meio
-        # da gravacao do recorte) virava OSError solto que matava a oficina inteira.
-        try:
-            imagem = frase.read_bytes() if frase.is_file() else None
-        except OSError:
-            imagem = None
-        # SEM IMAGEM NAO HA' O QUE LER, E ENTAO NAO SE PEDE NADA.
+        olhares = imagens_para_ler(origem, LEVAS / str(p.get("pasta", "")), nome)
+        # SEM NADA PARA OLHAR NAO SE PEDE NADA.
         #
-        # ISTO QUEIMAVA COTA PARA INVENTAR TEXTO. A peca so' tem `_frases/<nome>.png`
-        # quando o passo 2 achou um card com faixa de frase; nas de tela cheia nao ha'
-        # frase nenhuma. O pedido saia mesmo assim, sem parte de imagem, e a IA respondia
-        # do nada: ou inventava uma manchete, ou dizia SEM FRASE. Nos dois casos um pedido
-        # da cota do dia tinha sido gasto. Na leva 29 sao 15 pecas assim, de 107.
+        # ISTO QUEIMAVA COTA PARA INVENTAR TEXTO. O pedido saia mesmo sem parte de imagem, e
+        # a IA respondia do nada: ou inventava uma manchete, ou dizia SEM FRASE. Nos dois
+        # casos um pedido da cota do dia tinha sido gasto.
         #
-        # E ELA SUMIA DA CONTA: sem excecao, `falhas` nao subia; sem texto, `feitos` nao
-        # subia. A peca nao aparecia em lugar nenhum do fecho, e no dia seguinte o botao
-        # pedia ela de novo, gastando de novo.
-        if imagem is None:
+        # E A PECA SUMIA DA CONTA: sem excecao, `falhas` nao subia; sem texto, `feitos` nao
+        # subia. Ela nao aparecia em lugar nenhum do fecho, e no dia seguinte o botao pedia
+        # ela de novo, gastando de novo.
+        if not olhares:
             sem_frase += 1
-            diario.append({"arquivo": nome, "aviso": "esta peca nao tem frase para ler"})
-            print(f"  {i}/{len(pecas)} {nome}: sem frase para ler, nao gastei pedido")
+            diario.append({"arquivo": nome, "aviso": "nao achei imagem nem video para ler"})
+            print(f"  {i}/{len(pecas)} {nome}: nada para ler, nao gastei pedido")
             continue
         desta = {}
+        vazias = 0
         for campo in campos:
             texto = ""
             try:
@@ -3444,10 +3637,22 @@ def cumprir_escrever(caminho: Path, p: dict) -> None:
                 # "isso aqui nao faz sentido, tem que retirar isso". Abrir a caixa ja' era
                 # a ordem; o resto e' o prompt, que e' um so' e esta' visivel.
                 prompt = prompt_base.replace("{limite}", str(campo.get("limite", 90)))
-                texto, quem, cid = rodizio.escrever(prompt, imagem)
-                texto = texto.strip().strip('"').strip()
-                if texto.upper().startswith("SEM FRASE"):
-                    texto = ""
+                texto = ""
+                for olhar in olhares:
+                    dito, quem, cid = rodizio.escrever(prompt, olhar)
+                    dito = dito.strip().strip('"').strip()
+                    # "SEM FRASE" NAO E' RESPOSTA FINAL, E' UMA TENTATIVA QUE NAO DEU.
+                    #
+                    # Ate' 07/09/2026 era: a primeira imagem que a IA nao soubesse ler
+                    # encerrava a peca. Como a imagem era SEMPRE o recorte da faixa de
+                    # cima, um perfil com a manchete embaixo perdia a leva inteira (as 24
+                    # da leva 33, medidas uma a uma). Agora a proxima imagem da cadeia
+                    # entra: o quadro inteiro do reel, onde a manchete esta' de qualquer
+                    # jeito. Ordem dele: "ela tem que ser capaz de ler independente do
+                    # insumo".
+                    if dito and not dito.upper().startswith("SEM FRASE"):
+                        texto = dito
+                        break
             except RuntimeError as e:
                 diario.append({"arquivo": nome, "erro": str(e)})
                 print(f"  {i}/{len(pecas)} {nome}: {e}")
@@ -3480,10 +3685,28 @@ def cumprir_escrever(caminho: Path, p: dict) -> None:
                         encoding="utf-8")
                 except OSError:
                     pass
+            else:
+                vazias += 1
         if desta:
             saida[nome] = desta
             feitos += 1
             print(f"  {i}/{len(pecas)} {nome}: {list(desta.values())[0][:60]}")
+        elif vazias and not parou_por:
+            # A PECA QUE A IA LEU E NAO SOUBE LER ENTRA NA CONTA (07/09/2026).
+            #
+            # ESTE ERA O BURACO QUE FEZ O PAINEL FECHAR EM ZERO SEM DIZER POR QUE. Ele
+            # ja' tinha sido tapado em agosto para a peca SEM imagem, e continuou aberto
+            # para a peca COM imagem que a IA nao consegue ler: sem excecao, `falhas` nao
+            # subia; sem texto, `feitos` nao subia; e `sem_frase` so' contava a que nem
+            # chegou a ser tentada. As 24 da leva 33 sumiram assim, e a tela escreveu
+            # "0 de 24" por cinco minutos e meio sem uma linha explicando.
+            #
+            # AS TRES PARCELAS TEM DE FECHAR NO TOTAL. E' a mesma lei do resto desta casa:
+            # numero que nao fecha e' a tela escondendo trabalho.
+            sem_frase += 1
+            diario.append({"arquivo": nome,
+                           "aviso": "a IA olhou e nao achou frase legivel nesta peca"})
+            print(f"  {i}/{len(pecas)} {nome}: a IA nao achou frase legivel")
         # SO' DEPOIS DE GUARDAR O QUE SAIU. Na primeira versao deste corte eu pus o `break`
         # antes desta linha, e a peca que a IA tinha acabado de escrever ia para o lixo: o
         # `feitos` ficava em zero mesmo com a frase na mao. O teste pegou; o Gabriel teria
