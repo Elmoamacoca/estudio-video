@@ -1,0 +1,17 @@
+{
+ "conta": "castilho.ia",
+ "nome": "Castilho | IA para negócios 💼",
+ "eventos": [
+  {
+   "quando": 1788757445,
+   "tipo": "identificado",
+   "gravidade": "evento",
+   "texto": "Perfil identificado no Instagram: 537 publicações",
+   "detalhe": {
+    "publicacoes": 537,
+    "seguidores": 40586,
+    "total": 0
+   }
+  }
+ ]
+}
