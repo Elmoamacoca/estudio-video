@@ -8,6 +8,12 @@
    "gravidade": "aviso",
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (o Instagram respondeu 500; www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela",
    "vezes": 3
+  },
+  {
+   "quando": 1788787189,
+   "tipo": "aguardando",
+   "gravidade": "aviso",
+   "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (nenhuma conta do Instagram pronta neste computador; cadastre uma na sub-aba Contas, dentro de Configurações; www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela"
   }
  ]
 }
