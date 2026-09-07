@@ -1,30 +1,30 @@
 {
  "contas": [
   {
-   "conta": "hubjournal",
-   "nome": "Hub Journal",
-   "rotulo": "reels",
-   "primeiro": 1788759169,
-   "ultimo": 1788775518,
-   "eventos": 17,
-   "falhas": 0,
-   "avisos": 2,
-   "ultimo_tipo": "varredura",
-   "lidos": 7,
-   "publicacoes": 0,
-   "completo": false
-  },
-  {
    "conta": "thaleslaray",
    "nome": null,
    "rotulo": "carrosséis",
    "primeiro": 1788775164,
-   "ultimo": 1788775501,
-   "eventos": 2,
+   "ultimo": 1788776304,
+   "eventos": 3,
    "falhas": 1,
    "avisos": 1,
-   "ultimo_tipo": "falha_abertura",
+   "ultimo_tipo": "casa",
    "tentativas_id": 10
+  },
+  {
+   "conta": "hubjournal",
+   "nome": "Hub Journal",
+   "rotulo": "reels",
+   "primeiro": 1788759169,
+   "ultimo": 1788776002,
+   "eventos": 18,
+   "falhas": 0,
+   "avisos": 2,
+   "ultimo_tipo": "casa",
+   "lidos": 109,
+   "publicacoes": 1037,
+   "completo": true
   },
   {
    "conta": "castilho.ia",
@@ -97,5 +97,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788775518
+ "atualizado": 1788776306
 }
