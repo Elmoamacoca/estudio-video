@@ -5,14 +5,14 @@
    "nome": "Castilho | IA para negócios 💼",
    "rotulo": "publicações",
    "primeiro": 1788757445,
-   "ultimo": 1788757715,
-   "eventos": 2,
+   "ultimo": 1788758088,
+   "eventos": 3,
    "falhas": 0,
    "avisos": 0,
    "ultimo_tipo": "casa",
-   "lidos": 161,
+   "lidos": 330,
    "publicacoes": 537,
-   "completo": false
+   "completo": true
   },
   {
    "conta": "ratosdeia",
@@ -71,5 +71,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788757717
+ "atualizado": 1788758090
 }
