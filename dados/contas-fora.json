@@ -1,0 +1,17 @@
+{
+ "parada": true,
+ "quando": 1788760846,
+ "por_que": "nenhuma conta descartavel viva",
+ "quais": [
+  {
+   "usuario": "studiovillamont",
+   "apelido": "studiovillamont",
+   "estado": "bloqueada"
+  },
+  {
+   "usuario": "vestiariomolhado",
+   "apelido": "vestiariomolhado",
+   "estado": "vencida"
+  }
+ ]
+}
