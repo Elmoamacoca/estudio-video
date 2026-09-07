@@ -25,6 +25,17 @@
     "arroba": 503,
     "media_count": 0
    }
+  },
+  {
+   "quando": 1788787855,
+   "tipo": "casa",
+   "gravidade": "aviso",
+   "texto": "Não Consegui Abrir Logado Nesta Passagem (HTTP 503). Tento De Novo Na Próxima",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 503,
+    "media_count": 0
+   }
   }
  ]
 }
