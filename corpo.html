@@ -96,7 +96,10 @@
                  stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9"
                  width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0
                  1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar</button>
-          <button class="acao" id="liv_exportar" type="button">
+          <!-- O EXPORTAR PASSOU A SER DO REGISTRO, e não mais da lista de perfis que
+               saiu daqui. Ele baixa o log inteiro em planilha, com uma linha por
+               acontecimento, para conferir depois de o navegador ter sido fechado. -->
+          <button class="acao" id="vivo_exportar" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0
                  0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
@@ -140,39 +143,6 @@
           </div>
         </div>
 
-        <div class="liv-filtros">
-          <input class="ct-busca" id="liv_q" type="text" autocomplete="off"
-                 spellcheck="false" placeholder="Buscar perfil pelo @ ou pelo nome">
-          <div class="sel" id="liv-tipo">
-            <button class="sel-gatilho" id="liv-tipog" type="button"
-                    aria-haspopup="listbox" aria-expanded="false">
-              <span class="sel-valor" id="liv-tipov">Toda A Atividade</span>
-              <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m6 9 6 6 6-6"/></svg>
-            </button>
-            <div class="sel-lista" id="liv-tipol" role="listbox">
-              <div class="sel-grupo" id="liv-tipogr"></div>
-            </div>
-          </div>
-          <div class="sel" id="liv-quando">
-            <button class="sel-gatilho" id="liv-quandog" type="button"
-                    aria-haspopup="listbox" aria-expanded="false">
-              <span class="sel-valor" id="liv-quandov">Desde O Começo</span>
-              <svg class="sel-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m6 9 6 6 6-6"/></svg>
-            </button>
-            <div class="sel-lista" id="liv-quandol" role="listbox">
-              <div class="sel-grupo" id="liv-quandogr"></div>
-            </div>
-          </div>
-        </div>
-
-        <div id="liv_lista"></div>
-        <div class="gal-vazia" id="liv_vazio" hidden>Nenhum perfil com esses filtros.</div>
-        <div class="liv-mais"><button class="acao" id="liv_mais" type="button" hidden>
-          Ver Mais</button></div>
       </div>
     </div>
   </div>
@@ -364,38 +334,6 @@
     </div>
   </div>
 </div>
-
-<!-- A folha de exportação, fora das abas porque cobre a tela inteira -->
-<div class="liv-export" id="liv_folha" hidden>
-  <div class="liv-folha">
-    <h3>Exportar A Atividade</h3>
-    <p class="nota">Sai em planilha, que abre direto no Excel. Uma linha por evento,
-      com o perfil, a data, o tipo e os números daquela varredura.</p>
-
-    <label class="liv-opcao">
-      <input type="radio" name="exp" value="tudo" checked>
-      <span>Tudo<small>o histórico inteiro, de todos os perfis</small></span>
-    </label>
-    <label class="liv-opcao">
-      <input type="radio" name="exp" value="tela">
-      <span>Só o que está na tela<small id="exp_tela">o que os filtros deixaram</small></span>
-    </label>
-    <label class="liv-opcao">
-      <input type="radio" name="exp" value="periodo">
-      <span>Um período<small>escolha as datas abaixo</small></span>
-    </label>
-    <div class="liv-datas" id="exp_datas">
-      <label>De<input type="date" id="exp_de"></label>
-      <label>Até<input type="date" id="exp_ate"></label>
-    </div>
-
-    <div class="liv-pe">
-      <button class="acao" id="exp_cancelar" type="button">Cancelar</button>
-      <button class="acao forte" id="exp_baixar" type="button">Baixar Planilha</button>
-    </div>
-  </div>
-</div>
-
 
 <!-- ================================================== A FOLHA DE ETIQUETAR
 

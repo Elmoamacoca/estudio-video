@@ -2085,7 +2085,6 @@ async function ouvirBatimentos() {
     const b = await ler(`dados/andamento/${c.conta}.json`);
     if (b && b.conta) BATIMENTOS.set(c.conta, b);
   }));
-  desenhaLivro();
   for (const cartao of document.querySelectorAll(".liv-cartao.aberto")) {
     const agora = cartao.querySelector(".liv-agora");
     const b = BATIMENTOS.get(cartao.dataset.conta);
@@ -2359,6 +2358,32 @@ document.getElementById("vivo_log").addEventListener("click", ev => {
   logAbertos.has(i) ? logAbertos.delete(i) : logAbertos.add(i);
   desenhaRegistro();
 });
+/* A PLANILHA DO REGISTRO, e ela substituiu a exportação da lista de perfis.
+
+   O ponto e vírgula é o separador que o Excel em português entende sem perguntar nada, e
+   o BOM na frente é o que faz o acento aparecer certo lá dentro. Os dois vêm da
+   exportação antiga, que já tinha aprendido isso na prática. */
+$("vivo_exportar").addEventListener("click", () => {
+  const fim = fechosDoRegistro(LOG_PASSOS);
+  const agora = Math.floor(Date.now() / 1000);
+  const linhas = [["hora", "de onde", "perfil", "o que aconteceu", "estado", "durou",
+                   "quantos", "detalhe"]];
+  LOG_PASSOS.forEach((p, i) => {
+    const [dur] = duracaoDaLinha(p, i, fim, agora);
+    linhas.push([horaDoPasso(p.quando), ORIGEM_NA_TELA[p.de || "casa"] || "Casa",
+                 p.perfil || "", p.etapa || "", p.estado || "", dur,
+                 typeof p.quantos === "number" ? p.quantos : "", p.cru || ""]);
+  });
+  const csv = linhas.map(l => l.map(v =>
+    `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿" + csv],
+    { type: "text/csv;charset=utf-8" }));
+  a.download = `registro-mineracao-${hojeAqui()}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+
 $("vivo_copiar").addEventListener("click", async () => {
   // O REGISTRO COPIADO É TEXTO PLANO, na mesma ordem da tela: é o que ele cola quando
   // quer perguntar a alguém o que aconteceu.
@@ -2409,362 +2434,24 @@ ouvirAEsteira();
    `mandarContas`, que era a única a falar `/contas` com a Cloudflare. */
 
 
-function livroFiltrado() {
-  const q = ($("liv_q").value || "").trim().toLowerCase();
-  return LIVRO.filter(c => {
-    if (q && !((c.conta || "") + " " + (c.nome || "")).toLowerCase().includes(q))
-      return false;
-    // "Recusados" e' um GRUPO, e nao um tipo: os tres ramos em que o Instagram diz
-    // nao sao a mesma pergunta para quem olha.
-    if (livroTipo === "recusados") {
-      if (!RECUSAS.has(c.ultimo_tipo)) return false;
-    } else if (livroTipo && c.ultimo_tipo !== livroTipo) return false;
-    if (livroDesde && c.ultimo < livroDesde) return false;
-    return true;
-  });
-}
+/* A LISTA DE PERFIS SAIU DO REGISTRO EM 07/09/2026, por ordem dele: "remove tudo isso
+   daí". Eram a busca por arroba, os dois filtros (tipo e período) e um cartão por perfil
+   que abria o histórico daquela conta, tudo vindo do acervo.
 
-function desenhaLivro() {
-  const fila = livroFiltrado();
-  const pedaco = fila.slice(0, livroMostra);
+   POR QUE ELA NÃO FAZ FALTA: o que ela mostrava era o PASSADO de cada perfil, lido do
+   acervo, e o acervo é servido pela borda do GitHub, que segura a cópia por até cinco
+   minutos. Este bloco se chama Registro Ao Vivo e agora é um log de verdade: o que
+   aconteceu, na ordem em que aconteceu, escrito pela máquina que fez cada coisa. Duas
+   listas dentro do mesmo painel, uma ao vivo e outra atrasada, era o que fazia o
+   cabeçalho dizer uma coisa e a lista de baixo dizer outra.
 
-  $("liv_vazio").hidden = fila.length > 0;
-  $("liv_mais").hidden = fila.length <= livroMostra;
-  $("liv_mais").textContent = `Ver Mais ${Math.min(POR_LEVA, fila.length - livroMostra)}`;
-  $("exp_tela").textContent = `${fila.length} de ${LIVRO.length} perfis`;
+   O HISTÓRICO POR CONTA NÃO SE PERDEU: ele continua no acervo, e a tabela de Minerados,
+   na sub-aba ao lado, é quem mostra o estado de cada perfil.
 
-  const html = pedaco.map(bruto => {
-    // O BILHETE MANDA quando ele é mais novo que a capa do livro. A capa é escrita no
-    // fim da rodada; o bilhete, a cada página. Um perfil entrando agora tem capa dizendo
-    // zero e bilhete dizendo cento e trinta e dois.
-    const b = BATIMENTOS.get(bruto.conta);
-    // "VIVO" SÓ COM BILHETE FRESCO. O número lido continua valendo, porque aconteceu;
-    // a afirmação de presente é que exige carimbo de hora dentro do prazo. Bilhete
-    // velho rebaixa o card para "sem sinal", com a hora do último sinal, em vez de um
-    // "varrendo agora" que ninguém pode provar.
-    const c = b && b.quando > (bruto.ultimo || 0)
-      ? { ...bruto, lidos: b.lidos, publicacoes: b.publicacoes || bruto.publicacoes,
-          modo: b.modo, completo: b.completo, ultimo: b.quando,
-          vivo: !b.completo && bilheteFresco(b),
-          semSinal: !b.completo && !bilheteFresco(b) ? (b.quando || 0) : 0 }
-      : bruto;
-    const grave = c.falhas ? "falha" : c.avisos ? "aviso" : "";
-    // O TOTAL DE PUBLICAÇÕES É OPCIONAL. O caminho que abre o perfil (o feed pedido
-    // pelo arroba) não informa quantas publicações a conta tem, e isso não atrapalha
-    // varrer: sem o total, mostra-se o que foi lido, sem fração inventada.
-    const nome = rotuloDosFormatos(b, bruto);
-    // POR FORMATO, O TOTAL DE PUBLICAÇÕES NÃO É O TOTAL DAQUELE FORMATO. O
-    // @leisdamentemilionaria tem 398 publicações, mas isso soma posts e carrosséis; o
-    // Instagram não diz quantos REELS o perfil tem. Mostrar "132 de 398 reels (33%)" é a
-    // conta errada que assusta, ainda por cima com o mesmo card dizendo "398 publicações"
-    // no evento logo abaixo. Só se conta contra o total quando se varre TUDO
-    // ("publicações"); filtrando formato, mostra-se o lido daquele formato, sem
-    // denominador nem porcentagem, que seriam contra o total errado.
-    const contraOTotal = nome === "publicações" && !!c.publicacoes;
-    // A esteira para ao ATINGIR o alvo, e a última página costuma passar dele: pedir
-    // duzentos e trazer duzentos e quatro é o normal. Mostrar "102%" faz parecer conta
-    // errada, então a porcentagem só existe no caminho contra o total.
-    const cob = contraOTotal ? Math.round(100 * c.lidos / c.publicacoes) : null;
-    const quanto = !c.lidos
-      // sem número nenhum: conta fechada, sem publicação, ou ainda nada varrido.
-      ? (c.ultimo_tipo === "vazio" ? "sem publicação pública"
-         : c.completo ? "nada a varrer" : "")
-      : !contraOTotal
-        // por formato (ou sem total conhecido): só o que foi lido daquele formato.
-        ? `${num(c.lidos)} ${nome}${c.completo ? `, acabaram os ${nome} do perfil` : " lidos"}`
-      // VARREDURA ENCERRADA NÃO MOSTRA PORCENTAGEM DE MEIO CAMINHO: um perfil que fecha
-      // em 53% do alvo só acabou os reels dele, não parou no meio.
-      : c.completo
-        ? (cob >= 100 ? `${num(c.lidos)} ${nome}, alvo de ${num(c.publicacoes)} cumprido`
-                      : `${num(c.lidos)} ${nome}, acabaram os ${nome} do perfil`)
-      : `${num(c.lidos)} de ${num(c.publicacoes)} ${nome} (${cob}%)`;
-    // A MARCA DE ABERTO NASCE JUNTO COM O CARTÃO.
-    // Aplicá-la depois, no laço lá de baixo, fazia o cartão nascer fechado e abrir no
-    // quadro seguinte: de dez em dez segundos ele piscava na cara de quem estava lendo.
-    const jaAberto = ABERTOS.has(c.conta);
-    return `<div class="liv-cartao ${grave}${jaAberto ? " aberto" : ""}" data-conta="${c.conta}">
-      <button class="liv-cabeca" type="button" aria-expanded="${jaAberto}">
-        <span class="liv-ponto"></span>
-        <span class="liv-id">
-          <span class="liv-nome"><b>${c.nome
-            || (c.aguardando ? "Perfil ainda não identificado" : "sem nome no perfil")}</b>
-            <span class="liv-etq">${
-              // O CARD PROVISÓRIO TEM NOME DE FILA, e não de identificação: conta que
-              // só existe na lista de origem ainda não foi tocada pela esteira, e o
-              // rótulo diz exatamente em que degrau ela está.
-              c.aguardando ? "Na Fila, Esperando A Esteira"
-              : etiquetaDoPerfil(c)}</span></span>
-          <span class="liv-sub">@${c.conta} · ${
-            c.vivo ? '<b class="liv-vivo">varrendo agora</b>'
-            // SEM SINAL NOVO NO PRAZO, o card rebaixa a afirmação sozinho: diz há
-            // quanto tempo a esteira calou e a hora datada do último sinal.
-            : c.semSinal
-              ? `Sem Sinal Da Esteira Há ${
-                  Math.max(1, Math.round((Date.now() / 1000 - c.semSinal) / 60))
-                } Min · último sinal às ${horaCurta(c.semSinal)} · ${quandoAEsteiraVolta()}`
-            // O CARD DA FILA DIZ AS DUAS PONTAS DO TEMPO: quando a conta entrou (a hora
-            // gravada no fontes.json) e quando a esteira acorda de novo. Sem prazo,
-            // "esperando" é o mesmo silêncio que escondeu a esteira parada por 24 horas.
-            : c.naFila
-              ? `na fila desde ${horaCurta(c.naFila)} · ${quandoAEsteiraVolta()}`
-            // sem marca de tempo nenhuma, "há" quanto tempo daria meio século
-            : c.ultimo ? haQuanto(c.ultimo)
-            : "esperando a esteira abrir"}${
-            quanto ? ` · ${quanto}` : ""} · ${
-            c.eventos} ${c.eventos === 1 ? "registro" : "registros"}</span>
-        </span>
-        <svg class="liv-seta" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-      </button>
-      <div class="liv-corpo"><div class="liv-caixa">carregando</div></div>
-    </div>`;
-  }).join("");
-
-  // DESENHO IGUAL NÃO SE REDESENHA.
-  //
-  // Esta lista é reconstruída a cada dez segundos pelo relógio dos bilhetes. Quando nada
-  // mudou, trocar o HTML por outro idêntico destrói e recria os elementos à toa: o
-  // cartão aberto fecha e reabre, o texto que estava sendo lido salta, e a rolagem
-  // pula. Comparar antes custa nada e resolve o piscar na raiz.
-  const lista = $("liv_lista");
-  if (lista.dataset.desenho === html) return;
-  lista.dataset.desenho = html;
-  lista.innerHTML = html;
-
-  // o conteúdo dos abertos é repintado; a marca de aberto já veio no HTML
-  for (const cartao of lista.querySelectorAll(".liv-cartao.aberto")) abrirCartao(cartao);
-}
-
-/** Junta os eventos de todos os perfis e alimenta as três medidas do topo.
- *
- * Busca o histórico de cada um, o que é uma requisição por perfil. Isso é barato
- * porque cada arquivo é pequeno e fica guardado depois da primeira vez: abrir um
- * cartão em seguida não custa nada. */
-/** O histórico de um perfil, buscado só quando o cartão abre. */
-async function historicoDe(conta) {
-  // VAZIO NÃO SE GUARDA.
-  //
-  // Este era o defeito que fazia o cartão dizer "1 registro" no cabeçalho e "nada
-  // registrado" ao abrir: nos primeiros segundos de um perfil novo a ficha ainda não
-  // existe no acervo, a busca voltava vazia, e a resposta vazia ficava guardada para
-  // sempre. A ficha nascia meio minuto depois e ninguém mais ia olhar.
-  const guardado = HISTORICOS.get(conta);
-  if (guardado && guardado.length) return guardado;
-  const d = await ler(`dados/atividade/${conta}.json`);
-  const ev = (d && d.eventos) || [];
-  if (ev.length) HISTORICOS.set(conta, ev);
-  return ev;
-}
-
-/** Pinta o histórico dentro da caixa do cartão.
- *
- * O texto de cada evento entra como TEXTO, e não como marcação: ele vem do acervo, e
- * conteúdo de arquivo montado dentro de HTML é como se abre buraco numa tela.
- * Do mais novo para o mais antigo, que é como se lê histórico. */
-function pintarEventos(caixa, eventos) {
-  caixa.innerHTML = "";
-  if (!eventos.length) {
-    caixa.innerHTML = '<div class="liv-ev"><i></i><span class="oque">'
-      + "<b>Nada registrado para este perfil ainda.</b></span></div>";
-    return;
-  }
-  for (const e of [...eventos].reverse()) {
-    const d = e.detalhe || {};
-    const dados = [];
-    if (d.maquinas) dados.push(`<b>${d.maquinas}</b> máquinas`);
-    if (d.gravacoes) dados.push(`<b>${num(d.gravacoes)}</b> páginas`);
-    if (d.novos) dados.push(`<b>+${num(d.novos)}</b> novos`);
-    if (d.total) dados.push(`total <b>${num(d.total)}</b>`);
-    if (d.rodada) dados.push(`rodada <b>${d.rodada}</b>`);
-    if (d.seguidores) dados.push(`<b>${num(d.seguidores)}</b> seguidores`);
-    if (d.origem) dados.push(`<em>${d.origem}</em>`);
-
-    const ln = document.createElement("div");
-    ln.className = "liv-ev " + pesoDe(e);
-    // CADA DADO NUM ELEMENTO PRÓPRIO. Juntos numa string só, o respiro do arranjo não
-    // tinha onde pegar e saía "3 páginastotal 281histórico", tudo grudado.
-    ln.innerHTML = `<i></i><span class="oque"><b></b>`
-      + (dados.length
-          ? `<span class="dados">${dados.map(x => `<span>${x}</span>`).join("")}</span>`
-          : "")
-      + `</span><span class="data">${dataHora(e.quando)}</span>`;
-    ln.querySelector(".oque > b").textContent = e.texto;
-    caixa.appendChild(ln);
-
-    // AS PÁGINAS DAQUELA RODADA, uma linha cada, com a hora e a máquina que gravou.
-    // É o nível que faltava: o resumo dizia "4 máquinas, 8 páginas" e parava aí, sem
-    // mostrar o trabalho. Cada linha destas é um commit real no acervo.
-    for (const passo of [...(d.passos || [])].reverse()) {
-      const sub = document.createElement("div");
-      sub.className = "liv-ev passo";
-      sub.innerHTML = `<i></i><span class="oque"><b></b></span>`
-        + `<span class="data">${dataHora(passo.quando)}</span>`;
-      sub.querySelector(".oque > b").textContent =
-        "página lida e gravada pela " + (passo.maquina || "esteira");
-      caixa.appendChild(sub);
-    }
-  }
-}
-
-/* O OUVINTE E' DA LISTA DE PERFIS, E NAO DA PAGINA INTEIRA.
-   O registro do lote, na aba de Baixar, usa o mesmo molde de cartao: sem o endereco da
-   lista aqui, clicar num lote caia neste ouvinte, que ia buscar o historico de um perfil
-   chamado `undefined` e escrevia "nada registrado para este perfil" dentro do cartao do
-   lote. Dois donos para o mesmo clique. */
-document.addEventListener("click", ev => {
-  const cabeca = ev.target.closest("#liv_lista .liv-cabeca");
-  if (!cabeca) return;
-  const cartao = cabeca.closest(".liv-cartao");
-  const conta = cartao.dataset.conta;
-  if (ABERTOS.has(conta)) { ABERTOS.delete(conta); fecharCartao(cartao); }
-  else { ABERTOS.add(conta); abrirCartao(cartao); }
-});
-
-function fecharCartao(cartao) {
-  cartao.classList.remove("aberto");
-  cartao.querySelector(".liv-cabeca").setAttribute("aria-expanded", "false");
-}
-
-async function abrirCartao(cartao) {
-  cartao.classList.add("aberto");
-  cartao.querySelector(".liv-cabeca").setAttribute("aria-expanded", "true");
-  const caixa = cartao.querySelector(".liv-caixa");
-  const conta = cartao.dataset.conta;
-  // "buscando" só quando realmente vai buscar: com o histórico já na mão, essa linha
-  // piscava a cada repintura e dava a impressão de que o cartão estava recarregando.
-  const guardado = HISTORICOS.get(conta);
-  if (!guardado) caixa.textContent = "buscando o histórico";
-  const eventos = await historicoDe(conta);
-  const ficha = LIVRO.find(c => c.conta === conta);
-
-  // CARTÃO SEM HISTÓRICO EXPLICA A ESPERA, em vez de dizer "nada registrado". Perfil
-  // que a ponte não conseguiu identificar cai exatamente aqui, e o vazio dele não é
-  // ausência de trabalho: é trabalho em curso, do lado da esteira.
-  if (ficha && ficha.aguardando && !eventos.length) explicarEspera(caixa);
-  // O RESUMO DIZ QUE HÁ REGISTROS, MAS A LEITURA DO LOG NÃO VOLTOU: não minta "nada
-  // registrado" nem deixe o cartão girando calado. Diz que não carregou e que tenta
-  // sozinho, porque a lista se repinta a cada dez segundos e a próxima volta costuma
-  // trazer. É o par do corte de tempo da fonte: juntos, o log nunca fica mudo para sempre.
-  else if (!eventos.length && ficha && ficha.eventos > 0)
-    caixa.innerHTML = '<div class="liv-ev aviso"><i></i><span class="oque">'
-      + '<b>Não consegui carregar o log agora. Tento de novo em instantes.</b>'
-      + "</span></div>";
-  else pintarEventos(caixa, eventos);
-
-  const b = BATIMENTOS.get(conta);
-  if (b && !b.completo) caixa.prepend(linhaDoAgora(b));
-}
-
-/** O que está acontecendo com um perfil que entrou na lista e ainda não tem ficha. */
-function explicarEspera(caixa) {
-  const linhas = [
-    ["Perfil na lista de origem",
-     "Ele já está gravado no acervo e não se perde ao fechar a tela."],
-    ["A esteira vai abri-lo pelo arroba",
-     "A primeira chamada descobre quem é o perfil e já traz os doze primeiros posts, "
-     + "sem depender da consulta de identificação que o Instagram recusa."],
-    ["Falta a esteira chegar neste perfil",
-     "Ela acorda a cada rodada e atende um perfil por vaga. Assim que abrir este, o "
-     + "nome e a contagem aparecem neste cartão sozinhos."],
-  ];
-  caixa.innerHTML = "";
-  for (const [titulo, texto] of linhas) {
-    const ln = document.createElement("div");
-    ln.className = "liv-ev";
-    ln.innerHTML = '<i></i><span class="oque"><b></b><span class="dados"></span></span>';
-    ln.querySelector(".oque > b").textContent = titulo;
-    ln.querySelector(".dados").textContent = texto;
-    caixa.appendChild(ln);
-  }
-}
-
-$("liv_q").addEventListener("input", () => { livroMostra = POR_LEVA; desenhaLivro(); });
-$("liv_mais").onclick = () => { livroMostra += POR_LEVA; desenhaLivro(); };
-
-window.montarSelect("liv-tipo", [
-  { v: "", r: "Toda A Atividade" },
-  { v: "varredura", r: "Em Varredura" },
-  { v: "limite", r: "Fechados No Limite" },
-  { v: "concluido", r: "Concluídos" },
-  // O ROTULO DIZ O QUE O PROPRIO CODIGO DIZ NAO SER FALHA: `sem_avanco` e' AVISO na
-  // tabela de gravidade ("varias vagas caem no mesmo perfil e as ultimas voltam
-  // vazias, que e' o rodizio funcionando").
-  { v: "sem_avanco", r: "Sem Avanço Na Última" },
-  // E A PERGUNTA QUE ELE FAZ olhando esta tela e' "quem esta' preso?". Nenhuma das
-  // seis opcoes respondia: os tres tipos de recusa (`sem_leitura`, `falha_abertura`
-  // e `estouro`) nao estavam na lista, entao os dois perfis travados dele nao
-  // apareciam em filtro nenhum, em 03/09/2026.
-  { v: "recusados", r: "Recusados Pelo Instagram" },
-  { v: "sem_leitura", r: "Sem Página Na Última" },
-  { v: "falha_abertura", r: "Não Abriram Pelo Arroba" },
-  { v: "identificado", r: "Só Identificados" },
-], "", v => { livroTipo = v; livroMostra = POR_LEVA; desenhaLivro(); });
-
-window.montarSelect("liv-quando", [
-  { v: "0", r: "Desde O Começo" },
-  { v: "1", r: "Últimas 24 Horas" },
-  { v: "7", r: "Últimos 7 Dias" },
-  { v: "30", r: "Últimos 30 Dias" },
-  { v: "90", r: "Últimos 90 Dias" },
-], "0", v => {
-  const dias = parseInt(v, 10) || 0;
-  livroDesde = dias ? Math.floor(Date.now() / 1000) - dias * 86400 : 0;
-  livroMostra = POR_LEVA;
-  desenhaLivro();
-});
-
-/* ------------------------------------------------------------------ a exportação
-   Planilha, e não arquivo de programa: ele abre no Excel com dois cliques. O ponto e
-   vírgula é o separador que o Excel em português entende sem perguntar nada, e o BOM
-   na frente é o que faz o acento aparecer certo lá dentro. */
-$("liv_exportar").onclick = () => { $("liv_folha").hidden = false; };
-// as datas só aparecem quando a opção de período é a escolhida
-document.querySelectorAll('input[name="exp"]').forEach(r => r.addEventListener("change",
-  () => $("exp_datas").classList.toggle("aberto", r.value === "periodo" && r.checked)));
-$("exp_cancelar").onclick = () => { $("liv_folha").hidden = true; };
-$("liv_folha").addEventListener("click", ev => {
-  if (ev.target === $("liv_folha")) $("liv_folha").hidden = true;
-});
-
-$("exp_baixar").onclick = async () => {
-  const modo = document.querySelector('input[name="exp"]:checked').value;
-  const botao = $("exp_baixar");
-  botao.disabled = true;
-  botao.textContent = "montando";
-
-  let contas = modo === "tela" ? livroFiltrado() : LIVRO;
-  let de = 0, ate = Infinity;
-  if (modo === "periodo") {
-    if ($("exp_de").value) de = new Date($("exp_de").value + "T00:00").getTime() / 1000;
-    if ($("exp_ate").value) ate = new Date($("exp_ate").value + "T23:59").getTime() / 1000;
-  }
-
-  const linhas = [["perfil", "nome", "quando", "tipo", "gravidade", "descrição",
-                   "máquinas", "páginas", "posts novos", "total lido", "rodada"]];
-  for (const c of contas) {
-    for (const e of await historicoDe(c.conta)) {
-      if (e.quando < de || e.quando > ate) continue;
-      const d = e.detalhe || {};
-      linhas.push([c.conta, c.nome || "", dataHora(e.quando), TIPOS[e.tipo] || e.tipo,
-                   pesoDe(e), e.texto, d.maquinas || "", d.gravacoes || "",
-                   d.novos || "", d.total || "", d.rodada || ""]);
-    }
-  }
-
-  const csv = linhas.map(l => l.map(v =>
-    `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
-  const arquivo = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(arquivo);
-  // O DIA DAQUI TAMBEM NO NOME DO ARQUIVO, senao o que ele salva as 22h leva a data de
-  // amanha e a pasta de downloads fica com duas datas para o mesmo dia de trabalho.
-  a.download = `atividade-estudio-${hojeAqui()}.csv`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-
-  botao.disabled = false;
-  botao.textContent = "Baixar Planilha";
-  $("liv_folha").hidden = true;
-};
+   SAÍRAM JUNTO: `livroFiltrado`, `desenhaLivro`, `historicoDe`, `abrirCartao`,
+   `fecharCartao`, `pintarEventos`, `explicarEspera` e a folha de exportação, que
+   exportava exatamente a lista que deixou de existir. O `LIVRO` continua, porque ele
+   alimenta o rótulo dos formatos e o cartão do clique. */
 
 /* ---------------------------------------------------------------- desenhos
 
@@ -3066,7 +2753,6 @@ async function atualizar() {
   // AQUI COMEÇAVA A INSISTÊNCIA PELA IDENTIFICAÇÃO, e ela saiu em 07/09/2026: perfil
   // aguardando agora espera a PASSAGEM, que já foi disparada no clique, e não uma segunda
   // pergunta ao Instagram pela ponte.
-  desenhaLivro();
 
   desenhaProntos(MINERADOS);
 
@@ -3300,7 +2986,6 @@ $("ini_vai").onclick = async () => {
   $("ini_cancelar").disabled = true;
   // PEDIU, TEM CARTÃO, E ANTES DE QUALQUER IDA À REDE.
   contas.forEach(c => anotarPedida(c));
-  desenhaLivro();
 
   /* O CLIQUE PASSOU A FALAR COM A CASA, E SÓ COM ELA (07/09/2026).
 
@@ -3340,7 +3025,6 @@ $("ini_vai").onclick = async () => {
     for (const c of entraram)
       anotarPedida(c, { aguardando: true, ultimo_tipo: "aguardando", eventos: 1,
                         primeiro: agoraSeg, ultimo: agoraSeg });
-    desenhaLivro();
 
     $("fontes").value = "";
     delete $("fontes").dataset.tocado;
