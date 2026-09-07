@@ -5,11 +5,11 @@
    "nome": "Thales Laray",
    "rotulo": "carrosséis",
    "primeiro": 1788787177,
-   "ultimo": 1788788048,
-   "eventos": 5,
+   "ultimo": 1788788068,
+   "eventos": 7,
    "falhas": 0,
    "avisos": 2,
-   "ultimo_tipo": "casa",
+   "ultimo_tipo": "concluido",
    "lidos": 496,
    "publicacoes": 0,
    "completo": true
@@ -99,5 +99,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788788050
+ "atualizado": 1788788068
 }

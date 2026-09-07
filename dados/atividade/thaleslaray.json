@@ -47,6 +47,29 @@
     "arroba": 200,
     "media_count": 0
    }
+  },
+  {
+   "quando": 1788788042,
+   "tipo": "identificado",
+   "gravidade": "evento",
+   "texto": "Perfil aberto no Instagram: 496 posts na primeira leitura",
+   "caminho": "anonimo",
+   "detalhe": {
+    "publicacoes": null,
+    "seguidores": null,
+    "total": 496
+   }
+  },
+  {
+   "quando": 1788788068,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os carrosséis deste perfil: 496 no total",
+   "caminho": "anonimo",
+   "detalhe": {
+    "total": 496,
+    "publicacoes": 0
+   }
   }
  ]
 }
