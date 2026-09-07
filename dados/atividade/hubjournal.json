@@ -123,6 +123,17 @@
     "arroba": 500,
     "media_count": 1037
    }
+  },
+  {
+   "quando": 1788763427,
+   "tipo": "casa",
+   "gravidade": "aviso",
+   "texto": "Não Consegui Abrir Logado Nesta Passagem (HTTP 500). Tento De Novo Na Próxima",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 500,
+    "media_count": 1037
+   }
   }
  ]
 }
