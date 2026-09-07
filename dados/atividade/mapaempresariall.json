@@ -1,0 +1,17 @@
+{
+ "conta": "mapaempresariall",
+ "nome": "Mapa empresarial",
+ "eventos": [
+  {
+   "quando": 1788797665,
+   "tipo": "casa",
+   "gravidade": "evento",
+   "texto": "Lido Da Sua Casa (Apify): Varredura Completa, 58 Posts",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 200,
+    "media_count": 0
+   }
+  }
+ ]
+}
