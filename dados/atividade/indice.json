@@ -3,15 +3,13 @@
   {
    "conta": "thaleslaray",
    "nome": null,
+   "rotulo": "carrosséis",
    "primeiro": 1788787177,
    "ultimo": 1788787189,
    "eventos": 2,
    "falhas": 0,
    "avisos": 2,
-   "ultimo_tipo": "aguardando",
-   "lidos": 0,
-   "publicacoes": 0,
-   "completo": false
+   "ultimo_tipo": "aguardando"
   },
   {
    "conta": "hubjournal",
@@ -98,5 +96,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788787193
+ "atualizado": 1788787216
 }
