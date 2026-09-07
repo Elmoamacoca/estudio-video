@@ -37,6 +37,14 @@
    "quando": 1788802165,
    "tipo": "tratando",
    "texto": "1 de 24 tratados."
+  },
+  {
+   "quando": 1788802167,
+   "tipo": "limpeza",
+   "conta": "mapaempresariall",
+   "texto": "24 tratados.",
+   "aprovados": 24,
+   "reprovados": 0
   }
  ]
 }
