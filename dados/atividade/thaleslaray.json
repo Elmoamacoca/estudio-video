@@ -14,6 +14,17 @@
    "tipo": "aguardando",
    "gravidade": "aviso",
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (nenhuma conta do Instagram pronta neste computador; cadastre uma na sub-aba Contas, dentro de Configurações; www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela"
+  },
+  {
+   "quando": 1788787568,
+   "tipo": "casa",
+   "gravidade": "aviso",
+   "texto": "Não Consegui Abrir Logado Nesta Passagem (HTTP 503). Tento De Novo Na Próxima",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 503,
+    "media_count": 0
+   }
   }
  ]
 }
