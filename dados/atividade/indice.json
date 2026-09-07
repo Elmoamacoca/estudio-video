@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "hubjournal",
+   "nome": "Hub Journal",
+   "primeiro": 1788759169,
+   "ultimo": 1788759169,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "identificado",
+   "lidos": 0,
+   "publicacoes": 1037,
+   "completo": false
+  },
+  {
    "conta": "castilho.ia",
    "nome": "Castilho | IA para negócios 💼",
    "rotulo": "carrosséis",
@@ -71,5 +84,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788758475
+ "atualizado": 1788759173
 }
