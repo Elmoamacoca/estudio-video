@@ -1,5 +1,10 @@
 {
  "dia": "2026-09-07",
  "tentativas": 0,
- "perfis": {}
+ "perfis": {
+  "hubjournal": {
+   "prova": 1788759169,
+   "paradas": 0
+  }
+ }
 }
