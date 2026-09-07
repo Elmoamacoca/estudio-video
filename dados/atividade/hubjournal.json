@@ -68,6 +68,17 @@
     "arroba": 401,
     "media_count": 1037
    }
+  },
+  {
+   "quando": 1788761742,
+   "tipo": "casa",
+   "gravidade": "evento",
+   "texto": "Lido Da Sua Casa (Conta Logada): 7 Posts Até Agora, Continua Na Próxima Passagem",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 200,
+    "media_count": 1037
+   }
   }
  ]
 }
