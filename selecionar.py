@@ -140,7 +140,19 @@ def legenda_da_vitrine(p: dict) -> str:
 def mede_perfil(dados: dict, r: dict) -> list[dict]:
     """Devolve os posts do perfil com o indice de desempenho calculado."""
     conta = (dados.get("perfil") or {}).get("conta", "?")
-    posts = [p for p in dados.get("posts", []) if p.get("formato") in r["formatos"]]
+    # TODOS OS FORMATOS GUARDADOS ENTRAM, e isso mudou em 07/09/2026 por ordem dele:
+    # "na aba de coleta sempre deve aparecer tudo, nao faz sentido ter sumido".
+    #
+    # O QUE ACONTECIA ANTES: a regua do ULTIMO pedido filtrava a selecao inteira. Ele
+    # minerou tres perfis de carrossel, depois um de reels com corte 2x, e os 1.321
+    # carrosseis do acervo sumiram da aba de Coleta no mesmo instante, junto com os 545
+    # que ja' estavam BAIXADOS na casa e os cinco pacotes prontos. Nada tinha sumido: a
+    # vista e' que passou a mostrar so' reels.
+    #
+    # E A REGUA NAO PERDEU A FUNCAO: ela continua decidindo o que a VARREDURA guarda (e'
+    # o `formatos_pedidos` da mineracao) e qual o CORTE de cada formato aqui embaixo. O
+    # que ela deixou de fazer e' apagar da tela o material que ja' esta' no acervo.
+    posts = list(dados.get("posts", []))
     saida: list[dict] = []
 
     # A CHAVE DO GRUPO É A ESCOLHA DELE. Com separação por formato, reels e carrossel
@@ -180,7 +192,11 @@ def mede_perfil(dados: dict, r: dict) -> list[dict]:
 def selecionar(r: dict | None = None) -> dict:
     r = r or regua()
     teto = int(r.get("teto") or PADRAO["teto"])
-    criterio = {"formatos": r["formatos"], "por_formato": bool(r.get("por_formato")),
+    # `formatos` E' O QUE A SELECAO COBRE, e `pedido` e' o que ele escolheu no ultimo
+    # Iniciar. Eram a mesma coisa ate' 07/09/2026, e por isso a tela sumia com o resto.
+    criterio = {"formatos": ["reels", "post", "carrossel"],
+                "pedido": list(r["formatos"]),
+                "por_formato": bool(r.get("por_formato")),
                 "corte": r.get("corte"), "cortes": r["cortes"], "teto": teto}
     # ACERVO VAZIO TEM A MESMA FORMA DO CHEIO, e nao uma forma curta com um recado.
     #
@@ -266,11 +282,23 @@ def selecionar(r: dict | None = None) -> dict:
         if x["indice"] >= x["corte_usado"]:
             acima_por_perfil[x["conta"]] = acima_por_perfil.get(x["conta"], 0) + 1
 
-    escolhidos = sorted(
-        (p for p in todos if p["indice"] >= p["corte_usado"]),
-        key=lambda p: (p["indice"], p.get("views") or p.get("curtidas") or 0),
-        reverse=True,
-    )[:teto]
+    # O TETO E' POR FORMATO, e nao um teto so' para os tres juntos (07/09/2026).
+    #
+    # COM A SELECAO COBRINDO TUDO, um teto unico faria o formato mais numeroso comer as
+    # vagas dos outros: os 496 carrosseis do @thaleslaray sozinhos encostariam no teto de
+    # 500 e nao sobraria vaga para reel nenhum. Sao filas diferentes com destinos
+    # diferentes (o reel desce pela esteira, o carrossel a casa monta), e por isso cada
+    # uma tem o teto dela.
+    escolhidos = []
+    for formato in ("reels", "post", "carrossel"):
+        escolhidos += sorted(
+            (p for p in todos
+             if p["formato"] == formato and p["indice"] >= p["corte_usado"]),
+            key=lambda p: (p["indice"], p.get("views") or p.get("curtidas") or 0),
+            reverse=True,
+        )[:teto]
+    escolhidos.sort(key=lambda p: (p["indice"], p.get("views") or p.get("curtidas") or 0),
+                    reverse=True)
 
     # O QUE DA' PARA BAIXAR CONTA-SE NA LISTA JA' CORTADA PELO TETO, e nao no acervo
     # inteiro. Quem baixa le' `itens`, que para aqui no teto: contando antes do corte,
