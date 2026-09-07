@@ -34,6 +34,33 @@
     "arroba": 200,
     "media_count": 537
    }
+  },
+  {
+   "quando": 1788758475,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 330 carrosséis novos, 330 no total",
+   "caminho": "anonimo",
+   "detalhe": {
+    "rodada": 418,
+    "maquinas": null,
+    "gravacoes": null,
+    "passos": null,
+    "novos": 330,
+    "total": 330,
+    "publicacoes": 537
+   }
+  },
+  {
+   "quando": 1788758475,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os carrosséis deste perfil: 330 no total",
+   "caminho": "anonimo",
+   "detalhe": {
+    "total": 330,
+    "publicacoes": 537
+   }
   }
  ]
 }
