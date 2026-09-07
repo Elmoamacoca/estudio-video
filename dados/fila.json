@@ -103,6 +103,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@lifeofarjav",
+   "indice": 51.66,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@castilho.ia",
    "indice": 48.66,
    "etapa": "carrossel",
@@ -123,6 +129,12 @@
   {
    "origem": "@omatheusdaia",
    "indice": 43.78,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@lifeofarjav",
+   "indice": 39.9,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -159,6 +171,12 @@
   {
    "origem": "@castilho.ia",
    "indice": 30.66,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@lifeofarjav",
+   "indice": 30.45,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -341,25 +359,7 @@
    "indice": 13.86,
    "etapa": "carrossel",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@castilho.ia",
-   "indice": 13.71,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@thaleslaray",
-   "indice": 13.64,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 13.3,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1788795630
+ "atualizado": 1788796657
 }

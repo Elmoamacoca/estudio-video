@@ -2,13 +2,14 @@
  "contas": [
   {
    "conta": "lifeofarjav",
-   "primeiro": 1788796635,
    "nome": "Arjav Jain | Claude, AI & Automation",
-   "ultimo": 1788796635,
-   "eventos": 1,
+   "rotulo": "carrosséis",
+   "primeiro": 1788796635,
+   "ultimo": 1788796656,
+   "eventos": 3,
    "falhas": 0,
    "avisos": 0,
-   "ultimo_tipo": "casa",
+   "ultimo_tipo": "concluido",
    "lidos": 87,
    "publicacoes": 0,
    "completo": true
@@ -126,5 +127,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788796637
+ "atualizado": 1788796657
 }

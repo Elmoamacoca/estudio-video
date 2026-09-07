@@ -1,7 +1,7 @@
 {
  "prontas": 500,
- "avaliados": 1234,
- "ultima_rodada": 1788795630,
+ "avaliados": 1321,
+ "ultima_rodada": 1788796657,
  "perfis": [
   {
    "conta": "castilho.ia",
@@ -22,7 +22,7 @@
    "carrosseis": 330,
    "acima": 330,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 186,
+   "carrosseis_baixaveis": 166,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -70,7 +70,7 @@
    "carrosseis": 29,
    "acima": 29,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 18,
+   "carrosseis_baixaveis": 15,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -118,7 +118,31 @@
    "carrosseis": 48,
    "acima": 48,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 29,
+   "carrosseis_baixaveis": 25,
+   "baixados": 0,
+   "reprovados": 0,
+   "restam": 0
+  },
+  {
+   "conta": "lifeofarjav",
+   "nome": "Arjav Jain | Claude, AI & Automation",
+   "avatar": null,
+   "seguidores": null,
+   "mercado": null,
+   "etiquetas": [],
+   "atualizado": 1788796631,
+   "publicacoes": null,
+   "lidos": 87,
+   "completo": true,
+   "relendo": false,
+   "mais_antigo": 1777802069,
+   "mais_novo": 1788668717,
+   "reels": 0,
+   "imagens": 0,
+   "carrosseis": 87,
+   "acima": 87,
+   "baixaveis": 0,
+   "carrosseis_baixaveis": 44,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -142,7 +166,7 @@
    "carrosseis": 160,
    "acima": 160,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 84,
+   "carrosseis_baixaveis": 81,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -166,7 +190,7 @@
    "carrosseis": 69,
    "acima": 69,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 41,
+   "carrosseis_baixaveis": 35,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -190,7 +214,7 @@
    "carrosseis": 496,
    "acima": 496,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 73,
+   "carrosseis_baixaveis": 65,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
