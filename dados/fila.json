@@ -1,6 +1,12 @@
 {
  "itens": [
   {
+   "origem": "@ratosdeia",
+   "indice": 83.38,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@omatheusdaia",
    "indice": 80.59,
    "etapa": "carrossel",
@@ -73,6 +79,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@ratosdeia",
+   "indice": 15.34,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@omatheusdaia",
    "indice": 13.93,
    "etapa": "carrossel",
@@ -117,6 +129,12 @@
   {
    "origem": "@omatheusdaia",
    "indice": 10.15,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@ratosdeia",
+   "indice": 9.94,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -205,6 +223,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@ratosdeia",
+   "indice": 6.56,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@omatheusdaia",
    "indice": 6.48,
    "etapa": "carrossel",
@@ -235,8 +259,20 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@ratosdeia",
+   "indice": 5.16,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@omatheusdaia",
    "indice": 5.14,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@ratosdeia",
+   "indice": 5.03,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -247,8 +283,20 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@ratosdeia",
+   "indice": 4.78,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@omatheusdaia",
    "indice": 4.66,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@ratosdeia",
+   "indice": 4.47,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -283,6 +331,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@ratosdeia",
+   "indice": 4.25,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@omatheusdaia",
    "indice": 4.02,
    "etapa": "carrossel",
@@ -305,61 +359,7 @@
    "indice": 3.91,
    "etapa": "carrossel",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 3.89,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@liamjohnston.ai",
-   "indice": 3.77,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 3.69,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 3.54,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 3.47,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@liamjohnston.ai",
-   "indice": 3.31,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 3.19,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 3.14,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@liamjohnston.ai",
-   "indice": 3.09,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1788756911
+ "atualizado": 1788757466
 }

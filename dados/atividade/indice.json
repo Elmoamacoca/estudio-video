@@ -1,8 +1,23 @@
 {
  "contas": [
   {
+   "conta": "ratosdeia",
+   "nome": "ratos de IA",
+   "rotulo": "carrosséis",
+   "primeiro": 1788756892,
+   "ultimo": 1788757466,
+   "eventos": 4,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "concluido",
+   "lidos": 69,
+   "publicacoes": 0,
+   "completo": true
+  },
+  {
    "conta": "castilho.ia",
    "nome": "Castilho | IA para negócios 💼",
+   "rotulo": "publicações",
    "primeiro": 1788757445,
    "ultimo": 1788757445,
    "eventos": 1,
@@ -12,20 +27,6 @@
    "lidos": 0,
    "publicacoes": 537,
    "completo": false
-  },
-  {
-   "conta": "ratosdeia",
-   "nome": "ratos de IA",
-   "rotulo": "carrosséis",
-   "primeiro": 1788756892,
-   "ultimo": 1788757174,
-   "eventos": 2,
-   "falhas": 0,
-   "avisos": 1,
-   "ultimo_tipo": "casa",
-   "lidos": 69,
-   "publicacoes": 96,
-   "completo": true
   },
   {
    "conta": "omatheusdaia",
@@ -70,5 +71,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788757447
+ "atualizado": 1788757466
 }

@@ -19,6 +19,29 @@
     "arroba": 200,
     "media_count": 96
    }
+  },
+  {
+   "quando": 1788757170,
+   "tipo": "identificado",
+   "gravidade": "evento",
+   "texto": "Perfil aberto no Instagram: 96 publicações",
+   "caminho": "anonimo",
+   "detalhe": {
+    "publicacoes": 96,
+    "seguidores": 9460,
+    "total": 69
+   }
+  },
+  {
+   "quando": 1788757466,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os carrosséis deste perfil: 69 no total",
+   "caminho": "anonimo",
+   "detalhe": {
+    "total": 69,
+    "publicacoes": 96
+   }
   }
  ]
 }
