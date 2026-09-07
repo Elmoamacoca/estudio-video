@@ -50,6 +50,11 @@
    "quando": 1788802168,
    "tipo": "entrega",
    "texto": "Montando o pacote para entrega. Um lote grande leva alguns minutos aqui."
+  },
+  {
+   "quando": 1788802173,
+   "tipo": "fim",
+   "texto": "Leva entregue: 24 peças tratadas, 24 saíram da fileira."
   }
  ]
 }

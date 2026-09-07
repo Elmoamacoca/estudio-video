@@ -3,7 +3,7 @@
   {
    "numero": 33,
    "inicio": 1788802118,
-   "estado": "em curso",
+   "estado": "pronto",
    "baixados": 24,
    "limpos": 24,
    "reprovados": 0,
@@ -11,7 +11,8 @@
    "execucao": "34147753183",
    "contas": [
     "mapaempresariall"
-   ]
+   ],
+   "fim": 1788802173
   },
   {
    "numero": 31,
@@ -30,5 +31,5 @@
    "entregue": true
   }
  ],
- "atualizado": 1788802167
+ "atualizado": 1788802173
 }
