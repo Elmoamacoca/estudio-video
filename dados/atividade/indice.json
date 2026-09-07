@@ -3,15 +3,13 @@
   {
    "conta": "ratosdeia",
    "nome": null,
+   "rotulo": "carrosséis",
    "primeiro": 1788756892,
    "ultimo": 1788756892,
    "eventos": 1,
    "falhas": 0,
    "avisos": 1,
-   "ultimo_tipo": "aguardando",
-   "lidos": 0,
-   "publicacoes": 0,
-   "completo": false
+   "ultimo_tipo": "aguardando"
   },
   {
    "conta": "omatheusdaia",
@@ -56,5 +54,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788756894
+ "atualizado": 1788756911
 }
