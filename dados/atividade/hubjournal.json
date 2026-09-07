@@ -198,6 +198,17 @@
     "total": 7,
     "publicacoes": 1037
    }
+  },
+  {
+   "quando": 1788776002,
+   "tipo": "casa",
+   "gravidade": "evento",
+   "texto": "Lido Da Sua Casa (Conta Logada): Varredura Completa, 109 Posts",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 200,
+    "media_count": 1037
+   }
   }
  ]
 }
