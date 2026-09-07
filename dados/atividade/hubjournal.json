@@ -57,6 +57,17 @@
     "arroba": 429,
     "media_count": 1037
    }
+  },
+  {
+   "quando": 1788760820,
+   "tipo": "casa",
+   "gravidade": "falha",
+   "texto": "A Sessão Da Conta Descartável Não Passou (HTTP 401): Entre De Novo Na Sub-Aba Contas, Dentro De Configurações",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 401,
+    "media_count": 1037
+   }
   }
  ]
 }
