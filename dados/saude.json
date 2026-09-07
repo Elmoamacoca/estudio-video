@@ -1,7 +1,7 @@
 {
- "fiscal": "ok",
- "quando": 1788775518,
- "rodada": 420,
+ "fiscal": "reprovou",
+ "quando": 1788777097,
+ "rodada": 421,
  "eventos": [
   {
    "quando": 1788559223,
@@ -64,5 +64,6 @@
    "texto": "A Leitura Logada Está Indo Pelo Caminho De Reserva: Falta O Cliente Que Imita O Navegador. Ela Funciona, E Corre Mais Risco De A Conta Ser Bloqueada"
   }
  ],
- "atualizado": 1788776310
+ "atualizado": 1788776310,
+ "motivo": "FALHA: selecionar.py: KeyError: 'publicacoes' | conferencia: 1 problema(s)"
 }
