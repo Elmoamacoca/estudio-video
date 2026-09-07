@@ -2,14 +2,17 @@
  "contas": [
   {
    "conta": "ratosdeia",
-   "nome": null,
+   "nome": "ratos de IA",
    "rotulo": "carrosséis",
    "primeiro": 1788756892,
-   "ultimo": 1788756892,
-   "eventos": 1,
+   "ultimo": 1788757174,
+   "eventos": 2,
    "falhas": 0,
    "avisos": 1,
-   "ultimo_tipo": "aguardando"
+   "ultimo_tipo": "casa",
+   "lidos": 69,
+   "publicacoes": 96,
+   "completo": true
   },
   {
    "conta": "omatheusdaia",
@@ -54,5 +57,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788756911
+ "atualizado": 1788757177
 }
