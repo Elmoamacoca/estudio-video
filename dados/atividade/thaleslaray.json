@@ -1,0 +1,12 @@
+{
+ "conta": "thaleslaray",
+ "nome": null,
+ "eventos": [
+  {
+   "quando": 1788775122,
+   "tipo": "aguardando",
+   "gravidade": "aviso",
+   "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (nenhuma conta do Instagram pronta neste computador; cadastre uma na sub-aba Contas, dentro de Configurações; www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela"
+  }
+ ]
+}
