@@ -1,0 +1,17 @@
+{
+ "conta": "lifeofarjav",
+ "nome": "Arjav Jain | Claude, AI & Automation",
+ "eventos": [
+  {
+   "quando": 1788796635,
+   "tipo": "casa",
+   "gravidade": "evento",
+   "texto": "Lido Da Sua Casa (Apify): Varredura Completa, 87 Posts",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 200,
+    "media_count": 0
+   }
+  }
+ ]
+}
