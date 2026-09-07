@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "castilho.ia",
+   "nome": "Castilho | IA para negócios 💼",
+   "primeiro": 1788757445,
+   "ultimo": 1788757445,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "identificado",
+   "lidos": 0,
+   "publicacoes": 537,
+   "completo": false
+  },
+  {
    "conta": "ratosdeia",
    "nome": "ratos de IA",
    "rotulo": "carrosséis",
@@ -57,5 +70,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788757177
+ "atualizado": 1788757447
 }
