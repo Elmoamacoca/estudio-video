@@ -40,7 +40,7 @@ DOCS = PROJETO / "docs"
 # conversa: o escopo do passo 3 cresceu de "vestir a peca com a arte dele" ate' um editor de
 # nivel Canva, um pedido de boa-fe' por vez, e ninguem conseguia dizer onde ele tinha
 # comecado. Espec e' contrato em disco, com criterio de aceite em numero; quem confere se
-# ela foi cumprida e' o `aceite.py`, nunca a sessao que a construiu.
+# ela foi cumprida e' quem for conferir depois, nunca a sessao que a construiu.
 ESPECS = DOCS / "ESPEC"
 PROPOSTAS = DOCS / "propostas"          # as maquetes clicaveis, uma pasta por proposta
 PROVAS = PROJETO / "provas"
@@ -50,11 +50,6 @@ FOTOS = PROVAS / "fotos"
 # dia em que uma conta virar privada, e o susto manda a proxima sessao procurar defeito onde
 # nao ha'. Confere-se com a rede uma vez, grava-se, e a prova roda contra a copia.
 ENSAIOS = PROVAS / "ensaios"
-# O CARIMBO DAS PROVAS, desde 25/08/2026: a assinatura dos fontes no estado em que a
-# suite inteira passou. Quem escreve e' o `provar.py` (so' sem filtro), quem le' e' o
-# `publicar.py`, que recusa mandar arquivo com assinatura diferente da carimbada. Fica
-# fora do acervo: e' marca de bancada, nao programa.
-CARIMBO_DAS_PROVAS = PROVAS / "carimbo.json"
 TELAS = PROJETO / "telas"
 TELA = TELAS / "index.html"                       # a pagina montada, nunca editada a' mao
 FLUXOS = PROJETO / ".github" / "workflows"
@@ -280,7 +275,7 @@ PONTE = "https://estudio-ponte.gabrieltorres.workers.dev"
 VITRINE = f"https://{DONO.lower()}.github.io"
 # A PORTA DO POSTO, e a variavel de ambiente existe por causa de DUAS COPIAS DO PROJETO no
 # mesmo disco. Medido pelo revisor de provas em 03/09/2026: com o posto de outra pasta
-# segurando a 8787, o `ver.py` e o `maquete.py` mediam a arvore do vizinho e chamavam de
+# segurando a 8787, o `ver.py` media a arvore do vizinho e chamava de
 # verde (1.537.677 bytes servidos contra 1.531.684 no disco desta). Quem confere isso e' o
 # `ver.quem_ele_serve`; esta variavel e' a saida para quem quer as duas de pe' ao mesmo
 # tempo, e o padrao continua sendo o de sempre.

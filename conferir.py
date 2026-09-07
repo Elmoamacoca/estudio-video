@@ -249,7 +249,7 @@ def main() -> int:
     # A TELA MONTADA TEM DE SER MAIS NOVA QUE AS PECAS DELA. Trava 4 do CLAUDE.md.
     #
     # POR QUE ESTA CONFERENCIA GANHOU ISTO. A trava ja' era vigiada em tres lugares: o
-    # posto avisa, o `ver.py` se recusa a fotografar e o `provar.py` reprova. Faltava
+    # posto avisa, o `ver.py` se recusa a fotografar. Faltava
     # justamente o caminho da PUBLICACAO: o `publicar.py` chama esta conferencia e mais
     # nada, entao mexer no `tela.js` e publicar sem montar subia a tela da semana passada
     # com tudo verde. E' o pior tipo de erro daqui, porque nada reclama.

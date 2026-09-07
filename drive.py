@@ -45,7 +45,7 @@ PASTA = "1rft8TEkaWA_U6kRnt_liYxmsIDIn1_e1"
 PASTA_NOME = "Páginas Dark › Videos"
 PASTA_LINK = f"https://drive.google.com/drive/folders/{PASTA}"
 
-# A QUEBRA DE LINHA, MONTADA E NAO ESCRITA. Ver a nota igual no `provar.py`.
+# A QUEBRA DE LINHA, MONTADA E NAO ESCRITA.
 QUEBRA = chr(10)
 
 # QUANTO ESPERAR. Autorizar depende de ele clicar no navegador, entao a espera e' longa;
