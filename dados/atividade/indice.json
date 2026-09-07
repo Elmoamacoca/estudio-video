@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "thaleslaray",
+   "nome": null,
+   "primeiro": 1788775122,
+   "ultimo": 1788775122,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "aguardando",
+   "lidos": 0,
+   "publicacoes": 0,
+   "completo": false
+  },
+  {
    "conta": "hubjournal",
    "nome": "Hub Journal",
    "rotulo": "publicações",
@@ -85,5 +98,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788772733
+ "atualizado": 1788775125
 }
