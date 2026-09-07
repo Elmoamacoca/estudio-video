@@ -507,30 +507,26 @@ a.acao{display:inline-flex;align-items:center;justify-content:center;
 .liv-ev.passo .oque > b{font-weight:450;font-size:12px}
 .liv-ev.passo i{width:5px;height:5px;margin-top:6px}
 .liv-ev.passo .data{font-size:11px}
-/* ------------------------------------------------ A TABELA LARGA DE MINERADOS
+/* ------------------------------------------------ A TABELA DE MINERADOS
 
-   Treze colunas não cabem em tela nenhuma sem rolagem, e a rolagem existe: `.tab-rolo`
-   já tem `overflow-x`. O que não existia era o AVISO de que ela existe. A barra vem
-   escondida do sistema de origem, onde a tabela é estreita e cabe inteira; aqui o botão
-   da última coluna ficava metade fora e a leitura era de tabela quebrada.
+   ELA DEIXOU DE ROLAR DE LADO EM 07/09/2026, e quem a fez caber foram as quatro colunas
+   que ele mandou tirar. Aqui havia `min-width:1560px`, número cravado em 19/08 para as
+   treze colunas de então: com nove, aquele mínimo virava um espaço vazio esticado à força,
+   e a barra de rolagem continuava embaixo sem nada para rolar.
 
-   Duas correções, e nenhuma delas mexe no componente de origem:
+   MEDIDO NA JANELA DELE, 1400 por 1000, com espaço útil de 1.248: sem mínimo nenhum a
+   tabela pede 1.328, e as três medidas abaixo devolvem os oitenta que faltavam sem
+   espremer célula nenhuma (as pastilhas de Baixar e de Separado continuam com uma linha
+   só, conferido linha a linha no ar).
 
-     1. a coluna de ação gruda na direita, então o botão nunca sai de vista, role-se
-        quanto for. O fundo dela é opaco para o texto das outras colunas passar por baixo;
-     2. as colunas param de se espremer: com largura mínima, a rolagem entra em vez de
-        o conteúdo virar sopa.
-
-   O NÚMERO SUBIU DE 1.080 PARA 1.520 em 19/08/2026, e o primeiro palpite, 1.360, estava
-   curto: com ele a tabela cabia, mas cabia espremendo a coluna de Baixar até ela virar
-   duas linhas picadas. Uma tabela que rola e mostra tudo é melhor que uma tabela mais
-   estreita que esconde. Duas coisas seguraram o número: a marcação desceu de baixo do
-   nome do perfil, e o botão "Marcar" saiu da ponta da linha. */
-#tab_minerados{min-width:1560px}
+   A COLUNA DE AÇÃO CONTINUA GRUDADA NA DIREITA, e a barra continua visível. As duas
+   deixaram de ser necessárias hoje e ficam de guarda: basta ele estreitar a janela para
+   valerem de novo, e sem elas o botão da última coluna some pela borda. */
 .tab td.tab-acao, .tab th.tab-acao{position:sticky;right:0;z-index:2;
   background:var(--branco);box-shadow:-10px 0 12px -10px rgba(0,0,0,.45)}
 .tab thead th.tab-acao{background:var(--paper-2)}
 .tab tbody tr:hover td.tab-acao{background:var(--paper-2)}
+#tab_minerados td, #tab_minerados th{padding-left:11px;padding-right:11px}
 /* a rolagem passa a ser visível, discreta, para o olho saber que há mais à direita */
 .tab-rolo{scrollbar-width:thin;scrollbar-color:var(--rule-solid) transparent}
 .tab-rolo::-webkit-scrollbar{display:block;height:9px}
@@ -607,7 +603,16 @@ a.acao{display:inline-flex;align-items:center;justify-content:center;
 .pino.amb{color:var(--chart-1);
           border-color:color-mix(in srgb,var(--chart-1) 35%,transparent)}
 .pino.amb::before{background:var(--chart-1)}
-.tab-sep{min-width:168px;vertical-align:middle}
+.tab-sep{min-width:132px;vertical-align:middle}
+/* A TABELA TEM DE CABER NA JANELA DELE, e com nove colunas ela cabe: com treze não cabia,
+   e a barra de rolagem horizontal era o preço das seis colunas de número.
+
+   O NOME DO PERFIL PRECISA DE TETO PARA A ELIPSE VALER. A folha do sistema já manda cortar
+   o nome com reticências, mas `text-overflow` só corta quando existe um limite: sem ele, a
+   célula cresce até caber o nome inteiro e empurra a tabela. Medido em 1400 por 1000, com
+   o @lifeofarjav na lista ("Arjav Jain | Claude, AI & Automation"): a coluna do perfil ia
+   a 355 pixels e a tabela a 1.560, num espaço de 1.248. */
+.tab-perfil .tab-quem{max-width:116px}
 /* ATÉ ONDE CHEGOU, SEM QUEBRAR (07/09/2026, queixa dele). A célula mostrava `set. de
    2024`, e o navegador quebrava na preposição sempre que a coluna apertava: metade das
    linhas ficava com duas alturas e a fileira inteira desalinhava. O texto virou `set/2024`

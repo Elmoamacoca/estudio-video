@@ -3734,6 +3734,17 @@ $("etq_vai").onclick = async () => {
        catálogo já atualizado. */
     const r = await noPosto("/marcacao/perfil", {
       conta: etqConta, mercado: etqMercado, etiquetas: [...etqEtiquetas] });
+    /* A JANELA DA VERDADE ABRE AQUI, e sem ela o conserto de hoje não chegava à tela.
+
+       Medido no ar em 07/09/2026: a casa gravou a ficha do @thaleslaray e espelhou a
+       seleção (conferido nos dois arquivos do acervo, com "luxo" e "referencia" dentro), a
+       folha disse "gravado", e a tabela continuou dizendo "definir" trinta e cinco
+       segundos depois. Não era escrita perdida: é a borda do endereço cru servindo a cópia
+       de antes por até cinco minutos, a mesma trava que já mordeu o cartão do Iniciar.
+
+       QUEM ABRIA ESTA JANELA ERA O `mandar()` DA PONTE, e a marcação não passa mais por
+       ele. Toda ordem que escreve no acervo precisa abri-la na mão. */
+    acabeiDeEscrever();
     if (r && r.catalogo) CATALOGO = r.catalogo;
     const p = MINERADOS.find(x => x.conta === etqConta);
     if (p) { p.mercado = r.mercado || null; p.etiquetas = r.etiquetas || []; }
@@ -3849,6 +3860,10 @@ async function catPedir(caixa, ordem, corpo, aoFim) {
     return catDiz(caixa, e.message, "ruim");
   }
   catTravar(caixa, false);
+  // A JANELA DA VERDADE, pelo mesmo motivo do salvar da folha: apagar um mercado reescreve
+  // as fichas dos perfis que estavam nele, e a tabela leria o nome apagado de volta pela
+  // borda do endereço cru por até cinco minutos.
+  acabeiDeEscrever();
   if (d && d.catalogo) CATALOGO = d.catalogo;
   // O QUE ACONTECEU VEM ANTES DO REDESENHO, e a ordem contrária já enganou uma vez: é
   // `aoFim` quem refaz na memória da tela a mesma troca que a casa acabou de fazer nos
