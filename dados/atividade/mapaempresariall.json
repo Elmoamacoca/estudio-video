@@ -12,6 +12,29 @@
     "arroba": 200,
     "media_count": 0
    }
+  },
+  {
+   "quando": 1788797663,
+   "tipo": "identificado",
+   "gravidade": "evento",
+   "texto": "Perfil aberto no Instagram: 58 posts na primeira leitura",
+   "caminho": "anonimo",
+   "detalhe": {
+    "publicacoes": null,
+    "seguidores": null,
+    "total": 58
+   }
+  },
+  {
+   "quando": 1788797688,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os reels deste perfil: 58 no total",
+   "caminho": "anonimo",
+   "detalhe": {
+    "total": 58,
+    "publicacoes": 0
+   }
   }
  ]
 }

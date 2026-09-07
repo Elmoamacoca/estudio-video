@@ -2,13 +2,14 @@
  "contas": [
   {
    "conta": "mapaempresariall",
-   "primeiro": 1788797665,
    "nome": "Mapa empresarial",
-   "ultimo": 1788797665,
-   "eventos": 1,
+   "rotulo": "reels",
+   "primeiro": 1788797665,
+   "ultimo": 1788797688,
+   "eventos": 3,
    "falhas": 0,
    "avisos": 0,
-   "ultimo_tipo": "casa",
+   "ultimo_tipo": "concluido",
    "lidos": 58,
    "publicacoes": 0,
    "completo": true
@@ -140,5 +141,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788797668
+ "atualizado": 1788797688
 }
