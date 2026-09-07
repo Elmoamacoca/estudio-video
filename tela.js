@@ -153,10 +153,33 @@ function ponteFirme() { PONTE_TROPECOS = 0; PONTE_DE_CAMA_ATE = 0; }
  * A ponte já tinha corte pelo `freio`; a fonte não tinha, e era o buraco. Passado o prazo,
  * o pedido é abortado e vira "fonte muda", que o resto do código já sabe tratar. */
 const PACIENCIA_FONTE = 12000;
+/* O SELO DE TEMPO QUE FURA A BORDA, e ele nasceu em 07/09/2026.
+
+   `cache: "no-cache"` NÃO FUNCIONA no `raw.githubusercontent.com`, e o comentário logo
+   abaixo já dizia isso desde 25/08: a borda da Fastly responde `X-Cache: HIT` mesmo com
+   esse pedido. O que ela respeita é a URL: mudou a URL, ela vai buscar. A leitura pela
+   ponte já fazia isso (`?t=${Date.now()}`); esta aqui não fazia, e por isso servia o
+   passado por até cinco minutos.
+
+   O QUE O GABRIEL VIU, em 07/09: a máquina dele terminou de minerar um perfil às 02:14, o
+   acervo tinha os cinco perfis no mesmo instante, e a tela continuou mostrando quatro
+   depois de dois F5. O dado estava certo do outro lado o tempo todo.
+
+   POR QUE A SOLUÇÃO QUE JÁ EXISTIA NÃO PEGOU: a `SO_PELA_PONTE` abaixo só vale dentro da
+   "janela da verdade", que abre quando A TELA escreve. Com a mineração ao vivo, quem
+   escreve é a máquina dele, e a tela não fica sabendo: a janela nunca abria.
+
+   E ELE É ARREDONDADO EM QUINZE SEGUNDOS, de propósito. Com `Date.now()` cru, toda leitura
+   seria uma URL nova e a borda perderia a serventia: o `selecao.json` tem 1,4 MB e a tela
+   relê de vinte e cinco em vinte e cinco segundos. Arredondado, o cache continua valendo
+   dentro do bloco e o atraso máximo cai de cinco minutos para quinze segundos. */
+const SELO_DO_CRU = 15000;
+
 const pegarDaFonte = caminho => {
   const corte = new AbortController();
   const t = setTimeout(() => corte.abort(), PACIENCIA_FONTE);
-  return fetch(`${CRU}/${caminho}`, { cache: "no-cache", signal: corte.signal })
+  const selo = Math.floor(Date.now() / SELO_DO_CRU);
+  return fetch(`${CRU}/${caminho}?t=${selo}`, { cache: "no-cache", signal: corte.signal })
     .then(r => r.ok ? r.json().then(d => ({ tem: true, d, via: "fonte" }))
                     : { tem: false, sumiu: r.status === 404, via: "fonte" })
     .catch(() => ({ tem: false, via: "fonte" }))
