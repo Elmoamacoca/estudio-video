@@ -32,7 +32,13 @@
    "origem": "resgate",
    "gravidade": "aviso",
    "texto": "O Resgate Em Casa Está Esperando A Conta Descartável: Entre No Instagram No Navegador E Rode 'python casa.py --entrar' Uma Vez"
+  },
+  {
+   "quando": 1788768842,
+   "origem": "resgate",
+   "gravidade": "aviso",
+   "texto": "O Resgate Em Casa Está Esperando A Conta Descartável: Entre No Instagram No Navegador E Rode 'python casa.py --entrar' Uma Vez"
   }
  ],
- "atualizado": 1788765222
+ "atualizado": 1788768842
 }
