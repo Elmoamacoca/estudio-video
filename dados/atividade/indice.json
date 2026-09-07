@@ -5,8 +5,8 @@
    "nome": "Hub Journal",
    "rotulo": "publicações",
    "primeiro": 1788759169,
-   "ultimo": 1788770920,
-   "eventos": 14,
+   "ultimo": 1788772731,
+   "eventos": 15,
    "falhas": 0,
    "avisos": 1,
    "ultimo_tipo": "casa",
@@ -85,5 +85,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788770922
+ "atualizado": 1788772733
 }
