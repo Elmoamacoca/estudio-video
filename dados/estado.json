@@ -1,7 +1,7 @@
 {
  "prontas": 500,
- "avaliados": 894,
- "ultima_rodada": 1788786374,
+ "avaliados": 709,
+ "ultima_rodada": 1788786623,
  "perfis": [
   {
    "conta": "castilho.ia",
@@ -22,7 +22,7 @@
    "carrosseis": 330,
    "acima": 330,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 210,
+   "carrosseis_baixaveis": 225,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -94,7 +94,7 @@
    "carrosseis": 48,
    "acima": 48,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 32,
+   "carrosseis_baixaveis": 37,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -118,7 +118,7 @@
    "carrosseis": 160,
    "acima": 160,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 89,
+   "carrosseis_baixaveis": 91,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -142,31 +142,7 @@
    "carrosseis": 69,
    "acima": 69,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 45,
-   "baixados": 0,
-   "reprovados": 0,
-   "restam": 0
-  },
-  {
-   "conta": "thaleslaray",
-   "nome": "Thales Laray",
-   "avatar": null,
-   "seguidores": null,
-   "mercado": null,
-   "etiquetas": [],
-   "atualizado": 1788776397,
-   "publicacoes": null,
-   "lidos": 185,
-   "completo": true,
-   "relendo": false,
-   "mais_antigo": 1771329600,
-   "mais_novo": 1788609099,
-   "reels": 0,
-   "imagens": 0,
-   "carrosseis": 185,
-   "acima": 185,
-   "baixaveis": 0,
-   "carrosseis_baixaveis": 27,
+   "carrosseis_baixaveis": 50,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
