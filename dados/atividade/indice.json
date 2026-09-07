@@ -1,6 +1,19 @@
 {
  "contas": [
   {
+   "conta": "mapaempresariall",
+   "primeiro": 1788797665,
+   "nome": "Mapa empresarial",
+   "ultimo": 1788797665,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "casa",
+   "lidos": 58,
+   "publicacoes": 0,
+   "completo": true
+  },
+  {
    "conta": "lifeofarjav",
    "nome": "Arjav Jain | Claude, AI & Automation",
    "rotulo": "carrosséis",
@@ -127,5 +140,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788797343
+ "atualizado": 1788797668
 }
