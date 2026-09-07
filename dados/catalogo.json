@@ -1,10 +1,15 @@
 {
- "nichos": [],
+ "nichos": [
+  {
+   "nome": "luxo",
+   "criado": 1788806397
+  }
+ ],
  "etiquetas": [
   {
    "nome": "referencia",
    "criado": 1788804785
   }
  ],
- "atualizado": 1788806369
+ "atualizado": 1788806397
 }
