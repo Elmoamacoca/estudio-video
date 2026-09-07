@@ -167,6 +167,37 @@
     "arroba": 500,
     "media_count": 1037
    }
+  },
+  {
+   "quando": 1788775509,
+   "tipo": "sem_leitura",
+   "gravidade": "aviso",
+   "texto": "Nenhuma Página Veio (Feed): Recusa 401 Do Instagram. 1ª Rodada Seguida Sem Página, 10 Vagas Recusadas Nesta.",
+   "caminho": "anonimo",
+   "detalhe": {
+    "seguidas": 1,
+    "vagas": 10,
+    "rodada": "420",
+    "vaga": 20,
+    "caminho": "feed",
+    "resposta": "o arroba recusou (401); www.instagram.com recusou (401); i.instagram.com recusou (401)"
+   }
+  },
+  {
+   "quando": 1788775518,
+   "tipo": "varredura",
+   "gravidade": "evento",
+   "texto": "Varredura: 7 carrosséis novos, 7 no total",
+   "caminho": "anonimo",
+   "detalhe": {
+    "rodada": 420,
+    "maquinas": null,
+    "gravacoes": null,
+    "passos": null,
+    "novos": 7,
+    "total": 7,
+    "publicacoes": 1037
+   }
   }
  ]
 }

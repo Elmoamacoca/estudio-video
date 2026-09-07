@@ -8,6 +8,19 @@
    "gravidade": "aviso",
    "texto": "Perfil Na Fila De Origem, Esperando A Esteira. Identificação Pela Nuvem Falhou (nenhuma conta do Instagram pronta neste computador; cadastre uma na sub-aba Contas, dentro de Configurações; www.instagram.com Respondeu 401; i.instagram.com Respondeu 401); A Esteira Vai Tentar Pelos IPs Dela",
    "vezes": 4
+  },
+  {
+   "quando": 1788775501,
+   "tipo": "falha_abertura",
+   "gravidade": "falha",
+   "texto": "Abertura Pelo Arroba Não Passou: Recusa 401 Do Instagram. 10ª Tentativa De Abertura.",
+   "caminho": "anonimo",
+   "detalhe": {
+    "tentativa": 10,
+    "vaga": 19,
+    "resposta": "[thaleslaray] abertura via 1 recusou (401)\n[thaleslaray] abertura nao passou nesta rodada"
+   }
   }
- ]
+ ],
+ "tentativas_id": 10
 }
