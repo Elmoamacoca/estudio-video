@@ -25,7 +25,19 @@ from __future__ import annotations
 import random
 import time
 
-import cofre
+# O `cofre` NAO E' IMPORTADO AQUI EM CIMA, e a razao e' o acervo (07/09/2026).
+#
+# ELE ENTRA SO' DENTRO DO `testar_a_sessao`, que e' a unica funcao daqui que precisa dele, e
+# que roda EXCLUSIVAMENTE no computador dele, cumprindo o botao Testar Agora. Tudo o mais
+# neste arquivo trabalha com fichas que ja' chegaram prontas.
+#
+# O QUE ACONTECE COM O IMPORT NO TOPO: desde a virada, o `rodada.py` importa este arquivo,
+# e o `rodada.py` roda nas vinte maquinas do GitHub, a partir do acervo PLANO. O `cofre.py`
+# nao sobe para la', de proposito, porque ele e' o leitor das senhas e nao tem o que fazer
+# na nuvem. Com o import em cima, as vinte vagas quebrariam com `ModuleNotFoundError` na
+# primeira rodada depois da publicacao. A prova do acervo plano pegou isso antes de subir.
+#
+# E' O MESMO PADRAO DO `import casa` LOGO ABAIXO, na mesma funcao, pela mesma razao.
 
 # ============================================================ o teto que ELE mandou tirar
 #
@@ -52,9 +64,14 @@ MOLHO = 2 * 60 * 60              # duas horas de descanso, e depois ela volta so
 TROPECOS_GUARDADOS = 40          # o historico tem teto, senao a ficha cresce para sempre
 
 # UMA CONTA DE CADA VEZ. Duas lendo ao MESMO TEMPO e' o desenho que o Instagram reconhece:
-# duas sessoes diferentes, do mesmo endereco, no mesmo segundo. A passagem le' ate' dois
-# perfis e usa uma conta por perfil, em sequencia.
-POR_PASSAGEM = 2
+# duas sessoes diferentes, do mesmo endereco, no mesmo segundo. A passagem usa uma conta por
+# perfil, em SEQUENCIA, e e' isso que protege: o numero abaixo nao afrouxa nada disso.
+#
+# ELE ERA DOIS E VIROU QUATRO EM 07/09/2026, com a virada de prioridade. Enquanto a leitura
+# logada era o resgate, ela so' pegava o que a nuvem tinha desistido de ler, e dois bastava.
+# Virando o caminho principal, dois viraria o gargalo. O que nao cabe na passagem continua
+# na proxima, dez minutos depois: aqui nada fica para amanha.
+POR_PASSAGEM = 4
 
 # AS PAUSAS SAO SORTEADAS, e nao fixas. Pausa fixa e' assinatura de robo: o intervalo entre
 # pedidos vira uma reta perfeita, e isso e' visivel do outro lado. A de conta e' maior que
@@ -137,8 +154,26 @@ def anotar_tropeco(ficha: dict, motivo: str, agora: float | None = None) -> bool
 
 
 def de_molho(ficha: dict, agora: float | None = None) -> bool:
+    """Esta conta esta' descansando agora?
+
+    LE' OS DOIS DESENHOS DE FICHA, e isso nao e' frouxidao: a ficha do COFRE guarda a
+    saude aninhada (`saude.de_molho_ate`), e a ficha que viaja pela rede sai do
+    `cofre.sem_segredo`, que ACHATA a saude em tres numeros no topo e apaga o `saude`.
+    Sao o mesmo dado com duas caras, e a de cima e' a que a esteira do GitHub enxerga.
+    Ler so' a aninhada faria toda conta de molho parecer disponivel do lado de la'.
+    """
     agora = time.time() if agora is None else agora
-    return float((ficha.get("saude") or {}).get("de_molho_ate") or 0) > agora
+    aninhado = (ficha.get("saude") or {}).get("de_molho_ate")
+    return float(aninhado or ficha.get("de_molho_ate") or 0) > agora
+
+
+def com_sessao(ficha: dict) -> bool:
+    """Esta conta tem sessao guardada? Tambem le' os dois desenhos, pelo mesmo motivo.
+
+    No cofre o campo e' `sessao` e carrega o cookie; no resumo que viaja ele virou
+    `tem_sessao`, sim ou nao, porque o valor NUNCA sai do disco dele (trava 60).
+    """
+    return bool(ficha.get("sessao") or ficha.get("tem_sessao"))
 
 
 def marcar_melhor_dia(ficha: dict) -> None:
@@ -164,7 +199,7 @@ def vivas(contas: list, agora: float | None = None) -> list:
     """
     return [c for c in contas
             if c.get("estado") == "viva"
-            and c.get("sessao")
+            and com_sessao(c)
             and not de_molho(c, agora)]
 
 
@@ -263,6 +298,7 @@ def testar_a_sessao(ficha: dict, pergunta=None) -> tuple:
     if contar_testes_hoje(ficha) >= TETO_DO_TESTE:
         return False, (f"esta conta já foi testada {TETO_DO_TESTE} vezes hoje; "
                        "o teste conta como uma visita e o limite é por dia")
+    import cofre
     sessao = cofre.sessao_da_ficha(ficha)
     if not sessao:
         return False, "esta conta não tem sessão guardada"
@@ -350,6 +386,9 @@ class Passagem:
         # as duas na tela faria ele ir renovar senha de conta que so' estava cansada.
         self.demolho: list[str] = []
         self.parou_por = ""
+        # O FREIO DE QUEM LE'. Nasce solto e so' quem le' o levanta, devolvendo
+        # `{"parar": "<motivo>"}`: a passagem termina o perfil corrente e nao pega outro.
+        self.pedido_de_parada = ""
 
     def rodar(self, perfis: list, ler) -> list:
         """Le' ate' dois perfis, uma conta por perfil, em sequencia. Devolve os resultados.
@@ -365,6 +404,15 @@ class Passagem:
             if len(self.caidas) >= 2:
                 self.parou_por = ("duas contas cairam nesta passagem; o problema "
                                   "provavelmente nao e' a conta")
+                break
+            if self.pedido_de_parada:
+                # QUEM LE' TAMBEM PODE PARAR A PASSAGEM (07/09/2026). O leitor da casa
+                # grava no acervo a cada perfil, e acervo que recusa escrita e' motivo de
+                # parar: sem ele, cada passagem refaz as mesmas paginas logadas sem nada
+                # ser contado, que e' o martelar medido na auditoria de 25/08/2026.
+                #
+                # E O MOTIVO VEM DE QUEM VIU, e nao daqui: esta classe nao sabe o que e'
+                # um acervo. Ela so' respeita o pedido e guarda a frase para a sub-aba.
                 break
             conta = escolher(self.contas)
             if conta is None:
@@ -402,6 +450,10 @@ class Passagem:
                         self.demolho.append(conta["usuario"])
                 else:
                     marcar_melhor_dia(conta)
+            if r.get("parar"):
+                self.pedido_de_parada = str(r["parar"])
+                if not self.parou_por:
+                    self.parou_por = self.pedido_de_parada
             fora.append({"perfil": perfil, "conta": conta["usuario"], **r})
         # E A PARADA E' DITA MESMO QUANDO ELA COINCIDE COM O FIM DA PASSAGEM. Com
         # `POR_PASSAGEM = 2`, duas contas caindo esgotam a lista de perfis no mesmo
@@ -477,7 +529,7 @@ def todas_fora(contas: list) -> bool:
     volta amanha sozinha; conta vencida ou bloqueada NAO volta sem ele. Parar a esteira
     porque a cota acabou seria parar todo fim de tarde.
     """
-    return not any(c.get("estado") == "viva" and c.get("sessao") for c in contas)
+    return not any(c.get("estado") == "viva" and com_sessao(c) for c in contas)
 
 
 def quais_estao_fora(contas: list) -> list:

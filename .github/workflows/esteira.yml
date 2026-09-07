@@ -63,7 +63,10 @@ jobs:
 
       - id: olhar
         run: |
-          FALTA=$(python -c "import rodada; print(len(rodada.pendentes(rodada.contas_pedidas())))")
+          # A CONTA SAI DE DENTRO DO PROGRAMA, e nao desta linha (07/09/2026, a virada de
+          # prioridade). Escrita aqui, ela nao conhecia a decisao de caminho e subiria
+          # vinte maquinas para todas descobrirem, uma a uma, que a ponta esta' minerando.
+          FALTA=$(python -c "import rodada; print(rodada.quantos_faltam())")
           echo "perfis com pagina por ler: $FALTA"
           echo "falta=$FALTA" >> "$GITHUB_OUTPUT"
 

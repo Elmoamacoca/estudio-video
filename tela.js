@@ -15880,6 +15880,10 @@ const CTA_IC = {
     + '<path d="m9 12 2 2 4-4"/>',
   casa: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
   relogio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  // O RAIO É O CAMINHO DA MINERAÇÃO, e ele nasceu em 07/09/2026 com a virada: sem uma
+  // pastilha dizendo por onde a leitura está indo agora, a inversão de prioridade é uma
+  // mudança que só existe do lado de dentro, e ele não tem como conferir se pegou.
+  raio: '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>',
 };
 const ctaIc = n => '<svg viewBox="0 0 24 24">' + (CTA_IC[n] || "") + "</svg>";
 
@@ -15914,6 +15918,11 @@ async function lerAsContas() {
     // resumo nenhum, e a tabela escreve isso em vez de "nenhuma conta cadastrada".
     CTA.contas = Array.isArray(d.contas) ? d.contas : null;
     CTA.ilegivel = !!d.cofre_ilegivel;
+    // POR ONDE A MINERAÇÃO ESTÁ INDO AGORA, e quem decide é a casa, não esta tela. Ela
+    // tem a lista das contas e chama a mesma regra que a esteira do GitHub consulta; aqui
+    // só se lê o veredito. Decidir de novo neste arquivo seria a terceira cópia da mesma
+    // regra, e as duas primeiras já divergiram neste projeto.
+    CTA.caminho = (d.ponta || {}).caminho || null;
     CTA.balcao = d.balcao || null;
     // A CASA DIZ SE TEM O INSTALADOR. Nulo é "ainda não perguntei": o botão só aparece
     // com um sim, e nunca por otimismo.
@@ -16401,8 +16410,22 @@ function desenhaOCadastro() {
             ? "A leitura vai sair de " + escapar(CTA.ponta.endereco) + "."
             : "O endereço ainda não foi medido pela casa."),
           (CTA.ponta || {}).endereco ? "medido" : "não sei")
-      + ctaPas("relogio", "Teto Do Dia", "São seis leituras por conta a cada dia, e o dia "
-          + "vira à meia-noite do seu computador.", "6 cabem")
+      // A PASTILHA DIZIA "TETO DO DIA: SÃO SEIS LEITURAS POR CONTA A CADA DIA", e ela
+      // sobreviveu um dia inteiro ao teto que ela descrevia. Ele leu essa frase na tela em
+      // 06/09/2026 e mandou tirar o teto; o teto saiu do código na mesma tarde e a
+      // promessa ficou aqui, dizendo "6 cabem" sobre um número que não existe mais.
+      //
+      // TELA QUE DESCREVE UMA REGRA MORTA É PIOR QUE TELA MUDA (trava 2): ele leria "6
+      // cabem" e continuaria cadastrando contas para furar um teto que já tinha caído.
+      + ctaPas("relogio", "Sem Teto De Contagem", "Ela lê o quanto aguentar. Quem cuida "
+          + "dela é o vigia: três tropeços numa hora e ela descansa duas, sozinha.",
+          "sem teto")
+      + ctaPas("raio", "O Caminho Da Mineração",
+          (CTA.caminho === "ponta"
+            ? "Os perfis estão sendo lidos por esta conta, do seu endereço. É o caminho "
+              + "principal."
+            : "Enquanto não houver conta pronta, a leitura anônima assume, como reserva."),
+          CTA.caminho === "ponta" ? "por conta" : "anônimo")
       + "</div>"
       + '<div class="cta-jura">' + ctaIc("escudo")
       + "<span><b>Você não faz isto de novo.</b> A sessão é reusada enquanto valer, e o "

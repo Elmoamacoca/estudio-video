@@ -32,6 +32,9 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 import atividade
+# QUEM DECIDE POR ONDE A MINERACAO VAI E' O `rodizio.qual_caminho`, e mais ninguem: a
+# regra escrita duas vezes divergiria (trava 60), e ela ja' divergiu neste projeto.
+import rodizio
 from minerar import (CABECALHO, PASTA, POR_PAGINA, abre_pelo_arroba, limpa_post,
                      pagina_de_reels, grava, vias_do_feed)
 
@@ -284,8 +287,14 @@ def falta_formato(estado: dict, r: dict) -> bool:
     return bool(pedidos - da_epoca)
 
 
-def pendentes(contas: list[str]) -> list[str]:
-    """Perfis que ainda faltam, do menos varrido em proporção para o mais varrido."""
+def pendentes(contas: list[str], caminho: str | None = None) -> list[str]:
+    """Perfis que ainda faltam, do menos varrido em proporção para o mais varrido.
+
+    `caminho` é a resposta do `rodizio.qual_caminho`, e ele muda UMA coisa: quando o
+    anônimo assumiu a mineração (07/09/2026, a virada de prioridade), território
+    reservado à leitura logada deixa de ser reservado. Reservar perfil para quem não está
+    trabalhando é deixá-lo parado, e o anônimo só está aqui porque a ponta não pôde vir.
+    """
     pedidas, quando = releitura_pedida()
     r = regua()
     fila = []
@@ -301,7 +310,14 @@ def pendentes(contas: list[str]) -> list[str]:
         # esta linha excluia o perfil PARA SEMPRE, e ele nunca voltava a fila nem quando a
         # leitura logada deixava de existir. Quem responde essa pergunta e' a marca que a
         # casa escreve, e nao o cofre: a vaga nao enxerga o cofre e nunca vai enxergar.
-        if e.get("so_logado") and not _sem_conta_viva():
+        #
+        # E EM 07/09/2026 A PERGUNTA GANHOU UMA SEGUNDA FONTE. A marca so' aparece quando
+        # as contas MORREM; ela nao diz nada sobre o computador dele estar desligado, que
+        # e' o caso mais comum de a leitura logada nao acontecer. Quando o caminho ja' foi
+        # decidido como anonimo, ele vale sobre a marca: o anonimo assumiu, e assumir pela
+        # metade seria pior do que nao assumir.
+        if e.get("so_logado") and caminho != rodizio.ANONIMO \
+                and not _sem_conta_viva():
             continue
         if e.get("completo"):
             if not quer_reler(c, e, pedidas, quando) and not falta_formato(e, r):
@@ -699,6 +715,68 @@ def _sem_conta_viva() -> bool:
     return bool(ilegivel or (isinstance(marca, dict) and marca.get("parada")))
 
 
+def caminho_da_mineracao() -> tuple:
+    """Por onde a mineração vai AGORA, perguntado à casa. Devolve (caminho, motivo).
+
+    A VIRADA DE 07/09/2026, POR ORDEM DELE: "as contas viram o método principal, e o
+    método anterior fallback". Antes desta função a ordem existia escrita no
+    `rodizio.qual_caminho` desde 04/09, e NINGUÉM a chamava: as provas exercitavam a
+    função solta e a tubulação de verdade seguia com o anônimo na frente. Regra decidida e
+    desligada é pior que regra ausente, porque a prova verde diz que ela está valendo.
+
+    QUEM DECIDE É A CASA, e não esta vaga, porque a lista das contas mora lá. Aqui só se
+    lê o veredito. A rota é aberta, sem bilhete, e não traz conta nenhuma: só o estado da
+    ponta e a palavra `ponta` ou `anonimo`.
+
+    E CASA MUDA NÃO PARA A MINERAÇÃO. Se não deu para perguntar, isso é a falha `rede` do
+    `qual_caminho`, que é falha DE FORA e não da conta: o anônimo assume. Parar a esteira
+    porque um servidor não respondeu deixaria o trabalho parado por um motivo que não tem
+    nada a ver com o Instagram.
+    """
+    endereco = (os.environ.get("ESTUDIO_ENDERECO")
+                or "https://estudio.borusa.com.br").rstrip("/")
+    try:
+        pedido = urllib.request.Request(f"{endereco}/vivo",
+                                        headers={"User-Agent": "estudio-vaga"})
+        with urllib.request.urlopen(pedido, timeout=20) as r:
+            d = json.loads(r.read().decode("utf-8"))
+    except Exception as e:                          # noqa: BLE001 (rede é falha de fora)
+        return rodizio.ANONIMO, (f"não consegui perguntar à casa "
+                                 f"({type(e).__name__}); o anônimo assume")
+    ponta = (d or {}).get("ponta") or {}
+    caminho = ponta.get("caminho")
+    if caminho not in (rodizio.PONTA, rodizio.ANONIMO):
+        # CASA VELHA NÃO PARA A MINERAÇÃO. Enquanto a VPS não subir o código com este
+        # campo, a resposta vem sem ele, e tratar isso como "a ponta está cuidando"
+        # pararia a esteira em cima de um silêncio. Ausente não é sim (trava 3).
+        return rodizio.ANONIMO, ("a casa não disse o caminho (versão antiga); "
+                                 "o anônimo assume")
+    if caminho == rodizio.PONTA:
+        return caminho, (f"a ponta está ligada com {ponta.get('vivas')} conta(s) "
+                         "pronta(s), e ela é o caminho principal")
+    return caminho, ("a ponta não pode minerar agora "
+                     f"(ponta {ponta.get('estado')}, {ponta.get('vivas')} conta(s) "
+                     "pronta(s)); o anônimo assume como reserva")
+
+
+def quantos_faltam() -> int:
+    """Quantos perfis a esteira ANÔNIMA tem para varrer agora. É o número que decide
+    quantas máquinas do GitHub sobem nesta rodada.
+
+    ELA EXISTE PARA A CONTA NÃO SER FEITA DUAS VEZES COM RÉGUAS DIFERENTES. O passo que
+    conta a fila ficava escrito dentro do `esteira.yml`, numa linha de uma linha só, e ele
+    não conhecia a decisão de caminho: com a ponta minerando, ele contaria os perfis
+    inteiros e subiria vinte máquinas para todas saírem em seguida sem varrer nada.
+
+    Zero aqui é resposta legítima, e o `esteira.yml` já sabe não subir vaga nenhuma com
+    ela: é o mesmo caminho de "todos os perfis já estão completos".
+    """
+    caminho, _ = caminho_da_mineracao()
+    if caminho == rodizio.PONTA:
+        return 0
+    return len(pendentes(contas_pedidas(), caminho))
+
+
 def marca_das_contas() -> tuple:
     """A marca de que nao ha' conta descartavel viva. Devolve (marca, ilegivel).
 
@@ -737,12 +815,25 @@ def main() -> int:
                  else str(marca.get("por_que") or "nenhuma conta descartavel viva")))
         return 0
 
+    # E ENTAO A PERGUNTA DA VIRADA (07/09/2026): a leitura logada esta' cuidando disto?
+    #
+    # ELA VEM DEPOIS DA MARCA DE PARADA porque as duas respondem coisas diferentes. A
+    # marca diz "as contas morreram, para ate' eu repor", que e' ordem dele e vale sobre
+    # tudo. Esta diz "a ponta esta' de pe' e trabalhando", e o que ela pede nao e' parar:
+    # e' SAIR DA FRENTE. O anonimo continua existindo, e continua sendo quem varre quando
+    # o computador dele esta' desligado, sem rede, ou sem conta que possa ler.
+    caminho, por_que = caminho_da_mineracao()
+    if caminho == rodizio.PONTA:
+        print("a vaga anonima nao varre nesta rodada: " + por_que)
+        return 0
+    print("caminho desta rodada: anonimo. " + por_que)
+
     contas = contas_pedidas()
     if not contas:
         print("nenhuma conta de origem cadastrada")
         return 0
 
-    fila = pendentes(contas)
+    fila = pendentes(contas, caminho)
     if not fila:
         print("todos os perfis já estão completos")
         return 0
