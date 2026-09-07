@@ -1,5 +1,10 @@
 {
  "dia": "2026-09-07",
  "tentativas": 0,
- "perfis": {}
+ "perfis": {
+  "ratosdeia": {
+   "prova": 0,
+   "paradas": 0
+  }
+ }
 }
