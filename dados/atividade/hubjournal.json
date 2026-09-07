@@ -79,6 +79,17 @@
     "arroba": 200,
     "media_count": 1037
    }
+  },
+  {
+   "quando": 1788761791,
+   "tipo": "casa",
+   "gravidade": "aviso",
+   "texto": "Não Consegui Abrir Logado Nesta Passagem (HTTP 429). Tento De Novo Na Próxima",
+   "caminho": "ponta",
+   "detalhe": {
+    "arroba": 429,
+    "media_count": 1037
+   }
   }
  ]
 }
