@@ -307,6 +307,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@jackroberts___",
+   "indice": 15.48,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@ratosdeia",
    "indice": 15.34,
    "etapa": "carrossel",
@@ -353,13 +359,7 @@
    "indice": 13.3,
    "etapa": "carrossel",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 13.03,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1788788069
+ "atualizado": 1788795630
 }

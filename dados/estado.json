@@ -1,7 +1,7 @@
 {
  "prontas": 500,
- "avaliados": 1205,
- "ultima_rodada": 1788788069,
+ "avaliados": 1234,
+ "ultima_rodada": 1788795630,
  "perfis": [
   {
    "conta": "castilho.ia",
@@ -22,7 +22,7 @@
    "carrosseis": 330,
    "acima": 330,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 194,
+   "carrosseis_baixaveis": 186,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -47,6 +47,30 @@
    "acima": 102,
    "baixaveis": 0,
    "carrosseis_baixaveis": 69,
+   "baixados": 0,
+   "reprovados": 0,
+   "restam": 0
+  },
+  {
+   "conta": "jackroberts___",
+   "nome": "Jack Roberts",
+   "avatar": null,
+   "seguidores": null,
+   "mercado": null,
+   "etiquetas": [],
+   "atualizado": 1788795608,
+   "publicacoes": null,
+   "lidos": 29,
+   "completo": true,
+   "relendo": false,
+   "mais_antigo": 1719610438,
+   "mais_novo": 1788789787,
+   "reels": 0,
+   "imagens": 0,
+   "carrosseis": 29,
+   "acima": 29,
+   "baixaveis": 0,
+   "carrosseis_baixaveis": 18,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -94,7 +118,7 @@
    "carrosseis": 48,
    "acima": 48,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 31,
+   "carrosseis_baixaveis": 29,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -118,7 +142,7 @@
    "carrosseis": 160,
    "acima": 160,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 86,
+   "carrosseis_baixaveis": 84,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -142,7 +166,7 @@
    "carrosseis": 69,
    "acima": 69,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 45,
+   "carrosseis_baixaveis": 41,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0
@@ -166,7 +190,7 @@
    "carrosseis": 496,
    "acima": 496,
    "baixaveis": 0,
-   "carrosseis_baixaveis": 75,
+   "carrosseis_baixaveis": 73,
    "baixados": 0,
    "reprovados": 0,
    "restam": 0

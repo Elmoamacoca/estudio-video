@@ -2,13 +2,14 @@
  "contas": [
   {
    "conta": "jackroberts___",
-   "primeiro": 1788795611,
    "nome": "Jack Roberts",
-   "ultimo": 1788795611,
-   "eventos": 1,
+   "rotulo": "carrosséis",
+   "primeiro": 1788795611,
+   "ultimo": 1788795629,
+   "eventos": 3,
    "falhas": 0,
    "avisos": 0,
-   "ultimo_tipo": "casa",
+   "ultimo_tipo": "concluido",
    "lidos": 29,
    "publicacoes": 0,
    "completo": true
@@ -112,5 +113,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788795614
+ "atualizado": 1788795630
 }
