@@ -79,9 +79,21 @@ POR_PASSAGEM = 4
 PAUSA_PAGINA = (2.5, 4.5)
 PAUSA_CONTA = (15.0, 25.0)
 
-# OS TRES SINAIS DE BLOQUEIO, nomeados. "Parece bloqueada" nao e' criterio: ou o Instagram
-# respondeu uma destas tres coisas, ou a conta continua boa.
-SINAIS_DE_BLOQUEIO = (429, 403)
+# OS SINAIS DE BLOQUEIO, nomeados. "Parece bloqueada" nao e' criterio: ou o Instagram
+# respondeu uma destas coisas, ou a conta continua boa.
+#
+# O 429 SAIU DAQUI EM 07/09/2026, E ELE ERA O QUE ESTAVA MATANDO AS CONTAS DELE.
+#
+# 429 QUER DIZER "VA MAIS DEVAGAR", e nao "voce esta' bloqueado". Esta lista aposentava a
+# conta no PRIMEIRO 429, para sempre, e o guarda dela roda ANTES do vigia: a conta nunca
+# chegava a tropecar, ir de molho e voltar. Na madrugada de 07/09 ele cadastrou tres contas
+# seguidas e as tres foram dadas como mortas em minutos, sendo que o Instagram so' tinha
+# pedido ritmo. Quem estava aposentando as contas era esta linha, e nao o Instagram.
+#
+# E ELE JA' ESTAVA NO LUGAR CERTO: o `e_tropeco` trata 429 como tropeco desde 06/09, e tres
+# tropecos numa hora poem a conta de molho por duas horas, sozinha, com volta automatica.
+# Era exatamente para isso que o vigia foi construido, e este `429` aqui o atropelava.
+SINAIS_DE_BLOQUEIO = (403,)
 PAGINA_DE_VERIFICACAO = "challenge_required"
 
 # A MARCA DE QUE NAO HA' CONTA VIVA, escrita pela casa no acervo e lida pela vaga antes de
