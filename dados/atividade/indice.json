@@ -5,11 +5,11 @@
    "nome": null,
    "rotulo": "carrosséis",
    "primeiro": 1788787177,
-   "ultimo": 1788787189,
-   "eventos": 2,
+   "ultimo": 1788787568,
+   "eventos": 3,
    "falhas": 0,
    "avisos": 2,
-   "ultimo_tipo": "aguardando"
+   "ultimo_tipo": "casa"
   },
   {
    "conta": "hubjournal",
@@ -96,5 +96,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788787216
+ "atualizado": 1788787569
 }
