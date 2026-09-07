@@ -1,32 +1,32 @@
 {
  "contas": [
   {
-   "conta": "thaleslaray",
-   "nome": "Thales Laray",
+   "conta": "hubjournal",
+   "nome": "Hub Journal",
    "rotulo": "carrosséis",
-   "primeiro": 1788775164,
-   "ultimo": 1788776402,
-   "eventos": 4,
-   "falhas": 1,
-   "avisos": 1,
-   "ultimo_tipo": "casa",
-   "tentativas_id": 10,
-   "lidos": 185,
+   "primeiro": 1788759169,
+   "ultimo": 1788786374,
+   "eventos": 20,
+   "falhas": 0,
+   "avisos": 2,
+   "ultimo_tipo": "varredura",
+   "lidos": 102,
    "publicacoes": 0,
    "completo": true
   },
   {
-   "conta": "hubjournal",
-   "nome": "Hub Journal",
-   "rotulo": "reels",
-   "primeiro": 1788759169,
-   "ultimo": 1788776002,
-   "eventos": 18,
-   "falhas": 0,
-   "avisos": 2,
-   "ultimo_tipo": "casa",
-   "lidos": 109,
-   "publicacoes": 1037,
+   "conta": "thaleslaray",
+   "nome": "Thales Laray",
+   "rotulo": "carrosséis",
+   "primeiro": 1788775164,
+   "ultimo": 1788786374,
+   "eventos": 6,
+   "falhas": 1,
+   "avisos": 1,
+   "ultimo_tipo": "concluido",
+   "tentativas_id": 10,
+   "lidos": 185,
+   "publicacoes": 0,
    "completo": true
   },
   {
@@ -100,5 +100,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788776404
+ "atualizado": 1788786374
 }

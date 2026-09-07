@@ -42,6 +42,29 @@
     "arroba": 200,
     "media_count": 0
    }
+  },
+  {
+   "quando": 1788776397,
+   "tipo": "identificado",
+   "gravidade": "evento",
+   "texto": "Perfil aberto no Instagram: 185 posts na primeira leitura",
+   "caminho": "anonimo",
+   "detalhe": {
+    "publicacoes": null,
+    "seguidores": null,
+    "total": 185
+   }
+  },
+  {
+   "quando": 1788786374,
+   "tipo": "concluido",
+   "gravidade": "evento",
+   "texto": "Acabaram os carrosséis deste perfil: 185 no total",
+   "caminho": "anonimo",
+   "detalhe": {
+    "total": 185,
+    "publicacoes": 0
+   }
   }
  ],
  "tentativas_id": 10

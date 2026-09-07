@@ -151,6 +151,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@hubjournal",
+   "indice": 30.67,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@castilho.ia",
    "indice": 30.66,
    "etapa": "carrossel",
@@ -217,6 +223,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@hubjournal",
+   "indice": 20.33,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@omatheusdaia",
    "indice": 19.36,
    "etapa": "carrossel",
@@ -225,6 +237,12 @@
   {
    "origem": "@castilho.ia",
    "indice": 19.06,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@hubjournal",
+   "indice": 19.0,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -253,6 +271,12 @@
    "situacao": "selecionada"
   },
   {
+   "origem": "@hubjournal",
+   "indice": 16.67,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
    "origem": "@castilho.ia",
    "indice": 16.66,
    "etapa": "carrossel",
@@ -273,6 +297,12 @@
   {
    "origem": "@ratosdeia",
    "indice": 15.34,
+   "etapa": "carrossel",
+   "situacao": "selecionada"
+  },
+  {
+   "origem": "@hubjournal",
+   "indice": 15.0,
    "etapa": "carrossel",
    "situacao": "selecionada"
   },
@@ -329,37 +359,7 @@
    "indice": 12.11,
    "etapa": "carrossel",
    "situacao": "selecionada"
-  },
-  {
-   "origem": "@castilho.ia",
-   "indice": 11.83,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@castilho.ia",
-   "indice": 11.71,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 11.56,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 11.23,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
-  },
-  {
-   "origem": "@omatheusdaia",
-   "indice": 11.19,
-   "etapa": "carrossel",
-   "situacao": "selecionada"
   }
  ],
- "atualizado": 1788775518
+ "atualizado": 1788786374
 }
