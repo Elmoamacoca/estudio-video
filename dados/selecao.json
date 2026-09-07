@@ -239,8 +239,10 @@
    "nome": "Thales Laray",
    "avatar": null,
    "seguidores": null,
-   "mercado": null,
-   "etiquetas": [],
+   "mercado": "luxo",
+   "etiquetas": [
+    "referencia"
+   ],
    "atualizado": 1788788042,
    "publicacoes": null,
    "lidos": 496,
