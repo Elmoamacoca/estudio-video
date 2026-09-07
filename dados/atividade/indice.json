@@ -4,10 +4,10 @@
    "conta": "thaleslaray",
    "nome": null,
    "primeiro": 1788787177,
-   "ultimo": 1788787177,
-   "eventos": 1,
+   "ultimo": 1788787189,
+   "eventos": 2,
    "falhas": 0,
-   "avisos": 1,
+   "avisos": 2,
    "ultimo_tipo": "aguardando",
    "lidos": 0,
    "publicacoes": 0,
@@ -98,5 +98,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788787179
+ "atualizado": 1788787193
 }
