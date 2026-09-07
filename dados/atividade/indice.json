@@ -5,8 +5,8 @@
    "nome": null,
    "rotulo": "carrosséis",
    "primeiro": 1788787177,
-   "ultimo": 1788787568,
-   "eventos": 3,
+   "ultimo": 1788787855,
+   "eventos": 4,
    "falhas": 0,
    "avisos": 2,
    "ultimo_tipo": "casa"
@@ -96,5 +96,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788787588
+ "atualizado": 1788787856
 }
