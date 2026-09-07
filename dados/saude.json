@@ -50,7 +50,13 @@
    "origem": "resgate",
    "gravidade": "aviso",
    "texto": "O Resgate Em Casa Está Esperando A Conta Descartável: Entre No Instagram No Navegador E Rode 'python casa.py --entrar' Uma Vez"
+  },
+  {
+   "quando": 1788775765,
+   "origem": "resgate",
+   "gravidade": "aviso",
+   "texto": "A Leitura Logada Está Indo Pelo Caminho De Reserva: Falta O Cliente Que Imita O Navegador. Ela Funciona, E Corre Mais Risco De A Conta Ser Bloqueada"
   }
  ],
- "atualizado": 1788775747
+ "atualizado": 1788775765
 }
