@@ -32,6 +32,11 @@
    "quando": 1788802163,
    "tipo": "preparo",
    "texto": "Ferramenta de vídeo pronta. Começando o tratamento."
+  },
+  {
+   "quando": 1788802165,
+   "tipo": "tratando",
+   "texto": "1 de 24 tratados."
   }
  ]
 }
