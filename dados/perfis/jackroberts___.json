@@ -6,7 +6,9 @@
   "seguidores": null,
   "publicacoes": null,
   "privado": null,
-  "avatar": null
+  "avatar": null,
+  "mercado": "luxo",
+  "etiquetas": []
  },
  "posts": [
   {
