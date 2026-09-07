@@ -748,9 +748,13 @@ a.acao{display:inline-flex;align-items:center;justify-content:center;
 .cfg-duas{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
 .cfg-duas > .caixa{display:flex;flex-direction:column;align-self:stretch;padding:16px}
 .cfg-duas > .caixa > .cfg-cat{flex:1}
-.cfg-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+/* O CABEÇALHO DA CAIXA QUEBRA EM VEZ DE CORTAR (07/09/2026). Em "As Chaves" o título
+   mais a contagem mais o saldo passavam da largura, e o último saía pela borda direita
+   pela metade: "US$ 4,44 liv". Cortar número é pior que descer uma linha. */
+.cfg-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .cfg-topo h3{margin:0;font-size:14px;font-weight:700}
-.cfg-topo .dir{margin-left:auto;display:flex;align-items:center;gap:8px}
+.cfg-topo .dir{margin-left:auto;display:flex;align-items:center;gap:8px;
+  flex-wrap:wrap;justify-content:flex-end}
 .cfg-cat-conta{font-size:11.5px;color:var(--muted);white-space:nowrap}
 .cfg-cat{display:flex;flex-direction:column;gap:0}
 .cfg-cat-lista{flex:1;min-height:0}
@@ -4674,3 +4678,234 @@ body.aj-arrastando .aj-gaveta{transition:none}
   .dp-par{grid-template-columns:1fr}
   .pn{grid-template-columns:1fr}
 }
+
+
+/* ==================================================== A ESCADA DA MINERAÇÃO (07/09/2026)
+
+   A PROPOSTA C, aprovada por ele no navegador. Ela ganhou das outras duas porque a ordem
+   dos caminhos vira um OBJETO que se pega com a mão: essa é a decisão mais importante
+   desta aba, e arrastar diz o que um campo de número não diz.
+
+   NADA AQUI É COR NOVA. O verde é o `--accent` de sempre, e ele aparece em dose mínima:
+   o degrau que está minerando e o anel de quem tem folga. O resto é neutro, que é a
+   regra da casa desde a maquete do rastreamento. */
+
+.pri{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pri-c{position:relative;display:flex;flex-direction:column;gap:10px;padding:16px;
+  border:1px solid var(--rule-solid);border-radius:16px;background:var(--branco);
+  cursor:grab;transition:.18s;box-shadow:var(--sombra)}
+.pri-c:active{cursor:grabbing}
+.pri-c.arrastando{opacity:.35}
+.pri-c.alvo{border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.pri-c.off{background:var(--paper);box-shadow:none;opacity:.66}
+.pri-t{display:flex;align-items:center;gap:10px}
+.pri-n{width:26px;height:26px;flex:0 0 26px;border-radius:8px;display:flex;
+  align-items:center;justify-content:center;font-size:13px;font-weight:800;
+  background:var(--paper-2);color:var(--muted);font-variant-numeric:tabular-nums}
+.pri-c.on .pri-n{background:var(--accent);color:#fff}
+.pri-t b{font-size:14.5px;font-weight:750;letter-spacing:-.2px;flex:1}
+.pri-p{font-size:12px;color:var(--muted);line-height:1.5;min-height:36px}
+/* A MEDIDA DO DEGRAU: quantas chaves com saldo, quantas contas prontas, ou o motivo de
+   não poder. Ela é a resposta da pergunta que ele faz olhando, então tem linha inteira. */
+.pri-m{font-size:12px;line-height:1.45;color:var(--ink);opacity:.85;margin-top:-2px}
+.pri-c.off .pri-m{color:var(--muted);opacity:1}
+.pri-pe{display:flex;align-items:center;gap:8px;padding-top:10px;
+  border-top:1px solid var(--rule-solid)}
+.pri-pe .itr{margin-left:auto}
+/* NENHUM SELO DESTA ABA QUEBRA EM DUAS LINHAS. "não pode agora" virava três palavras
+   empilhadas dentro da pílula, e "em uso" saía como "em" sobre "uso": duas palavras
+   curtas empilhadas parecem defeito de renderização, e não estado do sistema. */
+.pri-pe .cfg-selo,.fic-a .cfg-selo{white-space:nowrap}
+/* O NOME DE QUEM ESTÁ MINERANDO, no lugar onde havia uma barra cheia que não media nada. */
+.cfgv-quem{font-size:19px;font-weight:750;letter-spacing:-.4px;line-height:1.15}
+/* A PEGA É O ÚNICO ENFEITE, e ela não é enfeite: é o que diz que o cartão se arrasta.
+   Sem ela, arrastar é um segredo que só quem escreveu a tela conhece. */
+.pri-pega{display:flex;flex-direction:column;gap:2px;opacity:.4}
+.pri-pega i{display:block;width:12px;height:2px;border-radius:2px;background:currentColor}
+.pri-diz{margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.55}
+.pri-diz b{color:var(--ink);font-weight:700}
+
+/* O INTERRUPTOR: pílula que desliza, e não caixa de marcar. Caixa de marcar é formulário;
+   isto liga e desliga um caminho na hora, e o gesto tem de dizer isso. */
+.itr{width:40px;height:23px;flex:0 0 40px;border-radius:999px;border:1px solid
+  var(--rule-solid);background:var(--paper-2);position:relative;cursor:pointer;
+  transition:.18s;padding:0}
+.itr::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;
+  border-radius:50%;background:var(--branco);box-shadow:0 1px 3px rgba(0,0,0,.22);
+  transition:.18s}
+.itr.on{background:var(--accent);border-color:var(--accent)}
+.itr.on::after{left:20px}
+.itr:disabled{opacity:.45;cursor:not-allowed}
+
+/* A FICHA DE UMA CHAVE DA APIFY, com o anel de consumo.
+
+   TRÊS NÚMEROS COM RÓTULO AO LADO DE UM ANEL DE 74 pedem mais que 268 de largura: com
+   uma chave só, o cartão saía com o anel colado nos valores e o apelido cortado cedo
+   demais. 320 é a medida em que "Teto Do Plano" e o valor cabem na mesma linha sem
+   aperto, e ainda entram três cartões numa tela de 1400. */
+.fic{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.fic-c{display:flex;flex-direction:column;gap:13px;padding:17px;border-radius:16px;
+  border:1px solid var(--rule-solid);background:var(--branco);box-shadow:var(--sombra);
+  transition:.18s}
+.fic-c.on{border-color:color-mix(in srgb,var(--accent) 45%,var(--rule-solid))}
+.fic-c.fim{background:color-mix(in srgb,var(--vermelho) 3%,var(--branco))}
+.fic-c.esperando{opacity:.5}
+/* O APELIDO CABE OU CORTA COM RETICÊNCIAS, e nunca empurra o selo (07/09/2026).
+   Ele cadastrou a primeira chave com o e-mail inteiro como apelido, e o nome atravessou
+   o cartão e espremeu o "em uso" contra a borda. O culpado é a regra de sempre: item de
+   `flex` nasce com `min-width:auto`, então ele se recusa a encolher abaixo do próprio
+   texto e empurra o vizinho para fora. */
+.fic-t{display:flex;align-items:flex-start;gap:11px}
+.fic-t > div:first-child{flex:1;min-width:0}
+.fic-t b{font-size:14.5px;font-weight:750;letter-spacing:-.2px;display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fic-t span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;
+  font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* O SELO NÃO QUEBRA EM DUAS LINHAS. "em uso" virou "em / uso" empilhado assim que o
+   apelido comprido apertou a linha: o `.cfg-selo` do molde não tem `nowrap`, e duas
+   palavras curtas empilhadas parecem defeito de renderização, não estado. */
+.fic-t .cfg-selo{margin-left:auto;flex-shrink:0;white-space:nowrap}
+.fic-m{display:flex;align-items:center;gap:15px}
+.fic-anel{position:relative;width:74px;height:74px;flex:0 0 74px}
+.fic-anel svg{transform:rotate(-90deg)}
+.fic-anel circle{fill:none;stroke-width:7;stroke-linecap:round}
+/* O TRILHO PRECISA APARECER NO ESCURO. Com `--paper-2` ele fica quase da cor do cartão,
+   e o anel vira um risco verde solto no ar: sem o círculo de trás não dá para ver que
+   11% é uma fatia de um inteiro, que é a única coisa que este desenho existe para dizer. */
+.fic-anel .trilho{stroke:color-mix(in srgb,var(--ink) 12%,transparent)}
+.fic-anel .arco{stroke:var(--verde);
+  transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1)}
+.fic-anel .arco.meio{stroke:var(--ambar)}
+.fic-anel .arco.ruim{stroke:var(--vermelho)}
+/* O ANEL SEM MEDIÇÃO É TRACEJADO, e não vazio: vazio se lê como "zero gasto", e zero
+   gasto é uma afirmação. Tracejado se lê como "ainda não perguntei", que é a verdade. */
+.fic-anel .arco.nulo{stroke:var(--soft);stroke-dasharray:3 6;opacity:.6}
+.fic-anel u{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-size:15px;font-weight:750;text-decoration:none;
+  letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+.fic-anel u.fraco{font-size:11px;color:var(--muted);font-weight:600}
+.fic-d{flex:1;min-width:0}
+.fic-d div{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  padding:4px 0;font-size:12.5px}
+.fic-d div span{color:var(--muted)}
+.fic-d div b{font-weight:700;font-variant-numeric:tabular-nums}
+.fic-a{display:flex;align-items:center;gap:7px;padding-top:12px;
+  border-top:1px solid var(--rule-solid)}
+.fic-a .ses-x{margin-left:auto}
+.fic-nova{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;min-height:210px;border:1.5px dashed var(--rule-solid);border-radius:16px;
+  background:none;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;
+  transition:.18s}
+.fic-nova:hover{border-color:var(--accent);color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 4%,transparent)}
+.fic-nova i{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;border:1.5px solid currentColor;font-style:normal;font-size:19px}
+
+/* AS PEÇAS EMPRESTADAS DA SUB-ABA DE CONTAS DO SOCIAL TRACKER. Elas já existem lá e são
+   as mesmas aqui: botão pequeno de linha, xis de apagar e a linha de recado. Redesenhar
+   um botão de 30 pixels para esta aba faria dois botões pequenos nesta casa. */
+.ses-btn{height:30px;padding:0 12px;font:inherit;font-size:12.5px;font-weight:600;
+  color:var(--muted);background:var(--branco);border:1px solid var(--rule-solid);
+  border-radius:8px;cursor:pointer;transition:.16s}
+.ses-btn:hover{border-color:var(--ink);color:var(--ink)}
+.ses-btn:disabled,.ses-x:disabled{opacity:.4;cursor:default}
+.ses-x{width:28px;height:28px;padding:0;display:flex;align-items:center;
+  justify-content:center;color:var(--soft);background:none;border:0;border-radius:8px;
+  cursor:pointer;transition:.16s}
+.ses-x:hover{background:color-mix(in srgb,var(--vermelho) 12%,transparent);
+  color:var(--vermelho)}
+.ses-x svg{width:15px;height:15px}
+.ses-diz{margin-top:12px;font-size:12.5px;line-height:1.5;color:var(--soft)}
+.ses-diz:empty{display:none}
+.ses-diz.ruim{color:var(--vermelho)}
+.ses-diz.bom{color:var(--verde)}
+
+/* A LINHA DO TEMPO do que acabou de acontecer na mineração. */
+.lt{display:flex;flex-direction:column}
+.lt-l{display:flex;gap:13px;padding:11px 0;border-top:1px solid var(--rule-solid);
+  font-size:13px}
+.lt-l:first-child{border-top:0}
+.lt-h{flex:0 0 64px;color:var(--muted);font-size:12px;
+  font-variant-numeric:tabular-nums;padding-top:1px}
+.lt-p{flex:0 0 9px;position:relative}
+.lt-p i{position:absolute;left:1px;top:6px;width:7px;height:7px;border-radius:50%;
+  background:var(--verde)}
+.lt-p i.meio{background:var(--ambar)}
+.lt-p i.ruim{background:var(--vermelho)}
+.lt-t{flex:1;line-height:1.5}
+.lt-t b{font-weight:700}
+.lt-t span{color:var(--muted)}
+.lt-vazia{padding:20px 0;font-size:13px;color:var(--muted)}
+
+/* OS MEDIDORES DA PÁGINA DA ESCADA, no molde dos da aba de Configurações do irmão. */
+.cfgv-folga{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.cfgv-folga.cfg-folga-2{grid-template-columns:repeat(2,1fr)}
+.cfgv-medidor .cfgv-topo{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.cfgv-medidor .cfgv-topo b{font-size:13px;font-weight:700}
+.cfgv-medidor .cfgv-pct{margin-left:auto;font-size:12.5px;font-weight:700;
+  font-variant-numeric:tabular-nums}
+.cfgv-mini{height:6px;border-radius:999px;background:var(--paper-2);overflow:hidden}
+.cfgv-mini i{display:block;height:100%;border-radius:999px;background:var(--verde);
+  transition:width .5s cubic-bezier(.22,1,.36,1)}
+.cfgv-mini i.cfg-meio{background:var(--ambar)}
+.cfgv-mini i.cfg-ruim{background:var(--vermelho)}
+.cfgv-medidor .cfg-nota{margin-top:8px}
+
+/* O CAMPO DO TETO É DINHEIRO, e não um contador de setinhas. As setas do `number` comem
+   um terço da largura útil, empurram o valor para o meio e transformam "quanto pode sair
+   do bolso" em algo que se ajusta de um em um dólar. O valor continua sendo número (o
+   navegador ainda valida e o teclado do celular abre no numérico), só sem os botões. */
+.cfg-linha input[type=number]{-moz-appearance:textfield;font-variant-numeric:tabular-nums;
+  font-weight:700;padding-right:11px}
+.cfg-linha input[type=number]::-webkit-outer-spin-button,
+.cfg-linha input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+/* E O CIFRÃO ANDA COLADO NO CAMPO, e não solto a doze pixels dele. Separado, ele se lê
+   como uma palavra da frase de cima em vez de rótulo da caixa. */
+.cfg-linha .dir > .nota{margin-right:-4px}
+
+/* A TELA ESTREITA: a escada vira uma coluna. Três cartões de 16 de recuo não cabem lado
+   a lado abaixo de 1080 sem o texto de cada um virar duas palavras por linha. */
+@media(max-width:1080px){
+  .pri{grid-template-columns:1fr}
+  .cfgv-folga,.cfgv-folga.cfg-folga-2{grid-template-columns:1fr}
+}
+
+
+/* ============================= OS PASSOS DA MINERAÇÃO, AO VIVO (07/09/2026)
+
+   Elas vivem dentro da konsole do Registro Ao Vivo, logo abaixo do cabeçalho. Antes deste
+   bloco, aquele espaço mostrava as vinte máquinas do GitHub, que é o terceiro caminho da
+   escada e não lê nada desde 03 de setembro: ele abria o mostrador e via "Esteira parada"
+   enquanto duas varreduras completas aconteciam na casa.
+
+   TRÊS ESTADOS, TRÊS DESENHOS, e é o mesmo vocabulário de cor do resto da casa: em curso
+   pulsa em âmbar, passou é verde, falhou é vermelho. Nada de cor nova. */
+.kon-passos{display:flex;flex-direction:column;border-top:1px solid var(--rule-solid)}
+/* O DESLIGA VEM JUNTO COM O LIGA. A lista nasce com `hidden` no molde, e `display:flex`
+   escrito sem par vence o `hidden` do navegador: sem esta linha a moldura vazia ficava de
+   pé antes do primeiro passo chegar. É a mesma dupla da `.kon-maquinas`, que mora no
+   mesmo mostrador e já tinha aprendido isso. */
+.kon-passos[hidden]{display:none}
+.kon-passo{display:flex;align-items:center;gap:11px;padding:10px 16px;
+  border-top:1px solid var(--rule-solid);font-size:13px}
+.kon-passo:first-child{border-top:0}
+.kon-pt{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--soft)}
+.kon-passo.passou .kon-pt{background:var(--verde)}
+.kon-passo.falhou .kon-pt{background:var(--vermelho)}
+/* O PULSO É SÓ DO QUE ESTÁ ACONTECENDO AGORA. Um ponto piscando ao lado de um trabalho
+   que já terminou é o tipo de sinal que ensina a ignorar sinal. */
+.kon-passo.em_curso .kon-pt{background:var(--ambar);
+  animation:kon-pulsa 1.6s ease-in-out infinite}
+@keyframes kon-pulsa{
+  0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ambar) 55%,transparent)}
+  60%{box-shadow:0 0 0 6px color-mix(in srgb,var(--ambar) 0%,transparent)}
+}
+@media(prefers-reduced-motion:reduce){.kon-passo.em_curso .kon-pt{animation:none}}
+.kon-quem2{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.kon-quem2 b{font-size:13px;font-weight:700;letter-spacing:-.1px}
+.kon-quem2 span{font-size:12px;color:var(--muted);line-height:1.4;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kon-meta{flex:0 0 auto;font-size:11.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums;white-space:nowrap}

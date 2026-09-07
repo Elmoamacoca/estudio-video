@@ -70,6 +70,20 @@ function irPara(chave, empurrar) {
   // tinha o que ver. Aqui ele rearma, e a trava da primeira tela garante
   // que o que ja esta' visivel apareca sem esperar animacao.
   if (typeof revelar === "function") revelar();
+  // ENTRAR NA ABA DE CONFIGURAÇÕES DESENHA A PÁGINA QUE ESTÁ ABERTA (07/09/2026).
+  //
+  // O DEFEITO QUE ISTO FECHA: cada página daquela aba desenha dentro do `irParaCfg`, que
+  // só roda no clique de um item do MENU LATERAL. Entrar na aba pelo cabeçalho, ou pelo
+  // endereço com `#config`, deixava a primeira página em branco até ele clicar num item e
+  // voltar. Não incomodava enquanto a primeira era a da IA, que nasce escrita no molde;
+  // com a escada da mineração na frente, a aba abria vazia.
+  //
+  // A CHAMADA É A MESMA DO CLIQUE, e não um segundo desenho: um desenho de abertura
+  // escrito à parte divergiria do outro no dia em que uma página ganhasse um bloco novo.
+  if (chave === "config" && typeof irParaCfg === "function") {
+    const viva = document.querySelector("#aba-config .cfg-pagina.cfg-ativa");
+    if (viva) irParaCfg(viva.dataset.pg);
+  }
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 document.addEventListener("click", ev => {
@@ -836,6 +850,9 @@ let CARR_PAGINA = 1;
 let CARR_LISTA = [];
 /* O QUE O DISCO DIZ, e não o que a aba lembra: os pacotes por perfil e o arquivo único.
    Os dois sobrevivem ao F5 porque vêm do posto, e é dali que sai o rótulo dos botões. */
+// A ÚLTIMA LEITURA DO ACERVO FALHOU? Ela mora fora da função porque três blocos
+// diferentes da aba precisam distinguir "vazio" de "não sei".
+let LEITURA_FALHOU_AGORA = false;
 let CARR_PACOTES = {};
 let CARR_LOTE = null;
 
@@ -874,7 +891,7 @@ function carrosseisDosPerfis(perfis) {
   return { lista, jaContou, houvePerfil };
 }
 
-function desenhaCarrossel(perfis) {
+async function desenhaCarrossel(perfis) {
   const caixa = $("cx_carrossel");
   if (!caixa) return;
   const { lista, jaContou, houvePerfil } = carrosseisDosPerfis(perfis);
@@ -907,6 +924,41 @@ function desenhaCarrossel(perfis) {
        verdade viajaria escondida no próximo pedido, e o posto recusaria o lote por causa
        de um arroba que a tela não mostra mais. */
     CARR_LISTA = [];
+    /* MAS O PACOTE QUE JÁ ESTÁ NO DISCO NÃO SOME COM A FILEIRA (07/09/2026, auditoria).
+
+       O `return` daqui pulava a ÚNICA chamada de `acharPacoteNoDisco()` do caminho
+       normal, e é ela quem desenha o pé com o botão Baixar O Arquivo Único, que nasce
+       escondido no molde. Efeito medido: bastava a régua daquele momento não contar
+       carrossel para o cartão inteiro sumir e levar junto um pacote pronto, montado e
+       pago, que continuava lá no disco. Ele apertava Montar, saía da aba, voltava, e não
+       havia mais nada na tela.
+
+       ENTÃO PERGUNTA-SE AO DISCO ANTES DE ESCONDER. Se houver pacote, o cartão fica de
+       pé, com a tabela vazia dizendo por quê. */
+    /* E O PACOTE JÁ MONTADO NÃO SOME COM A FILEIRA. Mas a pergunta ao disco é
+       ASSÍNCRONA, e a primeira versão deste conserto lia `CARR_PACOTES` no mesmo
+       instante em que disparava a busca: na primeira pintura depois do F5 as duas
+       variáveis ainda valem vazio, a condição dava falso, e o cartão sumia com o pacote
+       dentro do mesmo jeito. O conserto não consertava, e só passou no meu teste porque
+       eu tinha preenchido os dados à mão.
+
+       ENTÃO ESPERA-SE A RESPOSTA. Quem chama esta função não usa o retorno dela, então o
+       `await` aqui não segura ninguém: ele só adia a decisão de esconder até haver o que
+       decidir. */
+    if (!CARR_VIGIA.relogio) await acharPacoteNoDisco();
+    // O DESENHO VELHO SAI DA MEMÓRIA quando a lista esvazia. O `desenhaOsCartoes` decide
+    // redesenhar comparando com `dataset.desenho`, e sem esta limpeza ele comparava o
+    // recado novo com o HTML das linhas de antes e podia deixar a tabela velha na tela.
+    const corpo = $("carr_perfis");
+    if (corpo) delete corpo.dataset.desenho;
+    // `CARR_PACOTES` E' UM OBJETO POR PERFIL, e nao um array: `.length` daria `undefined`
+    // e a condicao nunca valeria. E' o tipo de engano que so' aparece na tela, calado.
+    if (Object.keys(CARR_PACOTES || {}).length || CARR_LOTE) {
+      caixa.hidden = false;
+      // O RECADO DA TABELA VAZIA MORA NO `desenhaOsCartoes`, e é ele quem o escreve: aqui
+      // ele seria apagado pelo redesenho que a própria busca ao disco dispara.
+      desenhaOsCartoes();
+    }
     return;
   }
   CARR_LISTA = lista;
@@ -993,6 +1045,40 @@ function desenhaOsCartoes() {
   const vazio = CARR_FILTRO !== "todos" || CARR_BUSCA
     ? `<tr><td colspan="5" class="carr-nada">Nenhum perfil passa no que está marcado
        acima. Tire o filtro ou a procura para ver os ${num(CARR_LISTA.length)}.</td></tr>`
+    /* SEM PERFIL NENHUM, MAS COM PACOTE NO DISCO, a tabela explica por que está vazia
+       (07/09/2026, por revisão adversarial do próprio conserto).
+
+       A PRIMEIRA VERSÃO ESCREVIA ISTO DE FORA, lá no `desenhaCarrossel`, e era uma
+       corrida perdida de antemão: quem manda neste `<tbody>` é esta função, e ela chega
+       cem milissegundos depois, com a lista vazia, e apaga tudo o que achar aqui. O
+       recado aparecia e sumia sozinho. Escrito AQUI, no lugar de quem tem autoridade
+       sobre o elemento, ele sobrevive ao próprio redesenho. */
+    : CARR_LOTE
+      ? `<tr><td colspan="5" class="carr-nada">A régua de agora não conta carrossel,
+         então não há perfil novo para montar. O arquivo único que você montou continua
+         aqui embaixo.</td></tr>`
+    /* DUAS FRASES, PORQUE SÃO DUAS SITUAÇÕES. Com arquivo único montado, ele está mesmo
+       logo abaixo, no pé. Com só os pacotes por perfil, não há onde eles apareçam: a
+       tabela lista quem passa na régua, e nesse momento não passa ninguém. Dizer "continua
+       aqui embaixo" nos dois casos seria apontar para um lugar vazio, que é a mesma
+       família de mentira que este arquivo inteiro combate. */
+    /* E ELA NÃO AFIRMA O MOTIVO NUMA VOLTA EM QUE NÃO CONSEGUIU LER (07/09/2026).
+
+       As duas coisas aconteciam juntas: a fileira dizia "não consegui ler o acervo" e,
+       logo abaixo, esta tabela cravava "a régua de agora não conta carrossel". A segunda
+       é uma afirmação sobre um dado que não chegou. Duas frases contrárias na mesma tela,
+       e a errada é sempre a que afirma. */
+    : LEITURA_FALHOU_AGORA
+      ? `<tr><td colspan="5" class="carr-nada">Não consegui ler o acervo nesta volta,
+         então não sei se há perfil novo para montar.</td></tr>`
+    : Object.keys(CARR_PACOTES || {}).length
+      ? `<tr><td colspan="5" class="carr-nada">A régua de agora não conta carrossel, então
+         não há perfil novo para montar. ${Object.keys(CARR_PACOTES).length === 1
+           ? "O pacote que você já montou continua guardado"
+           : `Os ${num(Object.keys(CARR_PACOTES).length)} pacotes que você já montou
+              continuam guardados`} na casa, e ${Object.keys(CARR_PACOTES).length === 1
+           ? "volta" : "voltam"} a aparecer aqui quando a régua contar carrossel de
+         novo.</td></tr>`
     : "";
   const desenho = html || vazio;
   // Desenho igual não se redesenha: reescrever apagaria o botão sob o cursor a cada volta
@@ -1638,8 +1724,28 @@ function desenhaMinerados() {
     + (fila.length === 1 ? " perfil" : " perfis");
   $("min-ini").disabled = $("min-ant").disabled = minPagina <= 1;
   $("min-prox").disabled = $("min-fim").disabled = minPagina >= paginas;
-  $("min-sub").textContent = `${MINERADOS.length} ${MINERADOS.length === 1 ? "perfil varrido" : "perfis varridos"}`;
-  $("sub-conta").textContent = MINERADOS.length;
+  /* A PASTILHA DIZ QUANTOS FALTAM, e não só o total (07/09/2026).
+
+     O QUE ELE VIU E ESTRANHOU: "Minerados tá aparecendo 6. Agora em minerar só tem 6
+     perfis concluídos. Como assim?" Os dois números liam a MESMA lista, e estavam certos
+     — só que um contava TODOS os perfis do banco e o outro contava os concluídos. Com
+     todos concluídos, os dois marcam 6, e a pastilha parece repetir a Situação sem
+     motivo.
+
+     ENTÃO ELA PASSA A CONTAR O QUE MUDA: com perfil em varredura, mostra `feitos/total`,
+     que responde "quanto falta" de um olho só; com tudo pronto, mostra só o total, porque
+     `6/6` é o mesmo número escrito duas vezes. Nenhum dado novo, nenhum cálculo novo: é a
+     mesma lista, dita de um jeito que não confunde. */
+  const feitos = MINERADOS.filter(p => p.completo).length;
+  const faltam = MINERADOS.length - feitos;
+  $("min-sub").textContent = faltam
+    ? `${feitos} de ${MINERADOS.length} ${MINERADOS.length === 1 ? "perfil varrido" : "perfis varridos"}`
+    : `${MINERADOS.length} ${MINERADOS.length === 1 ? "perfil varrido" : "perfis varridos"}`;
+  $("sub-conta").textContent = faltam
+    ? `${feitos}/${MINERADOS.length}` : MINERADOS.length;
+  $("sub-conta").title = faltam
+    ? `${feitos} concluídos, ${faltam} ainda em varredura`
+    : "todos concluídos";
 
   $("min-corpo").innerHTML = pedaco.map(p => {
     // A COBERTURA DE UMA VARREDURA FILTRADA NÃO É SOBRE AS PUBLICAÇÕES DO PERFIL.
@@ -2107,7 +2213,97 @@ function linhaDoAgora(b) {
    Sem resposta da ponte, o cabeçalho fica com o texto que já estava. Chute nenhum. */
 const ANDANDO = new Set(["in_progress", "queued", "waiting", "pending", "requested"]);
 
+/* A MINERAÇÃO DE VERDADE VEM ANTES DA ESTEIRA (07/09/2026), e este é o conserto da
+   reclamação mais antiga dele: "o registra ao vivo não cospe nada, ele não me traz a
+   realidade".
+
+   POR QUE ELE NÃO TRAZIA: este cabeçalho sempre falou da ESTEIRA DO GITHUB, que é o
+   TERCEIRO caminho da escada. Ele pergunta `${PONTE}/andamento`, conta quantas das vinte
+   máquinas estão no ar e escreve sobre elas. Só que a esteira não lê nada desde 03/09, e
+   desde 07/09 quem minera é a Apify, dentro da casa. Ele abria o mostrador e via "Esteira
+   parada" enquanto duas varreduras completas aconteciam.
+
+   AGORA A ORDEM É A DA ESCADA: o que está sendo minerado AGORA manda, e a esteira só
+   fala quando não há mineração acontecendo. É a mesma regra do resto desta tela: quem
+   tem prova do trabalho ganha de quem tem indício. */
+async function mineracaoAgora() {
+  try {
+    const d = await noPosto("/mineracao/registro");
+    if (!d || d.ilegivel || !Array.isArray(d.passos)) return null;
+    const emCurso = d.passos.filter(p => p.estado === "em_curso");
+    const ultimos = d.passos.slice(-8).reverse();
+    return { emCurso, ultimos, total: d.passos.length };
+  } catch (e) {
+    // SILÊNCIO NÃO É "PARADO". Sem resposta, esta função devolve nulo e o ramo da esteira
+    // assume, como sempre assumiu: dizer "parado" aqui seria afirmar o que não se mediu.
+    return null;
+  }
+}
+
+const CAMINHO_NA_TELA = { apify: "Apify", ponta: "conta descartável",
+                          anonimo: "esteira anônima", casa: "casa" };
+
+/* AS LINHAS DO REGISTRO, uma por passo, com a cor do estado.
+
+   TRÊS ESTADOS, TRÊS DESENHOS, e nenhum inventado: `em_curso` pulsa, `passou` é verde,
+   `falhou` é vermelho com o motivo escrito. O passo que começou e não deu sinal há mais
+   de cinco minutos já chega aqui como `falhou`, virado pela casa na leitura: a tela não
+   decide isso, ela desenha. */
+function pintaOsPassos(passos) {
+  const alvo = $("vivo_passos");
+  if (!alvo) return;
+  if (!passos || !passos.length) { alvo.hidden = true; alvo.innerHTML = ""; return; }
+  alvo.hidden = false;
+  alvo.innerHTML = passos.map(p => {
+    const estado = ["passou", "falhou", "em_curso"].includes(p.estado)
+      ? p.estado : "em_curso";
+    const via = CAMINHO_NA_TELA[p.caminho] || "";
+    return `<div class="kon-passo ${estado}">`
+      + `<span class="kon-pt"></span>`
+      + `<span class="kon-quem2"><b>@${escapa(p.perfil || "")}</b>`
+      + `<span>${escapa(p.etapa || "")}</span></span>`
+      + `<span class="kon-meta">${via ? escapa(via) : ""}`
+      + (typeof p.quantos === "number" ? ` · ${num(p.quantos)} peças` : "")
+      + `</span></div>`;
+  }).join("");
+}
+
 async function aoVivo() {
+  // A MINERAÇÃO NA CASA MANDA, e ela é perguntada primeiro.
+  const agora = await mineracaoAgora();
+  if (agora && agora.emCurso.length) {
+    const p = agora.emCurso[agora.emCurso.length - 1];
+    const via = CAMINHO_NA_TELA[p.caminho] || p.caminho || "";
+    // CONTA PERFIS, E NÃO PASSOS. Um perfil deixa duas linhas em curso na mesma passagem
+    // (entrou na fila, está lendo), e contar linhas anunciava "2 perfis ao mesmo tempo"
+    // com um perfil só na mão. Número inflado numa tela de estado é a mesma família de
+    // mentira que este arquivo inteiro combate.
+    const perfis = new Set(agora.emCurso.map(x => x.perfil)).size;
+    $("vivo_titulo").textContent = perfis === 1
+      ? `Minerando @${p.perfil}`
+      : `Minerando ${perfis} perfis ao mesmo tempo`;
+    // E A VIA NÃO É DITA DUAS VEZES. A etapa já costuma trazer o nome do caminho
+    // ("Lendo Pela Apify"), e o sufixo saía como "Lendo Pela Apify · pela Apify".
+    $("vivo_resumo").textContent = p.etapa
+      + (via && !p.etapa.toLowerCase().includes(via.toLowerCase()) ? ` · pela ${via}` : "");
+    $("vivo_quando").innerHTML = '<span class="kon-vivo ativa"><i></i>ao vivo</span>';
+    pintaOsPassos(agora.ultimos);
+    return;
+  }
+  if (agora && agora.ultimos.length) {
+    // NADA EM CURSO, MAS HOUVE TRABALHO. O último passo é o que responde "e aí, deu?", e
+    // ele fica na tela até o próximo começar, em vez de a tela voltar a falar da esteira.
+    const p = agora.ultimos[0];
+    const via = CAMINHO_NA_TELA[p.caminho] || p.caminho || "";
+    $("vivo_titulo").textContent = p.estado === "falhou"
+      ? `@${p.perfil} não foi` : `@${p.perfil}: ${p.etapa}`;
+    $("vivo_resumo").textContent = (p.estado === "falhou" ? p.etapa + " · " : "")
+      + (via ? `pela ${via}` : "") + (p.quantos ? ` · ${p.quantos} peças` : "");
+    $("vivo_quando").innerHTML = `<span class="kon-vivo"><i></i>${
+      p.estado === "falhou" ? "parou" : "terminou"}</span>`;
+    pintaOsPassos(agora.ultimos);
+    return;
+  }
   // OS BILHETES PRIMEIRO, A CORRIDA DO GITHUB DEPOIS.
   //
   // O bilhete é escrito pela máquina que está lendo, a cada página: é prova do
@@ -2769,6 +2965,9 @@ function desenhaProntos(perfis) {
        </div>`).join("")
     : `<div class="vazio">${comSaldo.length
         ? "Nenhum perfil com essa marcação."
+        : LEITURA_FALHOU_AGORA
+          ? "Não consegui ler o acervo nesta volta. Isso não quer dizer que ele está "
+            + "vazio: quer dizer que eu não sei. A próxima volta tenta de novo."
         : !(perfis || []).length
           ? "Nenhum perfil varrido ainda."
           /* VAZIO TEM DOIS MOTIVOS, e eles não se confundem: ou tudo já desceu, ou nunca
@@ -2811,7 +3010,9 @@ function contarLote(filtrados, nome) {
       + (filtrados.length === 1 ? "perfil" : "perfis")
     : "";
   if (Date.now() < travaDoRecado) return;
-  $("recado_lote").textContent = !espera
+  $("recado_lote").textContent = LEITURA_FALHOU_AGORA
+    ? "Não consegui ler o acervo nesta volta, então não sei o que está esperando."
+    : !espera
     ? "Nada esperando. Cada leva que sai apaga daqui o que ela levou."
     : total
       ? `${num(total)} ${nome} de ${marcados.length} `
@@ -2864,6 +3065,15 @@ async function atualizar() {
 
   // a seleção é quem calcula os números da tabela; o estado é a cópia dela
   const perfis = (sel && sel.perfis) || (estado && estado.perfis) || [];
+  /* LEITURA QUE FALHOU NÃO É ACERVO VAZIO (07/09/2026, por auditoria).
+
+     Com as duas leituras nulas, `perfis` vinha `[]` e a aba escrevia, com todas as
+     letras, "Nenhum perfil varrido ainda" e "Nada esperando". Ele leria isso como
+     "perdi tudo", numa volta em que nada mudou no acervo: foi uma tosse de rede.
+
+     TRÊS ESTADOS, TRÊS FRASES, que é a mesma lei do resto desta casa: li e está vazio,
+     li e tem coisa, e NÃO CONSEGUI LER. A terceira nunca vira a primeira. */
+  LEITURA_FALHOU_AGORA = !sel && !estado;
   /* A REGUA VALENDO E' LIDA ANTES DOS NUMEROS, e nao seiscentas linhas abaixo deles.
 
      Lida depois, a PRIMEIRA pintura contava com a régua da volta anterior (nula, na
@@ -2992,6 +3202,24 @@ async function atualizar() {
   const andando = ((lotes && lotes.lotes) || []).find(l => l.estado === "em curso");
   if (andando) await buscarPassos(andando.numero);
   else for (const n of LOTES_ABERTOS) await buscarPassos(n);
+  /* E A LEVA DO TOPO, QUANDO ELA PAROU, TAMBÉM (07/09/2026, por revisão adversarial).
+
+     A cabeça do registro passou a dizer POR QUE a leva falhou, e o motivo mora no diário
+     dela. Só que o índice (`dados/lotes/indice.json`) nunca carrega os passos: ele traz
+     número, estado, contagens e nada mais. Sem esta busca, a tela recém-carregada não
+     tem o diário na mão, e o motivo que o conserto prometeu simplesmente não aparece.
+
+     SÓ A DO TOPO, E SÓ QUANDO ELA PAROU: uma leva falhada de três dias atrás não muda
+     mais, e ninguém está olhando para ela. Buscar todas seria uma ida à rede por cartão
+     em cada volta de vinte e cinco segundos.
+
+     E REDESENHA DEPOIS, senão o diário chega e a cabeça continua com a frase de antes,
+     até a volta seguinte. */
+  const primeira = ((lotes && lotes.lotes) || [])[0];
+  if (primeira && primeira.estado === "falhou" && !PASSOS.has(primeira.numero)) {
+    await buscarPassos(primeira.numero);
+    desenhaRegistroDeLotes(lotes);
+  }
 
 }
 
@@ -3402,12 +3630,44 @@ function desenhaRegistroDeLotes(indice) {
       // para a pasta. Ele não estava faltando: ainda não tinha chegado a hora dele.
       //
       // Agora o cartão distingue as duas coisas, e o que falta é dito enquanto falta.
+      // FALHOU TEM GALHO PRÓPRIO (07/09/2026, por auditoria). Ele caía no "todo o resto",
+      // e como leva falhada nunca tem `guardado`, o cartão escrevia "Falta a última
+      // etapa: trazer para a casa, o que acontece sozinho em poucos minutos" duas linhas
+      // abaixo de um título que dizia "falhou". Prometer conclusão sozinha de uma coisa
+      // que parou é a mentira mais cara que uma tela de estado pode contar.
+      // O SUJEITO VEM INTEIRO NA FRENTE, senão sai "A leva parou de @gabriel", e no caso
+      // sem contas, "A leva parou dos melhores de todos os perfis", que não é português.
+      // O `de` já vem montado como "de @fulano" ou "dos melhores de todos os perfis": ele
+      // é complemento do substantivo, e não do verbo.
+      : atual.estado === "falhou"
+        ? `A leva ${de} parou. ${motivoDaFalha(atual) || "O diário dela, logo abaixo, diz "
+          + "em qual passo foi."} Nada acontece sozinho a partir daqui: peça de novo `
+          + "quando quiser."
+      // ENTREGUE NÃO É O FIM DO CAMINHO, e a tela dizia que era.
       : (atual.guardado
+          // O CAMINHO NÃO É CRAVADO NO TEXTO. Ele apontava para
+          // `C:\Users\Gabri\Estudio\levas`, que é o mundo anterior à VPS: desde a
+          // mudança, a leva é guardada na CASA, e essa pasta pode nem existir na máquina
+          // dele. Quem sabe onde a casa mora é a própria casa, e ela já diz isso no
+          // batimento (`CASA_INFO.casa`).
           ? `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}. `
-            + "Já estão em C:\\Users\\Gabri\\Estudio\\levas\\leva-" + atual.numero
-          : `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}. `
-            + "Falta a última etapa: trazer para a casa do Estúdio, o que acontece "
-            + "sozinho em poucos minutos.")
+            // "Já estão em " mais "na pasta" dava "em na pasta". A preposição agora
+            // mora só na função, que é quem sabe se a frase dela pede uma.
+            + "Já estão " + ondeMoraALeva(atual.numero)
+          /* MAS SÓ QUANDO ELA AINDA VAI ACONTECER (07/09/2026, revisão adversarial).
+
+             O `guardar.py` grava um passo de tipo `problema` quando a busca para a casa
+             emperra de vez, e esta frase ignorava isso: ficava prometendo "acontece
+             sozinho em poucos minutos" para sempre, numa leva que não ia sair do lugar.
+             Prometer conclusão automática do que travou é a mesma mentira do galho do
+             `falhou`, só que mais difícil de perceber, porque o selo diz "pronto". */
+          : (motivoDaFalha(atual, "problema")
+             ? `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}. `
+               + "A busca para a casa emperrou: " + motivoDaFalha(atual, "problema")
+               + " Isso não se resolve sozinho."
+             : `${num(atual.limpos || 0)} peças tratadas, ${atual.mb || 0} MB, ${de}. `
+               + "Falta a última etapa: trazer para a casa do Estúdio, o que acontece "
+               + "sozinho em poucos minutos."))
         + (atual.reprovados ? ` ${num(atual.reprovados)} reprovados na limpeza.` : "");
 
   const html = LOTES.map(l => {
@@ -3483,6 +3743,49 @@ function desenhaRegistroDeLotes(indice) {
 
    E FICA O BOTÃO DE COPIAR AO LADO, porque o endereço só existe nesta máquina: aberta
    de outro computador ou do celular, a página continua entregando o caminho. */
+/* ONDE A LEVA FOI GUARDADA, dito pela CASA e não cravado aqui (07/09/2026).
+
+   O texto do resumo apontava, com todas as letras, para
+   `C:\Users\Gabri\Estudio\levas\leva-N`. Esse é o mundo anterior à VPS: desde a mudança,
+   a leva é guardada na casa, e aquela pasta pode nem existir na máquina dele. Mandar
+   alguém procurar arquivo numa pasta que não existe é pior que não dizer onde está.
+
+   QUEM SABE ONDE A CASA MORA É A CASA, e ela já diz isso no batimento: o `/vivo` devolve
+   `casa` para quem tem bilhete. Sem bilhete, o nome relativo é o que há, e ele é honesto:
+   é o mesmo que o tira-dúvidas desta aba usa. */
+function ondeMoraALeva(numero) {
+  /* O CAMINHO DE DISCO NÃO ENTRA NA FRASE, e este é o segundo conserto do mesmo lugar.
+
+     O primeiro trocou o caminho do Windows dele (a máquina errada, do tempo anterior à
+     VPS) pelo caminho que a casa informa, e isso passou a escrever na tela algo como
+     "levas/leva-12" precedido do endereço do servidor: caminho de disco, numa máquina que
+     ele nem abre, e a régua desta casa proíbe caminho de disco no que ele lê. Trocar um
+     caminho errado por outro caminho errado não é conserto.
+
+     O QUE ELE PRECISA SABER É ONDE PEGAR, e para isso já existe o link da pasta no
+     registro da leva, logo abaixo, com o botão de copiar ao lado. A frase diz o lugar em
+     palavras; o caminho inteiro continua ali, para quem for procurar. */
+  return `na pasta da leva ${numero}, dentro da casa do Estúdio`;
+}
+
+/* O MOTIVO DA FALHA, TIRADO DO DIÁRIO DA PRÓPRIA LEVA.
+
+   A leva falhada grava um passo de tipo `falha` com o texto do que houve. Ele estava
+   ali, e o resumo do cartão o ignorava para escrever uma promessa de conclusão
+   automática. Trazer a linha que existe é mais honesto e mais curto que inventar. */
+function motivoDaFalha(leva, tipo = "falha") {
+  // `PASSOS` É UM `Map`, e não um objeto: `PASSOS[n]` devolveria `undefined` sempre, e o
+  // motivo da falha nunca apareceria. É o tipo de engano que só aparece na tela, calado.
+  const passos = (leva && (leva.passos || PASSOS.get(leva.numero))) || [];
+  const falha = [...passos].reverse().find(p => p && p.tipo === tipo);
+  if (!falha || !falha.texto) return "";
+  // A FRASE ENTRA NO MEIO DE OUTRA, depois de um ponto, então ela começa maiúscula. O
+  // texto do diário é escrito em minúscula porque lá ele é rótulo, não frase.
+  const t = String(falha.texto).trim();
+  const cheio = t.charAt(0).toUpperCase() + t.slice(1);
+  return cheio.endsWith(".") ? cheio : cheio + ".";
+}
+
 function paraOndeFoi(p, numero) {
   // O CAMINHO PODE SER DOS DOIS MUNDOS: `C:\...` quando a casa era o Windows, e
   // `/home/...` desde que ela mora na VPS. Sem a segunda forma, o passo escrito pela
@@ -7720,7 +8023,21 @@ async function noPosto(rota, corpo, paciencia) {
     throw new Error("A sessão desta página venceu. Recarregue a página e entre com "
       + "a senha; nada foi perdido.");
   }
-  if (!r.ok) throw new Error(d.erro || `o posto do Estúdio respondeu ${r.status}`);
+  /* O CÓDIGO HTTP FICA NO CADERNO DA PORTARIA, e não na cara dele (07/09/2026).
+
+     A frase saía como "o posto do Estúdio respondeu 500": número cru, minúscula inicial,
+     e nenhuma decisão dentro. Ele lia isso no cartão vermelho do carrossel e não tinha o
+     que fazer com a informação. A régua desta casa é a mesma desde sempre: na tela entra
+     o EFEITO e o que fazer; o nome técnico fica no registro, que é onde ele ajuda.
+
+     O `d.erro` DA CASA CONTINUA PASSANDO NA FRENTE, porque ele já vem escrito na língua
+     dele: quem o monta é o posto, e ele foi feito para ser lido. */
+  if (!r.ok) {
+    if (d.erro) throw new Error(d.erro);
+    console.warn(`o posto respondeu ${r.status} em ${rota}`);
+    throw new Error("O Estúdio não conseguiu atender este pedido agora. Nada foi "
+      + "montado, e tentar de novo em um minuto costuma resolver.");
+  }
   return d;
 }
 
@@ -8883,6 +9200,12 @@ function irParaCfg(pg) {
   // sessao e trezentas linhas ali seriam conflito que ninguem resolve lendo.
   if (pg === "contas") desenhaSubAbaContas();
   if (pg === "motor") desenhaOMotor();
+  // AS TRÊS PÁGINAS DA MINERAÇÃO (07/09/2026, proposta C aprovada). Elas desenham ao
+  // ENTRAR, e não ao carregar a tela, pela mesma razão das outras: a da Apify pergunta o
+  // saldo à Apify, e fazer isso em toda visita à tela pagaria uma ida à rede por olhada.
+  if (pg === "ordem") desenhaAEscada();
+  if (pg === "apify") desenhaAApify();
+  if (pg === "anonimo") desenhaOAnonimo();
 }
 document.querySelectorAll("#aba-config .cfg-item").forEach(a => {
   a.onclick = ev => { ev.preventDefault(); irParaCfg(a.dataset.cfg); };
@@ -16717,3 +17040,521 @@ document.addEventListener("click", async ev => {
 document.addEventListener("keydown", ev => {
   if (ev.key === "Escape" && !$("cta_pop").hidden) fechaOCadastro();
 });
+
+
+/* ============================================ A MINERAÇÃO: A ESCADA, A APIFY E O ANÔNIMO
+
+   A PROPOSTA C, aprovada por ele em 07/09/2026 olhando as três no navegador. Três páginas
+   do grupo Mineração da aba de Configurações, na ordem que ele mandou: Apify em primeiro,
+   contas descartáveis em segundo, anônimo em terceiro.
+
+   NADA AQUI DECIDE NADA. Quem sabe quem pode minerar é a casa (`rodizio.qual_caminho`), e
+   quem sabe quanto sobra em cada chave é o `apify.sem_segredo`: os dois mandam o veredito
+   pronto e este arquivo desenha. Uma segunda regra escrita no navegador divergiria da
+   primeira no dia em que uma das duas aprendesse um caso novo, e a tela passaria a ensinar
+   o contrário do que o sistema faz.
+
+   O BLOCO NASCE NO FIM DO ARQUIVO pelo mesmo motivo escrito na sub-aba de Contas: o meio
+   está com outra sessão, e trezentas linhas ali seriam conflito que ninguém resolve
+   lendo. */
+
+const ESC_NOMES = { apify: "Apify", ponta: "Contas Descartáveis",
+                    anonimo: "Modo Anônimo" };
+const ESC_TEXTO = {
+  apify: "Roda no servidor deles. Não usa conta sua nem o seu endereço, e traz as "
+       + "exibições reais do reel.",
+  ponta: "Lê logada, do seu computador. Depende de ele estar ligado e do endereço não "
+       + "estar barrado.",
+  anonimo: "O caminho antigo, sem conta nenhuma. A rota que ele usava parou de responder "
+         + "em 07 de setembro.",
+};
+const ESC_ICONE = {
+  apify: '<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.3 9.5A4.5 4.5 0 0 0 7 19z"/>',
+  ponta: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+  anonimo: '<path d="m2 2 20 20"/><path d="M17.9 17.9A10 10 0 0 1 12 20c-7 0-10-8-10-8'
+         + 'a18.4 18.4 0 0 1 5-5.9"/>',
+};
+
+let ESCADA = null;      // o que a casa respondeu por último; null = ainda não perguntei
+
+/** Dinheiro do jeito que ele lê: com cifrão e vírgula. */
+function esc_dinheiro(v) {
+  if (typeof v !== "number" || !isFinite(v)) return "—";
+  return "US$ " + v.toFixed(2).replace(".", ",");
+}
+
+/** O recado de uma página da mineração, com a cor certa. */
+function esc_diz(id, texto, classe) {
+  const d = $(id);
+  if (!d) return;
+  d.className = "ses-diz " + (classe || "");
+  d.textContent = texto || "";
+}
+
+/* ------------------------------------------------------------------ a escada */
+
+async function desenhaAEscada() {
+  const alvo = $("pri");
+  if (!alvo) return;
+  if (!ESCADA) {
+    alvo.innerHTML = '<p class="nota">Perguntando à casa…</p>';
+  }
+  const r = await noPosto("/mineracao/escada");
+  if (!r || r.erro) {
+    /* CASA MUDA NÃO VIRA ESCADA VAZIA. Desenhar três degraus todos "parados" em cima de
+       uma pergunta que não foi respondida é afirmar o que não se mediu: ele leria como
+       sistema quebrado e iria mexer no que estava bom. */
+    alvo.innerHTML = '<p class="nota alerta">Não deu para perguntar à casa como está a '
+      + 'mineração. Isso não quer dizer que ela parou: quer dizer que a pergunta não foi '
+      + 'respondida.</p>';
+    $("pri_diz").textContent = "";
+    return;
+  }
+  ESCADA = r;
+  pintaAEscada();
+  pintaOQueAconteceu();
+  pintaAFolga();
+}
+
+function pintaAEscada() {
+  const alvo = $("pri");
+  const { ordem, desligados, degraus, caminho } = ESCADA;
+  alvo.innerHTML = ordem.map((via, i) => {
+    const d = degraus[via] || {};
+    const off = desligados.includes(via);
+    const minerando = via === caminho && !off;
+    /* TRÊS SITUAÇÕES, E NÃO DUAS (trava 3): minerando agora, ligado mas sem poder, e
+       desligado por ele. O selo do meio é o que responde a pergunta que ele faz olhando
+       a tela: por que este está parado. */
+    const selo = off ? '<span class="cfg-selo">desligado</span>'
+      : minerando ? '<span class="cfg-selo">minerando</span>'
+      : d.pode ? '<span class="cfg-selo">de prontidão</span>'
+      : '<span class="cfg-selo cfg-alerta">não pode agora</span>';
+    /* A MEDIDA GANHOU LINHA PRÓPRIA, acima do rodapé (07/09/2026). Ela dividia a linha
+       com o selo e o interruptor, e em 230 pixels os três não cabiam: "não pode agora"
+       quebrava em duas linhas e a frase da medida virava três palavras empilhadas. O
+       rodapé agora tem só o estado e o interruptor, que são as duas coisas de decidir. */
+    const medida = (d.por_que && !off) ? d.por_que : (d.medida || "");
+    return `<div class="pri-c ${off ? "off" : "on"}" draggable="true" data-via="${via}">`
+      + `<div class="pri-t"><span class="pri-n">${i + 1}</span>`
+      + `<b>${ESC_NOMES[via]}</b>`
+      + '<span class="pri-pega"><i></i><i></i><i></i></span></div>'
+      + `<p class="pri-p">${escapa(ESC_TEXTO[via])}</p>`
+      + (medida ? `<p class="pri-m">${escapa(medida)}</p>` : "")
+      + `<div class="pri-pe">${selo}`
+      + `<button class="itr ${off ? "" : "on"}" type="button" data-liga="${via}" `
+      + `aria-label="Ligar ou desligar ${ESC_NOMES[via]}"></button></div></div>`;
+  }).join("");
+  escreveAFrase();
+  ligaOArrastar();
+}
+
+function escreveAFrase() {
+  const { ordem, desligados, degraus } = ESCADA;
+  const vivos = ordem.filter(v => !desligados.includes(v));
+  const diz = $("pri_diz");
+  if (!vivos.length) {
+    diz.innerHTML = "<b>Nenhum caminho ligado.</b> Assim a mineração não roda: ligue "
+      + "pelo menos um.";
+    return;
+  }
+  /* QUEM VAI TENTAR PRIMEIRO É O PRIMEIRO LIGADO, e não o primeiro que PODE. A frase
+     descreve a ordem que ele montou, e não o resultado de hoje: dizer "entra pelo anônimo"
+     porque a Apify está sem saldo esconderia que a Apify continua sendo a primeira da
+     fila e volta sozinha na virada do ciclo. */
+  const nomes = vivos.map(v => ESC_NOMES[v]);
+  let t = `Com esta ordem, um perfil novo entra pelo caminho <b>${nomes[0]}</b>.`;
+  if (nomes.length > 1) {
+    t += ` Se não der, a vez passa para <b>${nomes.slice(1).join("</b>, depois para <b>")}`
+       + "</b>, sem ninguém precisar mexer aqui.";
+  } else {
+    t += " Se ele falhar, a fila para e espera, porque não há para quem passar a vez.";
+  }
+  const parado = vivos.find(v => !(degraus[v] || {}).pode);
+  if (parado && (degraus[parado] || {}).por_que) {
+    t += ` Agora mesmo, <b>${ESC_NOMES[parado]}</b> não pode: `
+       + escapa(degraus[parado].por_que) + ".";
+  }
+  diz.innerHTML = t;
+}
+
+/** Arrastar e soltar os três degraus. Soltar renumera, grava e redesenha. */
+function ligaOArrastar() {
+  const pri = $("pri");
+  let pegando = null;
+  pri.querySelectorAll(".pri-c").forEach(c => {
+    c.addEventListener("dragstart", () => {
+      pegando = c; c.classList.add("arrastando");
+    });
+    c.addEventListener("dragend", () => {
+      c.classList.remove("arrastando");
+      pri.querySelectorAll(".pri-c").forEach(x => x.classList.remove("alvo"));
+      guardaAEscada();
+    });
+    c.addEventListener("dragover", ev => {
+      ev.preventDefault();
+      if (pegando && pegando !== c) c.classList.add("alvo");
+    });
+    c.addEventListener("dragleave", () => c.classList.remove("alvo"));
+    c.addEventListener("drop", ev => {
+      ev.preventDefault();
+      c.classList.remove("alvo");
+      if (!pegando || pegando === c) return;
+      const todos = Array.from(pri.children);
+      if (todos.indexOf(pegando) < todos.indexOf(c)) {
+        pri.insertBefore(pegando, c.nextSibling);
+      } else {
+        pri.insertBefore(pegando, c);
+      }
+    });
+  });
+  pri.querySelectorAll("[data-liga]").forEach(b => {
+    b.onclick = () => {
+      b.classList.toggle("on");
+      b.closest(".pri-c").classList.toggle("off", !b.classList.contains("on"));
+      guardaAEscada();
+    };
+  });
+}
+
+/** Lê a ordem que está NA TELA e manda para a casa. */
+async function guardaAEscada() {
+  const pri = $("pri");
+  const ordem = Array.from(pri.children).map(c => c.dataset.via);
+  const desligados = Array.from(pri.children)
+    .filter(c => !c.querySelector(".itr").classList.contains("on"))
+    .map(c => c.dataset.via);
+  /* O DESENHO É REFEITO COM A RESPOSTA DA CASA, e não com o que está na tela. É a casa
+     que numera, completa o que faltou e recalcula quem está minerando agora: redesenhar
+     com o palpite do navegador faria a tela e o disco discordarem sem ninguém ver. */
+  const r = await noPosto("/mineracao/escada", { ordem, desligados });
+  if (!r || r.erro) {
+    $("pri_diz").innerHTML = '<b class="cfg-vermelho">A ordem não foi guardada.</b> '
+      + escapa((r && r.erro) || "a casa não respondeu") + ".";
+    return;
+  }
+  ESCADA = r;
+  pintaAEscada();
+  pintaAFolga();
+}
+
+/* O QUE ACONTECEU, lido do registro que a mineração já grava ao vivo. Ele não é um diário
+   novo: é o mesmo `/mineracao/registro` que a aba de Mineração usa, visto por outro
+   ângulo. Um segundo diário para a mesma coisa é a trava 60. */
+async function pintaOQueAconteceu() {
+  const alvo = $("lt");
+  if (!alvo) return;
+  const r = await noPosto("/mineracao/registro");
+  const passos = (r && r.passos) || [];
+  if (!passos.length) {
+    alvo.innerHTML = '<p class="lt-vazia">Nada aconteceu desde que a casa subiu.</p>';
+    $("lt_selo").textContent = "sem movimento";
+    return;
+  }
+  $("lt_selo").textContent = "ao vivo";
+  /* OS CAMPOS SÃO OS QUE O ESCRITOR GRAVA, e não os que eu inventei (07/09/2026).
+
+     O QUE ESTAVA ERRADO, e era código meu: este painel lia `p.gravidade`, `p.conta` e
+     `p.texto`. O passo tem sete chaves e nenhuma das três é uma delas (veja
+     `vivo.guardar_passo`): são `quando`, `perfil`, `etapa`, `estado`, `caminho`, `conta`
+     e `quantos`. Resultado: bolinha sempre cinza, título com o texto da etapa no lugar do
+     perfil, e a segunda linha VAZIA. É a segunda metade da frase dele, "o log tá bugado".
+
+     E AS CLASSES SÃO AS QUE O CSS TEM. `.lt-p i` só define `meio` (âmbar) e `ruim`
+     (vermelho), em estilo.css. Escrever `falhou` ali daria classe sem regra, e a bolinha
+     continuaria cinza por outro caminho. */
+  alvo.innerHTML = passos.slice(-8).reverse().map(p => {
+    const cor = p.estado === "falhou" ? "ruim" : p.estado === "em_curso" ? "meio" : "";
+    const via = CAMINHO_NA_TELA[p.caminho] || "";
+    // `p.diz` VEM PRONTO DA CASA quando o passo travou (`vivo.passos_para_a_tela`), e ele
+    // explica melhor que qualquer frase que eu montasse aqui.
+    const conta = p.diz || p.etapa || "";
+    return '<div class="lt-l">'
+      + `<span class="lt-h">${escapa(esc_hora(p.quando))}</span>`
+      + `<span class="lt-p"><i class="${cor}"></i></span>`
+      + `<span class="lt-t"><b>@${escapa(p.perfil || "")}</b> `
+      + `<span>${escapa(conta)}`
+      + (via ? ` · ${escapa(via)}` : "")
+      + (typeof p.quantos === "number" ? ` · ${num(p.quantos)} peças` : "")
+      + "</span></span></div>";
+  }).join("");
+}
+
+function esc_hora(quando) {
+  if (!quando) return "";
+  const d = new Date(quando * 1000);
+  if (isNaN(d)) return "";
+  return String(d.getHours()).padStart(2, "0") + "h"
+       + String(d.getMinutes()).padStart(2, "0");
+}
+
+function pintaAFolga() {
+  const alvo = $("folga");
+  if (!alvo || !ESCADA) return;
+  const { gasto, teto } = ESCADA;
+  /* TETO ZERO É "SEM TETO", e não teto de zero dólares. Desenhar uma barra cheia aí diria
+     que ele estourou o limite, quando o que ele fez foi não pôr limite nenhum. */
+  const temTeto = typeof teto === "number" && teto > 0;
+  const pct = (temTeto && typeof gasto === "number")
+    ? Math.min(100, Math.round(100 * gasto / teto)) : null;
+  const cor = pct === null ? "" : pct >= 100 ? "cfg-ruim" : pct >= 80 ? "cfg-meio" : "";
+  alvo.innerHTML =
+    '<div class="cfgv-medidor"><div class="cfgv-topo"><b>Gasto Da Apify</b>'
+    + `<span class="cfgv-pct">${pct === null ? "sem teto" : pct + "%"}</span></div>`
+    + `<div class="cfgv-mini"><i class="${cor}" style="width:${pct === null ? 2 : Math.max(2, pct)}%"></i></div>`
+    + '<p class="nota mini cfg-nota">'
+    + (typeof gasto === "number" ? esc_dinheiro(gasto) : "não sei quanto")
+    + (temTeto ? " de " + esc_dinheiro(teto) + " que você liberou"
+               : " neste ciclo, sem teto definido") + "</p></div>"
+    /* QUEM ESTÁ MINERANDO NÃO TEM BARRA, e antes tinha uma cheia de ponta a ponta. Barra
+       cheia se lê como medidor no talo, e ali não há nada sendo medido: é o nome de um
+       caminho. Um desenho que mente sobre o que ele é vale menos que texto. */
+    + '<div class="cfgv-medidor"><div class="cfgv-topo"><b>Quem Está Minerando</b></div>'
+    + `<div class="cfgv-quem">${escapa(ESC_NOMES[ESCADA.caminho] || "—")}</div>`
+    + '<p class="nota mini cfg-nota">'
+    + escapa((ESCADA.degraus[ESCADA.caminho] || {}).medida || "") + "</p></div>";
+}
+
+/* ------------------------------------------------------------------ a Apify */
+
+let APIFY = null;
+
+async function desenhaAApify(dado) {
+  const alvo = $("apf_lista");
+  if (!alvo) return;
+  if (!dado) {
+    if (!APIFY) alvo.innerHTML = '<p class="nota">Perguntando à Apify o saldo de cada '
+      + 'chave…</p>';
+    dado = await noPosto("/apify", undefined, 25000);
+  }
+  if (!dado || dado.erro) {
+    alvo.innerHTML = "";
+    $("apf_alerta").hidden = false;
+    $("apf_alerta").innerHTML = "<b>Não deu para ler as chaves.</b> "
+      + escapa((dado && dado.erro) || "a casa não respondeu");
+    return;
+  }
+  APIFY = dado;
+  $("apf_alerta").hidden = !dado.cofre_ilegivel;
+  if (dado.cofre_ilegivel) {
+    /* COFRE ILEGÍVEL NÃO É COFRE VAZIO, e a tela não pode desenhar "nenhuma chave" em
+       cima de uma leitura que falhou: ele cadastraria tudo de novo por cima do que já
+       está lá. */
+    $("apf_alerta").innerHTML = "<b>O cofre das chaves existe e não deu para ler.</b> "
+      + "Nada foi apagado, e nada será gravado enquanto ele estiver assim.";
+  }
+  pintaAsChaves();
+  pintaOTeto();
+}
+
+function pintaAsChaves() {
+  const { chaves, da_vez } = APIFY;
+  const R = 32, C = 2 * Math.PI * R;
+  const anel = pct => {
+    const nulo = pct === null || pct === undefined;
+    const cor = nulo ? "nulo" : pct >= 100 ? "ruim" : pct >= 80 ? "meio" : "";
+    const off = nulo ? 0 : C * (1 - pct / 100);
+    return '<div class="fic-anel"><svg viewBox="0 0 74 74" width="74" height="74">'
+      + `<circle class="trilho" cx="37" cy="37" r="${R}"/>`
+      + `<circle class="arco ${cor}" cx="37" cy="37" r="${R}" `
+      + `stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>`
+      + (nulo ? '<u class="fraco">não sei</u>' : `<u>${pct}%</u>`) + "</div>";
+  };
+  $("apf_lista").innerHTML = chaves.map(c => {
+    const sem = c.pct !== null && c.pct !== undefined && c.pct >= 100;
+    const usando = c.id === da_vez;
+    const selo = usando ? '<span class="cfg-selo">em uso</span>'
+      : c.estado === "recusada" ? '<span class="cfg-selo cfg-alerta">recusada</span>'
+      : sem ? '<span class="cfg-selo cfg-alerta">sem saldo</span>'
+      : '<span class="cfg-selo">reserva</span>';
+    const usar = (!usando && !sem && c.estado !== "recusada")
+      ? `<button class="ses-btn" data-apf-usar="${c.id}" type="button">Usar Agora</button>`
+      : "";
+    /* O APELIDO INTEIRO FICA NO `title`, porque o cartão corta com reticências. Ele
+       cadastrou a primeira chave com o e-mail como apelido, e passar o mouse é o jeito
+       de ver o nome todo sem o cartão inchar para caber o caso mais comprido. */
+    return `<div class="fic-c ${usando ? "on" : ""} ${sem ? "fim" : ""}" `
+      + `data-apf="${c.id}">`
+      + `<div class="fic-t"><div><b title="${escapa(c.apelido)}">${escapa(c.apelido)}</b>`
+      + `<span>${escapa(c.conta || ("chave ···" + (c.rabo || "")))}</span></div>`
+      + selo + "</div>"
+      + '<div class="fic-m">' + anel(c.pct) + '<div class="fic-d">'
+      + `<div><span>Gasto</span><b>${esc_dinheiro(c.gasto)}</b></div>`
+      + `<div><span>Livre</span><b>${esc_dinheiro(c.livre)}</b></div>`
+      + `<div><span>Teto Do Plano</span><b>${esc_dinheiro(c.teto_do_plano)}</b></div>`
+      + "</div></div>"
+      + '<div class="fic-a">'
+      + `<button class="ses-btn" data-apf-testar="${c.id}" type="button">Testar</button>`
+      + usar
+      + `<button class="ses-x" data-apf-tirar="${c.id}" type="button" title="apagar">`
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+      + 'stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div></div>';
+  }).join("")
+    + '<button class="fic-nova" id="apf_novo" type="button"><i>+</i>'
+    + "Cadastrar Uma Chave</button>";
+
+  $("apf_conta").textContent = chaves.length
+    + (chaves.length === 1 ? " cadastrada" : " cadastradas");
+  const livre = chaves.reduce((t, c) => t + (typeof c.livre === "number" ? c.livre : 0), 0);
+  $("apf_soma").textContent = chaves.length ? esc_dinheiro(livre) + " livres" : "vazia";
+  if (APIFY.recado) esc_diz("apf_diz", APIFY.recado, "bom");
+}
+
+function pintaOTeto() {
+  const { teto, gasto, teto_estourou, chaves } = APIFY;
+  $("apf_teto").value = teto || 0;
+  $("apf_teto_selo").textContent = teto
+    ? (teto_estourou ? "teto atingido" : "parada automática") : "não para sozinha";
+  $("apf_teto_selo").className = (teto && teto_estourou) || !teto
+    ? "cfg-selo cfg-alerta" : "cfg-selo";
+  $("apf_gasto").textContent = esc_dinheiro(gasto);
+  /* O CICLO DA APIFY NÃO É O MÊS DO CALENDÁRIO: ele conta a partir do dia em que a conta
+     nasceu. A data vem da própria Apify, e a tela só a repete: escrever "neste mês"
+     prometeria uma virada no dia 1 que não acontece. */
+  const comCiclo = (chaves || []).find(c => c.saldo && c.saldo.ciclo_fim);
+  $("apf_ciclo").textContent = comCiclo
+    ? "O ciclo desta conta vira em " + esc_data(comCiclo.saldo.ciclo_fim) + "."
+    : "";
+}
+
+function esc_data(iso) {
+  const p = String(iso || "").split("-");
+  if (p.length !== 3) return String(iso || "");
+  return p[2] + "/" + p[1];
+}
+
+/** Uma ordem da sub-aba da Apify, com a ficha esperando enquanto a casa responde. */
+async function ordemDaApify(o_que, corpo, ficha) {
+  if (ficha) ficha.classList.add("esperando");
+  const r = await noPosto("/apify/" + o_que, corpo, 25000);
+  if (ficha) ficha.classList.remove("esperando");
+  if (!r || r.erro) {
+    esc_diz("apf_diz", (r && r.erro) || "a casa não respondeu", "ruim");
+    return null;
+  }
+  desenhaAApify(r);
+  /* A ESCADA TAMBÉM MUDA. Cadastrar a primeira chave, ou apagar a última, muda quem está
+     minerando agora; deixar a outra página com o desenho de antes faria as duas telas do
+     mesmo sistema discordarem a um clique de distância. */
+  ESCADA = null;
+  return r;
+}
+
+document.addEventListener("click", async ev => {
+  const novo = ev.target.closest("#apf_novo");
+  if (novo) return abreAJanelaDaChave();
+
+  const testar = ev.target.closest("[data-apf-testar]");
+  if (testar) {
+    return ordemDaApify("testar", { id: testar.dataset.apfTestar },
+                        testar.closest(".fic-c"));
+  }
+  const usar = ev.target.closest("[data-apf-usar]");
+  if (usar) {
+    return ordemDaApify("usar", { id: usar.dataset.apfUsar }, usar.closest(".fic-c"));
+  }
+  const tirar = ev.target.closest("[data-apf-tirar]");
+  if (tirar) {
+    return ordemDaApify("tirar", { id: tirar.dataset.apfTirar }, tirar.closest(".fic-c"));
+  }
+  if (ev.target.closest("#apf_x") || ev.target.closest("#apf_fundo")) {
+    return fechaAJanelaDaChave();
+  }
+  if (ev.target.closest("#apf_ok")) return salvaAChave();
+});
+
+function abreAJanelaDaChave() {
+  $("apf_fundo").hidden = false;
+  $("apf_pop").hidden = false;
+  $("apf_apelido").value = "";
+  $("apf_chave").value = "";
+  $("apf_pop_diz").textContent = "";
+  $("apf_apelido").focus();
+}
+
+function fechaAJanelaDaChave() {
+  $("apf_fundo").hidden = true;
+  $("apf_pop").hidden = true;
+  /* O CAMPO É LIMPO AO FECHAR, e não só ao abrir. É a mesma regra da janela das contas do
+     Instagram: o segredo colado não fica numa aba aberta a tarde toda. */
+  $("apf_chave").value = "";
+}
+
+async function salvaAChave() {
+  const chave = ($("apf_chave").value || "").trim();
+  const apelido = ($("apf_apelido").value || "").trim();
+  if (!chave) {
+    $("apf_pop_diz").textContent = "Cole a chave da Apify primeiro.";
+    return;
+  }
+  $("apf_ok").disabled = true;
+  $("apf_pop_diz").textContent = "Perguntando à Apify se a chave vale…";
+  const r = await noPosto("/apify/cadastrar", { chave, apelido }, 25000);
+  $("apf_ok").disabled = false;
+  if (!r || r.erro) {
+    $("apf_pop_diz").textContent = (r && r.erro) || "a casa não respondeu";
+    return;
+  }
+  fechaAJanelaDaChave();
+  desenhaAApify(r);
+  ESCADA = null;
+}
+
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && $("apf_pop") && !$("apf_pop").hidden) fechaAJanelaDaChave();
+});
+
+/* O TETO SÓ VIAJA QUANDO ELE PARA DE DIGITAR. Mandar a cada tecla escreveria o cofre
+   cinco vezes para um número de dois dígitos, e o valor do meio (o "1" de "15") viraria
+   um teto de verdade por um instante. */
+let APF_RELOGIO = null;
+document.addEventListener("input", ev => {
+  if (!ev.target.closest("#apf_teto")) return;
+  clearTimeout(APF_RELOGIO);
+  APF_RELOGIO = setTimeout(async () => {
+    const v = Number($("apf_teto").value);
+    if (!isFinite(v) || v < 0) return;
+    const r = await noPosto("/apify/teto", { teto: v }, 15000);
+    if (!r || r.erro) {
+      esc_diz("apf_diz", (r && r.erro) || "o teto não foi guardado", "ruim");
+      return;
+    }
+    APIFY = r;
+    pintaOTeto();
+    esc_diz("apf_diz", r.recado || "", "bom");
+    ESCADA = null;
+  }, 700);
+});
+
+/* ------------------------------------------------------------------ o anônimo */
+
+async function desenhaOAnonimo() {
+  if (!$("anon_selo")) return;
+  if (!ESCADA) {
+    const r = await noPosto("/mineracao/escada");
+    if (r && !r.erro) ESCADA = r;
+  }
+  if (!ESCADA) {
+    $("anon_selo").textContent = "não sei";
+    $("anon_selo").className = "cfg-selo cfg-alerta";
+    $("anon_quando").textContent = "Não deu para perguntar à casa.";
+    $("anon_vez").textContent = "—";
+    return;
+  }
+  const off = ESCADA.desligados.includes("anonimo");
+  const agora = ESCADA.caminho === "anonimo";
+  $("anon_selo").textContent = off ? "desligado" : agora ? "minerando" : "de reserva";
+  $("anon_selo").className = off ? "cfg-selo cfg-alerta" : "cfg-selo";
+  /* A ORDEM É LIDA, E NÃO ESCRITA À MÃO. Ele pode ter arrastado o anônimo para o primeiro
+     lugar; uma frase fixa dizendo "entra quando os outros dois não podem" estaria errada
+     na tela dele e certa em lugar nenhum. */
+  const antes = ESCADA.ordem.slice(0, ESCADA.ordem.indexOf("anonimo"))
+    .filter(v => !ESCADA.desligados.includes(v))
+    .map(v => ESC_NOMES[v]);
+  $("anon_quando").textContent = off
+    ? "Você desligou este caminho na página da ordem, então ele não é tentado."
+    : antes.length
+      ? "Ele entra quando " + antes.join(" e ") + " não podem minerar."
+      : "Ele é o primeiro da fila agora, porque você o pôs no topo da ordem.";
+  $("anon_vez").textContent = agora ? "é a vez dele" : "não é a vez";
+}

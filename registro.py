@@ -331,10 +331,29 @@ def fechar(numero: int, entregue: bool) -> None:
 
     d = ler(LIMPEZA, {})
     ok = len([x for x in d.get("laudos", []) if x.get("limpo")])
+    # O PASSO DE FECHAMENTO DIZ O QUE BARROU, e nao "Leva fechada sem entrega."
+    #
+    # POR QUE (07/09/2026, por revisao adversarial): a tela passou a mostrar o motivo da
+    # falha, e ela le' o ULTIMO passo de tipo `falha` do diario, que e' justamente este. O
+    # texto fixo tornava a frase uma tautologia: "A leva parou. Leva fechada sem entrega."
+    # Os passos com conteudo de verdade sao os por conta, escritos antes, e ninguem os
+    # alcanca.
+    #
+    # A CONDICAO JA' DISTINGUE DOIS CASOS, e ela estava sendo jogada fora: nada foi
+    # entregue, ou foi entregue e nenhuma peca passou na limpeza. Sao problemas
+    # diferentes, com conserto diferente, e agora a frase diz qual dos dois.
+    baixados = sum(len(v) for v in feitos.values()) if isinstance(feitos, dict) else 0
+    if entregue and ok:
+        motivo = f"Leva entregue: {ok} peças tratadas, {marcados} saíram da fileira."
+    elif not entregue:
+        motivo = (f"A entrega não saiu da esteira. {baixados} peça(s) chegaram a baixar, "
+                  "e nenhuma foi trazida para a casa.")
+    else:
+        reprovados = sum(len(v) for v in maus.values()) if isinstance(maus, dict) else 0
+        motivo = (f"Nenhuma peça passou na limpeza: {reprovados} reprovada(s) de "
+                  f"{baixados} baixada(s).")
     capa(numero, estado="pronto" if entregue and ok else "falhou", fim=int(time.time()))
-    passo(numero, "fim" if entregue and ok else "falha",
-          f"Leva entregue: {ok} peças tratadas, {marcados} saíram da fileira."
-          if entregue and ok else "Leva fechada sem entrega.")
+    passo(numero, "fim" if entregue and ok else "falha", motivo)
 
 
 if __name__ == "__main__":

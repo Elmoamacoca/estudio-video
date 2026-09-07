@@ -230,7 +230,17 @@ def selecionar(r: dict | None = None) -> dict:
             "mercado": dados["perfil"].get("mercado"),
             "etiquetas": dados["perfil"].get("etiquetas") or [],
             "atualizado": dados.get("atualizado"),
-            "publicacoes": dados["perfil"]["publicacoes"],
+            # `.get`, E NAO COLCHETE, e a diferenca derrubou a esteira em 07/09/2026.
+            #
+            # ELE ERA O UNICO CAMPO COM COLCHETE no meio de dez vizinhos defensivos, e a
+            # rodada 421 morreu inteira com `KeyError: 'publicacoes'` porque um perfil novo
+            # chegou sem ele: a via da Apify nao mede o total de publicacoes do perfil, e
+            # num perfil que nunca teve ficha nao havia valor antigo para preservar.
+            #
+            # A LICAO NAO E' SOBRE ESTE CAMPO. Uma ficha do acervo e' escrita por tres vias
+            # diferentes, e cada uma mede o que consegue: quem le' precisa aguentar campo
+            # ausente, senao a primeira via nova derruba tudo o que vem depois dela.
+            "publicacoes": dados["perfil"].get("publicacoes"),
             "lidos": len(dados.get("posts", [])),
             "completo": bool(dados.get("completo")),
             # perfil encerrado que foi pedido de novo. Sem este campo a tela mostrava

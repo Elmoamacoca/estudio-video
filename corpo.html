@@ -127,6 +127,18 @@
           </div>
         </div>
 
+        <!-- OS PASSOS DA MINERAÇÃO, PERFIL POR PERFIL (07/09/2026).
+
+             O QUE ELE DIZIA ANTES DESTE BLOCO EXISTIR: "eu abro o log do Tales, cara,
+             aqui não explica nada". Não explicava mesmo: o cabeçalho acima falava da
+             esteira do GitHub, e o histórico por perfil vinha do acervo, que a borda
+             segura por até cinco minutos e que só é escrito quando a passagem TERMINA.
+
+             ESTAS LINHAS VÊM DO REGISTRO AO VIVO DA CASA, gravado a cada etapa: entrou
+             na fila, está lendo, terminou com N peças, ou parou com o motivo. É o que
+             responde, sem sessão e sem espera, a pergunta que ele faz: e o meu perfil? -->
+        <div class="kon-passos" id="vivo_passos" hidden></div>
+
         <div class="kon-maquinas elos" id="vivo_elos" hidden></div>
 
         <div class="liv-filtros">
@@ -2397,6 +2409,22 @@
         <span class="cfg-menu-id"><b>Estúdio</b><span>Configurações</span></span>
       </div>
       <div class="cfg-menu-rolo">
+        <!-- A ORDEM DO MENU E' A ORDEM DA ESCADA, e ela mudou em 07/09/2026 por ordem
+             dele: "fica em primeiro lugar todo o processo de mineracao, tanto reels
+             quanto carrossel, utilizando a Apify. Em segundo lugar ficam as contas
+             descartaveis e em terceiro lugar fica o metodo antigo, que era o anonimo."
+
+             O NUMERO AO LADO DE CADA ITEM NAO E' ENFEITE: e' o degrau daquele caminho na
+             escada, o mesmo que o `rodizio.ESCADA` executa. Menu que lista numa ordem e
+             motor que roda noutra e' a trava 60 na forma mais cara, porque a tela ensina
+             o contrario do que o sistema faz. -->
+        <div class="cfg-grupo">
+          <span class="cfg-grupo-tit">Mineração</span>
+          <a class="cfg-item" href="#ordem" data-cfg="ordem"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h11M4 18h6"/></svg><span class="cfg-rot">A Ordem Dos Caminhos</span></span></a>
+          <a class="cfg-item" href="#apify" data-cfg="apify"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.3 9.5A4.5 4.5 0 0 0 7 19z"/><path d="M12 12v5"/><path d="M9.5 14.5 12 12l2.5 2.5"/></svg><span class="cfg-rot">Apify</span></span><span class="cfg-selo" id="cfg_selo_apify">1</span></a>
+          <a class="cfg-item" href="#contas" data-cfg="contas"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="cfg-rot">Contas Descartáveis</span></span><span class="cfg-selo">2</span></a>
+          <a class="cfg-item" href="#anonimo" data-cfg="anonimo"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="m2 2 20 20"/></svg><span class="cfg-rot">Modo Anônimo</span></span><span class="cfg-selo">3</span></a>
+        </div>
         <div class="cfg-grupo">
           <span class="cfg-grupo-tit">Escrita</span>
           <a class="cfg-item" href="#ia" data-cfg="ia"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg><span class="cfg-rot">A IA que escreve</span></span></a>
@@ -2406,11 +2434,12 @@
           <a class="cfg-item" href="#motor" data-cfg="motor"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span class="cfg-rot">O motor do recorte</span></span></a>
           <a class="cfg-item" href="#fontes" data-cfg="fontes"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="cfg-rot">As fontes da peça</span></span></a>
           <a class="cfg-item" href="#pastas" data-cfg="pastas"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span class="cfg-rot">As pastas</span></span></a>
-          <!-- CONTAS E' A QUINTA PAGINA DESTE MENU, e nao uma aba nova no cabecalho. Ordem
-               dele em 04/09/2026: "e' tudo dentro da aba de configuracoes. La' dentro da
-               aba de configuracoes voce cria uma sub-aba." O `montar.py` nao muda, e o
-               cabecalho continua com as mesmas quatro abas (criterio 1 da espec). -->
-          <a class="cfg-item" href="#contas" data-cfg="contas"><span class="cfg-item-esq"><svg class="cfg-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="cfg-rot">Contas</span></span></a>
+          <!-- CONTAS SAIU DAQUI E SUBIU PARA O GRUPO MINERACAO, em 07/09/2026. Ela nasceu
+               como quinta pagina do grupo Maquina por ordem dele em 04/09 ("e' tudo dentro
+               da aba de configuracoes... voce cria uma sub-aba"), e continua sendo uma
+               sub-aba: o que mudou foi o GRUPO, porque agora ela e' o SEGUNDO degrau de
+               uma escada de tres, e os tres degraus tem de aparecer juntos e em ordem.
+               O `montar.py` nao muda, e o cabecalho continua com as mesmas quatro abas. -->
         </div>
       </div>
       <div class="cfg-menu-pe">
@@ -2425,8 +2454,137 @@
 
     <div class="cfg-conteudo">
 
+      <!-- ......................................... A ORDEM DOS CAMINHOS (degrau 0)
+
+           A ESCADA E' A PRIMEIRA PAGINA DA ABA, e ela e' a proposta C, aprovada por ele
+           em 07/09/2026 olhando as tres no navegador. O que a fez ganhar foi a ordem ser
+           um OBJETO que se pega com a mao: ela e' a decisao mais importante desta aba, e
+           arrastar diz o que um campo de numero nao diz.
+
+           SOLTAR RENUMERA E GRAVA. Nao ha' botao de salvar: botao de salvar numa lista
+           arrastavel e' o convite para ele arrastar, sair da aba e perder tudo. -->
+      <div class="cfg-pagina cfg-ativa" data-pg="ordem">
+        <div class="cfg-pagina-cab">
+          <h2>A Ordem Dos Caminhos</h2>
+          <p>Arraste para mudar a ordem. O de cima tenta primeiro, e o de baixo só entra
+            quando o de cima não pode.</p>
+        </div>
+        <div class="cfg-bloco">
+          <div class="pri" id="pri"></div>
+          <p class="pri-diz" id="pri_diz"></p>
+        </div>
+        <div class="cfg-bloco cfg-duas">
+          <div class="caixa">
+            <div class="cfg-topo"><h3>O Que Aconteceu</h3>
+              <div class="dir"><span class="cfg-selo" id="lt_selo">ao vivo</span></div></div>
+            <div class="lt" id="lt"></div>
+          </div>
+          <div class="caixa">
+            <div class="cfg-topo"><h3>Quanto Ainda Cabe</h3>
+              <div class="dir"><span class="cfg-selo" id="folga_selo">neste ciclo</span></div></div>
+            <div class="cfgv-folga cfg-folga-2" id="folga"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ............................................................ APIFY (degrau 1)
+
+           CADA CHAVE E' UMA FICHA COM ANEL. Saldo e' fracao de um inteiro, e fracao de
+           inteiro se le' melhor em anel do que em barra: bater o olho em tres aneis diz
+           na hora qual conta ainda tem folga.
+
+           E O ANEL E' DESENHADO PELO NAVEGADOR COM O NUMERO QUE A CASA MANDOU PRONTO. A
+           divisao mora no `apify.sem_segredo`, num lugar so': escrita aqui tambem, as
+           duas versoes divergiriam no dia em que uma aprendesse sobre saldo negativo. -->
+      <div class="cfg-pagina" data-pg="apify">
+        <div class="cfg-pagina-cab">
+          <h2>Apify</h2>
+          <p>O primeiro caminho da mineração. Uma chave por conta, e o rodízio troca
+            sozinho quando o saldo de uma acaba.</p>
+        </div>
+
+        <div class="ia-alerta" id="apf_alerta" hidden></div>
+
+        <div class="cfg-bloco">
+          <div class="caixa">
+            <div class="cfg-topo"><h3>As Chaves</h3>
+              <div class="dir">
+                <span class="badge badge-secondary" id="apf_conta"></span>
+                <span class="cfg-selo" id="apf_soma"></span>
+              </div>
+            </div>
+            <div class="fic" id="apf_lista"></div>
+            <div class="ses-diz" id="apf_diz"></div>
+          </div>
+        </div>
+
+        <div class="cfg-bloco cfg-duas">
+          <div class="caixa">
+            <div class="cfg-topo"><h3>O Teto De Gasto</h3>
+              <div class="dir"><span class="cfg-selo" id="apf_teto_selo"></span></div>
+            </div>
+            <div class="cfg-linhas">
+              <div class="cfg-linha"><div><div class="cfg-nome">Parar Em</div>
+                <div class="cfg-desc">Passando deste valor no ciclo, a Apify sai da vez e
+                  as contas descartáveis assumem sozinhas. Em zero, não há teto.
+                  <span id="apf_ciclo"></span></div></div>
+                <div class="dir"><span class="nota">US$</span>
+                  <input type="number" id="apf_teto" min="0" max="500" step="1"
+                         style="width:96px;text-align:right"></div></div>
+              <div class="cfg-linha"><div><div class="cfg-nome">Já Saiu Neste Ciclo</div>
+                <div class="cfg-desc">A soma do que as chaves cadastradas gastaram desde
+                  a virada do ciclo.</div></div>
+                <div class="dir"><b id="apf_gasto" class="cfg-n"></b></div></div>
+            </div>
+          </div>
+          <div class="caixa">
+            <div class="cfg-topo"><h3>O Ator</h3>
+              <div class="dir"><span class="cfg-selo">medido nesta casa</span></div></div>
+            <div class="cfg-pares cfg-uma cfg-numeros">
+              <div class="cfg-par"><span>Nome</span><b>Instagram Scraper</b></div>
+              <div class="cfg-par"><span>Custo Por Mil Publicações</span><b>US$ 2,65</b></div>
+              <div class="cfg-par"><span>Exibições Do Reel</span><b>Vêm</b></div>
+              <div class="cfg-par"><span>Lâminas Do Carrossel</span><b>Vêm</b></div>
+              <div class="cfg-par"><span>Teto De Itens Por Corrida</span><b>1.000</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ...................................................... MODO ANONIMO (degrau 3)
+
+           ELE NAO TEM BOTAO DE LIGAR PROPRIO, e isso e' de proposito: quem liga e desliga
+           caminho e' a escada da primeira pagina, num lugar so'. Aqui fica o ESTADO, que
+           e' o que responde a pergunta que ele faz olhando: por que este esta' parado. -->
+      <div class="cfg-pagina" data-pg="anonimo">
+        <div class="cfg-pagina-cab">
+          <h2>Modo Anônimo</h2>
+          <p>O terceiro caminho, e o mais antigo. Fica de reserva porque a rota que ele
+            usava parou de responder.</p>
+        </div>
+        <div class="cfg-bloco">
+          <div class="caixa">
+            <div class="cfg-topo"><h3>Estado</h3>
+              <div class="dir"><span class="cfg-selo" id="anon_selo"></span></div></div>
+            <div class="cfg-linhas">
+              <div class="cfg-linha"><div><div class="cfg-nome">A Leitura Pelo Arroba</div>
+                <div class="cfg-desc">Funcionava até 03 de setembro e passou a devolver
+                  desvio em laço. Sem conta, o Instagram não entrega mais o feed.</div></div>
+                <div class="dir"><span class="cfg-selo cfg-alerta">parou</span></div></div>
+              <div class="cfg-linha"><div><div class="cfg-nome">A Esteira Do GitHub</div>
+                <div class="cfg-desc">Vinte vagas em paralelo, de graça. Continua de pé, e
+                  é o que faz este caminho valer a pena se a rota voltar.</div></div>
+                <div class="dir"><span class="cfg-selo">de pé</span></div></div>
+              <div class="cfg-linha"><div><div class="cfg-nome">Quando Ele Entra</div>
+                <div class="cfg-desc" id="anon_quando"></div></div>
+                <div class="dir"><span class="cfg-selo" id="anon_vez"></span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ................................................................ A IA -->
-      <div class="cfg-pagina cfg-ativa" data-pg="ia">
+      <div class="cfg-pagina" data-pg="ia">
         <div class="cfg-pagina-cab">
           <h2>A IA Que Escreve</h2>
           <p>A fila de chaves, o prompt, e o que já se gastou hoje.</p>
@@ -2764,6 +2922,43 @@
 </div>
 
 
+<!-- ============================================ A JANELA DE CADASTRAR CHAVE DA APIFY
+
+     ELA E' O `.pop` DA CASA, e nao uma janela nova, pela mesma razao ja' escrita na
+     janela da chave logo acima: uma segunda janela traria a segunda animacao, o segundo
+     Esc e o segundo jeito de devolver o foco. E ela mora FORA da secao da aba porque
+     `.aba` tem animacao com transform, e elemento assim vira ancora de quem e' fixo.
+
+     SO' O TOKEN PESSOAL E' PEDIDO, e a razao foi medida na conta dele em 07/09/2026: a
+     `/v2/users/me/limits` devolve plano, teto e gasto do ciclo so' com ele. Pedir mais
+     alguma coisa seria pedir o que nao se usa. -->
+<div class="pop-fundo" id="apf_fundo" hidden></div>
+<div class="pop" id="apf_pop" hidden role="dialog" aria-modal="true"
+     aria-labelledby="apf_titulo">
+  <div class="pop-cab">
+    <b id="apf_titulo">Cadastrar Uma Chave Da Apify</b>
+    <button class="gal-x" id="apf_x" type="button" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="pop-corpo">
+    <label class="cfg-campo">
+      <span>Apelido</span>
+      <input id="apf_apelido" type="text" placeholder="Mina 01" autocomplete="off">
+    </label>
+    <label class="cfg-campo">
+      <span>Chave Pessoal</span>
+      <input id="apf_chave" type="password" placeholder="apify_api_..." autocomplete="off"
+             spellcheck="false">
+    </label>
+    <p class="nota mini">Na Apify, em Settings e depois Integrations. É o único dado
+      necessário: o plano, o teto e o gasto são lidos por ela mesma.</p>
+    <div class="pop-diz" id="apf_pop_diz"></div>
+  </div>
+  <div class="pop-pe">
+    <button class="acao forte" id="apf_ok" type="button">Cadastrar</button>
+  </div>
+</div>
+
+
 <!-- ================================================ A JANELA DE CADASTRAR CONTA
 
      ORDEM DELE, em 05/09/2026, olhando a proposta no ar: "gostei desse, porem nao gostei
@@ -3085,7 +3280,10 @@
       <div class="ajuda-passo"><b>3 · Entregar</b>
         <span>O que passou vira um pacote só, e o que reprovou é apagado.</span></div>
       <div class="ajuda-passo"><b>4 · Guardar</b>
-        <span>O pacote desce para a casa do Estúdio, de dez em dez minutos.</span></div>
+        <!-- ERAM DEZ MINUTOS, e viraram um quando a casa foi para a VPS: o relógio que
+             busca o pacote roda de minuto em minuto (`estudio-guardar.timer`). O número
+             velho fazia ele esperar dez vezes mais do que precisava. -->
+        <span>O pacote desce para a casa do Estúdio, de minuto em minuto.</span></div>
     </div>
 
     <h3 class="ajuda-grupo">Montar A Leva</h3>
@@ -3113,9 +3311,17 @@
 
     <details class="ajuda-item">
       <summary>Baixa só reels?</summary>
-      <div><p>Sim. Imagem e carrossel são varridos, contados e entram na conta da
-      régua, mas não descem. O tratamento de metadado é de vídeo, e a página dark
-      publica vídeo.</p></div>
+      <!-- ESTA RESPOSTA DIZIA "SIM" E CONTRADIZIA A PRÓPRIA ABA (07/09/2026, auditoria).
+           Duzentas linhas acima, no mesmo arquivo, o cartão Pacote De Carrosséis diz que
+           a casa baixa carrossel direto e monta um PDF por peça. Duas afirmações opostas
+           na mesma tela é a pior forma de tira-dúvidas: ele confia numa e a outra o
+           desmente na hora de usar. -->
+      <div><p>A <b>leva</b> baixa só reels: o tratamento de metadado é de vídeo, e a
+      página dark publica vídeo. Imagem e carrossel são varridos, contados e entram na
+      conta da régua, mas não entram na leva.</p>
+      <p><b>Carrossel desce por outro caminho</b>, nesta mesma aba, no cartão
+      <b>Pacote De Carrosséis</b>: ali a casa baixa as lâminas direto e monta um PDF por
+      carrossel, com a descrição ao lado. Ele não passa pela esteira.</p></div>
     </details>
 
     <details class="ajuda-item">
@@ -3231,8 +3437,16 @@
 
     <details class="ajuda-item">
       <summary>Quanto isso custa?</summary>
-      <div><p>Zero, em todas as camadas. O acervo é público, e para repositório público
-      o GitHub não cobra nem o tempo de máquina nem o espaço dos pacotes.</p></div>
+      <!-- "ZERO EM TODAS AS CAMADAS" DEIXOU DE SER VERDADE em 07/09/2026, quando a Apify
+           virou o primeiro caminho da mineração. A frase media só a esteira, e continuava
+           certa sobre ela; errada era a palavra "todas". Numa tela que fala de dinheiro,
+           arredondar para zero é o tipo de conforto que vira surpresa no fim do mês. -->
+      <div><p><b>Esta aba é de graça.</b> O acervo é público, e para repositório público
+      o GitHub não cobra nem o tempo de máquina nem o espaço dos pacotes. Baixar, tratar
+      e guardar não custam nada.</p>
+      <p><b>A mineração que enche esta aba tem custo próprio.</b> Quando ela roda pela
+      Apify, cada perfil varrido é pago por publicação lida. O quanto já saiu, e o teto
+      que faz ela parar sozinha, ficam em <b>Configurações, na página Apify</b>.</p></div>
     </details>
 
     <details class="ajuda-item">

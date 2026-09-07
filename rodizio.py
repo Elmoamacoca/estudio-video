@@ -479,59 +479,155 @@ class Passagem:
         return fora
 
 
-# ------------------------------------------------------------------ a virada
+# ------------------------------------------------------------------ a escada
 #
 # A ORDEM DELE, em 04/09/2026: "o principal tem que ser a conta vinculada. O anonimo ele
 # vira fallback." A versao 2 desta atividade escrevia o CONTRARIO com o nome trocado.
+#
+# E ELA MUDOU DE NOVO EM 07/09/2026, com a Apify entrando na frente das duas:
+#
+#     "a gente vai mudar completamente a ordem. Entao fica em primeiro lugar todo o
+#      processo de mineracao, tanto reels quanto carrossel, utilizando a Apify. Em
+#      segundo lugar ficam as contas descartaveis e em terceiro lugar fica o metodo
+#      antigo que estava sendo utilizado, que era um metodo anonimo."
+#
+# POR QUE A APIFY VAI NA FRENTE, e nao e' preferencia: ela nao usa conta do Instagram nem
+# o endereco residencial dele, que sao os dois recursos que se gastam. As outras duas
+# custam conta ou custam bloqueio; esta custa dinheiro, e dinheiro tem teto que ele
+# controla na tela. Alem disso ela roda na casa, com o computador dele desligado.
 
+APIFY = "apify"
 PONTA = "ponta"
 ANONIMO = "anonimo"
 PARAR = "parar"
 
-# AS FALHAS QUE SAO DA CONTA. Elas trocam de conta, e NAO caem para o anonimo: cair
-# esconderia que a conta morreu, e ele descobriria dias depois, com todas mortas.
+# A ESCADA, EM DADOS. Ela existe como lista e nao como sequencia de `if` porque a tela
+# desenha esta mesma ordem, e ele pode arrastar: escrita nos dois lugares, ela divergiria
+# no dia em que um dos dois aprendesse um degrau novo (trava 60).
+ESCADA = (APIFY, PONTA, ANONIMO)
+
+# AS FALHAS QUE SAO DA CONTA. Elas trocam de conta, e NAO caem para o degrau seguinte:
+# cair esconderia que a conta morreu, e ele descobriria dias depois, com todas mortas.
 FALHAS_DA_CONTA = ("sessao_morta", "bloqueada", "vencida")
 
-# AS QUE NAO SAO DELA. Essas caem para o anonimo, porque a conta continua boa e o que
-# faltou foi a rede, o tempo ou o computador dele estar desligado.
+# AS QUE NAO SAO DELA. Essas caem para o degrau seguinte, porque a conta continua boa e o
+# que faltou foi a rede, o tempo ou o computador dele estar desligado.
 FALHAS_DE_FORA = ("rede", "tempo_esgotado", "ponta_desligada")
 
+# AS FALHAS DA APIFY. Elas nao tem nada a ver com conta do Instagram, e por isso tem lista
+# propria: quando a Apify nao pode, quem assume e' o degrau de baixo, e as contas dele
+# continuam intactas.
+FALHAS_DA_APIFY = ("sem_saldo", "teto_estourado", "apify_recusou", "apify_fora")
 
-def qual_caminho(contas: list, ponta_ligada: bool, falha: str | None = None) -> str:
-    """Por onde este perfil e' lido AGORA. Devolve `ponta`, `anonimo` ou `parar`.
 
-    ELA E' A UNICA QUE DECIDE ISSO, e os dois chamadores de mineracao a chamam. Escrita
+def _apify_pode(dito: bool | None) -> bool:
+    """Ha' chave da Apify em condicoes de minerar?
+
+    O IMPORT E' PREGUICOSO, e pela mesma razao do `cofre` logo acima: o `rodada.py`
+    importa este arquivo e roda nas vinte maquinas do GitHub, a partir do acervo PLANO. O
+    `apify.py` nao sobe para la', porque ele e' o leitor das chaves e nao tem o que fazer
+    na nuvem. Com o import no topo, as vinte vagas quebrariam com `ModuleNotFoundError` na
+    primeira rodada depois da publicacao.
+
+    E QUEM JA' SABE A RESPOSTA A PASSA PRONTA. A esteira pergunta o caminho a' casa e nao
+    tem cofre nenhum na mao; a casa tem. O parametro serve para os dois usarem a MESMA
+    decisao sem que um deles precise abrir um arquivo que nao existe do lado dele.
+    """
+    if dito is not None:
+        return bool(dito)
+    try:
+        import apify
+        return apify.ha_chave_viva()
+    except Exception:
+        # COFRE AUSENTE, ILEGIVEL OU MODULO FORA DO LUGAR VIRAM "NAO PODE", e nunca uma
+        # excecao que sobe: uma decisao de caminho nao pode derrubar a mineracao inteira.
+        # A escada existe justamente para o degrau seguinte assumir.
+        return False
+
+
+def qual_caminho(contas: list, ponta_ligada: bool, falha: str | None = None,
+                 apify_viva: bool | None = None) -> str:
+    """Por onde este perfil e' lido AGORA. Devolve `apify`, `ponta`, `anonimo` ou `parar`.
+
+    ELA E' A UNICA QUE DECIDE ISSO, e todos os chamadores de mineracao a chamam. Escrita
     duas vezes, ela divergiria: e' a trava 60, e nesta atividade ela ja' mordeu no
     `vias_do_feed` e no leitor do cofre.
 
-    A ORDEM, como ele decidiu:
+    A ESCADA, na ordem que ele mandou em 07/09/2026:
 
-        ha' conta viva e a ponta ligada?  --> a PONTA le', logado, do endereco residencial
-        falhou por motivo que NAO e' da conta? --> o ANONIMO tenta, como reserva
-        falhou por motivo que E' da conta? --> troca de conta, e NAO cai para o anonimo
-        nao ha' conta viva? --> o ANONIMO tenta
+        ha' chave da Apify com saldo?     --> a APIFY le', no servidor dela
+        nao ha', mas ha' conta e a ponta? --> a PONTA le', logada, do computador dele
+        nao ha' nem uma nem outra?        --> o ANONIMO tenta, como ultimo recurso
 
-    E `parar` NAO E' A MESMA COISA QUE `anonimo`. Ele so' aparece quando a marca da casa
-    diz que nao ha' conta viva NENHUMA: ai' a esteira para, por ordem dele ("pra ate' eu
+    E AS FALHAS DESCEM A ESCADA, cada uma no seu degrau:
+
+        falhou por saldo ou por teto?          --> desce para a ponta
+        falhou por motivo que E' da conta?     --> troca de conta, e NAO desce
+        falhou por motivo que NAO e' da conta? --> desce para o anonimo
+
+    `parar` NAO E' A MESMA COISA QUE `anonimo`. Ele so' aparece quando a marca da casa diz
+    que nao ha' conta viva NENHUMA: ai' a esteira para, por ordem dele ("pra ate' eu
     repor"), em vez de gastar rodada num caminho que ja' foi medido em 401.
     """
+    if falha in FALHAS_DA_APIFY:
+        # A APIFY SAIU DA VEZ, e o degrau de baixo assume. Nenhuma conta do Instagram foi
+        # tocada aqui: o que acabou foi saldo, e saldo volta na virada do ciclo.
+        return PONTA if (ponta_ligada and vivas(contas)) else ANONIMO
     if falha in FALHAS_DA_CONTA:
-        # TROCA DE CONTA, e nao cai para o anonimo. Se ainda ha' outra viva, e' ela que
-        # entra; se nao ha', o anonimo assume, porque parar por causa de UMA conta seria
-        # parar cedo demais.
+        # TROCA DE CONTA, e nao desce. Se ainda ha' outra viva, e' ela que entra; se nao
+        # ha', o anonimo assume, porque parar por causa de UMA conta seria parar cedo
+        # demais. E NAO volta para a Apify: se ela pudesse, este perfil nem teria chegado
+        # ao degrau da conta.
         return PONTA if vivas(contas) else ANONIMO
     if falha in FALHAS_DE_FORA:
         # A CONTA CONTINUA BOA: o que faltou foi a rede, o tempo ou o computador dele
         # estar desligado. Insistir na ponta aqui seria bater na mesma porta fechada; o
-        # anonimo e' de graca e nao gasta conta, entao ele tenta.
+        # anonimo e' de graca e nao gasta conta nem saldo, entao ele tenta.
         #
         # ESTE RAMO FALTAVA na primeira versao, e o criterio 4 o pegou: as tres falhas de
         # fora caiam no ramo de baixo e voltavam `ponta`, ou seja, o fallback que ele
         # mandou existir nunca era acionado por elas.
         return ANONIMO
-    if ponta_ligada and vivas(contas):
-        return PONTA
+    # A ORDEM E OS INTERRUPTORES SAO OS DA TELA, e nao uma sequencia de `if` presa aqui.
+    #
+    # POR QUE ASSIM: a proposta C, aprovada em 07/09/2026, deixa ele ARRASTAR os tres
+    # degraus e desligar qualquer um. Um `if` fixo faria a tela mostrar uma ordem e o motor
+    # rodar outra, que e' a pior forma da trava 60: a tela ensina o contrario do que
+    # acontece, e ele so' descobre pelo resultado.
+    #
+    # E O PADRAO E' O QUE ELE MANDOU, quando o arquivo ainda nao existe: Apify, contas,
+    # anonimo. O `escada.ler` nunca atira, entao um arquivo estragado nao para a mineracao.
+    ordem, desligados = _escada()
+    for degrau in ordem:
+        if degrau in desligados:
+            # DESLIGADO NAO E' TENTADO, nem sendo o unico com condicoes. Foi ele quem
+            # desligou, e a tela ja' diz que a fila espera nesse caso.
+            continue
+        if degrau == APIFY and _apify_pode(apify_viva):
+            return APIFY
+        if degrau == PONTA and ponta_ligada and vivas(contas):
+            return PONTA
+        if degrau == ANONIMO:
+            return ANONIMO
+    # TODOS DESLIGADOS, OU NENHUM EM CONDICOES. O anonimo continua sendo a resposta, e nao
+    # `parar`: `parar` e' outra coisa (a marca da casa dizendo que nao ha' conta viva), e
+    # quem devolve isso e' o `todas_fora`. Devolver `parar` daqui misturaria as duas.
     return ANONIMO
+
+
+def _escada() -> tuple:
+    """A ordem e os desligados, com o import preguicoso de sempre.
+
+    MESMA RAZAO DO `_apify_pode` E DO `cofre`: este arquivo e' importado pelo `rodada.py`,
+    que roda nas vinte maquinas do GitHub a partir do acervo plano, onde o `escada.py` nao
+    sobe. Sem cofre e sem escada do lado de la', a ordem vira o padrao, e a vaga anonima ja'
+    pergunta o caminho a' casa de qualquer jeito.
+    """
+    try:
+        import escada
+        return escada.ler()
+    except Exception:
+        return list(ESCADA), []
 
 
 def todas_fora(contas: list) -> bool:

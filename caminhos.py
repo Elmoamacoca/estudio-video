@@ -123,6 +123,14 @@ DESPACHADOS = PEDIDOS / "despachados"
 
 IA = CASA / "ia.json"                             # a fila de chaves e o prompt
 IA_USO = CASA / "ia-uso.json"                     # o gasto de cada chave, dia a dia
+
+# O COFRE DAS CHAVES DA APIFY, e ele mora NA CASA, ao contrario do das contas do
+# Instagram (07/09/2026). A diferenca nao e' de gosto: o `cofre.py` mora no computador
+# dele porque endereco de datacenter com CONTA LOGADA do Instagram e' o que o Instagram
+# mais pune. A Apify nao tem nada disso: o ator roda no servidor dela, com a saida dela,
+# e a chave nao esta' presa a endereco nenhum. Guardar aqui e' o que destrava a mineracao
+# rodar com o computador dele desligado, que era o motivo de tudo depender da ponta.
+COFRE_DA_APIFY = CASA / "apify.json"
 GUARDADAS = CASA / "guardadas.json"               # o livro das levas ja' trazidas
 REGISTRO_DO_POSTO = CASA / "posto-registro.txt"   # o caderno da portaria
 

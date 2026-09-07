@@ -745,18 +745,23 @@ def caminho_da_mineracao() -> tuple:
                                  f"({type(e).__name__}); o anônimo assume")
     ponta = (d or {}).get("ponta") or {}
     caminho = ponta.get("caminho")
-    if caminho not in (rodizio.PONTA, rodizio.ANONIMO):
+    if caminho not in rodizio.ESCADA:
         # CASA VELHA NÃO PARA A MINERAÇÃO. Enquanto a VPS não subir o código com este
-        # campo, a resposta vem sem ele, e tratar isso como "a ponta está cuidando"
+        # campo, a resposta vem sem ele, e tratar isso como "alguém está cuidando"
         # pararia a esteira em cima de um silêncio. Ausente não é sim (trava 3).
         return rodizio.ANONIMO, ("a casa não disse o caminho (versão antiga); "
                                  "o anônimo assume")
+    if caminho == rodizio.APIFY:
+        # O PRIMEIRO DEGRAU DA ESCADA, desde 07/09/2026. Ele roda DENTRO da casa, e não
+        # aqui: a chave mora lá e o ator roda no servidor da Apify. Para esta vaga, saber
+        # isso serve para uma coisa só, e é a mesma de sempre: sair da frente.
+        return caminho, ("a Apify tem chave com saldo, e ela é o primeiro caminho")
     if caminho == rodizio.PONTA:
         return caminho, (f"a ponta está ligada com {ponta.get('vivas')} conta(s) "
-                         "pronta(s), e ela é o caminho principal")
-    return caminho, ("a ponta não pode minerar agora "
+                         "pronta(s), e ela é o segundo caminho")
+    return caminho, ("nem a Apify nem a ponta podem minerar agora "
                      f"(ponta {ponta.get('estado')}, {ponta.get('vivas')} conta(s) "
-                     "pronta(s)); o anônimo assume como reserva")
+                     "pronta(s)); o anônimo assume como último recurso")
 
 
 def quantos_faltam() -> int:
@@ -772,7 +777,13 @@ def quantos_faltam() -> int:
     ela: é o mesmo caminho de "todos os perfis já estão completos".
     """
     caminho, _ = caminho_da_mineracao()
-    if caminho == rodizio.PONTA:
+    # A CONTA E' PARA A ESTEIRA ANONIMA, e so' para ela. Qualquer degrau acima dela na
+    # escada quer dizer que outro ja' esta' cuidando: zero maquinas.
+    #
+    # A CONDICAO E' "e' o anonimo?", e nao "e' a ponta?". Escrita ao contrario, ela
+    # devolvia a fila cheia para o caminho `apify` no dia em que ele entrou, e vinte
+    # maquinas subiriam para varrer o que a casa ja' estava varrendo.
+    if caminho != rodizio.ANONIMO:
         return 0
     return len(pendentes(contas_pedidas(), caminho))
 
@@ -823,7 +834,7 @@ def main() -> int:
     # e' SAIR DA FRENTE. O anonimo continua existindo, e continua sendo quem varre quando
     # o computador dele esta' desligado, sem rede, ou sem conta que possa ler.
     caminho, por_que = caminho_da_mineracao()
-    if caminho == rodizio.PONTA:
+    if caminho != rodizio.ANONIMO:
         print("a vaga anonima nao varre nesta rodada: " + por_que)
         return 0
     print("caminho desta rodada: anonimo. " + por_que)
