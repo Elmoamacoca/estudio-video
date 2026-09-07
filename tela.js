@@ -1772,46 +1772,15 @@ function desenhaMinerados() {
     : "todos concluídos";
 
   $("min-corpo").innerHTML = pedaco.map(p => {
-    // A COBERTURA DE UMA VARREDURA FILTRADA NÃO É SOBRE AS PUBLICAÇÕES DO PERFIL.
-    //
-    // Aqui saía "13%" para um perfil com 294 reels e 2.256 publicações, e "0%" para
-    // outro cujo total de publicações o Instagram não informou. Nenhum dos dois diz o
-    // que interessa: numa busca de reels, o que importa é se ela chegou ao último reel.
-    //
-    // Chegou: mostra "todos". Não chegou: mostra a contagem, sem inventar fração de um
-    // total que ninguém conhece, porque quantos reels um perfil tem só se sabe no fim.
-    const filtrado = rotuloDosFormatos(null, LIVRO.find(c => c.conta === p.conta))
-                       !== "publicações";
-    const cob = p.publicacoes ? Math.round(100 * p.lidos / p.publicacoes) : 0;
-    const coluna = filtrado
-      // A CONTAGEM E' DO FORMATO QUE O ROTULO NOMEIA. Com `p.lidos` a coluna dizia
-      // "todos / 395 carrosséis" num perfil de 395 reels e zero carrossel (03/09/2026);
-      // a ficha do perfil ja' traz `reels`, `imagens` e `carrosseis` separados.
-      ? (p.completo
-          ? `<span class="tab-dupla">todos<i>${num(lidosDoPerfil(p))} ${
-              rotuloDosFormatos(null, LIVRO.find(c => c.conta === p.conta))}</i></span>`
-          : `<span class="tab-dupla">em curso<i>${num(p.lidos)} até agora</i></span>`)
-      : p.publicacoes
-        ? `<span class="tab-dupla">${cob}%<i>de ${num(p.publicacoes)}</i></span>`
-        : `<span class="tab-dupla tab-nulo">sem total<i>o Instagram não informa</i></span>`;
     const [selo] = ESTADOS[situacaoDe(p)];
-    const ate = p.mais_antigo
-      ? new Date(p.mais_antigo * 1000).toLocaleDateString("pt-BR",
-          { month: "short", year: "numeric" })
-      : '<span class="tab-nulo">sem data</span>';
     return `<tr class="tab-linha">
       <td class="tab-perfil"><div class="tab-perfil-in">${retrato(p)}
         <span class="tab-quem"><b>@${p.conta}</b>
           <span>${p.nome || "sem nome no perfil"}</span></span></div></td>
       <td class="tab-marc">${celulaMercado(p)}</td>
       <td class="tab-marc tab-marc-etq">${celulaEtiqueta(p)}</td>
-      <td class="tab-num">${num(p.lidos)}</td>
-      <td class="tab-num">${coluna}</td>
-      <td>${ate}</td>
-      <td class="tab-num">${num(p.reels)}</td>
-      <td class="tab-num">${num(p.imagens)}</td>
-      <td class="tab-num">${num(p.carrosseis)}</td>
-      <td class="tab-num">${num(p.acima)}</td>
+      <td class="tab-ate">${celulaAte(p)}</td>
+      <td class="tab-sep">${celulaSeparado(p)}</td>
       <td class="tab-baixa">${celulaBaixar(p)}</td>
       <td>${selo}</td>
       <td>${quando(p.atualizado)}</td>
@@ -1819,6 +1788,48 @@ function desenhaMinerados() {
           rel="noopener" href="https://www.instagram.com/${p.conta}/">Instagram</a></td>
     </tr>`;
   }).join("");
+}
+
+/* ATÉ ONDE A VARREDURA CHEGOU, NUMA LINHA SÓ.
+   Queixa dele em 07/09/2026: "alcance tem que ser apenas uma linha, não duas linhas, aqui
+   tem vários que estão em duas linhas". O texto era o do navegador, `set. de 2024`, e a
+   preposição no meio dá ao navegador um lugar para quebrar quando a coluna aperta: metade
+   das linhas mostrava o mês em cima e o ano embaixo, e a fileira inteira desalinhava.
+
+   `set/2024` NÃO TEM ONDE QUEBRAR, e a barra ainda economiza três letras de largura. A
+   coluna também ganhou `nowrap` na folha, porque texto curto não é garantia: basta ele
+   estreitar a janela para o problema voltar. */
+const MES_CURTO = ["jan", "fev", "mar", "abr", "mai", "jun",
+                   "jul", "ago", "set", "out", "nov", "dez"];
+function celulaAte(p) {
+  if (!p.mais_antigo) return '<span class="tab-nulo">sem data</span>';
+  const d = new Date(p.mais_antigo * 1000);
+  if (isNaN(d.getTime())) return '<span class="tab-nulo">sem data</span>';
+  return `${MES_CURTO[d.getMonth()]}/${d.getFullYear()}`;
+}
+
+/* O QUE A RÉGUA SEPAROU DESTE PERFIL, e é a coluna que ele pediu no lugar das seis de
+   número: "informando se esse perfil foi separado carrossel, ou foi separado reels, ou até
+   mesmo ambos".
+
+   OS DOIS NÚMEROS JÁ EXISTEM E SÃO CONTADOS SEPARADOS DE PROPÓSITO. O `selecionar.py`
+   escreve `baixaveis` (reels acima da régua) e `carrosseis_baixaveis` em campos
+   diferentes, e o comentário de lá explica por quê: somados num número só, ninguém saberia
+   de qual formato é o material que sobrou. É essa separação que esta coluna mostra.
+
+   NADA SEPARADO NÃO É FALHA, e por isso a pastilha é apagada e não vermelha: pode ser
+   perfil ainda em varredura, ou perfil cujo material inteiro ficou abaixo do corte que ele
+   mesmo escolheu. */
+function celulaSeparado(p) {
+  const reels = p.baixaveis || 0;
+  const carr = p.carrosseis_baixaveis || 0;
+  if (reels && carr)
+    return pinoBaixar("amb", "ambos", `${num(reels)} + ${num(carr)}`);
+  if (reels)
+    return pinoBaixar("rls", "reels", num(reels));
+  if (carr)
+    return pinoBaixar("crr", "carrosséis", num(carr));
+  return pinoBaixar("off", "nada", "");
 }
 
 $("min-q").addEventListener("input", () => { minPagina = 1; desenhaMinerados(); });
@@ -3585,28 +3596,12 @@ let etqConta = null;
 let etqMercado = "";                 // o que esta' escolhido na folha, ainda nao salvo
 let etqEtiquetas = new Set();
 
-/* A LEITURA DE ESPERA NAO PASSA PELO ENDERECO CRU.
-   O `ler` corre os dois caminhos e aceita quem responder primeiro, o que e' certo para
-   pintar a tela e errado para esperar uma mudanca: o endereco cru tem cache de borda e
-   serve por minutos o arquivo de antes. Quem espera precisa da resposta do momento, ou
-   fica esperando para sempre uma coisa que ja' aconteceu. */
-async function lerFresco(caminho) {
-  // ESTA VAI SÓ PELA PONTE DE PROPÓSITO: ela existe para perguntar ao acervo se a
-  // mudança já entrou, e a fonte tem cache de borda que responderia o valor velho.
-  //
-  // O FREIO É NOVO, e a razão é a mesma da leitura comum: ponte doente segura o pedido
-  // por até um minuto, e esta função é chamada de três em três segundos enquanto a tela
-  // espera. Sem cortar, cada espera de quatro minutos deixava oitenta pedidos pendurados.
-  const dentro = caminho.replace(/^dados\//, "");
-  const freio = new AbortController();
-  const corte = setTimeout(() => freio.abort(), 8000);
-  try {
-    const r = await fetch(`${PONTE}/dados/${dentro}?t=${Date.now()}`,
-                          { cache: "no-store", signal: freio.signal });
-    return r.ok ? await r.json() : null;
-  } catch (e) { return null; }
-  finally { clearTimeout(corte); }
-}
+/* AQUI MORAVA A `lerFresco`, e ela saiu em 07/09/2026 junto com a espera que a justificava.
+
+   Ela lia o acervo pela ponte, sem cache, de três em três segundos, enquanto a tela
+   aguardava a esteira do GitHub aplicar uma mudança de catálogo. Não há mais o que
+   aguardar: quem grava mercado e etiqueta agora é a casa, pela rota `/marcacao/`, e ela
+   devolve o resultado na própria resposta. */
 
 /** Quantos perfis carregam cada nome hoje. Sai da tabela, que ja' tem todos. */
 function usoDoCatalogo() {
@@ -3706,23 +3701,47 @@ document.addEventListener("click", () => {
   });
 });
 
-$("etq_cancelar").onclick = () => { $("etq_folha").hidden = true; };
+/* FECHAR A FOLHA TEM TRÊS CAMINHOS, e até 07/09/2026 tinha um só, escondido.
+
+   O QUE ELE ENCONTROU: "quando eu venho aqui na etapa de mercado ou na etapa de etiqueta,
+   eu não consigo fechar a tela, tem que ter um símbolozinho de fechar". Medido na tela
+   dele, em 1400 por 1000: o botão Fechar existe e fica a 562 pixels do topo, bem visível
+   — enquanto a folha está pequena. Abrindo "Criar e apagar mercados e etiquetas", a folha
+   passa de 370 para mais de 700 pixels, ganha rolagem própria, e o pé com o Fechar sai
+   pela borda de cima. Quem está mexendo nas listas, lá embaixo, não tem como sair.
+
+   O XIS FICA GRUDADO NO ALTO DA FOLHA, e é por isso que ele não rola junto: um botão de
+   fechar que some quando a folha cresce é o mesmo problema com outro desenho. */
+function fecharAFolhaDaMarcacao() { $("etq_folha").hidden = true; }
+$("etq_cancelar").onclick = fecharAFolhaDaMarcacao;
+$("etq_fechar").onclick = fecharAFolhaDaMarcacao;
+$("etq_folha").addEventListener("click", ev => {
+  if (ev.target === $("etq_folha")) fecharAFolhaDaMarcacao();
+});
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && !$("etq_folha").hidden) fecharAFolhaDaMarcacao();
+});
 
 $("etq_vai").onclick = async () => {
   if (!etqConta) return;
   $("etq_vai").disabled = true;
   carregando("etq_recado", "Gravando a marcação", "bolas");
   try {
-    await mandar("/baixar", { quantos: `etiquetar:${etqConta}|${etqMercado}|`
-      + [...etqEtiquetas].join(";") });
-    // A TABELA MUDA AGORA, pelo mesmo motivo do apagar: reler o acervo traria de volta o
-    // arquivo do cache de borda, que é o de antes. A esteira leva perto de um minuto e a
-    // volta de vinte e cinco segundos confirma sozinha.
+    /* A MARCAÇÃO PASSOU A FALAR COM A CASA, e não mais com a esteira do GitHub
+       (07/09/2026). O caminho velho mandava `etiquetar:conta|mercado|a;b` no campo
+       `quantos` da ponte, que disparava uma máquina no GitHub para reescrever um campo de
+       texto num arquivo. Aqui a casa grava direto no acervo, e a resposta volta com o
+       catálogo já atualizado. */
+    const r = await noPosto("/marcacao/perfil", {
+      conta: etqConta, mercado: etqMercado, etiquetas: [...etqEtiquetas] });
+    if (r && r.catalogo) CATALOGO = r.catalogo;
     const p = MINERADOS.find(x => x.conta === etqConta);
-    if (p) { p.mercado = etqMercado || null; p.etiquetas = [...etqEtiquetas].sort(); }
+    if (p) { p.mercado = r.mercado || null; p.etiquetas = r.etiquetas || []; }
+    desenhaFolha();
+    desenhaProntos(MINERADOS);
     desenhaMinerados();
     parado("etq_recado", "gravado.");
-    setTimeout(() => { $("etq_folha").hidden = true; }, 1400);
+    setTimeout(fecharAFolhaDaMarcacao, 1400);
   } catch (e) { parado("etq_recado", e.message); }
   $("etq_vai").disabled = false;
 };
@@ -3733,13 +3752,12 @@ $("etq_vai").onclick = async () => {
    uma linha por nome, quantos perfis o usam à direita, o xis aparecendo só ao passar o
    mouse, e a linha de criar encostada no pé, separada por um fio.
 
-   A ESPERA É DIFERENTE DA DE LÁ, e tinha de ser. Lá o pedido entra numa fila na
-   Cloudflare e o computador de casa passa nela de minuto em minuto, então a tela
-   pergunta pelo número do pedido até ele ficar pronto. Aqui quem executa é a esteira do
-   GitHub, que não devolve número nenhum: a tela dispara e passa a reler o próprio
-   catálogo até ele mudar. O sinal para quem olha é o mesmo, roda e cronômetro, porque a
-   espera é real e uma tela parada nesse intervalo é indistinguível de uma travada. */
-const CAT_ESPERA_MAX = 240;                       // segundos antes de desistir de esperar
+   NÃO HÁ MAIS ESPERA, e essa é a diferença de 07/09/2026. Lá, no sistema de origem, o
+   pedido entra numa fila na Cloudflare e o computador de casa passa nela de minuto em
+   minuto, então a tela pergunta pelo número do pedido até ele ficar pronto. Aqui a casa é
+   quem grava, na hora, e devolve o catálogo pronto na resposta: a roda e o cronômetro
+   continuam desenhados porque a escrita no acervo leva alguns segundos, mas ninguém mais
+   fica relendo arquivo à espera de uma máquina do GitHub subir. */
 
 function desenhaCatalogo(caixa) {
   const o = caixa.dataset.o;
@@ -3806,51 +3824,47 @@ function catTravar(caixa, v) {
   caixa.querySelector(".cfg-cat-novo input").disabled = v;
 }
 
-/** Dispara o pedido e espera o catálogo do acervo refletir o que foi pedido. */
-async function catPedir(caixa, texto, pronto, aoFim) {
+/* CRIAR E APAGAR ACONTECEM AGORA, E NÃO EM DOIS MINUTOS (07/09/2026).
+
+   O QUE ELE ENCONTROU: "quando eu tento excluir etiqueta ou mercado, ele não permite, não
+   sei por quê". Permitia. Medido no ar no mesmo dia, com a etiqueta `loja`: o pedido saía
+   da tela para a ponte da Cloudflare, que disparava uma máquina no GitHub, que clonava o
+   acervo inteiro para reescrever uma lista de dois nomes. O percurso levava perto de dois
+   minutos, e esta função ficava relendo o acervo de três em três segundos até quatro
+   minutos, com a caixa TRAVADA. Clique dado nesse intervalo era engolido calado, que é
+   como se lê "não permite".
+
+   AGORA QUEM GRAVA É A CASA, pela rota `/marcacao/`, e ela responde com o catálogo já
+   mudado: não há mais o que esperar, nem prazo para estourar. É o mesmo movimento que o
+   botão Iniciar fez no começo do dia, e pela mesma ordem dele: "tudo isso que envolve o
+   GitHub e Cloudflare não faz sentido". */
+async function catPedir(caixa, ordem, corpo, aoFim) {
   catTravar(caixa, true);
-  const desde = Date.now();
-  catEsperando(caixa, "enviando", desde);
+  catEsperando(caixa, "gravando no acervo", Date.now());
+  let d;
   try {
-    await mandar("/baixar", { quantos: texto });
+    d = await noPosto("/marcacao/" + ordem, corpo);
   } catch (e) {
     catTravar(caixa, false);
-    return catDiz(caixa, "não deu para deixar o pedido: " + e.message, "ruim");
-  }
-  catEsperando(caixa, "a esteira está aplicando", desde);
-  while ((Date.now() - desde) / 1000 < CAT_ESPERA_MAX) {
-    await new Promise(r => setTimeout(r, 3000));
-    const d = await lerFresco("dados/catalogo.json");
-    if (d && pronto(d)) {
-      CATALOGO = d;
-      catTravar(caixa, false);
-      // O QUE ACONTECEU VEM ANTES DO REDESENHO, e a ordem contrária já enganou uma vez:
-      // é `aoFim` quem refaz na memória da tela a mesma troca que a esteira acabou de
-      // fazer nos perfis. Chamado depois de desenhar, ele mexia num dado que ninguém ia
-      // mais ler, e a tabela ficava dizendo o contrário do recado logo ao lado: "os
-      // perfis passaram para luxo" e, na linha de baixo, "luxo, sem uso".
-      aoFim();
-      desenhaFolha();
-      // OS FILTROS DE BAIXAR LEEM O MESMO CATÁLOGO, e quem os enche é o `desenhaProntos`.
-      //
-      // AQUI ESTAVA ESCRITO `encherFiltros()`, que era o nome antigo desta mesma tarefa e
-      // não existe mais em lugar nenhum. A linha estourava, e a de baixo, que redesenha a
-      // tabela da Mineração, nunca chegava a rodar: ele mudava o mercado de um perfil, a
-      // folha dizia "gravado", e a tabela continuava mostrando o valor de antes.
-      desenhaProntos(MINERADOS);
-      // a tabela e os filtros de Baixar leem daqui, então mudam junto
-      return desenhaMinerados();
-    }
-    catEsperando(caixa, "a esteira está aplicando", desde);
+    return catDiz(caixa, e.message, "ruim");
   }
   catTravar(caixa, false);
-  catDiz(caixa, "passaram quatro minutos e a esteira não confirmou. O pedido não se "
-    + "perdeu: se ela terminar, a mudança aparece sozinha na próxima volta da tela.",
-    "ruim");
+  if (d && d.catalogo) CATALOGO = d.catalogo;
+  // O QUE ACONTECEU VEM ANTES DO REDESENHO, e a ordem contrária já enganou uma vez: é
+  // `aoFim` quem refaz na memória da tela a mesma troca que a casa acabou de fazer nos
+  // perfis. Chamado depois de desenhar, ele mexia num dado que ninguém ia mais ler, e a
+  // tabela dizia o contrário do recado ao lado: "os perfis passaram para luxo" e, na linha
+  // de baixo, "luxo, sem uso".
+  aoFim(d || {});
+  desenhaFolha();
+  // OS FILTROS DE BAIXAR LEEM O MESMO CATÁLOGO, e quem os enche é o `desenhaProntos`.
+  desenhaProntos(MINERADOS);
+  desenhaMinerados();
 }
 
-const temNome = (d, o, nome) => (d[o === "nicho" ? "nichos" : "etiquetas"] || [])
-  .some(x => x.nome.toLowerCase() === nome.toLowerCase());
+/* A `temNome` saiu daqui em 07/09/2026: ela dizia à espera quando parar de reler o
+   catálogo, e a espera acabou. Quem confere se o nome já existe continua sendo a casa, no
+   `marcar.criar`, que é onde a conferência vale contra o acervo e não contra a memória. */
 
 document.querySelectorAll(".cfg-cat").forEach(caixa => {
   const o = caixa.dataset.o;
@@ -3864,9 +3878,9 @@ document.querySelectorAll(".cfg-cat").forEach(caixa => {
     if (!nome) { campo.focus(); return catDiz(caixa, "escreva um nome primeiro.", "ruim"); }
     const igual = listaDo(o).find(x => x.nome.toLowerCase() === nome.toLowerCase());
     if (igual) return catDiz(caixa, `“${igual.nome}” já está na lista.`, "ruim");
-    catPedir(caixa, `catalogo:criar|${o}|${nome}`,
-      d => temNome(d, o, nome),
-      () => { campo.value = ""; catDiz(caixa, `“${nome}” criad${oA}.`, "bom"); });
+    catPedir(caixa, "criar", { o_que: o, nome },
+      d => { campo.value = "";
+             catDiz(caixa, `“${d.nome || nome}” criad${oA}.`, "bom"); });
   }
   botao.addEventListener("click", criar);
   campo.addEventListener("keydown", ev => {
@@ -3941,14 +3955,16 @@ function apagarDoCatalogo(caixa, linha, nome, destino) {
   const o = caixa.dataset.o;
   const oA = o === "nicho" ? "o" : "a";
   linha.classList.add("esperando");
-  catPedir(caixa, `catalogo:remover|${o}|${nome}|${destino}`,
-    d => !temNome(d, o, nome),
-    () => {
-      mexerNosPerfisDaTela(o, nome, destino);
-      let fim = `“${nome}” apagad${oA}.`;
-      if (destino) fim += ` Os perfis passaram para “${destino}”.`;
-      catDiz(caixa, fim, "bom");
-    });
+  catPedir(caixa, "remover", { o_que: o, nome, destino }, d => {
+    mexerNosPerfisDaTela(o, nome, destino);
+    let fim = `“${nome}” apagad${oA}.`;
+    // O NÚMERO É O QUE A CASA MEXEU DE VERDADE, e não o que a tela contou antes de pedir:
+    // "apagado" sem número não conta o que aconteceu, e o número da tela é palpite.
+    if (destino && d.movidos)
+      fim += ` ${d.movidos} ${d.movidos === 1 ? "perfil passou" : "perfis passaram"}`
+           + ` para “${destino}”.`;
+    catDiz(caixa, fim, "bom");
+  });
 }
 
 /* A MESMA TROCA QUE A ESTEIRA FEZ, REFEITA AQUI NA MEMÓRIA DA TELA.
@@ -4762,8 +4778,23 @@ $("ed_volta_escolha").onclick = () => {
    oferece os dois caminhos, antes de entrar: o cartao continua sendo "voltar ao
    trabalho", e o botao ao lado comeca do zero sem tocar no que ja' existe. */
 async function desenhaLevasDaEdicao(indice) {
+  /* LEVA ENTREGUE NÃO ENTRA NESTA LISTA (07/09/2026).
+
+     O QUE ELE ENCONTROU: "eu queria entender o motivo do porquê a leva 31 ainda tá
+     aparecendo aqui, sendo que ela já foi finalizada, ela já foi entregue. Quando eu
+     clico em iniciar uma nova edição, tá aparecendo a leva 31, coisa que não deveria
+     aparecer." Conferido no acervo: a leva 31 está com `entregue` verdadeiro, e as 180
+     peças dela subiram para o Drive com descrição.
+
+     A LISTA ERA FILTRADA POR "PRONTO", QUE É OUTRA PERGUNTA. `pronto` quer dizer que a
+     leva saiu da esteira inteira, e é isso que a torna EDITÁVEL; `entregue` quer dizer que
+     o trabalho dela terminou. A tela sabia da diferença e mostrava as duas juntas, a
+     entregue com a pílula fria escrita "180 De 180 Entregues": informação certa no lugar
+     errado, porque esta lista responde "o que eu vou editar agora".
+
+     ESCOLHER É O VERBO DESTA TELA, e o que está entregue não é escolha nenhuma. */
   const levas = ((indice && indice.lotes) || [])
-    .filter(l => l.estado === "pronto" && l.limpos);
+    .filter(l => l.estado === "pronto" && l.limpos && !l.entregue);
   if (!$("ed_sem_leva")) return;
   $("ed_sem_leva").hidden = levas.length > 0;
   // O QUE JA' EXISTE, POR LEVA. Falhou a leitura, o cartao sai sem a linha: dizer "nao
@@ -4789,16 +4820,16 @@ async function desenhaLevasDaEdicao(indice) {
       ? `você parou n${NOME_DO_PASSO[antes.passo] ? "" : "o passo "}`
         + `${NOME_DO_PASSO[antes.passo] || antes.passo}, ${quando(antes.mexido)}`
       : "";
-    const foi = !!l.entregue;
-    /* A PILULA TEM TRES CARAS, e sao as da maquete mais a que ja' existia:
+    /* A PILULA TEM DUAS CARAS, e eram tres ate' 07/09/2026:
          longe     a leva ainda nao chegou a' casa
-         fria      ela saiu inteira, e a caixa vai a 55%
-         viva      ha' trabalho por fazer, com ou sem rascunho */
+         viva      ha' trabalho por fazer, com ou sem rascunho
+
+       A TERCEIRA ERA A "FRIA", que escrevia "180 De 180 Entregues". Ela morreu junto com o
+       motivo dela: leva entregue nao entra mais nesta lista, entao uma cara para dizer
+       "esta ja' acabou" seria uma cara que nunca aparece. */
     const pilula = !aqui
       ? { cor: "longe", txt: "Ainda Não Chegou À Casa Do Estúdio" }
-      : foi
-        ? { cor: "fria", txt: `${num(l.limpos)} De ${num(l.limpos)} Entregues` }
-        : { cor: "viva", txt: antes ? conta : "Nenhuma Peça Montada Ainda" };
+      : { cor: "viva", txt: antes ? conta : "Nenhuma Peça Montada Ainda" };
     /* A CAIXA DEIXOU DE SER UM `<button>` em 03/09/2026, e essa e' a mudanca que faz o
        resto caber: a maquete poe um botao `Abrir` de verdade dentro da caixa, e botao
        dentro de botao nao existe em HTML. O `data-leva` fica so' na caixa de fora, entao
@@ -4808,9 +4839,9 @@ async function desenhaLevasDaEdicao(indice) {
        `.ed-leva-linha` e `.ed-leva-antes` CONTINUAM NO HTML de proposito: as duas sao
        lidas pelas provas do grupo `rascunho`, que guardam a promessa de o cartao dizer
        onde o trabalho parou. Elas viraram ganchos, e nao sobra de desenho. */
-    return `<div class="ed-leva-linha lv-caixa${!aqui ? " longe" : ""}${foi ? " entregue" : ""}"
+    return `<div class="ed-leva-linha lv-caixa${!aqui ? " longe" : ""}"
       data-leva="${l.numero}">
-      <span class="lv-capa" data-capa="${l.numero}">${caras}</span>
+      <span class="lv-capa">${caras}</span>
       <span class="lv-meio">
         <span class="lv-nome">Leva ${l.numero}${contas.length
           ? " · " + escapa(contas.join(", ")) : ""}</span>
@@ -4828,7 +4859,6 @@ async function desenhaLevasDaEdicao(indice) {
       </span>
     </div>`;
   }).join("");
-  capasDasLevas();
 }
 
 /* O TAMANHO EM PALAVRA DE GENTE. O indice guarda megabyte cru, e a leva 31 saia como
@@ -4852,35 +4882,19 @@ function desceuEm(ts) {
   return `desceu em ${d.getDate()} de ${MESES_POR_EXTENSO[d.getMonth()]}`;
 }
 
-/* A CARA DA LEVA E' O PRIMEIRO REEL DELA, e o retrato do perfil virou o plano B.
-   A maquete desenha um quadro 9 por 16 com a filmagem dentro, e nao um retrato redondo:
-   numa lista de levas do mesmo perfil, tres bolinhas iguais nao distinguem nada, e o
-   primeiro quadro do reel distingue na hora.
+/* A CARA DA LEVA VOLTOU A SER O RETRATO DO PERFIL, em 07/09/2026, por ordem dele:
+   "o formato que tá atualmente, onde aparece ali um preview do vídeo, não é pra ser isso,
+   era pra ser como era antes, que era o ícone do perfil do Instagram."
 
-   FALHA CALADA DEIXA O RETRATO NO LUGAR. Sem posto de pe', a caixa nao fica preta: ela
-   fica com o que ja' estava desenhado, que e' o retrato. */
-async function capasDasLevas() {
-  const caixas = [...document.querySelectorAll(".lv-capa[data-capa]")];
-  for (const caixa of caixas) {
-    const n = Number(caixa.dataset.capa);
-    try {
-      const r = await noPosto("/pecas?leva=" + n);
-      // A ROTA DEVOLVE `{tem, nomes}`, e o `tem` e' falso quando a pasta ainda nao chegou
-      // a' casa. Sem esta guarda, `nomes` vem vazio e a caixa ficaria esperando um video
-      // que nunca carrega.
-      if (!r || !r.tem) continue;
-      const nome = [...(r.nomes || [])].sort((a, b) => a.localeCompare(b, "pt"))[0];
-      if (!nome) continue;
-      const v = document.createElement("video");
-      v.src = urlDoArquivo("levas/leva-" + n + "/" + nome) + "#t=1.5";
-      v.muted = true; v.playsInline = true; v.preload = "metadata";
-      // O QUADRO SO' SUBSTITUI O RETRATO DEPOIS DE CARREGAR, senao a caixa pisca preta
-      // no caminho e a lista inteira treme enquanto as levas respondem.
-      v.addEventListener("loadeddata", () => { caixa.innerHTML = ""; caixa.appendChild(v); },
-                         { once: true });
-    } catch (e) { /* fica o retrato */ }
-  }
-}
+   AQUI HAVIA UMA `capasDasLevas`, e ela trocava o retrato pelo primeiro quadro do primeiro
+   reel: perguntava ao posto quais peças a leva tem, montava um `<video>` apontado para o
+   segundo e meio do arquivo, e o punha no lugar da cara quando o quadro carregasse.
+
+   O ARGUMENTO DELA ERA DISTINGUIR DUAS LEVAS DO MESMO PERFIL, e ele não paga o preço: cada
+   caixa buscava a lista de peças e depois carregava metadado de um vídeo que pode ter
+   dezenas de megabytes, e o resultado é um quadro escuro de reel onde antes havia a marca
+   do perfil. Quem tem duas levas do mesmo perfil já as distingue pelo número e pela data,
+   que estão escritos ao lado. */
 
 $("ed_levas").addEventListener("click", async ev => {
   /* COMEÇAR DO ZERO E' PEDIDO, E NAO ACIDENTE (02/09/2026).

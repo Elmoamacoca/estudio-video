@@ -594,6 +594,26 @@ a.acao{display:inline-flex;align-items:center;justify-content:center;
 .pino.meio::before{background:var(--ambar)}
 .pino.indo::before{background:var(--chart-2);animation:bxpulso 1.4s ease-in-out infinite}
 @keyframes bxpulso{0%,100%{opacity:1}50%{opacity:.25}}
+/* A COLUNA "SEPARADO": UMA COR POR FORMATO, e não uma pastilha cinza com o nome dentro.
+   Numa tabela de dez perfis, a cor é o que deixa o olho contar de quantos saiu carrossel
+   sem ler linha por linha. Os três tons são os do sistema, os mesmos que os gráficos
+   usam, e nenhum deles é o verde nem o vermelho: separar reels não é acerto nem erro. */
+.pino.rls{color:var(--chart-2);
+          border-color:color-mix(in srgb,var(--chart-2) 35%,transparent)}
+.pino.rls::before{background:var(--chart-2)}
+.pino.crr{color:var(--chart-4);
+          border-color:color-mix(in srgb,var(--chart-4) 35%,transparent)}
+.pino.crr::before{background:var(--chart-4)}
+.pino.amb{color:var(--chart-1);
+          border-color:color-mix(in srgb,var(--chart-1) 35%,transparent)}
+.pino.amb::before{background:var(--chart-1)}
+.tab-sep{min-width:168px;vertical-align:middle}
+/* ATÉ ONDE CHEGOU, SEM QUEBRAR (07/09/2026, queixa dele). A célula mostrava `set. de
+   2024`, e o navegador quebrava na preposição sempre que a coluna apertava: metade das
+   linhas ficava com duas alturas e a fileira inteira desalinhava. O texto virou `set/2024`
+   no programa, e esta regra fecha a porta para a quebra voltar quando ele estreitar a
+   janela. */
+.tab-ate{white-space:nowrap;vertical-align:middle}
 /* AS COLUNAS DE NÚMERO APERTAM, e as de texto não. Com três colunas a mais a tabela
    passou de 1.080 para perto de 1.400 pixels: tirar quatro pixels de cada lado das oito
    colunas de número devolve sessenta e quatro sem espremer nada que se leia. */
@@ -784,7 +804,20 @@ a.acao{display:inline-flex;align-items:center;justify-content:center;
    A FOLHA FICA MAIS LARGA quando carrega as duas listas. As outras folhas desta tela têm
    440 pixels, que é a medida de um formulário curto; duas colunas de catálogo dentro
    disso viram duas colunas de trinta pixels. */
-.etq-larga{width:min(760px,100%)}
+.etq-larga{width:min(760px,100%);position:relative}
+/* O XIS DA FOLHA DE MARCAÇÃO: GRUDADO NO ALTO, E NÃO ROLANDO JUNTO.
+   `sticky` e não `absolute`: a folha tem rolagem própria, e um botão absoluto sobe junto
+   com o conteúdo e desaparece exatamente quando ela cresce, que é o defeito que ele
+   encontrou no botão Fechar do pé. A margem negativa à direita e embaixo tira o botão do
+   fluxo do texto, para o título continuar começando onde começava. */
+.etq-x{position:sticky;top:0;float:right;margin:-6px -6px -26px 0;z-index:2;
+       display:flex;align-items:center;justify-content:center;width:30px;height:30px;
+       border:1px solid var(--rule-solid);border-radius:9px;background:var(--branco);
+       color:var(--muted);cursor:pointer;padding:0;
+       transition:background .15s,color .15s,border-color .15s}
+.etq-x:hover{background:var(--paper-2);color:var(--ink);border-color:var(--ink)}
+.etq-x:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.etq-x svg{width:16px;height:16px}
 /* AS PASTILHAS DE ETIQUETA, marcando e desmarcando ao clique. A não escolhida fica
    apagada e mantém o mesmo desenho: uma caixa de seleção ao lado de cada nome daria a
    mesma função e roubaria do olho a etiqueta, que é o que ele já reconhece nas outras
@@ -3996,24 +4029,33 @@ body.aj-arrastando .aj-gaveta{transition:none}
 .lv-caixa:hover{border-color:var(--accent);transform:translateY(-2px)}
 .lv-caixa.indo{border-color:var(--accent);transform:scale(.985)}
 
-/* A LEVA ENTREGUE FICA A 55%, que e' o desenho dele, e nao 50 nem 60: com a entregue na
-   mesma lista da que falta fazer, e' a opacidade que separa as duas de longe. */
-.lv-caixa.entregue{opacity:.55}
+/* A REGRA DA LEVA ENTREGUE SAIU EM 07/09/2026, junto com a leva entregue. Ela punha a
+   caixa a 55% de opacidade para separar de longe o que já acabou do que falta fazer; hoje
+   o que já acabou não entra na lista, por ordem dele. */
 /* LEVA QUE AINDA NAO DESCEU APARECE, apagada e sem clique. `pointer-events` no lugar do
    `disabled` de antes, porque a caixa deixou de ser botao: o `Abrir` dentro dela continua
    `disabled`, e este e' o cinto de seguranca de fora. */
 .lv-caixa.longe{opacity:.5;cursor:not-allowed;box-shadow:none;pointer-events:none}
 .lv-caixa.longe:hover{border-color:var(--rule-solid);transform:none}
 
-/* ------------------------------------------------------------------- a miniatura */
-.lv-capa{flex:none;width:58px;height:103px;border-radius:var(--r-md);background:#000;
-  overflow:hidden;display:grid;place-items:center;position:relative}
-.lv-capa video,.lv-capa img{width:100%;height:100%;object-fit:cover;display:block}
-/* O RETRATO E' O PLANO B, e ele encolhe para caber: 46 numa caixa de 58 encostaria nas
-   duas bordas. Um so' aparece, porque tres retratos empilhados num quadro estreito viram
-   borrao em vez de informacao. */
-.lv-capa .pcard-retrato{flex:0 0 40px;width:40px;height:40px;margin:0}
+/* ------------------------------------------------------------------- a cara da leva
+   O RETRATO DEIXOU DE SER O PLANO B (07/09/2026, ordem dele: "era pra ser como era antes,
+   que era o ícone do perfil do Instagram").
+
+   O QUADRO 9 POR 16 SAIU COM O VÍDEO. Ele existia para receber o primeiro quadro do reel:
+   58 por 103, fundo preto e recorte por cima. Sem vídeo, esse desenho vira uma tira preta
+   e alta com uma bolinha no meio. A caixa agora é do tamanho do retrato, sem fundo. */
+.lv-capa{flex:none;width:64px;height:64px;display:grid;place-items:center;
+  position:relative}
+/* UM RETRATO SÓ, e a razão continua a de antes: três caras empilhadas num espaço estreito
+   viram borrão em vez de informação. Quem tem a leva de vários perfis lê os arroba na
+   linha ao lado, onde eles estão escritos por extenso. */
+.lv-capa .pcard-retrato{flex:0 0 60px;width:60px;height:60px;margin:0}
 .lv-capa .pcard-retrato + .pcard-retrato{display:none}
+/* A INICIAL ACOMPANHA A CAIXA. O `.pcard-avatar` herda o corpo de letra da folha do
+   sistema, calibrado para os 84 pixels de lá: num círculo de 60, a letra do perfil sem
+   foto saía maior que o círculo. */
+.lv-capa .pcard-avatar{border-width:2px;font-size:20px}
 
 /* ----------------------------------------------------------------------- o miolo */
 .lv-meio{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start}

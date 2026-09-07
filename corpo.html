@@ -193,36 +193,37 @@
         </div>
       </div>
 
-      <!-- TREZE COLUNAS, E ESTA TABELA É O PAINEL DE CONTROLE DO SISTEMA INTEIRO.
-           Eram onze. Entraram três em 19/08/2026, a pedido do Gabriel, e saiu o botão
-           de marcar, que ele não tinha pedido.
+      <!-- NOVE COLUNAS, E ESTA TABELA É O PAINEL DE CONTROLE DO SISTEMA INTEIRO.
+           Eram treze até 07/09/2026, e a lista de quem saiu é dele, palavra por palavra:
+           "varridos pode remover, cobertura pode remover, reels, posts e carrosséis pode
+           remover, acima da régua também pode remover".
+
+           SEIS COLUNAS DE NÚMERO PARA A MESMA PERGUNTA. Varridos, cobertura, reels,
+           posts, carrosséis e acima da régua respondiam todas a "o que tem neste perfil",
+           cada uma com um recorte, e nenhuma respondia "o que eu faço com ele agora".
+           Seis números lado a lado não se comparam de relance: eles se leem um por um,
+           que é o contrário de uma tabela de controle.
 
            MERCADO E ETIQUETA viravam duas pastilhas espremidas embaixo do nome do
            perfil, e de lá não dava para comparar dois perfis nem ordenar por elas. São
            dado do cadastro, e dado de cadastro é coluna. Clicar na célula abre a folha
-           de marcação, que é o que o botão fazia.
+           de marcação.
 
-           BAIXAR é a coluna que faltava para o sistema fechar. Um perfil some da
-           fileira da aba de Baixar no instante em que vem inteiro, e some sem deixar
-           rastro: quem quisesse saber se a Vinci já tinha descido não tinha onde olhar.
-           Agora tem, e é aqui.
+           SEPARADO É A COLUNA NOVA, e ela entrou no lugar das seis: em vez de dizer
+           quantos reels e quantos carrosséis o perfil tem, ela diz o que a régua separou
+           dele, que é a decisão que interessa antes de coletar.
 
-           O TOTAL DE PUBLICAÇÕES continua sem coluna própria, pelo mesmo motivo de
-           sempre: ele é a segunda linha da cobertura, que é onde a conta faz sentido de
-           qualquer forma, 62% de 4.976. -->
+           BAIXAR é onde o perfil está na aba de Baixar. Um perfil some da fileira de lá
+           no instante em que vem inteiro, e some sem deixar rastro: quem quisesse saber
+           se a Vinci já tinha descido não tinha onde olhar. -->
       <div class="tab-rolo">
         <table class="tab" id="tab_minerados">
           <thead><tr>
             <th>Perfil</th>
             <th class="tab-marc">Mercado</th>
             <th class="tab-marc tab-marc-etq">Etiqueta</th>
-            <th class="tab-num">Varridos</th>
-            <th class="tab-num">Cobertura</th>
-            <th>Alcançou até</th>
-            <th class="tab-num">Reels</th>
-            <th class="tab-num">Posts</th>
-            <th class="tab-num">Carrosséis</th>
-            <th class="tab-num">Acima da régua</th>
+            <th class="tab-ate">Alcançou até</th>
+            <th class="tab-sep">Separado</th>
             <th class="tab-baixa">Baixar</th>
             <th>Estado</th>
             <th>Última rodada</th>
@@ -367,6 +368,17 @@
      desenha sempre o mesmo símbolo. Copiá-la seria trazer superfície sem função. -->
 <div class="liv-export" id="etq_folha" hidden>
   <div class="liv-folha etq-larga">
+    <!-- O XIS FICA GRUDADO NO ALTO, e não some quando a folha cresce.
+         Queixa dele em 07/09/2026: "quando eu venho aqui na etapa de mercado ou na etapa
+         de etiqueta, eu não consigo fechar a tela, tem que ter um símbolozinho de fechar".
+         O botão Fechar existia, no pé, e some de vista assim que ele abre "Criar e apagar
+         mercados e etiquetas": a folha passa de 370 para mais de 700 pixels, ganha rolagem
+         própria, e o pé sai pela borda de cima. Quem está mexendo nas listas, lá embaixo,
+         fica sem saída. -->
+    <button class="etq-x" id="etq_fechar" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
     <h3>Mercado E Etiquetas <span id="etq_quem"></span></h3>
     <p class="nota">Mercado é um só por perfil, e serve para escolher. Etiqueta é
       livre e soma: um perfil pode ter várias, e o filtro traz todos os que tiverem
