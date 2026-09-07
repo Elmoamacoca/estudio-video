@@ -2,15 +2,18 @@
  "contas": [
   {
    "conta": "thaleslaray",
-   "nome": null,
+   "nome": "Thales Laray",
    "rotulo": "carrosséis",
    "primeiro": 1788775164,
-   "ultimo": 1788776304,
-   "eventos": 3,
+   "ultimo": 1788776402,
+   "eventos": 4,
    "falhas": 1,
    "avisos": 1,
    "ultimo_tipo": "casa",
-   "tentativas_id": 10
+   "tentativas_id": 10,
+   "lidos": 185,
+   "publicacoes": 0,
+   "completo": true
   },
   {
    "conta": "hubjournal",
@@ -97,5 +100,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788776306
+ "atualizado": 1788776404
 }
