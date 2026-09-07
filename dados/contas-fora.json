@@ -1,6 +1,6 @@
 {
- "parada": false,
- "quando": 1788762588,
- "por_que": null,
+ "parada": true,
+ "quando": 1788775745,
+ "por_que": "nenhuma conta descartavel viva",
  "quais": []
 }
