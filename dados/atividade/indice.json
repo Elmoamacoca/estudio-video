@@ -3,13 +3,13 @@
   {
    "conta": "divyannshisharma",
    "nome": "Divyanshi Sharma",
-   "rotulo": "publicações",
+   "rotulo": "carrosséis",
    "primeiro": 1788848094,
-   "ultimo": 1788849553,
-   "eventos": 3,
+   "ultimo": 1788849577,
+   "eventos": 5,
    "falhas": 0,
    "avisos": 1,
-   "ultimo_tipo": "casa",
+   "ultimo_tipo": "concluido",
    "lidos": 212,
    "publicacoes": 0,
    "completo": true
@@ -17,13 +17,13 @@
   {
    "conta": "raycfu",
    "nome": "Rui Fu",
-   "rotulo": "publicações",
+   "rotulo": "carrosséis",
    "primeiro": 1788848065,
-   "ultimo": 1788849384,
-   "eventos": 3,
+   "ultimo": 1788849577,
+   "eventos": 5,
    "falhas": 0,
    "avisos": 1,
-   "ultimo_tipo": "casa",
+   "ultimo_tipo": "concluido",
    "lidos": 15,
    "publicacoes": 0,
    "completo": true
@@ -169,5 +169,5 @@
    "completo": true
   }
  ],
- "atualizado": 1788849558
+ "atualizado": 1788849577
 }
