@@ -12,6 +12,16 @@
     "arroba": 200,
     "media_count": 0
    }
+  },
+  {
+   "quando": 1788848065,
+   "tipo": "vazio",
+   "gravidade": "aviso",
+   "texto": "Sem posts públicos: conta fechada ou sem publicação. Nada a varredura aqui.",
+   "caminho": "anonimo",
+   "detalhe": {
+    "total": 0
+   }
   }
  ],
  "vazio_logado": true
