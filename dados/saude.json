@@ -122,7 +122,13 @@
    "origem": "resgate",
    "gravidade": "aviso",
    "texto": "A Leitura Logada Está Indo Pelo Caminho De Reserva: Falta O Cliente Que Imita O Navegador. Ela Funciona, E Corre Mais Risco De A Conta Ser Bloqueada"
+  },
+  {
+   "quando": 1788874927,
+   "origem": "resgate",
+   "gravidade": "falha",
+   "texto": "O Resgate Em Casa Quebrou No Meio (URLError)"
   }
  ],
- "atualizado": 1788849281
+ "atualizado": 1788874927
 }
