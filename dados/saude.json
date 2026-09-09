@@ -128,7 +128,13 @@
    "origem": "resgate",
    "gravidade": "falha",
    "texto": "O Resgate Em Casa Quebrou No Meio (URLError)"
+  },
+  {
+   "quando": 1788939919,
+   "origem": "resgate",
+   "gravidade": "falha",
+   "texto": "O Resgate Em Casa Quebrou No Meio (HTTP 500 Do GitHub)"
   }
  ],
- "atualizado": 1788874927
+ "atualizado": 1788939919
 }
