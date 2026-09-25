@@ -1,6 +1,16 @@
 {
  "contas": [
   {
+   "conta": "thiago.nigro",
+   "primeiro": 1790375731,
+   "nome": null,
+   "ultimo": 1790375731,
+   "eventos": 1,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "casa"
+  },
+  {
    "conta": "nathaliaarcuri",
    "primeiro": 1790372062,
    "nome": "Nathalia Arcuri",
@@ -215,5 +225,5 @@
    "completo": true
   }
  ],
- "atualizado": 1790372062
+ "atualizado": 1790375891
 }
