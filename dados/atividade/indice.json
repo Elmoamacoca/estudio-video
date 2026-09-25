@@ -1,14 +1,92 @@
 {
  "contas": [
   {
-   "conta": "macrofoco.br",
-   "primeiro": 1790259172,
-   "nome": null,
-   "ultimo": 1790259172,
+   "conta": "nathaliaarcuri",
+   "primeiro": 1790372062,
+   "nome": "Nathalia Arcuri",
+   "ultimo": 1790372062,
    "eventos": 1,
    "falhas": 0,
    "avisos": 0,
+   "ultimo_tipo": "casa",
+   "lidos": 843,
+   "publicacoes": 6242,
+   "completo": true
+  },
+  {
+   "conta": "mepoupe",
+   "primeiro": 1790371036,
+   "nome": null,
+   "ultimo": 1790371268,
+   "eventos": 3,
+   "falhas": 0,
+   "avisos": 0,
    "ultimo_tipo": "casa"
+  },
+  {
+   "conta": "perdeunovar",
+   "primeiro": 1790331854,
+   "nome": null,
+   "ultimo": 1790334477,
+   "eventos": 6,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "casa"
+  },
+  {
+   "conta": "jackroberts___",
+   "nome": "Jack Roberts",
+   "rotulo": "carrosséis",
+   "primeiro": 1788795611,
+   "ultimo": 1790319211,
+   "eventos": 6,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "casa",
+   "lidos": 36,
+   "publicacoes": 0,
+   "completo": true
+  },
+  {
+   "conta": "raycfu",
+   "nome": "Rui Fu",
+   "rotulo": "carrosséis",
+   "primeiro": 1788848065,
+   "ultimo": 1790315256,
+   "eventos": 8,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "casa",
+   "lidos": 16,
+   "publicacoes": 0,
+   "completo": true
+  },
+  {
+   "conta": "ratosdeia",
+   "nome": "ratos de IA",
+   "rotulo": "carrosséis",
+   "primeiro": 1788756892,
+   "ultimo": 1790314219,
+   "eventos": 6,
+   "falhas": 0,
+   "avisos": 1,
+   "ultimo_tipo": "casa",
+   "lidos": 82,
+   "publicacoes": 96,
+   "completo": true
+  },
+  {
+   "conta": "macrofoco.br",
+   "primeiro": 1790259172,
+   "nome": "Eduardo Devereux",
+   "ultimo": 1790264391,
+   "eventos": 2,
+   "falhas": 0,
+   "avisos": 0,
+   "ultimo_tipo": "casa",
+   "lidos": 0,
+   "publicacoes": 0,
+   "completo": true
   },
   {
    "conta": "divyannshisharma",
@@ -21,20 +99,6 @@
    "avisos": 1,
    "ultimo_tipo": "concluido",
    "lidos": 212,
-   "publicacoes": 0,
-   "completo": true
-  },
-  {
-   "conta": "raycfu",
-   "nome": "Rui Fu",
-   "rotulo": "carrosséis",
-   "primeiro": 1788848065,
-   "ultimo": 1788849577,
-   "eventos": 5,
-   "falhas": 0,
-   "avisos": 1,
-   "ultimo_tipo": "concluido",
-   "lidos": 15,
    "publicacoes": 0,
    "completo": true
   },
@@ -63,20 +127,6 @@
    "avisos": 0,
    "ultimo_tipo": "concluido",
    "lidos": 87,
-   "publicacoes": 0,
-   "completo": true
-  },
-  {
-   "conta": "jackroberts___",
-   "nome": "Jack Roberts",
-   "rotulo": "carrosséis",
-   "primeiro": 1788795611,
-   "ultimo": 1788795629,
-   "eventos": 3,
-   "falhas": 0,
-   "avisos": 0,
-   "ultimo_tipo": "concluido",
-   "lidos": 29,
    "publicacoes": 0,
    "completo": true
   },
@@ -123,20 +173,6 @@
    "completo": true
   },
   {
-   "conta": "ratosdeia",
-   "nome": "ratos de IA",
-   "rotulo": "carrosséis",
-   "primeiro": 1788756892,
-   "ultimo": 1788757466,
-   "eventos": 4,
-   "falhas": 0,
-   "avisos": 1,
-   "ultimo_tipo": "concluido",
-   "lidos": 69,
-   "publicacoes": 0,
-   "completo": true
-  },
-  {
    "conta": "omatheusdaia",
    "nome": "Matheus Castro | AI Coding",
    "rotulo": "carrosséis",
@@ -179,5 +215,5 @@
    "completo": true
   }
  ],
- "atualizado": 1790259173
+ "atualizado": 1790372062
 }
