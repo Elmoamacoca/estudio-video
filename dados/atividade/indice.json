@@ -4,8 +4,8 @@
    "conta": "thiago.nigro",
    "primeiro": 1790375731,
    "nome": null,
-   "ultimo": 1790384984,
-   "eventos": 5,
+   "ultimo": 1790386809,
+   "eventos": 6,
    "falhas": 0,
    "avisos": 0,
    "ultimo_tipo": "casa"
@@ -225,5 +225,5 @@
    "completo": true
   }
  ],
- "atualizado": 1790385022
+ "atualizado": 1790386826
 }
